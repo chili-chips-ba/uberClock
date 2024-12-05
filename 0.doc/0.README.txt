@@ -1,20 +1,34 @@
+https://www.electronics-notes.com/articles/electronic_components/quartz-crystal-xtal/crystal-resonator-cuts-at-bt-sc-ct.php
 
--------------
+https://xoprof.com/2023/09/unleashing-the-mystery-of-crystal-cuts
 
-https://www.sitime.com/company/news/blog/oscillator-aging-and-its-importance-precision-timing
+https://www.jauch.com/blog/en/its-all-about-the-angle-the-at-cut-for-quartz-crystals
 
-https://github.com/chipmuenk/pyfda
+https://www.sitime.com/company/newsroom/articles/oscillator-aging-and-its-importance-precision-timing
+
+
+---open-source tool with GUI for filter design (Python based)
+https://github.com/chipmuenk/pyfda  
 https://www.youtube.com/watch?v=IDKKr-ry9tc
 
-https://www.analog.com/media/en/technical-documentation/data-sheets/AD9548.pdf
-
-https://www.youtube.com/watch?v=_CCc18S1DA0
-https://github.com/ZipCPU/dspfilters
-
-https://hardwaredescriptions.com/elementor-fixed-point-arithmetic-in-synthesizable-vhdl
-
+---DSP Filters in AmaranthHDL (Python-based)
 https://github.com/amaranth-farm/amlib/tree/main/amlib/dsp
 
+---DSP Filters in Verilog
+https://github.com/ZipCPU/dspfilters
+
+---Control Loops in Python
+https://www.youtube.com/watch?v=RxQWk1PjJLQ 
+
+---FFT
 https://zipcpu.com/dsp/2018/10/02/fft.html
+
+---GNU Radio
+https://www.youtube.com/watch?v=_CCc18S1DA0
+
+---Misc
+https://hardwaredescriptions.com/elementor-fixed-point-arithmetic-in-synthesizable-vhdl
+
+https://www.analog.com/media/en/technical-documentation/data-sheets/AD9548.pdf
 
 -------------

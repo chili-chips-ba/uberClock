@@ -12,6 +12,34 @@ This work is about researching and exploiting the properties of multi-mode cryst
 
 This is a Proof-of-Concept (PoC) and stepping stone for future applied research projects on this theme, possibly extending into the field of Artificial Intelligence. In addition to a working prototype (PCBs, FPGA Gateware and Embedded Firmware), the project will deliver a series of scientific papers.
 
+### References
+- [Quartz Crystal Cuts: AT, BT, SC, CT](https://www.electronics-notes.com/articles/electronic_components/quartz-crystal-xtal/crystal-resonator-cuts-at-bt-sc-ct.php)
+
+- [Unleashing the Mystery of Crystal Cuts](https://xoprof.com/2023/09/unleashing-the-mystery-of-crystal-cuts)
+
+- [It's All about the Angle - The AT-Cut for Quartz Crystals](https://www.jauch.com/blog/en/its-all-about-the-angle-the-at-cut-for-quartz-crystals)
+
+- [Oscillator aging and its importance in precision timing](https://www.sitime.com/company/newsroom/articles/oscillator-aging-and-its-importance-precision-timing)
+
+
+- [Python tool for filter design, with GUI](https://github.com/chipmuenk/pyfda)
+- [video demo of the tool](https://www.youtube.com/watch?v=IDKKr-ry9tc)
+
+- [DSP Filters in AmaranthHDL](https://github.com/amaranth-farm/amlib/tree/main/amlib/dsp)
+- [DSP Filters in Verilog](https://github.com/ZipCPU/dspfilters)
+
+### Project Status
+
+
+### HW Architecture
+<p align="center">
+  <img width=300 src="0.doc/HW_architecture.png">
+</p>
+
+
+### SW Architecture
+
+
 ### Acknowledgements
 We are grateful to NLnet Foundation for their sponsorship of this development activity.
 
