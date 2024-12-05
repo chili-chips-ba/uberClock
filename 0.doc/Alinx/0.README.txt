@@ -1,0 +1,11 @@
+ Technical support:
+   -technical@alinx.com
+   -ellie.wang@alinx.com
+
+--------
+https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html
+https://www.en.alinx.com/Product/Add-on-Modules/AN9238.html (2xADC  65MSPS 12bit)
+https://www.en.alinx.com/Product/Add-on-Modules/AN9767.html (2xDAC 125MSPS 14bit)
+
+
+#---End-of-File---
