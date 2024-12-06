@@ -1,5 +1,3 @@
-# uberClock
-
 Clocks can be extracted from GPS satellite signals, or locally generated with MEMS oscillators, SAW resonators, quartz crystal (XTAL, XO) or piezo resonators, often set in “ovens” (TCXO, OCXO), derived from atomic properties (like Cesium Beam, Hydrogen Maser, Rubidium, Strontium or Ytterbium), or obtained in another way.
 
 <p align="center">
@@ -12,7 +10,7 @@ They differ in Absolute Accuracy, Long-term Frequency Stability (e.g. due to agi
 
 This is a Proof-of-Concept (PoC) and stepping stone for future applied research projects on this theme, possibly extending into the field of Artificial Intelligence. In addition to a working prototype (PCBs, FPGA Gateware and Embedded Firmware), the project will deliver a series of scientific papers.
 
-### References
+#### References
 - [Unleashing the Mystery of Crystal Cuts](https://xoprof.com/2023/09/unleashing-the-mystery-of-crystal-cuts)
 - [Quartz Crystal Cuts: AT, BT, SC, CT](https://www.electronics-notes.com/articles/electronic_components/quartz-crystal-xtal/crystal-resonator-cuts-at-bt-sc-ct.php)
 - [It's All about the Angle - The AT-Cut for Quartz Crystals](https://www.jauch.com/blog/en/its-all-about-the-angle-the-at-cut-for-quartz-crystals)
@@ -24,7 +22,10 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 - [DSP Filters in Verilog](https://github.com/ZipCPU/dspfilters)
 - [Papers](0.doc/Quartz/papers)
 
-### Hardware platform
+
+--------------------
+
+## Hardware platform
 - **Physics Package** -- Full-custom Analog Board with multi-mode Quartz Crystal
   
 - [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
@@ -42,7 +43,10 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
   <img width=300 src="0.doc/Alinx/2xDAC--125MSPS-14bit--AN9767.jpg">
 </p>
 
-### Project Status
+
+--------------------
+
+# Project Status
 
 #### 1. Acquisition of Hardware Platform
  - [ ] Design, manufacture and debug the "Physics Package" card.
@@ -87,8 +91,10 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 #### 8. Dev Infrastructure
  - [ ] Develop and test Docker packages with FPGA tools, on a Continuous Integration (CI) system.
 
- 
-### HW Architecture
+
+--------------------
+
+# HW Architecture
 - WIP
   
 <p align="center">
@@ -96,8 +102,13 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 </p>
 
 
-### SW Architecture
+--------------------
+
+# SW Architecture
 - WIP
+
+
+--------------------
 
 ### Acknowledgements
 We are grateful to NLnet Foundation for their sponsorship of this development activity.
@@ -110,5 +121,7 @@ We are grateful to NLnet Foundation for their sponsorship of this development ac
 ### Public posts:
 - Soon to come
 
+
+--------------------
 #### End of Document
 
