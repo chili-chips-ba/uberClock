@@ -22,6 +22,26 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 - [DSP Filters in AmaranthHDL](https://github.com/amaranth-farm/amlib/tree/main/amlib/dsp)
 - [DSP Filters in Verilog](https://github.com/ZipCPU/dspfilters)
+- [Papers](0.doc/Quartz/papers)
+
+### Hardware platform
+- **Physics Package** -- Our own full-custom Analog Board with multi-mode Quartz Crystal
+  
+- [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
+<p align="center">
+  <img width=600 src="0.doc/Alinx/FPGA-Board--Artix7-200--AX7203.jpg">
+</p>
+  
+- [AN9238 2xADC,  65MSPS, 12bit](https://www.en.alinx.com/Product/Add-on-Modules/AN9238.html)
+<p align="center">
+    <img width=300 src="0.doc/Alinx/2xADC--65MSPS-12bit--AN9238.jpg">
+</p>
+    
+- [AN9767 2xDAC, 125MSPS, 14bit](https://www.en.alinx.com/Product/Add-on-Modules/AN9767.html)
+<p align="center">
+  <img width=300 src="0.doc/Alinx/2xDAC--125MSPS-14bit--AN9767.jpg">
+</p>
+
 
 ### Project Status
 - TODO
