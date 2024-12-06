@@ -25,7 +25,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 - [Papers](0.doc/Quartz/papers)
 
 ### Hardware platform
-- **Physics Package** -- Our own full-custom Analog Board with multi-mode Quartz Crystal
+- **Physics Package** -- Full-custom Analog Board with multi-mode Quartz Crystal
   
 - [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
 <p align="center">
@@ -42,12 +42,54 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
   <img width=300 src="0.doc/Alinx/2xDAC--125MSPS-14bit--AN9767.jpg">
 </p>
 
-
 ### Project Status
-- TODO
 
+#### 1. Acquisition of Hardware Platform
+ - [ ] Design, manufacture and debug the "Physics Package" card.
+ - [ ] Procure and distribute FPGA, ADC and DAC cards.
+
+#### 2. Digital Infrastructure Development
+ - [ ] Familiarize with ALINX boards.
+ - Toggle LEDs
+ - Write RTL for interfaces to ADC and DAC chips
+ - Write RTL to test their operation
+ - Perform this testing. Debug and fix the problems as they arise
+ - [ ] Create CPU hardware subsystem based on an open-source RISC-V core, memories, UART and debug port. 
+ - [ ] Create a bare-metal software skeleton, as the foundation for writing future DSP applications. Create and test software build flow.
+ - [ ] Test operation of CPU subsystem. Profile its performance. 
+ - [ ] Map ADCs and DACs into CPU memory space and test SW communication with them. 
+ 
+#### 3. DSP Model and Documentation Development
+ - [ ] Model quartz crystal and DSP datapath in C or Python.
+ - [ ] Create _Theory of Operation_ document with explanation of concepts, tradeoffs and criteria used to devise solutions. 
+ - [ ] Post the _Executive Summary_ here.
+
+#### 4. HW Integration and Characterization
+ - [ ] Bring up the complete system with digital and analog card connected to each other.
+ - [ ] Perform manual characterization of individual crystals.
+ - [ ] Develop a semi or fully automated crystal characterization procedure.
+ 
+#### 5. Implementation of DSP algorithms and HW/SW Integration
+ - [ ] Implement HW side of DSP algorithm on FPGA.
+ - [ ] Implement SW side of DSP algorithm in the RISC-V CPU.
+ - [ ] Integrate DSP hardware and software into a complete system.
+ 
+#### 6. Benchmarking
+ - [ ] Test the DSP together with crystal.
+ - we need a reliable reference clock source for this, preferably Stratum 0
+ - and a good Spectrum Analyzer
+ - [ ] Fine-tune DSP algorithm based on the obtained measurements.
+ - [ ] Conducting additional experiments with the corrected DSP algorithm (in simulation and on hardware).
+ 
+#### 7. openXC7 port
+ - [ ] Port from Vivado to openXC.
+ 
+#### 8. Dev Infrastructure
+ - [ ] Develop and test Docker packages with FPGA tools, on a Continuous Integration (CI) system.
+
+ 
 ### HW Architecture
-- TODO
+- WIP
   
 <p align="center">
   <img width=800 src="0.doc/HW_architecture.png">
@@ -55,7 +97,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 
 ### SW Architecture
-- TODO
+- WIP
 
 ### Acknowledgements
 We are grateful to NLnet Foundation for their sponsorship of this development activity.
