@@ -97,9 +97,10 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 # DSP Theory of Operation
 - WIP
 
---------------------
+# Bit-accurate DSP models
+- WIP
 
-# Bit-accurate DSP models and simulation of the entire algorithm
+# Bit-accurate simulation of the entire algorithm
 - WIP
   
 --------------------
