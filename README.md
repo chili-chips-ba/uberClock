@@ -99,7 +99,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 --------------------
 
-# Bit-accurate DSP model
+# Bit-accurate DSP models and simulation of the entire algorithm
 - WIP
   
 --------------------
