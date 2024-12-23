@@ -1,11 +1,22 @@
- Technical support:
-   -technical@alinx.com
-   -ellie.wang@alinx.com
+Vendor contacts:
+   - technical@alinx.com
+   - ellie.wang@alinx.com
+   - sales@alinx.com
 
 --------
 https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html
 https://www.en.alinx.com/Product/Add-on-Modules/AN9238.html (2xADC  65MSPS 12bit)
 https://www.en.alinx.com/Product/Add-on-Modules/AN9767.html (2xDAC 125MSPS 14bit)
 
+--------
+AX7203, design examples: https://www.dropbox.com/scl/fo/hki55ezgpvrbslwr5ds6m/ANTaRNAlFy6ECYrl1BoYyo8?rlkey=mv0y4qqoield09iodylu6milb&st=039ov628&dl=0
 
+Translated tutorials: https://cqsrdbo4fm8.feishu.cn/wiki/YE9Zwy254iCImXk5wNNcFRZonLb?from=from_copylink
+
+--------
+AN9238, design examples: https://www.dropbox.com/scl/fo/vos3h4llrdlu96dv1lu0t/AGm7VjZKl3tM_-hsKydPOzc?rlkey=805x5d0tdyc0xetztagqkjbgg&st=rlhih4zz&dl=0
+
+AN9767, design examples: https://www.dropbox.com/scl/fo/zwaaprh8i1k8yjtl4716p/ADvWWY_ZK2VukXA_YHG2Wrs?rlkey=gep13k56fl2avbgo5v708iree&st=mw7tfmdm&dl=0
+
+ 
 #---End-of-File---

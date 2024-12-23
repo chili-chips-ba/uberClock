@@ -1,0 +1,41 @@
+#-----------------------------------------------------------
+# Vivado v2015.4 (64-bit)
+# SW Build 1412921 on Wed Nov 18 09:43:45 MST 2015
+# IP Build 1412160 on Tue Nov 17 13:47:24 MST 2015
+# Start of session at: Thu May 04 10:57:59 2017
+# Process ID: 6152
+# Current directory: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent6736 E:\Project\AN9767\CD\CD\verilog\ad9767_ax7102\trig_wave\an9767_test.xpr
+# Log file: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/vivado.log
+# Journal file: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.xpr
+reset_run synth_1
+reset_run impl_1
+launch_runs impl_1 -jobs 2
+wait_on_run impl_1
+launch_runs impl_1 -to_step write_bitstream -jobs 2
+wait_on_run impl_1
+remove_files -fileset ROM E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci
+file delete -force E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.srcs/sources_1/ip/ROM
+file delete -force E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.ip_user_files/ip/ROM E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.ip_user_files/sim_scripts/ROM
+remove_files E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/sin1024.coe
+reset_run synth_1
+launch_runs impl_1 -jobs 2
+wait_on_run impl_1
+reset_run synth_1
+launch_runs impl_1 -jobs 2
+wait_on_run impl_1
+launch_runs impl_1 -to_step write_bitstream -jobs 2
+wait_on_run impl_1
+open_hw
+connect_hw_server
+open_hw_target
+set_property PROGRAM.FILE {E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.runs/impl_1/ad9767_test.bit} [lindex [get_hw_devices] 0]
+current_hw_device [lindex [get_hw_devices] 0]
+refresh_hw_device -update_hw_probes false [lindex [get_hw_devices] 0]
+set_property PROBES.FILE {} [lindex [get_hw_devices] 0]
+set_property PROGRAM.FILE {E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/trig_wave/an9767_test.runs/impl_1/ad9767_test.bit} [lindex [get_hw_devices] 0]
+program_hw_devices [lindex [get_hw_devices] 0]
+refresh_hw_device [lindex [get_hw_devices] 0]

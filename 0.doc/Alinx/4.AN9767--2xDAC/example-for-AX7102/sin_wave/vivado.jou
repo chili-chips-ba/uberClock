@@ -1,0 +1,49 @@
+#-----------------------------------------------------------
+# Vivado v2015.4 (64-bit)
+# SW Build 1412921 on Wed Nov 18 09:43:45 MST 2015
+# IP Build 1412160 on Tue Nov 17 13:47:24 MST 2015
+# Start of session at: Thu May 04 10:51:33 2017
+# Process ID: 8716
+# Current directory: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave
+# Command line: vivado.exe -gui_launcher_event rodinguilauncherevent8588 E:\Project\AN9767\CD\CD\verilog\ad9767_ax7102\sin_wave\an9767_test.xpr
+# Log file: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/vivado.log
+# Journal file: E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave\vivado.jou
+#-----------------------------------------------------------
+start_gui
+open_project E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.xpr
+add_files -norecurse E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/ad9767_test.v
+update_compile_order -fileset sources_1
+update_compile_order -fileset sim_1
+add_files -fileset constrs_1 -norecurse E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/ad9767.xdc
+create_ip -name blk_mem_gen -vendor xilinx.com -library ip -version 8.3 -module_name ROM
+set_property -dict [list CONFIG.Memory_Type {Single_Port_ROM} CONFIG.Write_Width_A {14} CONFIG.Write_Depth_A {1024} CONFIG.Enable_A {Always_Enabled} CONFIG.Load_Init_File {true} CONFIG.Coe_File {E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/sin1024.coe} CONFIG.Read_Width_A {14} CONFIG.Write_Width_B {14} CONFIG.Read_Width_B {14} CONFIG.Port_A_Write_Rate {0}] [get_ips ROM]
+generate_target {instantiation_template} [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci]
+update_compile_order -fileset sources_1
+generate_target all [get_files  e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci]
+export_ip_user_files -of_objects [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci] -no_script -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci]
+launch_run -jobs 2 ROM_synth_1
+export_simulation -of_objects [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/ROM/ROM.xci] -directory E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.ip_user_files/sim_scripts -force -quiet
+create_ip -name clk_wiz -vendor xilinx.com -library ip -version 5.2 -module_name PLL
+set_property -dict [list CONFIG.PRIM_IN_FREQ {200} CONFIG.CLKOUT2_USED {true} CONFIG.CLKOUT1_REQUESTED_OUT_FREQ {50} CONFIG.CLKOUT2_REQUESTED_OUT_FREQ {125} CONFIG.CLKIN1_JITTER_PS {50.0} CONFIG.MMCM_DIVCLK_DIVIDE {1} CONFIG.MMCM_CLKFBOUT_MULT_F {5.000} CONFIG.MMCM_CLKIN1_PERIOD {5.0} CONFIG.MMCM_CLKOUT0_DIVIDE_F {20.000} CONFIG.MMCM_CLKOUT1_DIVIDE {8} CONFIG.NUM_OUT_CLKS {2} CONFIG.CLKOUT1_JITTER {129.198} CONFIG.CLKOUT1_PHASE_ERROR {89.971} CONFIG.CLKOUT2_JITTER {107.523} CONFIG.CLKOUT2_PHASE_ERROR {89.971}] [get_ips PLL]
+generate_target {instantiation_template} [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/PLL/PLL.xci]
+update_compile_order -fileset sources_1
+generate_target all [get_files  e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/PLL/PLL.xci]
+export_ip_user_files -of_objects [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/PLL/PLL.xci] -no_script -force -quiet
+create_ip_run [get_files -of_objects [get_fileset sources_1] e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/PLL/PLL.xci]
+launch_run -jobs 2 PLL_synth_1
+export_simulation -of_objects [get_files e:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.srcs/sources_1/ip/PLL/PLL.xci] -directory E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.ip_user_files/sim_scripts -force -quiet
+launch_runs impl_1 -jobs 2
+wait_on_run impl_1
+launch_runs impl_1 -to_step write_bitstream -jobs 2
+wait_on_run impl_1
+open_hw
+connect_hw_server
+open_hw_target
+set_property PROGRAM.FILE {E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.runs/impl_1/ad9767_test.bit} [lindex [get_hw_devices] 0]
+current_hw_device [lindex [get_hw_devices] 0]
+refresh_hw_device -update_hw_probes false [lindex [get_hw_devices] 0]
+set_property PROBES.FILE {} [lindex [get_hw_devices] 0]
+set_property PROGRAM.FILE {E:/Project/AN9767/CD/CD/verilog/ad9767_ax7102/sin_wave/an9767_test.runs/impl_1/ad9767_test.bit} [lindex [get_hw_devices] 0]
+program_hw_devices [lindex [get_hw_devices] 0]
+refresh_hw_device [lindex [get_hw_devices] 0]
