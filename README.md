@@ -50,7 +50,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 #### 1. Acquisition of Hardware Platform
  - [ ] Design, manufacture and debug the "Physics Package" card.
- - [ ] Procure and distribute FPGA, ADC and DAC cards.
+ - [x] Procure and distribute FPGA, ADC and DAC cards.
 
 #### 2. Digital Infrastructure Development
  - [ ] Familiarize with ALINX boards.
