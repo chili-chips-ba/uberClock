@@ -52,7 +52,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  - [ ] Design, manufacture and debug the "Physics Package" card.
  - [x] Procure and distribute FPGA, ADC and DAC cards.
 
-#### 2. Digital Infrastructure Development
+#### 2. Digital Infrastructure
  - [ ] Familiarize with ALINX boards.
  - Toggle LEDs
  - Write RTL for interfaces to ADC and DAC chips
@@ -63,17 +63,17 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  - [ ] Test operation of CPU subsystem. Profile its performance. 
  - [ ] Map ADCs and DACs into CPU memory space and test SW communication with them. 
  
-#### 3. DSP Model and Documentation Development
+#### 3. DSP Model and Documentation
  - [ ] Model quartz crystal and DSP datapath in C or Python.
  - [ ] Create _Theory of Operation_ document with explanation of concepts, tradeoffs and criteria used to devise solutions. 
  - [ ] Post the _Executive Summary_ here.
 
-#### 4. HW Integration and Characterization
+#### 4. Integration and Characterization
  - [ ] Bring up the complete system with digital and analog card connected to each other.
  - [ ] Perform manual characterization of individual crystals.
  - [ ] Develop a semi or fully automated crystal characterization procedure.
  
-#### 5. Implementation of DSP algorithms and HW/SW Integration
+#### 5.  Implementation of DSP algorithms
  - [ ] Implement HW side of DSP algorithm on FPGA.
  - [ ] Implement SW side of DSP algorithm in the RISC-V CPU.
  - [ ] Integrate DSP hardware and software into a complete system.
@@ -85,11 +85,9 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  - [ ] Fine-tune DSP algorithm based on the obtained measurements.
  - [ ] Conducting additional experiments with the corrected DSP algorithm (in simulation and on hardware).
  
-#### 7. openXC7 port
+#### 7. Port from Vivado to openXC7
  - [ ] Port from Vivado to openXC.
  
-#### 8. Dev Infrastructure
- - [ ] Develop and test Docker packages with FPGA tools, on a Continuous Integration (CI) system.
 
 
 --------------------
