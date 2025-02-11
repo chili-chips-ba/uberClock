@@ -80,25 +80,25 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  
 #### 6. Benchmarking
  - [ ] Test the DSP together with crystal.
- - we need a reliable reference clock source for this, preferably Stratum 0
- - and a good Spectrum Analyzer
+    - we need a reliable reference clock source for this, preferably Stratum 0
+    - with a good Spectrum Analyzer
  - [ ] Fine-tune DSP algorithm based on the obtained measurements.
  - [ ] Conducting additional experiments with the corrected DSP algorithm (in simulation and on hardware).
  
 #### 7. Port from Vivado to openXC7
  - [ ] Port from Vivado to openXC.
  
-
-
 --------------------
 
 # DSP Theory of Operation
 - WIP
 
-# Bit-accurate DSP models
+# Bit-accurate Models
+## Multi-mode Quartz Crystal
+## DSP datapath
 - WIP
 
-# Bit-accurate simulation of the entire algorithm
+# Bit-accurate Sim of the entire algorithm
 - WIP
   
 --------------------
