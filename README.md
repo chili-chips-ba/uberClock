@@ -1,7 +1,7 @@
 Clocks can be extracted from GPS satellite signals, or locally generated with MEMS oscillators, SAW resonators, quartz crystal (XTAL, XO) or piezo resonators, often set in “ovens” (TCXO, OCXO), derived from atomic properties (like Cesium Beam, Hydrogen Maser, Rubidium, Strontium or Ytterbium), or obtained in another way.
 
 <p align="center">
-  <img width=380 src="0.doc/artwork/uberclock.logo.png">
+  <img width=250 src="0.doc/artwork/uberClock.sticker.png">
 </p>
 
 They differ in Absolute Accuracy, Long-term Frequency Stability (e.g. due to aging), Short-term Frequency Stability (due to temperature changes), Phase Noise (aka Jitter), physical size, complexity, immunity to external interference (due to physical vibrations, humidity, EMP, EW), power consumption, cost, etc. These differences are categorized as “Clock Strata”, whereby a clock source must meet a standardized set of requirements for each Stratum level.
@@ -128,7 +128,7 @@ We are grateful to NLnet Foundation for their sponsorship of this development ac
 </p>
 
 ### Public posts:
-- Soon to come
+- [2025-02-10](https://www.linkedin.com/posts/chili-chips_dsp-adc-cordic-activity-7294943218167689216-ZzOs?utm_source=share&utm_medium=member_desktop)
 
 
 --------------------
