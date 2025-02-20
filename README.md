@@ -26,7 +26,11 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 --------------------
 
 ## Hardware platform
-- **Physics Package** -- Full-custom Analog Board with multi-mode Quartz Crystal
+- **Physics Package** -- Full-custom [Analog Board](https://github.com/jdbrinton/uberclock) with multi-mode Quartz Crystal
+
+<p align="center">
+  <img width=600 src="0.doc/Quartz/Analog-Card.png">
+</p>
   
 - [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
 <p align="center">
