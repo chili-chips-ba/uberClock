@@ -1,3 +1,4 @@
+---
 https://www.electronics-notes.com/articles/electronic_components/quartz-crystal-xtal/crystal-resonator-cuts-at-bt-sc-ct.php
 
 https://xoprof.com/2023/09/unleashing-the-mystery-of-crystal-cuts
@@ -5,6 +6,15 @@ https://xoprof.com/2023/09/unleashing-the-mystery-of-crystal-cuts
 https://www.jauch.com/blog/en/its-all-about-the-angle-the-at-cut-for-quartz-crystals
 
 https://www.sitime.com/company/newsroom/articles/oscillator-aging-and-its-importance-precision-timing
+
+
+---ScopeIO
+https://github.com/hdl4fpga/hdl4fpga/wiki
+https://www.youtube.com/watch?v=ikcH4yUsTC4
+
+
+---Manta
+https://github.com/fischermoseley/manta
 
 
 ---open-source tool with GUI for filter design (Python based)
