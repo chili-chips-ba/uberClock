@@ -41,4 +41,6 @@ https://hardwaredescriptions.com/elementor-fixed-point-arithmetic-in-synthesizab
 
 https://www.analog.com/media/en/technical-documentation/data-sheets/AD9548.pdf
 
+https://www.wirelessinnovation.org/assets/Proceedings/2006/sdr06-1.3-01-harris.pdf
+
 -------------
