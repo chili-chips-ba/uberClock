@@ -29,7 +29,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 - **Physics Package** -- Full-custom [Analog Board](https://github.com/jdbrinton/uberclock) with multi-mode Quartz Crystal
 
 <p align="center">
-  <img width=200 src="0.doc/Quartz/Analog-Card.1.png">
+  <img width=250 src="0.doc/Quartz/Analog-Card.1.jpg">
   <img width=200 src="0.doc/Quartz/Analog-Card.2.png">
 </p>
   
