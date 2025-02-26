@@ -29,7 +29,8 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 - **Physics Package** -- Full-custom [Analog Board](https://github.com/jdbrinton/uberclock) with multi-mode Quartz Crystal
 
 <p align="center">
-  <img width=250 src="0.doc/Quartz/Analog-Card.png">
+  <img width=200 src="0.doc/Quartz/Analog-Card.1.png">
+  <img width=200 src="0.doc/Quartz/Analog-Card.2.png">
 </p>
   
 - [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
