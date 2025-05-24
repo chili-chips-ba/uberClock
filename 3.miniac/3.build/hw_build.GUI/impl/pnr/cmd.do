@@ -1,0 +1,14 @@
+-d C:\0.PROJECTS\0.Bosna\0.Git-Repo\eduSOC\3.build\hw_build.GUI\impl\gwsynthesis\eduSOC.vg
+-p GW2AR-18C-QFN88-8
+-pn GW2AR-LV18QN88C8/I7
+-cst C:\0.PROJECTS\0.Bosna\0.Git-Repo\eduSOC\1.hw\constraints\top.pinout.cst
+-cfg C:\0.PROJECTS\0.Bosna\0.Git-Repo\eduSOC\3.build\hw_build.GUI\impl\pnr\device.cfg
+-sdc C:\0.PROJECTS\0.Bosna\0.Git-Repo\eduSOC\1.hw\constraints\top.timing.sdc
+-bit
+-tr
+-ph
+-timing
+-cst_error
+-correct_hold 1
+-route_maxfan 23
+-global_freq 100.000

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Module name="top" T_Register="631(0)" T_Alu="188(0)" T_Lut="1400(0)" T_Bsram="19(0)">
+    <SubModule name="u_pll" Register="2" Lut="1" T_Register="2(2)" T_Lut="1(1)"/>
+    <SubModule name="u_debounce[2]" Register="4" Lut="2" T_Register="4(4)" T_Lut="2(2)"/>
+    <SubModule name="u_debounce[1]" Register="4" Lut="1" T_Register="4(4)" T_Lut="1(1)"/>
+    <SubModule name="u_cpu" Lut="80" T_Register="467(0)" T_Alu="188(0)" T_Lut="1230(80)" T_Bsram="3(0)">
+        <SubModule name="u_cpu" Register="466" Alu="188" Lut="1148" Bsram="2" T_Register="466(466)" T_Alu="188(188)" T_Lut="1148(1148)" T_Bsram="2(2)"/>
+        <SubModule name="u_imem" Register="1" Lut="2" Bsram="1" T_Register="1(1)" T_Lut="2(2)" T_Bsram="1(1)"/>
+    </SubModule>
+    <SubModule name="u_dmem" Register="1" Lut="8" Bsram="16" T_Register="1(1)" T_Lut="8(8)" T_Bsram="16(16)"/>
+    <SubModule name="u_csr" Register="6" Lut="4" T_Register="6(6)" T_Lut="4(4)"/>
+    <SubModule name="u_sdram" T_Register="104(0)" T_Lut="91(0)">
+        <SubModule name="u_sdram_ctrl" Register="104" Lut="91" T_Register="104(104)" T_Lut="91(91)">
+            <SubModule name="u_oddr_clk"/>
+            <SubModule name="u_pad_dq[31]"/>
+            <SubModule name="u_pad_dq[30]"/>
+            <SubModule name="u_pad_dq[29]"/>
+            <SubModule name="u_pad_dq[28]"/>
+            <SubModule name="u_pad_dq[27]"/>
+            <SubModule name="u_pad_dq[26]"/>
+            <SubModule name="u_pad_dq[25]"/>
+            <SubModule name="u_pad_dq[24]"/>
+            <SubModule name="u_pad_dq[23]"/>
+            <SubModule name="u_pad_dq[22]"/>
+            <SubModule name="u_pad_dq[21]"/>
+            <SubModule name="u_pad_dq[20]"/>
+            <SubModule name="u_pad_dq[19]"/>
+            <SubModule name="u_pad_dq[18]"/>
+            <SubModule name="u_pad_dq[17]"/>
+            <SubModule name="u_pad_dq[16]"/>
+            <SubModule name="u_pad_dq[15]"/>
+            <SubModule name="u_pad_dq[14]"/>
+            <SubModule name="u_pad_dq[13]"/>
+            <SubModule name="u_pad_dq[12]"/>
+            <SubModule name="u_pad_dq[11]"/>
+            <SubModule name="u_pad_dq[10]"/>
+            <SubModule name="u_pad_dq[9]"/>
+            <SubModule name="u_pad_dq[8]"/>
+            <SubModule name="u_pad_dq[7]"/>
+            <SubModule name="u_pad_dq[6]"/>
+            <SubModule name="u_pad_dq[5]"/>
+            <SubModule name="u_pad_dq[4]"/>
+            <SubModule name="u_pad_dq[3]"/>
+            <SubModule name="u_pad_dq[2]"/>
+            <SubModule name="u_pad_dq[1]"/>
+            <SubModule name="u_pad_dq[0]"/>
+            <SubModule name="u_pad_cmd[2]"/>
+            <SubModule name="u_pad_cmd[1]"/>
+            <SubModule name="u_pad_cmd[0]"/>
+        </SubModule>
+    </SubModule>
+    <SubModule name="u_uart" Register="43" Lut="63" T_Register="43(43)" T_Lut="63(63)"/>
+</Module>

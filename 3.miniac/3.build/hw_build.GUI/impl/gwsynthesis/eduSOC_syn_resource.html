@@ -1,0 +1,467 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title>Hierarchy Module Resource</title>
+<style type="text/css">
+body { font-family: Verdana, Arial, sans-serif; font-size: 14px; }
+div#main_wrapper{ width: 100%; }
+h1 {text-align: center; }
+h1 {margin-top: 36px; }
+table, th, td { border: 1px solid #aaa; }
+table { border-collapse:collapse; margin-top: 10px; margin-bottom: 20px; width: 100%; }
+th, td { align = "center"; padding: 5px 2px 5px 5px; }
+th { color: #fff; font-weight: bold; background-color: #0084ff; }
+table td.label { width: 20%; white-space: nowrap; min-width: 20px; background-color: #dee8f4; }
+</style>
+</head>
+<body>
+<div id="main_wrapper">
+<div id="content">
+<h1>Hierarchy Module Resource</h1>
+<table>
+<tr>
+<th class="label">MODULE NAME</th>
+<th class="label">REG NUMBER</th>
+<th class="label">ALU NUMBER</th>
+<th class="label">LUT NUMBER</th>
+<th class="label">DSP NUMBER</th>
+<th class="label">BSRAM NUMBER</th>
+<th class="label">SSRAM NUMBER</th>
+</tr>
+<tr>
+<td class="label">top (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_pll
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">2</td>
+<td align = "center">-</td>
+<td align = "center">1</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_debounce[2]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">4</td>
+<td align = "center">-</td>
+<td align = "center">2</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_debounce[1]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">4</td>
+<td align = "center">-</td>
+<td align = "center">1</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_cpu
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">80</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_cpu
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.cpu/soc_cpu.PICORV32.sv)</td>
+<td align = "center">466</td>
+<td align = "center">188</td>
+<td align = "center">1148</td>
+<td align = "center">-</td>
+<td align = "center">2</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_imem
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.cpu/soc_cpu.PICORV32.sv)</td>
+<td align = "center">1</td>
+<td align = "center">-</td>
+<td align = "center">2</td>
+<td align = "center">-</td>
+<td align = "center">1</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_dmem
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">1</td>
+<td align = "center">-</td>
+<td align = "center">8</td>
+<td align = "center">-</td>
+<td align = "center">16</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_csr
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">6</td>
+<td align = "center">-</td>
+<td align = "center">4</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_sdram
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_sdram_ctrl
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/soc_sdram.sv)</td>
+<td align = "center">104</td>
+<td align = "center">-</td>
+<td align = "center">91</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_oddr_clk
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[31]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[30]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[29]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[28]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[27]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[26]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[25]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[24]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[23]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[22]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[21]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[20]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[19]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[18]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[17]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[16]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[15]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[14]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[13]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[12]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[11]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[10]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[9]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[8]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[7]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[6]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[5]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[4]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[3]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[2]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[1]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_dq[0]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_cmd[2]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_cmd[1]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp|--u_pad_cmd[0]
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/ip.sdram/sdram_ctrl.sv)</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+<td class="label">&nbsp&nbsp&nbsp&nbsp|--u_uart
+ (C:/0.PROJECTS/0.Bosna/0.Git-Repo/eduSOC/1.hw/top.sv)</td>
+<td align = "center">43</td>
+<td align = "center">-</td>
+<td align = "center">63</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+<td align = "center">-</td>
+</tr>
+</table>
+</div><!-- content -->
+</div><!-- main_wrapper -->
+</body>
+</html>
