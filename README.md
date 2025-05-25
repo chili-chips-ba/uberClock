@@ -54,7 +54,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 # Project Status
 
 #### 1. Acquisition of Hardware Platform
- - [ ] Design, manufacture and debug the "Physics Package" card.
+ - [x] Design, manufacture and debug the "Physics Package" card.
  - [x] Procure and distribute FPGA, ADC and DAC cards.
 
 #### 2. Digital Infrastructure
@@ -63,7 +63,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
     - Write RTL for interfaces to ADC and DAC chips
     - Write RTL to test their operation
     - Perform this testing. Debug and fix the problems as they arise
- - [ ] Create CPU hardware subsystem based on an open-source RISC-V core, memories, UART and debug port. 
+ - [x] Create CPU hardware subsystem based on an open-source RISC-V core, memories, UART and debug port. 
  - [ ] Create a bare-metal software skeleton, as the foundation for writing future DSP applications. Create and test software build flow.
  - [ ] Test operation of CPU subsystem. Profile its performance. 
  - [ ] Map ADCs and DACs into CPU memory space and test SW communication with them. 
