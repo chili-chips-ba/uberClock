@@ -4,106 +4,7 @@
 package csr_pkg;
 
     localparam CSR_DATA_WIDTH = 32;
-    localparam CSR_MIN_ADDR_WIDTH = 7;
-
-    typedef struct {
-        logic next;
-    } csr__cpu_fifo__rx__status__tready__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__status__tready__in_t tready;
-    } csr__cpu_fifo__rx__status__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__status__in_t status;
-    } csr__cpu_fifo__rx__in_t;
-
-    typedef struct {
-        logic [31:0] next;
-    } csr__cpu_fifo__tx__data_31_0__tdata__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__data_31_0__tdata__in_t tdata;
-    } csr__cpu_fifo__tx__data_31_0__in_t;
-
-    typedef struct {
-        logic [31:0] next;
-    } csr__cpu_fifo__tx__data_63_32__tdata__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__data_63_32__tdata__in_t tdata;
-    } csr__cpu_fifo__tx__data_63_32__in_t;
-
-    typedef struct {
-        logic [31:0] next;
-    } csr__cpu_fifo__tx__data_95_64__tdata__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__data_95_64__tdata__in_t tdata;
-    } csr__cpu_fifo__tx__data_95_64__in_t;
-
-    typedef struct {
-        logic [31:0] next;
-    } csr__cpu_fifo__tx__data_127_96__tdata__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__data_127_96__tdata__in_t tdata;
-    } csr__cpu_fifo__tx__data_127_96__in_t;
-
-    typedef struct {
-        logic [2:0] next;
-    } csr__cpu_fifo__tx__control__tuser_dst__in_t;
-
-    typedef struct {
-        logic [2:0] next;
-    } csr__cpu_fifo__tx__control__tuser_src__in_t;
-
-    typedef struct {
-        logic next;
-    } csr__cpu_fifo__tx__control__tuser_bypass_stage__in_t;
-
-    typedef struct {
-        logic next;
-    } csr__cpu_fifo__tx__control__tuser_bypass_all__in_t;
-
-    typedef struct {
-        logic next;
-    } csr__cpu_fifo__tx__control__tlast__in_t;
-
-    typedef struct {
-        logic [15:0] next;
-    } csr__cpu_fifo__tx__control__tkeep__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__control__tuser_dst__in_t tuser_dst;
-        csr__cpu_fifo__tx__control__tuser_src__in_t tuser_src;
-        csr__cpu_fifo__tx__control__tuser_bypass_stage__in_t tuser_bypass_stage;
-        csr__cpu_fifo__tx__control__tuser_bypass_all__in_t tuser_bypass_all;
-        csr__cpu_fifo__tx__control__tlast__in_t tlast;
-        csr__cpu_fifo__tx__control__tkeep__in_t tkeep;
-    } csr__cpu_fifo__tx__control__in_t;
-
-    typedef struct {
-        logic next;
-    } csr__cpu_fifo__tx__status__tvalid__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__status__tvalid__in_t tvalid;
-    } csr__cpu_fifo__tx__status__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__data_31_0__in_t data_31_0;
-        csr__cpu_fifo__tx__data_63_32__in_t data_63_32;
-        csr__cpu_fifo__tx__data_95_64__in_t data_95_64;
-        csr__cpu_fifo__tx__data_127_96__in_t data_127_96;
-        csr__cpu_fifo__tx__control__in_t control;
-        csr__cpu_fifo__tx__status__in_t status;
-    } csr__cpu_fifo__tx__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__in_t rx;
-        csr__cpu_fifo__tx__in_t tx;
-    } csr__cpu_fifo__in_t;
+    localparam CSR_MIN_ADDR_WIDTH = 5;
 
     typedef struct {
         logic [7:0] next;
@@ -150,135 +51,9 @@ package csr_pkg;
     } csr__gpio__in_t;
 
     typedef struct {
-        logic [1:0] next;
-    } csr__ethernet__status__speed__in_t;
-
-    typedef struct {
-        csr__ethernet__status__speed__in_t speed;
-    } csr__ethernet__status__in_t;
-
-    typedef struct {
-        csr__ethernet__status__in_t status;
-    } csr__ethernet__in_t;
-
-    typedef struct {
-        logic next;
-    } csr__dpe__fcr__idle__in_t;
-
-    typedef struct {
-        csr__dpe__fcr__idle__in_t idle;
-    } csr__dpe__fcr__in_t;
-
-    typedef struct {
-        csr__dpe__fcr__in_t fcr;
-    } csr__dpe__in_t;
-
-    typedef struct {
-        csr__cpu_fifo__in_t cpu_fifo;
         csr__uart__in_t uart;
         csr__gpio__in_t gpio;
-        csr__ethernet__in_t ethernet[4];
-        csr__dpe__in_t dpe;
     } csr__in_t;
-
-    typedef struct {
-        logic [31:0] value;
-    } csr__cpu_fifo__rx__data_31_0__tdata__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__data_31_0__tdata__out_t tdata;
-    } csr__cpu_fifo__rx__data_31_0__out_t;
-
-    typedef struct {
-        logic [31:0] value;
-    } csr__cpu_fifo__rx__data_63_32__tdata__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__data_63_32__tdata__out_t tdata;
-    } csr__cpu_fifo__rx__data_63_32__out_t;
-
-    typedef struct {
-        logic [31:0] value;
-    } csr__cpu_fifo__rx__data_95_64__tdata__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__data_95_64__tdata__out_t tdata;
-    } csr__cpu_fifo__rx__data_95_64__out_t;
-
-    typedef struct {
-        logic [31:0] value;
-    } csr__cpu_fifo__rx__data_127_96__tdata__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__data_127_96__tdata__out_t tdata;
-    } csr__cpu_fifo__rx__data_127_96__out_t;
-
-    typedef struct {
-        logic [2:0] value;
-    } csr__cpu_fifo__rx__control__tuser_dst__out_t;
-
-    typedef struct {
-        logic [2:0] value;
-    } csr__cpu_fifo__rx__control__tuser_src__out_t;
-
-    typedef struct {
-        logic value;
-    } csr__cpu_fifo__rx__control__tuser_bypass_stage__out_t;
-
-    typedef struct {
-        logic value;
-    } csr__cpu_fifo__rx__control__tuser_bypass_all__out_t;
-
-    typedef struct {
-        logic value;
-    } csr__cpu_fifo__rx__control__tlast__out_t;
-
-    typedef struct {
-        logic [15:0] value;
-    } csr__cpu_fifo__rx__control__tkeep__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__control__tuser_dst__out_t tuser_dst;
-        csr__cpu_fifo__rx__control__tuser_src__out_t tuser_src;
-        csr__cpu_fifo__rx__control__tuser_bypass_stage__out_t tuser_bypass_stage;
-        csr__cpu_fifo__rx__control__tuser_bypass_all__out_t tuser_bypass_all;
-        csr__cpu_fifo__rx__control__tlast__out_t tlast;
-        csr__cpu_fifo__rx__control__tkeep__out_t tkeep;
-    } csr__cpu_fifo__rx__control__out_t;
-
-    typedef struct {
-        logic value;
-    } csr__cpu_fifo__rx__trigger__tvalid__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__trigger__tvalid__out_t tvalid;
-    } csr__cpu_fifo__rx__trigger__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__data_31_0__out_t data_31_0;
-        csr__cpu_fifo__rx__data_63_32__out_t data_63_32;
-        csr__cpu_fifo__rx__data_95_64__out_t data_95_64;
-        csr__cpu_fifo__rx__data_127_96__out_t data_127_96;
-        csr__cpu_fifo__rx__control__out_t control;
-        csr__cpu_fifo__rx__trigger__out_t trigger;
-    } csr__cpu_fifo__rx__out_t;
-
-    typedef struct {
-        logic value;
-    } csr__cpu_fifo__tx__trigger__tready__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__trigger__tready__out_t tready;
-    } csr__cpu_fifo__tx__trigger__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__tx__trigger__out_t trigger;
-    } csr__cpu_fifo__tx__out_t;
-
-    typedef struct {
-        csr__cpu_fifo__rx__out_t rx;
-        csr__cpu_fifo__tx__out_t tx;
-    } csr__cpu_fifo__out_t;
 
     typedef struct {
         logic swacc;
@@ -334,45 +109,40 @@ package csr_pkg;
     } csr__gpio__out_t;
 
     typedef struct {
-        logic value;
-    } csr__dpe__fcr__pause__out_t;
-
-    typedef struct {
-        csr__dpe__fcr__pause__out_t pause;
-    } csr__dpe__fcr__out_t;
-
-    typedef struct {
-        csr__dpe__fcr__out_t fcr;
-    } csr__dpe__out_t;
+        logic [15:0] value;
+    } csr__hw_id__PRODUCT__out_t;
 
     typedef struct {
         logic [15:0] value;
-    } csr__hwid__RELEASE__out_t;
+    } csr__hw_id__VENDOR__out_t;
+
+    typedef struct {
+        csr__hw_id__PRODUCT__out_t PRODUCT;
+        csr__hw_id__VENDOR__out_t VENDOR;
+    } csr__hw_id__out_t;
 
     typedef struct {
         logic [15:0] value;
-    } csr__hwid__VERSION__out_t;
+    } csr__hw_version__PATCH__out_t;
 
     typedef struct {
-        logic [15:0] value;
-    } csr__hwid__PID__out_t;
+        logic [7:0] value;
+    } csr__hw_version__MINOR__out_t;
 
     typedef struct {
-        logic [15:0] value;
-    } csr__hwid__VID__out_t;
+        logic [7:0] value;
+    } csr__hw_version__MAJOR__out_t;
 
     typedef struct {
-        csr__hwid__RELEASE__out_t RELEASE;
-        csr__hwid__VERSION__out_t VERSION;
-        csr__hwid__PID__out_t PID;
-        csr__hwid__VID__out_t VID;
-    } csr__hwid__out_t;
+        csr__hw_version__PATCH__out_t PATCH;
+        csr__hw_version__MINOR__out_t MINOR;
+        csr__hw_version__MAJOR__out_t MAJOR;
+    } csr__hw_version__out_t;
 
     typedef struct {
-        csr__cpu_fifo__out_t cpu_fifo;
         csr__uart__out_t uart;
         csr__gpio__out_t gpio;
-        csr__dpe__out_t dpe;
-        csr__hwid__out_t hwid;
+        csr__hw_id__out_t hw_id;
+        csr__hw_version__out_t hw_version;
     } csr__out_t;
 endpackage

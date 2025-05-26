@@ -1,0 +1,41 @@
+#-----------------------------------------------------------
+# Vivado v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:35:27 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Mon May 26 12:30:10 2025
+# Process ID         : 4396
+# Current directory  : E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado
+# Command line       : vivado.exe -gui_launcher_event rodinguilauncherevent4424 E:\GoogleDrive\Projekti\ChiliChips\uberClock\3.miniac\3.build\hw_build.Vivado\uberclock.xpr
+# Log file           : E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado/vivado.log
+# Journal file       : E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado\vivado.jou
+# Running On         : ENIO-PC
+# Platform           : Windows Server 2016 or Windows 10
+# Operating System   : 19045
+# Processor Detail   : Intel(R) Core(TM) i7-6700K CPU @ 4.00GHz
+# CPU Frequency      : 4008 MHz
+# CPU Physical cores : 4
+# CPU Logical cores  : 8
+# Host memory        : 17116 MB
+# Swap memory        : 5388 MB
+# Total Virtual      : 22505 MB
+# Available Virtual  : 5597 MB
+#-----------------------------------------------------------
+start_gui
+open_project E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.xpr
+launch_runs impl_1 -to_step write_bitstream -jobs 8
+wait_on_run impl_1
+reset_run synth_1
+launch_runs impl_1 -to_step write_bitstream -jobs 8
+wait_on_run impl_1
+open_hw_manager
+connect_hw_server -allow_non_jtag
+open_hw_target
+set_property PROGRAM.FILE {E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1/top.bit} [get_hw_devices xc7a200t_0]
+current_hw_device [get_hw_devices xc7a200t_0]
+refresh_hw_device -update_hw_probes false [lindex [get_hw_devices xc7a200t_0] 0]
+set_property PROBES.FILE {} [get_hw_devices xc7a200t_0]
+set_property FULL_PROBES.FILE {} [get_hw_devices xc7a200t_0]
+set_property PROGRAM.FILE {E:/GoogleDrive/Projekti/ChiliChips/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1/top.bit} [get_hw_devices xc7a200t_0]
+program_hw_devices [get_hw_devices xc7a200t_0]
+refresh_hw_device [lindex [get_hw_devices xc7a200t_0] 0]

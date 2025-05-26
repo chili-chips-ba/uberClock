@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "wireguard_regs.h"
+#include "uberclock_regs.h"
 #include "string_bare.h"
 
 #define UART_RXBUF_SIZE 32

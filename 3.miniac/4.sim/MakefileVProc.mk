@@ -40,10 +40,6 @@ export BLD_DIR HW_SRC SIM_DIR TB_NAME
 
 # Location of VProc and memory model libraries
 COSIMDIR         = $(CURDIR)/models/cosim
-UDPDIR           = $(CURDIR)/models/udpIpPg
-UDP_C            = VUserMainUdp.cpp
-UDPCODEDIR       = $(CURDIR)/usercode
-
 
 # --------------------------------------------
 # RV32 ISS variables
@@ -83,14 +79,14 @@ C++              = g++
 CPPSTD           = -std=c++20
 
 # C/C++ include paths for VProc, memory model and user code
-INCLPATHS        = -I$(USRCODEDIR) -I$(UDPCODEDIR) -I$(COSIMDIR)/include -I$(UDPDIR) $(RV32INCLOPTS)
+INCLPATHS        = -I$(USRCODEDIR) -I$(COSIMDIR)/include $(RV32INCLOPTS)
 DEFS             = -DVERILATOR -DVPROC_SV -DVPROC
 
 VOBJDIR          = $(CURDIR)/obj
 
 # Separate C and C++ source files
-USER_CPP_BASE    = $(notdir $(filter %cpp, $(USER_C) $(UDP_C)))
-USER_C_BASE      = $(notdir $(filter %c,   $(USER_C) $(UDP_C)))
+USER_CPP_BASE    = $(notdir $(filter %cpp, $(USER_C)))
+USER_C_BASE      = $(notdir $(filter %c,   $(USER_C)))
 
 # Create list of object files (excluding any veriuser object)
 VOBJS            = $(addprefix $(VOBJDIR)/,                   \
@@ -101,10 +97,8 @@ USERLIB          = libuser.a
 
 ifeq ("$(OSTYPE)", "Linux")
   COSIMLDOPT     = -lcosimlnx
-  UDPLDOPT       = -ludplnx
 else
   COSIMLDOPT     = -lcosimwin
-  UDPLDOPT       = -ludpwin
 endif
 
 WARNOPTS       = -Wall models/config.vlt
@@ -134,7 +128,7 @@ SIMDEFS          = +define+VPROC_BYTE_ENABLE                  \
 #                   +define+UART_BFM_DEBUG                     \
 #                   +define+ADC_DEBUG+ADC_BFM_DEBUG
 
-SIMINCLPATHS     = -I$(CURDIR) -I$(COSIMDIR) -I$(UDPDIR)
+SIMINCLPATHS     = -I$(CURDIR) -I$(COSIMDIR)
 SIMCFLAGS        = -std=c++20 -Wno-attributes $(USRCFLAGS)
 
 # Get OS type
@@ -185,14 +179,6 @@ $(VOBJDIR)/%.o: $(USRCODEDIR)/%.c
 $(VOBJDIR)/%.o: $(USRCODEDIR)/%.cpp
 	@$(C++) -c -fPIC $(OPTFLAGS) $(CPPSTD) -Wno-write-strings $(DEFS) $(INCLPATHS) $< -o $@
 
-# Rule to build UDP user C sources
-$(VOBJDIR)/%.o: $(UDPCODEDIR)/%.c
-	@$(CC) -c -fPIC $(OPTFLAG) -Wno-write-strings $(DEFS) $(INCLPATHS) $< -o $@
-
-# Rule to build UDP user C++ sources
-$(VOBJDIR)/%.o: $(UDPCODEDIR)/%.cpp
-	@$(C++) -c -fPIC $(OPTFLAGS) $(CPPSTD) -Wno-write-strings $(DEFS) $(INCLPATHS) $< -o $@
-
 # Rule to build library of user code
 $(USERLIB): $(VOBJDIR) $(VOBJS)
 	@ar cr $(USERLIB) $(VOBJS)
@@ -213,7 +199,6 @@ compile: $(USERLIB)
 	   -LDFLAGS   "$(SIMLDFLAGS)                          \
 	               -Wl,-whole-archive                     \
 	               -L$(COSIMDIR)/lib $(COSIMLDOPT)        \
-	               -L$(UDPDIR)/lib $(UDPLDOPT)            \
 	               -L$(CURDIR) -luser                     \
 	               -Wl,-no-whole-archive                  \
 	               -ldl $(RV32LDOPTS)"
@@ -270,7 +255,6 @@ help:
 	@$(info )
 	@$(info Command line configurable variables:)
 	@$(info $(SPC) $(SPC) USER_C:       list of user source code files for soc_cpu (default VUserMain0.cpp))
-	@$(info $(SPC) $(SPC) UDP_C:        list of user source code files for udpIpPg modules (default VUserMainUdp.cpp))
 	@$(info $(SPC) $(SPC) USRCODEDIR:   directory containing user source code (default $$(CURDIR)/usercode))
 	@$(info $(SPC) $(SPC) OPTFLAG:      Optimisation flag for user VProc code (default -g))
 	@$(info $(SPC) $(SPC) TIMINGOPT:    Verilator timing flags (default --timing))
