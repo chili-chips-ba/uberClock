@@ -21,9 +21,7 @@ module clk_rst_gen
    input  rst_n,
    output sys_clk,
    output sys_rst,
-   output sys_rst_n,
-   output eth_gtx_clk,
-   output eth_gtx_rst
+   output sys_rst_n
 );
 
 //==========================================================================
@@ -52,40 +50,20 @@ module clk_rst_gen
       .sys_pll_locked(sys_pll_locked)
    );
 
-   sync_reset #(
-      .N(4)
-   ) sys_sync_reset_inst (
-      .clk(sys_pll_clk),
-      .rst(~sys_pll_locked),
-      .out(sys_reset)
-   );
+   (* srl_style = "register" *)
+   logic [3:0] sync_reg;
+   
+   always @(posedge sys_pll_clk or negedge sys_pll_locked) begin
+       if (sys_pll_locked == 1'b0) begin
+           sync_reg <= '1;
+       end else begin
+           sync_reg <= {sync_reg[2:0], 1'b0};
+       end
+   end
 
-   assign sys_rst = sys_reset;
-   assign sys_rst_n = ~sys_reset;
+   assign sys_rst = sync_reg[3];
+   assign sys_rst_n = ~sync_reg[3];
    assign sys_clk = sys_pll_clk;
-
-//==========================================================================
-// PLL for Ethernet clock domain
-//==========================================================================
-   wire eth_pll_locked;
-   wire eth_pll_clk;
-
-   fpga_pll_125M u_eth_pll (
-      .clk(clk),
-      .rst_n(rst_n),
-      .eth_pll_clk(eth_pll_clk),
-      .eth_pll_locked(eth_pll_locked)
-   );
-
-   sync_reset #(
-      .N(4)
-   ) eth_sync_reset_inst (
-      .clk(eth_pll_clk),
-      .rst(~eth_pll_locked),
-      .out(eth_gtx_rst)
-   );
-
-   assign eth_gtx_clk = eth_pll_clk;
 
 endmodule: clk_rst_gen
 

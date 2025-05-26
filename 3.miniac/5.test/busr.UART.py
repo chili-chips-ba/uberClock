@@ -32,7 +32,7 @@ print("SOP:   ", hex(C_SOP))
 ot = ComPort.write(struct.pack('B', int(0x0F)))          #Send C_BUSR enter DMEM/CSR read data mode
 print("CMD:   ", hex(0x0F))
 
-ot = ComPort.write(struct.pack('B', int(0x48)))          #Send ADDR0 to FPGA
+ot = ComPort.write(struct.pack('B', int(0x10)))          #Send ADDR0 to FPGA
 print("ADDR0: ", hex(0x48))
 
 ot = ComPort.write(struct.pack('B', int(0x00)))          #Send ADDR1 to FPGA

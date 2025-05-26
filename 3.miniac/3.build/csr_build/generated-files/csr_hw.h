@@ -35,396 +35,6 @@ public:
 
 // -----------------------------------------------------
 //
-class csr__cpu_fifo__rx__data_31_0_vp_t {
-public:
-    csr__cpu_fifo__rx__data_31_0_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__data_31_0_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__data_31_0_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_63_32_vp_t {
-public:
-    csr__cpu_fifo__rx__data_63_32_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__data_63_32_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__data_63_32_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_95_64_vp_t {
-public:
-    csr__cpu_fifo__rx__data_95_64_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__data_95_64_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__data_95_64_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_127_96_vp_t {
-public:
-    csr__cpu_fifo__rx__data_127_96_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__data_127_96_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__data_127_96_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__control_vp_t {
-public:
-    csr__cpu_fifo__rx__control_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__control_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tuser_dst(const uint32_t data) {reg->f.tuser_dst = data;};
-    inline uint32_t tuser_dst()                    {return reg->f.tuser_dst;};
-    inline void     tuser_src(const uint32_t data) {reg->f.tuser_src = data;};
-    inline uint32_t tuser_src()                    {return reg->f.tuser_src;};
-    inline void     tuser_bypass_stage(const uint32_t data) {reg->f.tuser_bypass_stage = data;};
-    inline uint32_t tuser_bypass_stage()                    {return reg->f.tuser_bypass_stage;};
-    inline void     tuser_bypass_all(const uint32_t data) {reg->f.tuser_bypass_all = data;};
-    inline uint32_t tuser_bypass_all()                    {return reg->f.tuser_bypass_all;};
-    inline void     tlast(const uint32_t data) {reg->f.tlast = data;};
-    inline uint32_t tlast()                    {return reg->f.tlast;};
-    inline void     tkeep(const uint32_t data) {reg->f.tkeep = data;};
-    inline uint32_t tkeep()                    {return reg->f.tkeep;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__control_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__trigger_vp_t {
-public:
-    csr__cpu_fifo__rx__trigger_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__trigger_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tvalid(const uint32_t data) {reg->f.tvalid = data;};
-    inline uint32_t tvalid()                    {return reg->f.tvalid;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__trigger_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__status_vp_t {
-public:
-    csr__cpu_fifo__rx__status_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__rx__status_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tready(const uint32_t data) {reg->f.tready = data;};
-    inline uint32_t tready()                    {return reg->f.tready;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__rx__status_t* reg;
-};
-
-// -----------------------------------------------------
-class csr__cpu_fifo__rx_vp_t {
-public:
-
-    csr__cpu_fifo__rx_vp_t(uint32_t* base_addr)
-    {
-        data_31_0 = new csr__cpu_fifo__rx__data_31_0_vp_t (base_addr);
-        data_63_32 = new csr__cpu_fifo__rx__data_63_32_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4
-                                                                                    );
-        data_95_64 = new csr__cpu_fifo__rx__data_95_64_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4
-                                                                                    );
-        data_127_96 = new csr__cpu_fifo__rx__data_127_96_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4
-                                                                                    );
-        control = new csr__cpu_fifo__rx__control_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4
-                                                                                    );
-        trigger = new csr__cpu_fifo__rx__trigger_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__control_t)/4
-                                                                                    );
-        status = new csr__cpu_fifo__rx__status_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__control_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__trigger_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__rx__data_31_0_vp_t* data_31_0;
-    csr__cpu_fifo__rx__data_63_32_vp_t* data_63_32;
-    csr__cpu_fifo__rx__data_95_64_vp_t* data_95_64;
-    csr__cpu_fifo__rx__data_127_96_vp_t* data_127_96;
-    csr__cpu_fifo__rx__control_vp_t* control;
-    csr__cpu_fifo__rx__trigger_vp_t* trigger;
-    csr__cpu_fifo__rx__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_31_0_vp_t {
-public:
-    csr__cpu_fifo__tx__data_31_0_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__data_31_0_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__data_31_0_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_63_32_vp_t {
-public:
-    csr__cpu_fifo__tx__data_63_32_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__data_63_32_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__data_63_32_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_95_64_vp_t {
-public:
-    csr__cpu_fifo__tx__data_95_64_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__data_95_64_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__data_95_64_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_127_96_vp_t {
-public:
-    csr__cpu_fifo__tx__data_127_96_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__data_127_96_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tdata(const uint32_t data) {reg->f.tdata = data;};
-    inline uint32_t tdata()                    {return reg->f.tdata;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__data_127_96_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__control_vp_t {
-public:
-    csr__cpu_fifo__tx__control_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__control_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tuser_dst(const uint32_t data) {reg->f.tuser_dst = data;};
-    inline uint32_t tuser_dst()                    {return reg->f.tuser_dst;};
-    inline void     tuser_src(const uint32_t data) {reg->f.tuser_src = data;};
-    inline uint32_t tuser_src()                    {return reg->f.tuser_src;};
-    inline void     tuser_bypass_stage(const uint32_t data) {reg->f.tuser_bypass_stage = data;};
-    inline uint32_t tuser_bypass_stage()                    {return reg->f.tuser_bypass_stage;};
-    inline void     tuser_bypass_all(const uint32_t data) {reg->f.tuser_bypass_all = data;};
-    inline uint32_t tuser_bypass_all()                    {return reg->f.tuser_bypass_all;};
-    inline void     tlast(const uint32_t data) {reg->f.tlast = data;};
-    inline uint32_t tlast()                    {return reg->f.tlast;};
-    inline void     tkeep(const uint32_t data) {reg->f.tkeep = data;};
-    inline uint32_t tkeep()                    {return reg->f.tkeep;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__control_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__trigger_vp_t {
-public:
-    csr__cpu_fifo__tx__trigger_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__trigger_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tready(const uint32_t data) {reg->f.tready = data;};
-    inline uint32_t tready()                    {return reg->f.tready;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__trigger_t* reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__status_vp_t {
-public:
-    csr__cpu_fifo__tx__status_vp_t (uint32_t* reg_addr = 0) : reg((csr__cpu_fifo__tx__status_t*)reg_addr) {};
-
-    inline void     full(const uint32_t data) {reg->w = data;};
-    inline uint32_t full()                    {return reg->w;};
-
-    inline void     tvalid(const uint32_t data) {reg->f.tvalid = data;};
-    inline uint32_t tvalid()                    {return reg->f.tvalid;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__cpu_fifo__tx__status_t* reg;
-};
-
-// -----------------------------------------------------
-class csr__cpu_fifo__tx_vp_t {
-public:
-
-    csr__cpu_fifo__tx_vp_t(uint32_t* base_addr)
-    {
-        data_31_0 = new csr__cpu_fifo__tx__data_31_0_vp_t (base_addr);
-        data_63_32 = new csr__cpu_fifo__tx__data_63_32_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4
-                                                                                    );
-        data_95_64 = new csr__cpu_fifo__tx__data_95_64_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4
-                                                                                    );
-        data_127_96 = new csr__cpu_fifo__tx__data_127_96_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4
-                                                                                    );
-        control = new csr__cpu_fifo__tx__control_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4
-                                                                                    );
-        trigger = new csr__cpu_fifo__tx__trigger_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__control_t)/4
-                                                                                    );
-        status = new csr__cpu_fifo__tx__status_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__control_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__trigger_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__tx__data_31_0_vp_t* data_31_0;
-    csr__cpu_fifo__tx__data_63_32_vp_t* data_63_32;
-    csr__cpu_fifo__tx__data_95_64_vp_t* data_95_64;
-    csr__cpu_fifo__tx__data_127_96_vp_t* data_127_96;
-    csr__cpu_fifo__tx__control_vp_t* control;
-    csr__cpu_fifo__tx__trigger_vp_t* trigger;
-    csr__cpu_fifo__tx__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
-class csr__cpu_fifo_vp_t {
-public:
-
-    csr__cpu_fifo_vp_t(uint32_t* base_addr)
-    {
-        rx = new csr__cpu_fifo__rx_vp_t (base_addr);
-        tx = new csr__cpu_fifo__tx_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__rx_vp_t* rx;
-    csr__cpu_fifo__tx_vp_t* tx;
-} ;
-
-// -----------------------------------------------------
-//
 class csr__uart__rx_vp_t {
 public:
     csr__uart__rx_vp_t (uint32_t* reg_addr = 0) : reg((csr__uart__rx_t*)reg_addr) {};
@@ -554,88 +164,44 @@ private:
 
 // -----------------------------------------------------
 //
-class csr__ethernet__status_vp_t {
+class csr__hw_id_vp_t {
 public:
-    csr__ethernet__status_vp_t (uint32_t* reg_addr = 0) : reg((csr__ethernet__status_t*)reg_addr) {};
+    csr__hw_id_vp_t (uint32_t* reg_addr = 0) : reg((csr__hw_id_t*)reg_addr) {};
 
     inline void     full(const uint32_t data) {reg->w = data;};
     inline uint32_t full()                    {return reg->w;};
 
-    inline void     speed(const uint32_t data) {reg->f.speed = data;};
-    inline uint32_t speed()                    {return reg->f.speed;};
+    inline void     PRODUCT(const uint32_t data) {reg->f.PRODUCT = data;};
+    inline uint32_t PRODUCT()                    {return reg->f.PRODUCT;};
+    inline void     VENDOR(const uint32_t data) {reg->f.VENDOR = data;};
+    inline uint32_t VENDOR()                    {return reg->f.VENDOR;};
 
     inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
 
 private:
-    csr__ethernet__status_t* reg;
+    csr__hw_id_t* reg;
 };
 
 // -----------------------------------------------------
-class csr__ethernet_vp_t {
-public:
-
-    csr__ethernet_vp_t(uint32_t* base_addr)
-    {
-        status = new csr__ethernet__status_vp_t (base_addr);
-    };
-
-    csr__ethernet__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
 //
-class csr__dpe__fcr_vp_t {
+class csr__hw_version_vp_t {
 public:
-    csr__dpe__fcr_vp_t (uint32_t* reg_addr = 0) : reg((csr__dpe__fcr_t*)reg_addr) {};
+    csr__hw_version_vp_t (uint32_t* reg_addr = 0) : reg((csr__hw_version_t*)reg_addr) {};
 
     inline void     full(const uint32_t data) {reg->w = data;};
     inline uint32_t full()                    {return reg->w;};
 
-    inline void     idle(const uint32_t data) {reg->f.idle = data;};
-    inline uint32_t idle()                    {return reg->f.idle;};
-    inline void     pause(const uint32_t data) {reg->f.pause = data;};
-    inline uint32_t pause()                    {return reg->f.pause;};
+    inline void     PATCH(const uint32_t data) {reg->f.PATCH = data;};
+    inline uint32_t PATCH()                    {return reg->f.PATCH;};
+    inline void     MINOR(const uint32_t data) {reg->f.MINOR = data;};
+    inline uint32_t MINOR()                    {return reg->f.MINOR;};
+    inline void     MAJOR(const uint32_t data) {reg->f.MAJOR = data;};
+    inline uint32_t MAJOR()                    {return reg->f.MAJOR;};
 
     inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
 
 private:
-    csr__dpe__fcr_t* reg;
-};
-
-// -----------------------------------------------------
-class csr__dpe_vp_t {
-public:
-
-    csr__dpe_vp_t(uint32_t* base_addr)
-    {
-        fcr = new csr__dpe__fcr_vp_t (base_addr);
-    };
-
-    csr__dpe__fcr_vp_t* fcr;
-} ;
-
-// -----------------------------------------------------
-//
-class csr__hwid_vp_t {
-public:
-    csr__hwid_vp_t (uint32_t* reg_addr = 0) : reg((csr__hwid_t*)reg_addr) {};
-
-    inline void     full(const uint64_t data) {reg->w = data;};
-    inline uint64_t full()                    {return reg->w;};
-
-    inline void     RELEASE(const uint64_t data) {reg->f.RELEASE = data;};
-    inline uint64_t RELEASE()                    {return reg->f.RELEASE;};
-    inline void     VERSION(const uint64_t data) {reg->f.VERSION = data;};
-    inline uint64_t VERSION()                    {return reg->f.VERSION;};
-    inline void     PID(const uint64_t data) {reg->f.PID = data;};
-    inline uint64_t PID()                    {return reg->f.PID;};
-    inline void     VID(const uint64_t data) {reg->f.VID = data;};
-    inline uint64_t VID()                    {return reg->f.VID;};
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    csr__hwid_t* reg;
+    csr__hw_version_t* reg;
 };
 
 // -----------------------------------------------------
@@ -644,44 +210,25 @@ public:
 
     csr_vp_t(uint32_t* base_addr = (uint32_t*)0x20000000)
     {
-        cpu_fifo = new csr__cpu_fifo_vp_t (base_addr);
-        uart = new csr__uart_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4
-                                                                                    );
+        uart = new csr__uart_vp_t (base_addr);
         gpio = new csr__gpio_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
                                                                                    sizeof(csr__uart_t)/4
                                                                                     );
-        for(int idx = 0; idx < 4; idx++)
-        {
-            ethernet[idx] = new csr__ethernet_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 +
-                                                                                   sizeof(csr__uart_t)/4 +
-                                                                                   sizeof(csr__gpio_t)/4 +
-                                                                                   idx * sizeof(csr__ethernet_t)/4);
-        };
-
-        dpe = new csr__dpe_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
+        hw_id = new csr__hw_id_vp_t (base_addr +
                                                                                    sizeof(csr__uart_t)/4 + 
-                                                                                   sizeof(csr__gpio_t)/4 + 
-                                                                                   4*sizeof(csr__ethernet_t)/4
+                                                                                   sizeof(csr__gpio_t)/4
                                                                                     );
-        hwid = new csr__hwid_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
+        hw_version = new csr__hw_version_vp_t (base_addr +
                                                                                    sizeof(csr__uart_t)/4 + 
                                                                                    sizeof(csr__gpio_t)/4 + 
-                                                                                   4*sizeof(csr__ethernet_t)/4 + 
-                                                                                   sizeof(csr__dpe_t)/4
+                                                                                   sizeof(csr__hw_id_t)/4
                                                                                     );
     };
 
-    csr__cpu_fifo_vp_t* cpu_fifo;
     csr__uart_vp_t* uart;
     csr__gpio_vp_t* gpio;
-    csr__ethernet_vp_t* ethernet[4];
-    csr__dpe_vp_t* dpe;
-    csr__hwid_vp_t* hwid;
+    csr__hw_id_vp_t* hw_id;
+    csr__hw_version_vp_t* hw_version;
 } ;
 
 
