@@ -3,7 +3,7 @@
 #=============================================================
 
 RDLCSRTOP = csr
-RDLWGTOP  = wireguard
+RDLWGTOP  = uberclock
 RDLPREFIX = csr
 RDLDIR    = csr_build
 GENDIR    = $(RDLDIR)/generated-files
