@@ -55,882 +55,6 @@ public:
 
 // -----------------------------------------------------
 //
-class csr__cpu_fifo__rx__data_31_0_vp_t {
-public:
-    csr__cpu_fifo__rx__data_31_0_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__DATA_31_0__TDATA_bm) >> CSR__CPU_FIFO__RX__DATA_31_0__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_63_32_vp_t {
-public:
-    csr__cpu_fifo__rx__data_63_32_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__DATA_63_32__TDATA_bm) >> CSR__CPU_FIFO__RX__DATA_63_32__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_95_64_vp_t {
-public:
-    csr__cpu_fifo__rx__data_95_64_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__DATA_95_64__TDATA_bm) >> CSR__CPU_FIFO__RX__DATA_95_64__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__data_127_96_vp_t {
-public:
-    csr__cpu_fifo__rx__data_127_96_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__DATA_127_96__TDATA_bm) >> CSR__CPU_FIFO__RX__DATA_127_96__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__control_vp_t {
-public:
-    csr__cpu_fifo__rx__control_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tuser_dst (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tuser_dst () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TUSER_DST_bm) >> CSR__CPU_FIFO__RX__CONTROL__TUSER_DST_bp;
-                    };
-
-    inline void     tuser_src (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__RX__CONTROL__TUSER_SRC_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__RX__CONTROL__TUSER_SRC_bp) & CSR__CPU_FIFO__RX__CONTROL__TUSER_SRC_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_src () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TUSER_SRC_bm) >> CSR__CPU_FIFO__RX__CONTROL__TUSER_SRC_bp;
-                    };
-
-    inline void     tuser_bypass_stage (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_STAGE_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_STAGE_bp) & CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_STAGE_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_bypass_stage () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_STAGE_bm) >> CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_STAGE_bp;
-                    };
-
-    inline void     tuser_bypass_all (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_ALL_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_ALL_bp) & CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_ALL_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_bypass_all () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_ALL_bm) >> CSR__CPU_FIFO__RX__CONTROL__TUSER_BYPASS_ALL_bp;
-                    };
-
-    inline void     tlast (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__RX__CONTROL__TLAST_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__RX__CONTROL__TLAST_bp) & CSR__CPU_FIFO__RX__CONTROL__TLAST_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tlast () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TLAST_bm) >> CSR__CPU_FIFO__RX__CONTROL__TLAST_bp;
-                    };
-
-    inline void     tkeep (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 16, 0xc, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tkeep () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__CONTROL__TKEEP_bm) >> CSR__CPU_FIFO__RX__CONTROL__TKEEP_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__trigger_vp_t {
-public:
-    csr__cpu_fifo__rx__trigger_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tvalid (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tvalid () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__TRIGGER__TVALID_bm) >> CSR__CPU_FIFO__RX__TRIGGER__TVALID_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__rx__status_vp_t {
-public:
-    csr__cpu_fifo__rx__status_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tready (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tready () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__RX__STATUS__TREADY_bm) >> CSR__CPU_FIFO__RX__STATUS__TREADY_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-class csr__cpu_fifo__rx_vp_t {
-public:
-
-    csr__cpu_fifo__rx_vp_t(uint32_t* base_addr)
-    {
-        data_31_0 = new csr__cpu_fifo__rx__data_31_0_vp_t (base_addr);
-        data_63_32 = new csr__cpu_fifo__rx__data_63_32_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4
-                                                                                    );
-        data_95_64 = new csr__cpu_fifo__rx__data_95_64_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4
-                                                                                    );
-        data_127_96 = new csr__cpu_fifo__rx__data_127_96_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4
-                                                                                    );
-        control = new csr__cpu_fifo__rx__control_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4
-                                                                                    );
-        trigger = new csr__cpu_fifo__rx__trigger_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__control_t)/4
-                                                                                    );
-        status = new csr__cpu_fifo__rx__status_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__control_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__rx__trigger_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__rx__data_31_0_vp_t* data_31_0;
-    csr__cpu_fifo__rx__data_63_32_vp_t* data_63_32;
-    csr__cpu_fifo__rx__data_95_64_vp_t* data_95_64;
-    csr__cpu_fifo__rx__data_127_96_vp_t* data_127_96;
-    csr__cpu_fifo__rx__control_vp_t* control;
-    csr__cpu_fifo__rx__trigger_vp_t* trigger;
-    csr__cpu_fifo__rx__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_31_0_vp_t {
-public:
-    csr__cpu_fifo__tx__data_31_0_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__DATA_31_0__TDATA_bm) >> CSR__CPU_FIFO__TX__DATA_31_0__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_63_32_vp_t {
-public:
-    csr__cpu_fifo__tx__data_63_32_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__DATA_63_32__TDATA_bm) >> CSR__CPU_FIFO__TX__DATA_63_32__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_95_64_vp_t {
-public:
-    csr__cpu_fifo__tx__data_95_64_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__DATA_95_64__TDATA_bm) >> CSR__CPU_FIFO__TX__DATA_95_64__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__data_127_96_vp_t {
-public:
-    csr__cpu_fifo__tx__data_127_96_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tdata (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tdata () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__DATA_127_96__TDATA_bm) >> CSR__CPU_FIFO__TX__DATA_127_96__TDATA_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__control_vp_t {
-public:
-    csr__cpu_fifo__tx__control_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tuser_dst (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tuser_dst () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TUSER_DST_bm) >> CSR__CPU_FIFO__TX__CONTROL__TUSER_DST_bp;
-                    };
-
-    inline void     tuser_src (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__TX__CONTROL__TUSER_SRC_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__TX__CONTROL__TUSER_SRC_bp) & CSR__CPU_FIFO__TX__CONTROL__TUSER_SRC_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_src () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TUSER_SRC_bm) >> CSR__CPU_FIFO__TX__CONTROL__TUSER_SRC_bp;
-                    };
-
-    inline void     tuser_bypass_stage (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_STAGE_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_STAGE_bp) & CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_STAGE_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_bypass_stage () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_STAGE_bm) >> CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_STAGE_bp;
-                    };
-
-    inline void     tuser_bypass_all (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_ALL_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_ALL_bp) & CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_ALL_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tuser_bypass_all () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_ALL_bm) >> CSR__CPU_FIFO__TX__CONTROL__TUSER_BYPASS_ALL_bp;
-                    };
-
-    inline void     tlast (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__CPU_FIFO__TX__CONTROL__TLAST_bm;
-                                tmpdata |= ((data << CSR__CPU_FIFO__TX__CONTROL__TLAST_bp) & CSR__CPU_FIFO__TX__CONTROL__TLAST_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t tlast () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TLAST_bm) >> CSR__CPU_FIFO__TX__CONTROL__TLAST_bp;
-                    };
-
-    inline void     tkeep (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 16, 0xc, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tkeep () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__CONTROL__TKEEP_bm) >> CSR__CPU_FIFO__TX__CONTROL__TKEEP_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__trigger_vp_t {
-public:
-    csr__cpu_fifo__tx__trigger_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tready (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tready () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__TRIGGER__TREADY_bm) >> CSR__CPU_FIFO__TX__TRIGGER__TREADY_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-//
-class csr__cpu_fifo__tx__status_vp_t {
-public:
-    csr__cpu_fifo__tx__status_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     tvalid (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t tvalid () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__CPU_FIFO__TX__STATUS__TVALID_bm) >> CSR__CPU_FIFO__TX__STATUS__TVALID_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-class csr__cpu_fifo__tx_vp_t {
-public:
-
-    csr__cpu_fifo__tx_vp_t(uint32_t* base_addr)
-    {
-        data_31_0 = new csr__cpu_fifo__tx__data_31_0_vp_t (base_addr);
-        data_63_32 = new csr__cpu_fifo__tx__data_63_32_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4
-                                                                                    );
-        data_95_64 = new csr__cpu_fifo__tx__data_95_64_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4
-                                                                                    );
-        data_127_96 = new csr__cpu_fifo__tx__data_127_96_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4
-                                                                                    );
-        control = new csr__cpu_fifo__tx__control_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4
-                                                                                    );
-        trigger = new csr__cpu_fifo__tx__trigger_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__control_t)/4
-                                                                                    );
-        status = new csr__cpu_fifo__tx__status_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__tx__data_31_0_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_63_32_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_95_64_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__data_127_96_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__control_t)/4 + 
-                                                                                   sizeof(csr__cpu_fifo__tx__trigger_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__tx__data_31_0_vp_t* data_31_0;
-    csr__cpu_fifo__tx__data_63_32_vp_t* data_63_32;
-    csr__cpu_fifo__tx__data_95_64_vp_t* data_95_64;
-    csr__cpu_fifo__tx__data_127_96_vp_t* data_127_96;
-    csr__cpu_fifo__tx__control_vp_t* control;
-    csr__cpu_fifo__tx__trigger_vp_t* trigger;
-    csr__cpu_fifo__tx__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
-class csr__cpu_fifo_vp_t {
-public:
-
-    csr__cpu_fifo_vp_t(uint32_t* base_addr)
-    {
-        rx = new csr__cpu_fifo__rx_vp_t (base_addr);
-        tx = new csr__cpu_fifo__tx_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo__rx_t)/4
-                                                                                    );
-    };
-
-    csr__cpu_fifo__rx_vp_t* rx;
-    csr__cpu_fifo__tx_vp_t* tx;
-} ;
-
-// -----------------------------------------------------
-//
 class csr__uart__rx_vp_t {
 public:
     csr__uart__rx_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
@@ -1274,9 +398,9 @@ private:
 
 // -----------------------------------------------------
 //
-class csr__ethernet__status_vp_t {
+class csr__hw_id_vp_t {
 public:
-    csr__ethernet__status_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
+    csr__hw_id_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
 
     inline void     full(const uint32_t data) {
                         VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
@@ -1290,198 +414,109 @@ public:
 
                         return rdata;
                     };
-    inline void     speed (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t speed () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__ETHERNET__STATUS__SPEED_bm) >> CSR__ETHERNET__STATUS__SPEED_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-class csr__ethernet_vp_t {
-public:
-
-    csr__ethernet_vp_t(uint32_t* base_addr)
-    {
-        status = new csr__ethernet__status_vp_t (base_addr);
-    };
-
-    csr__ethernet__status_vp_t* status;
-} ;
-
-// -----------------------------------------------------
-//
-class csr__dpe__fcr_vp_t {
-public:
-    csr__dpe__fcr_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full(const uint32_t data) {
-                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t full()                    {
-                        uint32_t rdata;
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return rdata;
-                    };
-    inline void     idle (const uint32_t data) {
-                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
-
-                        VWriteBE(reg + 0, wdata << 0, 0x1, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint32_t idle () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__DPE__FCR__IDLE_bm) >> CSR__DPE__FCR__IDLE_bp;
-                    };
-
-    inline void     pause (const uint32_t data) {
-                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__DPE__FCR__PAUSE_bm;
-                                tmpdata |= ((data << CSR__DPE__FCR__PAUSE_bp) & CSR__DPE__FCR__PAUSE_bm) >> 0;
-                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
-
-                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                                VTick(rand() % 33, SOC_CPU_VPNODE);
-                      };
-
-    inline uint32_t pause () {
-                        uint32_t rdata;
-
-                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return (((uint32_t)rdata << 0) & CSR__DPE__FCR__PAUSE_bm) >> CSR__DPE__FCR__PAUSE_bp;
-                    };
-
-
-    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
-
-private:
-    uint32_t reg;
-};
-
-// -----------------------------------------------------
-class csr__dpe_vp_t {
-public:
-
-    csr__dpe_vp_t(uint32_t* base_addr)
-    {
-        fcr = new csr__dpe__fcr_vp_t (base_addr);
-    };
-
-    csr__dpe__fcr_vp_t* fcr;
-} ;
-
-// -----------------------------------------------------
-//
-class csr__hwid_vp_t {
-public:
-    csr__hwid_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
-
-    inline void     full (const uint64_t data) {
-                        VWrite(reg, (uint32_t)(data & 0xffffffff), NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VWrite(reg + 4, (uint32_t)((data >> 32) & 0xffffffff), NO_DELTA_UPDATE, SOC_CPU_VPNODE);
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-                    };
-
-    inline uint64_t full() {
-                        uint64_t val;
-                        uint32_t rdata;
-
-                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE); val = rdata;
-                        VRead(reg + 4, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE); val |= (uint64_t)rdata << 32;
-                        VTick(rand() % 33, SOC_CPU_VPNODE);
-
-                        return val;
-                    };
-
-    inline void     RELEASE (const uint64_t data) {
+    inline void     PRODUCT (const uint32_t data) {
                         uint32_t wdata = (uint32_t)(data & 0xffffffff);
 
                         VWriteBE(reg + 0, wdata << 0, 0x3, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
                     };
 
-    inline uint64_t RELEASE () {
+    inline uint32_t PRODUCT () {
                         uint32_t rdata;
 
                         VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
 
-                        return (((uint64_t)rdata << 0) & CSR__HWID__RELEASE_bm) >> CSR__HWID__RELEASE_bp;
+                        return (((uint32_t)rdata << 0) & CSR__HW_ID__PRODUCT_bm) >> CSR__HW_ID__PRODUCT_bp;
                     };
 
-    inline void     VERSION (const uint64_t data) {
+    inline void     VENDOR (const uint32_t data) {
                         uint32_t wdata = (uint32_t)(data & 0xffffffff);
 
                         VWriteBE(reg + 0, wdata << 16, 0xc, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
                     };
 
-    inline uint64_t VERSION () {
+    inline uint32_t VENDOR () {
                         uint32_t rdata;
 
                         VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
 
-                        return (((uint64_t)rdata << 0) & CSR__HWID__VERSION_bm) >> CSR__HWID__VERSION_bp;
+                        return (((uint32_t)rdata << 0) & CSR__HW_ID__VENDOR_bm) >> CSR__HW_ID__VENDOR_bp;
                     };
 
-    inline void     PID (const uint64_t data) {
+
+    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
+
+private:
+    uint32_t reg;
+};
+
+// -----------------------------------------------------
+//
+class csr__hw_version_vp_t {
+public:
+    csr__hw_version_vp_t (uint32_t* reg_addr = 0) : reg((uint64_t)reg_addr) {};
+
+    inline void     full(const uint32_t data) {
+                        VWrite(reg, data, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+                    };
+
+    inline uint32_t full()                    {
+                        uint32_t rdata;
+                        VRead(reg, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+
+                        return rdata;
+                    };
+    inline void     PATCH (const uint32_t data) {
                         uint32_t wdata = (uint32_t)(data & 0xffffffff);
 
-                        VWriteBE(reg + 4, wdata << 0, 0x3, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VWriteBE(reg + 0, wdata << 0, 0x3, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
                     };
 
-    inline uint64_t PID () {
+    inline uint32_t PATCH () {
                         uint32_t rdata;
 
-                        VRead(reg + 4, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
 
-                        return (((uint64_t)rdata << 32) & CSR__HWID__PID_bm) >> CSR__HWID__PID_bp;
+                        return (((uint32_t)rdata << 0) & CSR__HW_VERSION__PATCH_bm) >> CSR__HW_VERSION__PATCH_bp;
                     };
 
-    inline void     VID (const uint64_t data) {
+    inline void     MINOR (const uint32_t data) {
                         uint32_t wdata = (uint32_t)(data & 0xffffffff);
 
-                        VWriteBE(reg + 4, wdata << 16, 0xc, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VWriteBE(reg + 0, wdata << 16, 0x4, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
                     };
 
-    inline uint64_t VID () {
+    inline uint32_t MINOR () {
                         uint32_t rdata;
 
-                        VRead(reg + 4, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
                         VTick(rand() % 33, SOC_CPU_VPNODE);
 
-                        return (((uint64_t)rdata << 32) & CSR__HWID__VID_bm) >> CSR__HWID__VID_bp;
+                        return (((uint32_t)rdata << 0) & CSR__HW_VERSION__MINOR_bm) >> CSR__HW_VERSION__MINOR_bp;
+                    };
+
+    inline void     MAJOR (const uint32_t data) {
+                        uint32_t wdata = (uint32_t)(data & 0xffffffff);
+
+                        VWriteBE(reg + 0, wdata << 24, 0x8, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+                    };
+
+    inline uint32_t MAJOR () {
+                        uint32_t rdata;
+
+                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+
+                        return (((uint32_t)rdata << 0) & CSR__HW_VERSION__MAJOR_bm) >> CSR__HW_VERSION__MAJOR_bp;
                     };
 
 
@@ -1497,44 +532,25 @@ public:
 
     csr_vp_t(uint32_t* base_addr = (uint32_t*)0x20000000)
     {
-        cpu_fifo = new csr__cpu_fifo_vp_t (base_addr);
-        uart = new csr__uart_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4
-                                                                                    );
+        uart = new csr__uart_vp_t (base_addr);
         gpio = new csr__gpio_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
                                                                                    sizeof(csr__uart_t)/4
                                                                                     );
-        for(int idx = 0; idx < 4; idx++)
-        {
-            ethernet[idx] = new csr__ethernet_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 +
-                                                                                   sizeof(csr__uart_t)/4 +
-                                                                                   sizeof(csr__gpio_t)/4 +
-                                                                                   idx * sizeof(csr__ethernet_t)/4);
-        };
-
-        dpe = new csr__dpe_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
+        hw_id = new csr__hw_id_vp_t (base_addr +
                                                                                    sizeof(csr__uart_t)/4 + 
-                                                                                   sizeof(csr__gpio_t)/4 + 
-                                                                                   4*sizeof(csr__ethernet_t)/4
+                                                                                   sizeof(csr__gpio_t)/4
                                                                                     );
-        hwid = new csr__hwid_vp_t (base_addr +
-                                                                                   sizeof(csr__cpu_fifo_t)/4 + 
+        hw_version = new csr__hw_version_vp_t (base_addr +
                                                                                    sizeof(csr__uart_t)/4 + 
                                                                                    sizeof(csr__gpio_t)/4 + 
-                                                                                   4*sizeof(csr__ethernet_t)/4 + 
-                                                                                   sizeof(csr__dpe_t)/4
+                                                                                   sizeof(csr__hw_id_t)/4
                                                                                     );
     };
 
-    csr__cpu_fifo_vp_t* cpu_fifo;
     csr__uart_vp_t* uart;
     csr__gpio_vp_t* gpio;
-    csr__ethernet_vp_t* ethernet[4];
-    csr__dpe_vp_t* dpe;
-    csr__hwid_vp_t* hwid;
+    csr__hw_id_vp_t* hw_id;
+    csr__hw_version_vp_t* hw_version;
 } ;
 
 

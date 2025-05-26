@@ -19,24 +19,14 @@ export HW_SRC BLD_DIR SIM_DIR TB_NAME
 # Co-simulation libraries
 # --------------------------------------------
 COSIMDIR := $(SIM_DIR)/models/cosim
-UDPDIR   := $(SIM_DIR)/models/udpIpPg
 
 COSIM_LDFLAGS := -L$(COSIMDIR)/lib -lcosimlnx
-UDP_LDFLAGS   := -L$(UDPDIR)/lib   -ludplnx
-
-# --------------------------------------------
-# User code
-# --------------------------------------------
-UDPCODEDIR   := $(SIM_DIR)/usercode
-USER_SOURCES := $(wildcard $(UDPCODEDIR)/*.cpp)
 
 # --------------------------------------------
 # Include paths for DPI / usercode
 # --------------------------------------------
 SIM_INCLUDES := \
-	-I$(UDPCODEDIR)         \
-	-I$(COSIMDIR)/include   \
-	-I$(UDPDIR)
+	-I$(COSIMDIR)/include
 
 # --------------------------------------------
 # File lists for Verilator
@@ -71,12 +61,11 @@ compile:
 		-f $(TOP_FILELIST) \
 		-f $(TB_FILELIST) \
 		--top-module $(TB_NAME) \
-		--exe versimSV.cpp usercode/VUserMainUdp.cpp $(USER_SOURCES) \
-		-CFLAGS "-I$(COSIMDIR)/include -I$(UDPCODEDIR) -DVERILATOR -DVPROC_SV -DVPROC" \
+		--exe versimSV.cpp \
+		-CFLAGS "-I$(COSIMDIR)/include -DVERILATOR -DVPROC_SV -DVPROC" \
 		-LDFLAGS "\
 			-rdynamic \
-			$(COSIM_LDFLAGS) \
-			$(UDP_LDFLAGS)" \
+			$(COSIM_LDFLAGS)" \
 		-Mdir $(WORKDIR)
 
 # -----------------------------------------------------------------------------
