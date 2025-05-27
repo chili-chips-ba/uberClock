@@ -1,0 +1,15 @@
+[options]
+mode prove
+
+[engines]
+smtbmc
+
+[script]
+read -formal mem_led_axi.v
+read -formal faxil_slave.v
+hierarchy -top mem_led_axi
+prep -top mem_led_axi
+
+[files]
+mem_led_axi.v
+faxil_slave.v

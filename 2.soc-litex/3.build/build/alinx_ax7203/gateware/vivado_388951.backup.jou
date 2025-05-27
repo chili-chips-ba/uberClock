@@ -1,0 +1,24 @@
+#-----------------------------------------------------------
+# Vivado v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Tue May 27 10:33:54 2025
+# Process ID         : 388951
+# Current directory  : /home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware
+# Command line       : vivado -mode batch -source alinx_ax7203.tcl
+# Log file           : /home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware/vivado.log
+# Journal file       : /home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware/vivado.jou
+# Running On         : archlinux
+# Platform           : Arch
+# Operating System   : Arch Linux
+# Processor Detail   : Intel(R) Core(TM) Ultra 7 155U
+# CPU Frequency      : 3878.010 MHz
+# CPU Physical cores : 12
+# CPU Logical cores  : 14
+# Host memory        : 33123 MB
+# Swap memory        : 4294 MB
+# Total Virtual      : 37418 MB
+# Available Virtual  : 18555 MB
+#-----------------------------------------------------------
+source alinx_ax7203.tcl

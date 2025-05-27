@@ -1,0 +1,8 @@
++====================+===================+===========================================================+
+| Launch Setup Clock | Launch Hold Clock | Pin                                                       |
++====================+===================+===========================================================+
+| eth_rx_clk         | eth_rx_clk        | storage_12_adr1_reg[4]/D                                  |
+| eth_rx_clk         | eth_rx_clk        | main_basesoc_ethcore_mac_core_cdc_graycounter1_q_reg[2]/D |
+| eth_rx_clk         | eth_rx_clk        | main_basesoc_ethcore_mac_core_cdc_graycounter1_q_reg[1]/D |
+| eth_rx_clk         | eth_rx_clk        | storage_12_adr1_reg[3]/D                                  |
++--------------------+-------------------+-----------------------------------------------------------+

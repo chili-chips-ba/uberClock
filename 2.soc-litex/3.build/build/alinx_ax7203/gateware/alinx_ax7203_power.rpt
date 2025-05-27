@@ -1,0 +1,206 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version     : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date             : Tue May 27 13:33:36 2025
+| Host             : archlinux running 64-bit Arch Linux
+| Command          : report_power -file alinx_ax7203_power.rpt
+| Design           : alinx_ax7203
+| Device           : xc7a200tfbg484-2
+| Design State     : routed
+| Grade            : commercial
+| Process          : typical
+| Characterization : Production
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Power Report
+
+Table of Contents
+-----------------
+1. Summary
+1.1 On-Chip Components
+1.2 Power Supply Summary
+1.3 Confidence Level
+2. Settings
+2.1 Environment
+2.2 Clock Constraints
+3. Detailed Reports
+3.1 By Hierarchy
+
+1. Summary
+----------
+
++--------------------------+--------------+
+| Total On-Chip Power (W)  | 0.912        |
+| Design Power Budget (W)  | Unspecified* |
+| Power Budget Margin (W)  | NA           |
+| Dynamic (W)              | 0.761        |
+| Device Static (W)        | 0.151        |
+| Effective TJA (C/W)      | 2.5          |
+| Max Ambient (C)          | 82.7         |
+| Junction Temperature (C) | 27.3         |
+| Confidence Level         | Low          |
+| Setting File             | ---          |
+| Simulation Activity File | ---          |
+| Design Nets Matched      | NA           |
++--------------------------+--------------+
+* Specify Design Power Budget using, set_operating_conditions -design_power_budget <value in Watts>
+
+
+1.1 On-Chip Components
+----------------------
+
++--------------------------+-----------+----------+-----------+-----------------+
+| On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
++--------------------------+-----------+----------+-----------+-----------------+
+| Clocks                   |     0.039 |       13 |       --- |             --- |
+| Slice Logic              |     0.012 |    17830 |       --- |             --- |
+|   LUT as Logic           |     0.010 |     7169 |    133800 |            5.36 |
+|   CARRY4                 |     0.001 |      381 |     33450 |            1.14 |
+|   Register               |    <0.001 |     7427 |    267600 |            2.78 |
+|   LUT as Distributed RAM |    <0.001 |      538 |     46200 |            1.16 |
+|   F7/F8 Muxes            |    <0.001 |       64 |    133800 |            0.05 |
+|   LUT as Shift Register  |    <0.001 |       10 |     46200 |            0.02 |
+|   Others                 |     0.000 |       14 |       --- |             --- |
+| Signals                  |     0.015 |    15044 |       --- |             --- |
+| Block RAM                |     0.035 |       33 |       365 |            9.04 |
+| PLL                      |     0.279 |        2 |        10 |           20.00 |
+| DSPs                     |     0.002 |        4 |       740 |            0.54 |
+| I/O                      |     0.380 |      122 |       285 |           42.81 |
+| Static Power             |     0.151 |          |           |                 |
+| Total                    |     0.912 |          |           |                 |
++--------------------------+-----------+----------+-----------+-----------------+
+
+
+1.2 Power Supply Summary
+------------------------
+
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Vccint    |       1.000 |     0.168 |       0.135 |      0.034 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.258 |       0.228 |      0.031 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.016 |       0.011 |      0.005 |       NA    | Unspecified | NA         |
+| Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco15    |       1.500 |     0.124 |       0.119 |      0.005 |       NA    | Unspecified | NA         |
+| Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.004 |       0.003 |      0.002 |       NA    | Unspecified | NA         |
+| MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccadc    |       1.800 |     0.020 |       0.000 |      0.020 |       NA    | Unspecified | NA         |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+
+
+1.3 Confidence Level
+--------------------
+
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| User Input Data             | Confidence | Details                                                | Action                                                                                                     |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| Design implementation state | High       | Design is routed                                       |                                                                                                            |
+| Clock nodes activity        | High       | User specified more than 95% of clocks                 |                                                                                                            |
+| I/O nodes activity          | Low        | More than 75% of inputs are missing user specification | Provide missing input activity with simulation results or by editing the "By Resource Type -> I/Os" view   |
+| Internal nodes activity     | Medium     | User specified less than 25% of internal nodes         | Provide missing internal nodes activity with simulation results or by editing the "By Resource Type" views |
+| Device models               | High       | Device models are Production                           |                                                                                                            |
+|                             |            |                                                        |                                                                                                            |
+| Overall confidence level    | Low        |                                                        |                                                                                                            |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
+
+2. Settings
+-----------
+
+2.1 Environment
+---------------
+
++-----------------------+--------------------------+
+| Ambient Temp (C)      | 25.0                     |
+| ThetaJA (C/W)         | 2.5                      |
+| Airflow (LFM)         | 250                      |
+| Heat Sink             | medium (Medium Profile)  |
+| ThetaSA (C/W)         | 4.2                      |
+| Board Selection       | medium (10"x10")         |
+| # of Board Layers     | 12to15 (12 to 15 Layers) |
+| Board Temperature (C) | 25.0                     |
++-----------------------+--------------------------+
+
+
+2.2 Clock Constraints
+---------------------
+
++--------------------------------+--------------------------------+-----------------+
+| Clock                          | Domain                         | Constraint (ns) |
++--------------------------------+--------------------------------+-----------------+
+| builder_crg_pll_fb             | builder_crg_pll_fb             |             5.0 |
+| builder_liteethphyrgmii_pll_fb | builder_liteethphyrgmii_pll_fb |             8.0 |
+| clk200_p                       | clk200_p                       |             5.0 |
+| eth_rx_clk                     | eth_rx_clk                     |             8.0 |
+| eth_tx_clk                     | eth_tx_clk                     |             8.0 |
+| main_crg_clkout0               | main_crg_clkout0               |            20.0 |
+| main_crg_clkout1               | main_crg_clkout1               |             5.0 |
+| main_crg_clkout2               | main_crg_clkout2               |             5.0 |
+| main_crg_clkout3               | main_crg_clkout3               |             5.0 |
+| main_ethphy_clkout0            | main_ethphy_clkout0            |             8.0 |
+| main_ethphy_clkout1            | main_ethphy_clkout1            |             8.0 |
++--------------------------------+--------------------------------+-----------------+
+
+
+3. Detailed Reports
+-------------------
+
+3.1 By Hierarchy
+----------------
+
++----------------------------+-----------+
+| Name                       | Power (W) |
++----------------------------+-----------+
+| alinx_ax7203               |     0.761 |
+|   IOBUF                    |     0.003 |
+|   IOBUFDS                  |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_1                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_2                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_3                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUF_1                  |     0.003 |
+|   IOBUF_10                 |     0.003 |
+|   IOBUF_11                 |     0.003 |
+|   IOBUF_12                 |     0.003 |
+|   IOBUF_13                 |     0.003 |
+|   IOBUF_14                 |     0.003 |
+|   IOBUF_15                 |     0.003 |
+|   IOBUF_16                 |     0.003 |
+|   IOBUF_17                 |     0.003 |
+|   IOBUF_18                 |     0.003 |
+|   IOBUF_19                 |     0.003 |
+|   IOBUF_2                  |     0.003 |
+|   IOBUF_20                 |     0.003 |
+|   IOBUF_21                 |     0.003 |
+|   IOBUF_22                 |     0.003 |
+|   IOBUF_23                 |     0.003 |
+|   IOBUF_24                 |     0.003 |
+|   IOBUF_25                 |     0.003 |
+|   IOBUF_26                 |     0.003 |
+|   IOBUF_27                 |     0.003 |
+|   IOBUF_28                 |     0.003 |
+|   IOBUF_29                 |     0.003 |
+|   IOBUF_3                  |     0.003 |
+|   IOBUF_30                 |     0.003 |
+|   IOBUF_31                 |     0.003 |
+|   IOBUF_4                  |     0.003 |
+|   IOBUF_5                  |     0.003 |
+|   IOBUF_6                  |     0.003 |
+|   IOBUF_7                  |     0.003 |
+|   IOBUF_8                  |     0.003 |
+|   IOBUF_9                  |     0.003 |
+|   OBUFDS                   |     0.002 |
+|   VexRiscv                 |     0.022 |
+|     IBusCachedPlugin_cache |     0.004 |
+|     dataCache_1            |     0.003 |
++----------------------------+-----------+
+
+
