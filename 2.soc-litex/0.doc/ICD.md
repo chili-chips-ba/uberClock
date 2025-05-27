@@ -5,9 +5,19 @@ Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown un
 TODO:
 
 Specify the  5 algorithms.
+
 RAM Bandwith? Is the CPU going to be fighting with the HS Capture?
+
 Picture for Gain.
+
 HS CAPTURE: What control is starting? Am I always capturing? Where am I going to stop? What controls it?
+
+5x:
+CORDIC TX and RX register.
+
+Amplitude ArcTan register.
+
+Writting to buffer/latch and to CORDIC.
 
 | Offset |   Bits   | Field                  | Access | Description                                              |
 | :----: | :------: | :--------------------- | :----- | :------------------------------------------------------- |
