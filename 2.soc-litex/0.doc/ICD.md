@@ -2,6 +2,12 @@
 All of the registers listed below live in the MAIN ICD bank, which is memory-mapped at `CSR_MAIN_BASE = CSR_BASE + 0x2000` (i.e. address `0xF000_2000`).
 Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown under “Bits” are implemented; all other bit-positions are reserved and should be written as zero (reads return zero).
 
+TODO:
+
+Specify the  5 algorithms.
+RAM Bandwith? Is the CPU going to be fighting with the HS Capture?
+Picture for Gain.
+HS CAPTURE: What control is starting? Am I always capturing? Where am I going to stop? What controls it?
 
 | Offset |   Bits   | Field                  | Access | Description                                              |
 | :----: | :------: | :--------------------- | :----- | :------------------------------------------------------- |
