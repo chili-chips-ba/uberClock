@@ -1,0 +1,35 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Tue May 27 13:32:22 2025
+| Host         : archlinux running 64-bit Arch Linux
+| Command      : report_utilization -hierarchical -file alinx_ax7203_utilization_hierarchical_place.rpt
+| Design       : alinx_ax7203
+| Device       : xc7a200tfbg484-2
+| Speed File   : -2
+| Design State : Fully Placed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
+|          Instance          |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
+| alinx_ax7203               |            (top) |       7717 |       7169 |     538 |   10 | 7427 |     12 |     42 |          4 |
+|   (alinx_ax7203)           |            (top) |       4914 |       4366 |     538 |   10 | 6176 |     11 |     34 |          0 |
+|   VexRiscv                 |         VexRiscv |       2823 |       2823 |       0 |    0 | 1251 |      1 |      8 |          4 |
+|     (VexRiscv)             |         VexRiscv |       1576 |       1576 |       0 |    0 | 1097 |      0 |      2 |          4 |
+|     IBusCachedPlugin_cache | InstructionCache |        790 |        790 |       0 |    0 |   95 |      1 |      1 |          0 |
+|     dataCache_1            |        DataCache |        469 |        469 |       0 |    0 |   59 |      0 |      5 |          0 |
+|   cordic_dac               |       cordic_dac |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
++----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+
