@@ -5,7 +5,7 @@ negsf2.o: \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/stdint.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_default_types.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/features.h \
- /home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/include/../libc/picolibc.h \
+ /home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/../libc/picolibc.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_intsup.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_stdint.h \
  /usr/lib/gcc/riscv64-linux-gnu/14.2.0/include/stdbool.h \
@@ -25,7 +25,7 @@ negsf2.o: \
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/stdint.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_default_types.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/features.h:
-/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/include/../libc/picolibc.h:
+/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/../libc/picolibc.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_intsup.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_stdint.h:
 /usr/lib/gcc/riscv64-linux-gnu/14.2.0/include/stdbool.h:

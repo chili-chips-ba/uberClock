@@ -9,7 +9,7 @@
 // Filename   : alinx_ax7203.v
 // Device     : xc7a200tfbg484-2
 // LiteX sha1 : dd54d77db
-// Date       : 2025-05-27 13:34:45
+// Date       : 2025-05-27 16:25:14
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
@@ -193,7 +193,50 @@ BaseSoC
 │    └─── bitslip_71* (BitSlip)
 │    └─── tappeddelayline_2* (TappedDelayLine)
 │    └─── tappeddelayline_3* (TappedDelayLine)
+│    └─── [OSERDESE2]
 │    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [ISERDESE2]
+│    └─── [IDELAYE2]
+│    └─── [IOBUF]
 │    └─── [IDELAYE2]
 │    └─── [IOBUF]
 │    └─── [OSERDESE2]
@@ -253,9 +296,40 @@ BaseSoC
 │    └─── [IDELAYE2]
 │    └─── [IOBUF]
 │    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [IOBUFDS]
+│    └─── [OSERDESE2]
+│    └─── [IOBUFDS]
+│    └─── [OSERDESE2]
+│    └─── [IOBUFDS]
+│    └─── [OSERDESE2]
+│    └─── [IOBUFDS]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
+│    └─── [OSERDESE2]
 │    └─── [OSERDESE2]
 │    └─── [ISERDESE2]
 │    └─── [IDELAYE2]
@@ -282,84 +356,10 @@ BaseSoC
 │    └─── [IOBUF]
 │    └─── [OSERDESE2]
 │    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
 │    └─── [OSERDESE2]
 │    └─── [OBUFDS]
 │    └─── [OSERDESE2]
 │    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [IOBUFDS]
-│    └─── [OSERDESE2]
-│    └─── [IOBUFDS]
-│    └─── [OSERDESE2]
-│    └─── [IOBUFDS]
-│    └─── [OSERDESE2]
-│    └─── [IOBUFDS]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
-│    └─── [OSERDESE2]
-│    └─── [ISERDESE2]
-│    └─── [IDELAYE2]
-│    └─── [IOBUF]
 └─── sdram (LiteDRAMCore)
 │    └─── dfii (DFIInjector)
 │    │    └─── pi0 (PhaseInjector)
@@ -767,11 +767,6 @@ BaseSoC
 │    │    └─── csrstorage_13* (CSRStorage)
 │    │    └─── csrstatus_1* (CSRStatus)
 │    │    └─── csrstorage_14* (CSRStorage)
-│    │    └─── csrstorage_15* (CSRStorage)
-│    │    └─── csrstatus_2* (CSRStatus)
-│    │    └─── csrstorage_16* (CSRStorage)
-│    │    └─── csrstatus_3* (CSRStatus)
-│    │    └─── csrstorage_17* (CSRStorage)
 │    └─── csrbank_4* (CSRBank)
 │    │    └─── csrstorage_0* (CSRStorage)
 │    │    └─── csrstorage_1* (CSRStorage)
@@ -926,18 +921,26 @@ wire   [18:0] builder_csr_bankarray_csrbank3_cordic_tx_phase0_r;
 reg           builder_csr_bankarray_csrbank3_cordic_tx_phase0_re = 1'd0;
 wire   [18:0] builder_csr_bankarray_csrbank3_cordic_tx_phase0_w;
 reg           builder_csr_bankarray_csrbank3_cordic_tx_phase0_we = 1'd0;
-wire    [3:0] builder_csr_bankarray_csrbank3_downsample_factor0_r;
-reg           builder_csr_bankarray_csrbank3_downsample_factor0_re = 1'd0;
-wire    [3:0] builder_csr_bankarray_csrbank3_downsample_factor0_w;
-reg           builder_csr_bankarray_csrbank3_downsample_factor0_we = 1'd0;
-wire   [11:0] builder_csr_bankarray_csrbank3_gain_rx0_r;
-reg           builder_csr_bankarray_csrbank3_gain_rx0_re = 1'd0;
-wire   [11:0] builder_csr_bankarray_csrbank3_gain_rx0_w;
-reg           builder_csr_bankarray_csrbank3_gain_rx0_we = 1'd0;
-wire   [11:0] builder_csr_bankarray_csrbank3_gain_tx0_r;
-reg           builder_csr_bankarray_csrbank3_gain_tx0_re = 1'd0;
-wire   [11:0] builder_csr_bankarray_csrbank3_gain_tx0_w;
-reg           builder_csr_bankarray_csrbank3_gain_tx0_we = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain00_r;
+reg           builder_csr_bankarray_csrbank3_gain00_re = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain00_w;
+reg           builder_csr_bankarray_csrbank3_gain00_we = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain10_r;
+reg           builder_csr_bankarray_csrbank3_gain10_re = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain10_w;
+reg           builder_csr_bankarray_csrbank3_gain10_we = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain20_r;
+reg           builder_csr_bankarray_csrbank3_gain20_re = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain20_w;
+reg           builder_csr_bankarray_csrbank3_gain20_we = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain30_r;
+reg           builder_csr_bankarray_csrbank3_gain30_re = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain30_w;
+reg           builder_csr_bankarray_csrbank3_gain30_we = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain40_r;
+reg           builder_csr_bankarray_csrbank3_gain40_re = 1'd0;
+wire   [11:0] builder_csr_bankarray_csrbank3_gain40_w;
+reg           builder_csr_bankarray_csrbank3_gain40_we = 1'd0;
 wire   [15:0] builder_csr_bankarray_csrbank3_hs_dbg_addr0_r;
 reg           builder_csr_bankarray_csrbank3_hs_dbg_addr0_re = 1'd0;
 wire   [15:0] builder_csr_bankarray_csrbank3_hs_dbg_addr0_w;
@@ -974,35 +977,7 @@ wire   [18:0] builder_csr_bankarray_csrbank3_phase_inc0_r;
 reg           builder_csr_bankarray_csrbank3_phase_inc0_re = 1'd0;
 wire   [18:0] builder_csr_bankarray_csrbank3_phase_inc0_w;
 reg           builder_csr_bankarray_csrbank3_phase_inc0_we = 1'd0;
-wire          builder_csr_bankarray_csrbank3_physics_busy_r;
-reg           builder_csr_bankarray_csrbank3_physics_busy_re = 1'd0;
-wire          builder_csr_bankarray_csrbank3_physics_busy_w;
-reg           builder_csr_bankarray_csrbank3_physics_busy_we = 1'd0;
-wire          builder_csr_bankarray_csrbank3_physics_run0_r;
-reg           builder_csr_bankarray_csrbank3_physics_run0_re = 1'd0;
-wire          builder_csr_bankarray_csrbank3_physics_run0_w;
-reg           builder_csr_bankarray_csrbank3_physics_run0_we = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_r;
-reg           builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_re = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_w;
-reg           builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_we = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_sd_cmd0_r;
-reg           builder_csr_bankarray_csrbank3_sd_cmd0_re = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_sd_cmd0_w;
-reg           builder_csr_bankarray_csrbank3_sd_cmd0_we = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_sd_status_r;
-reg           builder_csr_bankarray_csrbank3_sd_status_re = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_sd_status_w;
-reg           builder_csr_bankarray_csrbank3_sd_status_we = 1'd0;
 wire          builder_csr_bankarray_csrbank3_sel;
-wire    [7:0] builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_r;
-reg           builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_re = 1'd0;
-wire    [7:0] builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_w;
-reg           builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_we = 1'd0;
-wire    [3:0] builder_csr_bankarray_csrbank3_upsample_factor0_r;
-reg           builder_csr_bankarray_csrbank3_upsample_factor0_re = 1'd0;
-wire    [3:0] builder_csr_bankarray_csrbank3_upsample_factor0_w;
-reg           builder_csr_bankarray_csrbank3_upsample_factor0_we = 1'd0;
 wire    [3:0] builder_csr_bankarray_csrbank4_dfii_control0_r;
 reg           builder_csr_bankarray_csrbank4_dfii_control0_re = 1'd0;
 wire    [3:0] builder_csr_bankarray_csrbank4_dfii_control0_w;
@@ -6499,8 +6474,6 @@ reg           main_crg_power_down = 1'd0;
 wire          main_crg_reset;
 reg     [3:0] main_crg_reset_counter = 4'd15;
 reg           main_crg_rst = 1'd0;
-reg           main_downsample_factor_re = 1'd0;
-reg     [3:0] main_downsample_factor_storage = 4'd0;
 reg           main_ethphy__r_re = 1'd0;
 reg           main_ethphy__r_status = 1'd0;
 wire          main_ethphy__r_we;
@@ -6555,10 +6528,16 @@ wire          main_ethphy_sink_valid;
 wire          main_ethphy_tx_ctl_obuf;
 wire    [3:0] main_ethphy_tx_data_obuf;
 wire          main_ethphy_w;
-reg           main_gain_rx_re = 1'd0;
-reg    [11:0] main_gain_rx_storage = 12'd0;
-reg           main_gain_tx_re = 1'd0;
-reg    [11:0] main_gain_tx_storage = 12'd0;
+reg           main_gain0_re = 1'd0;
+reg    [11:0] main_gain0_storage = 12'd0;
+reg           main_gain1_re = 1'd0;
+reg    [11:0] main_gain1_storage = 12'd0;
+reg           main_gain2_re = 1'd0;
+reg    [11:0] main_gain2_storage = 12'd0;
+reg           main_gain3_re = 1'd0;
+reg    [11:0] main_gain3_storage = 12'd0;
+reg           main_gain4_re = 1'd0;
+reg    [11:0] main_gain4_storage = 12'd0;
 reg           main_hs_dbg_addr_re = 1'd0;
 reg    [15:0] main_hs_dbg_addr_storage = 16'd0;
 reg           main_hs_dbg_rdata_re = 1'd0;
@@ -6579,22 +6558,6 @@ reg           main_mux_sel_re = 1'd0;
 reg     [2:0] main_mux_sel_storage = 3'd0;
 reg           main_phase_inc_re = 1'd0;
 reg    [18:0] main_phase_inc_storage = 19'd0;
-reg           main_physics_busy_re = 1'd0;
-reg           main_physics_busy_status = 1'd0;
-wire          main_physics_busy_we;
-reg           main_physics_run_re = 1'd0;
-reg           main_physics_run_storage = 1'd0;
-reg           main_rx_lpf_cutoff_re = 1'd0;
-reg     [7:0] main_rx_lpf_cutoff_storage = 8'd0;
-reg           main_sd_cmd_re = 1'd0;
-reg     [7:0] main_sd_cmd_storage = 8'd0;
-reg           main_sd_status_re = 1'd0;
-reg     [7:0] main_sd_status_status = 8'd0;
-wire          main_sd_status_we;
-reg           main_tx_lpf_cutoff_re = 1'd0;
-reg     [7:0] main_tx_lpf_cutoff_storage = 8'd0;
-reg           main_upsample_factor_re = 1'd0;
-reg     [3:0] main_upsample_factor_storage = 4'd0;
 wire          sys4x_clk;
 wire          sys4x_dqs_clk;
 wire          sys4x_dqs_rst;
@@ -17263,7 +17226,7 @@ always @(*) begin
         end
     endcase
 end
-assign builder_csr_bankarray_csrbank0_sel = (builder_csr_bankarray_interface0_bank_bus_adr[13:9] == 5'd22);
+assign builder_csr_bankarray_csrbank0_sel = (builder_csr_bankarray_interface0_bank_bus_adr[13:9] == 5'd17);
 assign builder_csr_bankarray_csrbank0_reset0_r = builder_csr_bankarray_interface0_bank_bus_dat_w[1:0];
 always @(*) begin
     builder_csr_bankarray_csrbank0_reset0_re <= 1'd0;
@@ -17302,7 +17265,7 @@ assign builder_csr_bankarray_csrbank0_reset0_w = main_basesoc_basesoc_reset_stor
 assign builder_csr_bankarray_csrbank0_scratch0_w = main_basesoc_basesoc_scratch_storage;
 assign builder_csr_bankarray_csrbank0_bus_errors_w = main_basesoc_basesoc_bus_errors_status;
 assign main_basesoc_basesoc_bus_errors_we = builder_csr_bankarray_csrbank0_bus_errors_we;
-assign builder_csr_bankarray_csrbank1_sel = (builder_csr_bankarray_interface1_bank_bus_adr[13:9] == 5'd23);
+assign builder_csr_bankarray_csrbank1_sel = (builder_csr_bankarray_interface1_bank_bus_adr[13:9] == 5'd18);
 assign builder_csr_bankarray_csrbank1_rst0_r = builder_csr_bankarray_interface1_bank_bus_dat_w[0];
 always @(*) begin
     builder_csr_bankarray_csrbank1_rst0_re <= 1'd0;
@@ -17426,7 +17389,7 @@ assign builder_csr_bankarray_csrbank1_half_sys8x_taps0_w = main_a7ddrphy_half_sy
 assign builder_csr_bankarray_csrbank1_wlevel_en0_w = main_a7ddrphy_wlevel_en_storage;
 assign builder_csr_bankarray_csrbank1_rdphase0_w = main_a7ddrphy_rdphase_storage;
 assign builder_csr_bankarray_csrbank1_wrphase0_w = main_a7ddrphy_wrphase_storage;
-assign builder_csr_bankarray_csrbank2_sel = (builder_csr_bankarray_interface2_bank_bus_adr[13:9] == 5'd24);
+assign builder_csr_bankarray_csrbank2_sel = (builder_csr_bankarray_interface2_bank_bus_adr[13:9] == 5'd19);
 assign builder_csr_bankarray_csrbank2_crg_reset0_r = builder_csr_bankarray_interface2_bank_bus_dat_w[0];
 always @(*) begin
     builder_csr_bankarray_csrbank2_crg_reset0_re <= 1'd0;
@@ -17461,7 +17424,7 @@ assign main_ethphy_w = main_ethphy__w_storage[2];
 assign builder_csr_bankarray_csrbank2_mdio_w0_w = main_ethphy__w_storage;
 assign builder_csr_bankarray_csrbank2_mdio_r_w = main_ethphy__r_status;
 assign main_ethphy__r_we = builder_csr_bankarray_csrbank2_mdio_r_we;
-assign builder_csr_bankarray_sel = (builder_csr_bankarray_sram_bus_adr[13:9] == 5'd25);
+assign builder_csr_bankarray_sel = (builder_csr_bankarray_sram_bus_adr[13:9] == 5'd20);
 always @(*) begin
     builder_csr_bankarray_sram_bus_dat_r <= 32'd0;
     if (builder_csr_bankarray_sel_r) begin
@@ -17469,7 +17432,7 @@ always @(*) begin
     end
 end
 assign builder_csr_bankarray_adr = builder_csr_bankarray_sram_bus_adr[5:0];
-assign builder_csr_bankarray_csrbank3_sel = (builder_csr_bankarray_interface3_bank_bus_adr[13:9] == 5'd26);
+assign builder_csr_bankarray_csrbank3_sel = (builder_csr_bankarray_interface3_bank_bus_adr[13:9] == 5'd21);
 assign builder_csr_bankarray_csrbank3_bypass_en0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[0];
 always @(*) begin
     builder_csr_bankarray_csrbank3_bypass_en0_re <= 1'd0;
@@ -17497,101 +17460,74 @@ always @(*) begin
         builder_csr_bankarray_csrbank3_method_sel0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
 end
-assign builder_csr_bankarray_csrbank3_upsample_factor0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[3:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_upsample_factor0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_upsample_factor0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 2'd3))) begin
-        builder_csr_bankarray_csrbank3_upsample_factor0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_upsample_factor0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[7:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd4))) begin
-        builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
 assign builder_csr_bankarray_csrbank3_cordic_tx_phase0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[18:0];
 always @(*) begin
     builder_csr_bankarray_csrbank3_cordic_tx_phase0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_cordic_tx_phase0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd5))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 2'd3))) begin
         builder_csr_bankarray_csrbank3_cordic_tx_phase0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_cordic_tx_phase0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_downsample_factor0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[3:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_downsample_factor0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_downsample_factor0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd6))) begin
-        builder_csr_bankarray_csrbank3_downsample_factor0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_downsample_factor0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[7:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd7))) begin
-        builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
 end
 assign builder_csr_bankarray_csrbank3_cordic_rx_phase0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[18:0];
 always @(*) begin
     builder_csr_bankarray_csrbank3_cordic_rx_phase0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_cordic_rx_phase0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd8))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd4))) begin
         builder_csr_bankarray_csrbank3_cordic_rx_phase0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_cordic_rx_phase0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
 end
-assign builder_csr_bankarray_csrbank3_gain_tx0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
+assign builder_csr_bankarray_csrbank3_gain00_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
 always @(*) begin
-    builder_csr_bankarray_csrbank3_gain_tx0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_gain_tx0_we <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain00_re <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain00_we <= 1'd0;
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd5))) begin
+        builder_csr_bankarray_csrbank3_gain00_re <= builder_csr_bankarray_interface3_bank_bus_we;
+        builder_csr_bankarray_csrbank3_gain00_we <= builder_csr_bankarray_interface3_bank_bus_re;
+    end
+end
+assign builder_csr_bankarray_csrbank3_gain10_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
+always @(*) begin
+    builder_csr_bankarray_csrbank3_gain10_re <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain10_we <= 1'd0;
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd6))) begin
+        builder_csr_bankarray_csrbank3_gain10_re <= builder_csr_bankarray_interface3_bank_bus_we;
+        builder_csr_bankarray_csrbank3_gain10_we <= builder_csr_bankarray_interface3_bank_bus_re;
+    end
+end
+assign builder_csr_bankarray_csrbank3_gain20_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
+always @(*) begin
+    builder_csr_bankarray_csrbank3_gain20_re <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain20_we <= 1'd0;
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 3'd7))) begin
+        builder_csr_bankarray_csrbank3_gain20_re <= builder_csr_bankarray_interface3_bank_bus_we;
+        builder_csr_bankarray_csrbank3_gain20_we <= builder_csr_bankarray_interface3_bank_bus_re;
+    end
+end
+assign builder_csr_bankarray_csrbank3_gain30_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
+always @(*) begin
+    builder_csr_bankarray_csrbank3_gain30_re <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain30_we <= 1'd0;
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd8))) begin
+        builder_csr_bankarray_csrbank3_gain30_re <= builder_csr_bankarray_interface3_bank_bus_we;
+        builder_csr_bankarray_csrbank3_gain30_we <= builder_csr_bankarray_interface3_bank_bus_re;
+    end
+end
+assign builder_csr_bankarray_csrbank3_gain40_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
+always @(*) begin
+    builder_csr_bankarray_csrbank3_gain40_re <= 1'd0;
+    builder_csr_bankarray_csrbank3_gain40_we <= 1'd0;
     if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd9))) begin
-        builder_csr_bankarray_csrbank3_gain_tx0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_gain_tx0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_gain_rx0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[11:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_gain_rx0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_gain_rx0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd10))) begin
-        builder_csr_bankarray_csrbank3_gain_rx0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_gain_rx0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_physics_run0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_physics_run0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_physics_run0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd11))) begin
-        builder_csr_bankarray_csrbank3_physics_run0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_physics_run0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_physics_busy_r = builder_csr_bankarray_interface3_bank_bus_dat_w[0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_physics_busy_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_physics_busy_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd12))) begin
-        builder_csr_bankarray_csrbank3_physics_busy_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_physics_busy_we <= builder_csr_bankarray_interface3_bank_bus_re;
+        builder_csr_bankarray_csrbank3_gain40_re <= builder_csr_bankarray_interface3_bank_bus_we;
+        builder_csr_bankarray_csrbank3_gain40_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
 end
 assign builder_csr_bankarray_csrbank3_hs_dbg_addr0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[15:0];
 always @(*) begin
     builder_csr_bankarray_csrbank3_hs_dbg_addr0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_hs_dbg_addr0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd13))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd10))) begin
         builder_csr_bankarray_csrbank3_hs_dbg_addr0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_hs_dbg_addr0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17600,7 +17536,7 @@ assign builder_csr_bankarray_csrbank3_hs_dbg_wdata0_r = builder_csr_bankarray_in
 always @(*) begin
     builder_csr_bankarray_csrbank3_hs_dbg_wdata0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_hs_dbg_wdata0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd14))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd11))) begin
         builder_csr_bankarray_csrbank3_hs_dbg_wdata0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_hs_dbg_wdata0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17609,7 +17545,7 @@ assign builder_csr_bankarray_csrbank3_hs_dbg_rdata_r = builder_csr_bankarray_int
 always @(*) begin
     builder_csr_bankarray_csrbank3_hs_dbg_rdata_re <= 1'd0;
     builder_csr_bankarray_csrbank3_hs_dbg_rdata_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd15))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd12))) begin
         builder_csr_bankarray_csrbank3_hs_dbg_rdata_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_hs_dbg_rdata_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17618,7 +17554,7 @@ assign builder_csr_bankarray_csrbank3_ls_dbg_addr0_r = builder_csr_bankarray_int
 always @(*) begin
     builder_csr_bankarray_csrbank3_ls_dbg_addr0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_ls_dbg_addr0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd16))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd13))) begin
         builder_csr_bankarray_csrbank3_ls_dbg_addr0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_ls_dbg_addr0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17627,7 +17563,7 @@ assign builder_csr_bankarray_csrbank3_ls_dbg_wdata0_r = builder_csr_bankarray_in
 always @(*) begin
     builder_csr_bankarray_csrbank3_ls_dbg_wdata0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_ls_dbg_wdata0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd17))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd14))) begin
         builder_csr_bankarray_csrbank3_ls_dbg_wdata0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_ls_dbg_wdata0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17636,34 +17572,16 @@ assign builder_csr_bankarray_csrbank3_ls_dbg_rdata_r = builder_csr_bankarray_int
 always @(*) begin
     builder_csr_bankarray_csrbank3_ls_dbg_rdata_re <= 1'd0;
     builder_csr_bankarray_csrbank3_ls_dbg_rdata_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd18))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 4'd15))) begin
         builder_csr_bankarray_csrbank3_ls_dbg_rdata_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_ls_dbg_rdata_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_sd_cmd0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[7:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_sd_cmd0_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_sd_cmd0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd19))) begin
-        builder_csr_bankarray_csrbank3_sd_cmd0_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_sd_cmd0_we <= builder_csr_bankarray_interface3_bank_bus_re;
-    end
-end
-assign builder_csr_bankarray_csrbank3_sd_status_r = builder_csr_bankarray_interface3_bank_bus_dat_w[7:0];
-always @(*) begin
-    builder_csr_bankarray_csrbank3_sd_status_re <= 1'd0;
-    builder_csr_bankarray_csrbank3_sd_status_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd20))) begin
-        builder_csr_bankarray_csrbank3_sd_status_re <= builder_csr_bankarray_interface3_bank_bus_we;
-        builder_csr_bankarray_csrbank3_sd_status_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
 end
 assign builder_csr_bankarray_csrbank3_phase_inc0_r = builder_csr_bankarray_interface3_bank_bus_dat_w[18:0];
 always @(*) begin
     builder_csr_bankarray_csrbank3_phase_inc0_re <= 1'd0;
     builder_csr_bankarray_csrbank3_phase_inc0_we <= 1'd0;
-    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd21))) begin
+    if ((builder_csr_bankarray_csrbank3_sel & (builder_csr_bankarray_interface3_bank_bus_adr[8:0] == 5'd16))) begin
         builder_csr_bankarray_csrbank3_phase_inc0_re <= builder_csr_bankarray_interface3_bank_bus_we;
         builder_csr_bankarray_csrbank3_phase_inc0_we <= builder_csr_bankarray_interface3_bank_bus_re;
     end
@@ -17671,17 +17589,13 @@ end
 assign builder_csr_bankarray_csrbank3_bypass_en0_w = main_bypass_en_storage;
 assign builder_csr_bankarray_csrbank3_mux_sel0_w = main_mux_sel_storage;
 assign builder_csr_bankarray_csrbank3_method_sel0_w = main_method_sel_storage;
-assign builder_csr_bankarray_csrbank3_upsample_factor0_w = main_upsample_factor_storage;
-assign builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_w = main_tx_lpf_cutoff_storage;
 assign builder_csr_bankarray_csrbank3_cordic_tx_phase0_w = main_cordic_tx_phase_storage;
-assign builder_csr_bankarray_csrbank3_downsample_factor0_w = main_downsample_factor_storage;
-assign builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_w = main_rx_lpf_cutoff_storage;
 assign builder_csr_bankarray_csrbank3_cordic_rx_phase0_w = main_cordic_rx_phase_storage;
-assign builder_csr_bankarray_csrbank3_gain_tx0_w = main_gain_tx_storage;
-assign builder_csr_bankarray_csrbank3_gain_rx0_w = main_gain_rx_storage;
-assign builder_csr_bankarray_csrbank3_physics_run0_w = main_physics_run_storage;
-assign builder_csr_bankarray_csrbank3_physics_busy_w = main_physics_busy_status;
-assign main_physics_busy_we = builder_csr_bankarray_csrbank3_physics_busy_we;
+assign builder_csr_bankarray_csrbank3_gain00_w = main_gain0_storage;
+assign builder_csr_bankarray_csrbank3_gain10_w = main_gain1_storage;
+assign builder_csr_bankarray_csrbank3_gain20_w = main_gain2_storage;
+assign builder_csr_bankarray_csrbank3_gain30_w = main_gain3_storage;
+assign builder_csr_bankarray_csrbank3_gain40_w = main_gain4_storage;
 assign builder_csr_bankarray_csrbank3_hs_dbg_addr0_w = main_hs_dbg_addr_storage;
 assign builder_csr_bankarray_csrbank3_hs_dbg_wdata0_w = main_hs_dbg_wdata_storage;
 assign builder_csr_bankarray_csrbank3_hs_dbg_rdata_w = main_hs_dbg_rdata_status;
@@ -17690,11 +17604,8 @@ assign builder_csr_bankarray_csrbank3_ls_dbg_addr0_w = main_ls_dbg_addr_storage;
 assign builder_csr_bankarray_csrbank3_ls_dbg_wdata0_w = main_ls_dbg_wdata_storage;
 assign builder_csr_bankarray_csrbank3_ls_dbg_rdata_w = main_ls_dbg_rdata_status;
 assign main_ls_dbg_rdata_we = builder_csr_bankarray_csrbank3_ls_dbg_rdata_we;
-assign builder_csr_bankarray_csrbank3_sd_cmd0_w = main_sd_cmd_storage;
-assign builder_csr_bankarray_csrbank3_sd_status_w = main_sd_status_status;
-assign main_sd_status_we = builder_csr_bankarray_csrbank3_sd_status_we;
 assign builder_csr_bankarray_csrbank3_phase_inc0_w = main_phase_inc_storage;
-assign builder_csr_bankarray_csrbank4_sel = (builder_csr_bankarray_interface4_bank_bus_adr[13:9] == 5'd27);
+assign builder_csr_bankarray_csrbank4_sel = (builder_csr_bankarray_interface4_bank_bus_adr[13:9] == 5'd22);
 assign builder_csr_bankarray_csrbank4_dfii_control0_r = builder_csr_bankarray_interface4_bank_bus_dat_w[3:0];
 always @(*) begin
     builder_csr_bankarray_csrbank4_dfii_control0_re <= 1'd0;
@@ -18061,7 +17972,7 @@ assign builder_csr_bankarray_csrbank4_dfii_pi3_wrdata0_w = main_basesoc_sdram_ph
 assign builder_csr_bankarray_csrbank4_dfii_pi3_rddata1_w = main_basesoc_sdram_phaseinjector3_rddata_status[63:32];
 assign builder_csr_bankarray_csrbank4_dfii_pi3_rddata0_w = main_basesoc_sdram_phaseinjector3_rddata_status[31:0];
 assign main_basesoc_sdram_phaseinjector3_rddata_we = builder_csr_bankarray_csrbank4_dfii_pi3_rddata0_we;
-assign builder_csr_bankarray_csrbank5_sel = (builder_csr_bankarray_interface5_bank_bus_adr[13:9] == 5'd28);
+assign builder_csr_bankarray_csrbank5_sel = (builder_csr_bankarray_interface5_bank_bus_adr[13:9] == 5'd23);
 assign builder_csr_bankarray_csrbank5_load0_r = builder_csr_bankarray_interface5_bank_bus_dat_w;
 always @(*) begin
     builder_csr_bankarray_csrbank5_load0_re <= 1'd0;
@@ -18148,7 +18059,7 @@ assign builder_csr_bankarray_csrbank5_ev_pending_w = main_basesoc_basesoc_timer_
 assign main_basesoc_basesoc_timer_pending_we = builder_csr_bankarray_csrbank5_ev_pending_we;
 assign main_basesoc_basesoc_timer_zero2 = main_basesoc_basesoc_timer_enable_storage;
 assign builder_csr_bankarray_csrbank5_ev_enable0_w = main_basesoc_basesoc_timer_enable_storage;
-assign builder_csr_bankarray_csrbank6_sel = (builder_csr_bankarray_interface6_bank_bus_adr[13:9] == 5'd29);
+assign builder_csr_bankarray_csrbank6_sel = (builder_csr_bankarray_interface6_bank_bus_adr[13:9] == 5'd24);
 assign main_basesoc_basesoc_uart_rxtx_r = builder_csr_bankarray_interface6_bank_bus_dat_w[7:0];
 always @(*) begin
     main_basesoc_basesoc_uart_rxtx_re <= 1'd0;
@@ -22841,60 +22752,45 @@ always @(posedge sys_clk) begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_method_sel0_w;
             end
             2'd3: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_upsample_factor0_w;
-            end
-            3'd4: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_w;
-            end
-            3'd5: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_cordic_tx_phase0_w;
             end
-            3'd6: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_downsample_factor0_w;
-            end
-            3'd7: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_w;
-            end
-            4'd8: begin
+            3'd4: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_cordic_rx_phase0_w;
             end
+            3'd5: begin
+                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain00_w;
+            end
+            3'd6: begin
+                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain10_w;
+            end
+            3'd7: begin
+                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain20_w;
+            end
+            4'd8: begin
+                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain30_w;
+            end
             4'd9: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain_tx0_w;
+                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain40_w;
             end
             4'd10: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_gain_rx0_w;
-            end
-            4'd11: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_physics_run0_w;
-            end
-            4'd12: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_physics_busy_w;
-            end
-            4'd13: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_hs_dbg_addr0_w;
             end
-            4'd14: begin
+            4'd11: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_hs_dbg_wdata0_w;
             end
-            4'd15: begin
+            4'd12: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_hs_dbg_rdata_w;
             end
-            5'd16: begin
+            4'd13: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_ls_dbg_addr0_w;
             end
-            5'd17: begin
+            4'd14: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_ls_dbg_wdata0_w;
             end
-            5'd18: begin
+            4'd15: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_ls_dbg_rdata_w;
             end
-            5'd19: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_sd_cmd0_w;
-            end
-            5'd20: begin
-                builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_sd_status_w;
-            end
-            5'd21: begin
+            5'd16: begin
                 builder_csr_bankarray_interface3_bank_bus_dat_r <= builder_csr_bankarray_csrbank3_phase_inc0_w;
             end
         endcase
@@ -22911,43 +22807,34 @@ always @(posedge sys_clk) begin
         main_method_sel_storage <= builder_csr_bankarray_csrbank3_method_sel0_r;
     end
     main_method_sel_re <= builder_csr_bankarray_csrbank3_method_sel0_re;
-    if (builder_csr_bankarray_csrbank3_upsample_factor0_re) begin
-        main_upsample_factor_storage <= builder_csr_bankarray_csrbank3_upsample_factor0_r;
-    end
-    main_upsample_factor_re <= builder_csr_bankarray_csrbank3_upsample_factor0_re;
-    if (builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_re) begin
-        main_tx_lpf_cutoff_storage <= builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_r;
-    end
-    main_tx_lpf_cutoff_re <= builder_csr_bankarray_csrbank3_tx_lpf_cutoff0_re;
     if (builder_csr_bankarray_csrbank3_cordic_tx_phase0_re) begin
         main_cordic_tx_phase_storage <= builder_csr_bankarray_csrbank3_cordic_tx_phase0_r;
     end
     main_cordic_tx_phase_re <= builder_csr_bankarray_csrbank3_cordic_tx_phase0_re;
-    if (builder_csr_bankarray_csrbank3_downsample_factor0_re) begin
-        main_downsample_factor_storage <= builder_csr_bankarray_csrbank3_downsample_factor0_r;
-    end
-    main_downsample_factor_re <= builder_csr_bankarray_csrbank3_downsample_factor0_re;
-    if (builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_re) begin
-        main_rx_lpf_cutoff_storage <= builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_r;
-    end
-    main_rx_lpf_cutoff_re <= builder_csr_bankarray_csrbank3_rx_lpf_cutoff0_re;
     if (builder_csr_bankarray_csrbank3_cordic_rx_phase0_re) begin
         main_cordic_rx_phase_storage <= builder_csr_bankarray_csrbank3_cordic_rx_phase0_r;
     end
     main_cordic_rx_phase_re <= builder_csr_bankarray_csrbank3_cordic_rx_phase0_re;
-    if (builder_csr_bankarray_csrbank3_gain_tx0_re) begin
-        main_gain_tx_storage <= builder_csr_bankarray_csrbank3_gain_tx0_r;
+    if (builder_csr_bankarray_csrbank3_gain00_re) begin
+        main_gain0_storage <= builder_csr_bankarray_csrbank3_gain00_r;
     end
-    main_gain_tx_re <= builder_csr_bankarray_csrbank3_gain_tx0_re;
-    if (builder_csr_bankarray_csrbank3_gain_rx0_re) begin
-        main_gain_rx_storage <= builder_csr_bankarray_csrbank3_gain_rx0_r;
+    main_gain0_re <= builder_csr_bankarray_csrbank3_gain00_re;
+    if (builder_csr_bankarray_csrbank3_gain10_re) begin
+        main_gain1_storage <= builder_csr_bankarray_csrbank3_gain10_r;
     end
-    main_gain_rx_re <= builder_csr_bankarray_csrbank3_gain_rx0_re;
-    if (builder_csr_bankarray_csrbank3_physics_run0_re) begin
-        main_physics_run_storage <= builder_csr_bankarray_csrbank3_physics_run0_r;
+    main_gain1_re <= builder_csr_bankarray_csrbank3_gain10_re;
+    if (builder_csr_bankarray_csrbank3_gain20_re) begin
+        main_gain2_storage <= builder_csr_bankarray_csrbank3_gain20_r;
     end
-    main_physics_run_re <= builder_csr_bankarray_csrbank3_physics_run0_re;
-    main_physics_busy_re <= builder_csr_bankarray_csrbank3_physics_busy_re;
+    main_gain2_re <= builder_csr_bankarray_csrbank3_gain20_re;
+    if (builder_csr_bankarray_csrbank3_gain30_re) begin
+        main_gain3_storage <= builder_csr_bankarray_csrbank3_gain30_r;
+    end
+    main_gain3_re <= builder_csr_bankarray_csrbank3_gain30_re;
+    if (builder_csr_bankarray_csrbank3_gain40_re) begin
+        main_gain4_storage <= builder_csr_bankarray_csrbank3_gain40_r;
+    end
+    main_gain4_re <= builder_csr_bankarray_csrbank3_gain40_re;
     if (builder_csr_bankarray_csrbank3_hs_dbg_addr0_re) begin
         main_hs_dbg_addr_storage <= builder_csr_bankarray_csrbank3_hs_dbg_addr0_r;
     end
@@ -22966,11 +22853,6 @@ always @(posedge sys_clk) begin
     end
     main_ls_dbg_wdata_re <= builder_csr_bankarray_csrbank3_ls_dbg_wdata0_re;
     main_ls_dbg_rdata_re <= builder_csr_bankarray_csrbank3_ls_dbg_rdata_re;
-    if (builder_csr_bankarray_csrbank3_sd_cmd0_re) begin
-        main_sd_cmd_storage <= builder_csr_bankarray_csrbank3_sd_cmd0_r;
-    end
-    main_sd_cmd_re <= builder_csr_bankarray_csrbank3_sd_cmd0_re;
-    main_sd_status_re <= builder_csr_bankarray_csrbank3_sd_status_re;
     if (builder_csr_bankarray_csrbank3_phase_inc0_re) begin
         main_phase_inc_storage <= builder_csr_bankarray_csrbank3_phase_inc0_r;
     end
@@ -23673,25 +23555,20 @@ always @(posedge sys_clk) begin
         main_mux_sel_re <= 1'd0;
         main_method_sel_storage <= 3'd0;
         main_method_sel_re <= 1'd0;
-        main_upsample_factor_storage <= 4'd0;
-        main_upsample_factor_re <= 1'd0;
-        main_tx_lpf_cutoff_storage <= 8'd0;
-        main_tx_lpf_cutoff_re <= 1'd0;
         main_cordic_tx_phase_storage <= 19'd0;
         main_cordic_tx_phase_re <= 1'd0;
-        main_downsample_factor_storage <= 4'd0;
-        main_downsample_factor_re <= 1'd0;
-        main_rx_lpf_cutoff_storage <= 8'd0;
-        main_rx_lpf_cutoff_re <= 1'd0;
         main_cordic_rx_phase_storage <= 19'd0;
         main_cordic_rx_phase_re <= 1'd0;
-        main_gain_tx_storage <= 12'd0;
-        main_gain_tx_re <= 1'd0;
-        main_gain_rx_storage <= 12'd0;
-        main_gain_rx_re <= 1'd0;
-        main_physics_run_storage <= 1'd0;
-        main_physics_run_re <= 1'd0;
-        main_physics_busy_re <= 1'd0;
+        main_gain0_storage <= 12'd0;
+        main_gain0_re <= 1'd0;
+        main_gain1_storage <= 12'd0;
+        main_gain1_re <= 1'd0;
+        main_gain2_storage <= 12'd0;
+        main_gain2_re <= 1'd0;
+        main_gain3_storage <= 12'd0;
+        main_gain3_re <= 1'd0;
+        main_gain4_storage <= 12'd0;
+        main_gain4_re <= 1'd0;
         main_hs_dbg_addr_storage <= 16'd0;
         main_hs_dbg_addr_re <= 1'd0;
         main_hs_dbg_wdata_storage <= 32'd0;
@@ -23702,9 +23579,6 @@ always @(posedge sys_clk) begin
         main_ls_dbg_wdata_storage <= 32'd0;
         main_ls_dbg_wdata_re <= 1'd0;
         main_ls_dbg_rdata_re <= 1'd0;
-        main_sd_cmd_storage <= 8'd0;
-        main_sd_cmd_re <= 1'd0;
-        main_sd_status_re <= 1'd0;
         main_phase_inc_storage <= 19'd0;
         main_phase_inc_re <= 1'd0;
         builder_interface1_re <= 1'd0;
@@ -30295,5 +30169,5 @@ FDPE #(
 endmodule
 
 // -----------------------------------------------------------------------------
-//  Auto-Generated by LiteX on 2025-05-27 13:34:46.
+//  Auto-Generated by LiteX on 2025-05-27 16:25:14.
 //------------------------------------------------------------------------------

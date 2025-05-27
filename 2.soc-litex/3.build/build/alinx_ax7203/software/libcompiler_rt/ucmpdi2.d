@@ -4,7 +4,7 @@ ucmpdi2.o: \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-compiler_rt/pythondata_software_compiler_rt/data/lib/builtins/int_lib.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/limits.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/newlib.h \
- /home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/include/../libc/picolibc.h \
+ /home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/../libc/picolibc.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/cdefs.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_default_types.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/features.h \
@@ -23,7 +23,7 @@ ucmpdi2.o: \
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-compiler_rt/pythondata_software_compiler_rt/data/lib/builtins/int_lib.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/limits.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/newlib.h:
-/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/include/../libc/picolibc.h:
+/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/../libc/picolibc.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/cdefs.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_default_types.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/features.h:

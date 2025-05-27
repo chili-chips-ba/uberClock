@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Tue May 27 13:37:25 2025
+| Date         : Tue May 27 16:27:29 2025
 | Host         : archlinux running 64-bit Arch Linux
 | Command      : report_timing_summary -file alinx_ax7203_timing_synth.rpt
 | Design       : alinx_ax7203
@@ -138,10 +138,10 @@ Table of Contents
 
     WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
     -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
-      0.552        0.000                      0                22042       -0.003       -0.200                     66                22042        0.264        0.000                       0                  8917  
+      0.787        0.000                      0                21718        0.003        0.000                      0                21718        0.264        0.000                       0                  8915  
 
 
-Timing constraints are not met.
+All user specified timing constraints are met.
 
 
 ------------------------------------------------------------------------------------------------
@@ -173,15 +173,15 @@ Clock                                 WNS(ns)      TNS(ns)  TNS Failing Endpoint
 -----                                 -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
 clk200_p                                4.013        0.000                      0                    7        0.140        0.000                      0                    7        1.100        0.000                       0                    10  
   builder_crg_pll_fb                                                                                                                                                                3.751        0.000                       0                     2  
-  main_crg_clkout0                      1.208        0.000                      0                15668       -0.003       -0.200                     66                15668        8.870        0.000                       0                  6060  
+  main_crg_clkout0                      1.208        0.000                      0                15365        0.003        0.000                      0                15365        8.870        0.000                       0                  6058  
   main_crg_clkout1                                                                                                                                                                  3.408        0.000                       0                   128  
   main_crg_clkout2                                                                                                                                                                  3.408        0.000                       0                     6  
   main_crg_clkout3                      1.216        0.000                      0                   14        0.037        0.000                      0                   14        0.264        0.000                       0                    10  
-eth_rx_clk                              0.552        0.000                      0                 5993        0.029        0.000                      0                 5993        2.000        0.000                       0                  2536  
+eth_rx_clk                              0.787        0.000                      0                 5975        0.029        0.000                      0                 5975        2.000        0.000                       0                  2536  
   builder_liteethphyrgmii_pll_fb                                                                                                                                                    6.751        0.000                       0                     2  
   main_ethphy_clkout0                                                                                                                                                               6.408        0.000                       0                     2  
   main_ethphy_clkout1                                                                                                                                                               6.408        0.000                       0                     3  
-eth_tx_clk                              1.209        0.000                      0                  360        0.037        0.000                      0                  360        3.500        0.000                       0                   158  
+eth_tx_clk                              1.209        0.000                      0                  357        0.037        0.000                      0                  357        3.500        0.000                       0                   158  
 
 
 ------------------------------------------------------------------------------------------------
@@ -377,7 +377,7 @@ From Clock:  main_crg_clkout0
   To Clock:  main_crg_clkout0
 
 Setup :            0  Failing Endpoints,  Worst Slack        1.208ns,  Total Violation        0.000ns
-Hold  :           66  Failing Endpoints,  Worst Slack       -0.003ns,  Total Violation       -0.200ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.003ns,  Total Violation        0.000ns
 PW    :            0  Failing Endpoints,  Worst Slack        8.870ns,  Total Violation        0.000ns
 ---------------------------------------------------------------------------------------------------
 
@@ -418,7 +418,7 @@ Slack (MET) :             1.208ns  (required time - arrival time)
                                                       0.077     2.230 r  PLLE2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.646     2.876    main_crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.081     2.957 r  BUFG/O
-                         net (fo=6058, unplaced)      0.646     3.603    sys_clk
+                         net (fo=6056, unplaced)      0.646     3.603    sys_clk
                          FDPE                                         r  FDPE/C
   -------------------------------------------------------------------    -------------------
                          FDPE (Prop_fdpe_C_Q)         0.397     4.000 r  FDPE/Q
@@ -437,7 +437,7 @@ Slack (MET) :             1.208ns  (required time - arrival time)
                                                       0.073     4.007 r  PLLE2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.613     4.621    main_crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.077     4.698 r  BUFG/O
-                         net (fo=6058, unplaced)      0.501     5.198    sys_clk
+                         net (fo=6056, unplaced)      0.501     5.198    sys_clk
                          FDPE                                         r  FDPE_1/C
                          clock pessimism              0.259     5.458    
                          clock uncertainty           -0.059     5.398    
@@ -454,7 +454,7 @@ Slack (MET) :             1.208ns  (required time - arrival time)
 
 Min Delay Paths
 --------------------------------------------------------------------------------------
-Slack (VIOLATED) :        -0.003ns  (arrival time - required time)
+Slack (MET) :             0.003ns  (arrival time - required time)
   Source:                 main_a7ddrphy_rst_storage_reg/C
                             (rising edge-triggered cell FDRE clocked by main_crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
   Destination:            OSERDESE2/RST
@@ -462,7 +462,7 @@ Slack (VIOLATED) :        -0.003ns  (arrival time - required time)
   Path Group:             main_crg_clkout0
   Path Type:              Hold (Min at Fast Process Corner)
   Requirement:            0.000ns  (main_crg_clkout0 rise@0.000ns - main_crg_clkout0 rise@0.000ns)
-  Data Path Delay:        0.701ns  (logic 0.239ns (34.096%)  route 0.462ns (65.904%))
+  Data Path Delay:        0.707ns  (logic 0.239ns (33.785%)  route 0.468ns (66.215%))
   Logic Levels:           1  (LUT2=1)
   Clock Path Skew:        0.145ns (DCD - SCD - CPR)
     Destination Clock Delay (DCD):    1.773ns
@@ -483,13 +483,13 @@ Slack (VIOLATED) :        -0.003ns  (arrival time - required time)
                                                       0.050     0.871 r  PLLE2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.320     1.191    main_crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.026     1.217 r  BUFG/O
-                         net (fo=6058, unplaced)      0.192     1.409    sys_clk
+                         net (fo=6056, unplaced)      0.192     1.409    sys_clk
                          FDRE                                         r  main_a7ddrphy_rst_storage_reg/C
   -------------------------------------------------------------------    -------------------
                          FDRE (Prop_fdre_C_Q)         0.141     1.550 r  main_a7ddrphy_rst_storage_reg/Q
-                         net (fo=11, unplaced)        0.142     1.692    main_a7ddrphy_rst_storage
-                         LUT2 (Prop_lut2_I1_O)        0.098     1.790 r  OSERDESE2_1_i_2/O
-                         net (fo=102, unplaced)       0.320     2.110    RST0
+                         net (fo=19, unplaced)        0.148     1.698    main_a7ddrphy_rst_storage
+                         LUT2 (Prop_lut2_I1_O)        0.098     1.796 r  OSERDESE2_3_i_5/O
+                         net (fo=98, unplaced)        0.320     2.116    RST0
     OLOGIC_X1Y144        OSERDESE2                                    r  OSERDESE2/RST
   -------------------------------------------------------------------    -------------------
 
@@ -505,16 +505,16 @@ Slack (VIOLATED) :        -0.003ns  (arrival time - required time)
                                                       0.053     1.070 r  PLLE2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.337     1.407    main_crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.029     1.436 r  BUFG/O
-                         net (fo=6058, unplaced)      0.337     1.773    sys_clk
+                         net (fo=6056, unplaced)      0.337     1.773    sys_clk
     OLOGIC_X1Y144        OSERDESE2                                    r  OSERDESE2/CLKDIV
                          clock pessimism             -0.219     1.554    
     OLOGIC_X1Y144        OSERDESE2 (Hold_oserdese2_CLKDIV_RST)
                                                       0.559     2.113    OSERDESE2
   -------------------------------------------------------------------
                          required time                         -2.113    
-                         arrival time                           2.110    
+                         arrival time                           2.116    
   -------------------------------------------------------------------
-                         slack                                 -0.003    
+                         slack                                  0.003    
 
 
 
@@ -745,7 +745,7 @@ High Pulse Width  Slow    FDPE/C             n/a            0.500         2.500 
 From Clock:  eth_rx_clk
   To Clock:  eth_rx_clk
 
-Setup :            0  Failing Endpoints,  Worst Slack        0.552ns,  Total Violation        0.000ns
+Setup :            0  Failing Endpoints,  Worst Slack        0.787ns,  Total Violation        0.000ns
 Hold  :            0  Failing Endpoints,  Worst Slack        0.029ns,  Total Violation        0.000ns
 PW    :            0  Failing Endpoints,  Worst Slack        2.000ns,  Total Violation        0.000ns
 ---------------------------------------------------------------------------------------------------
@@ -753,16 +753,16 @@ PW    :            0  Failing Endpoints,  Worst Slack        2.000ns,  Total Vio
 
 Max Delay Paths
 --------------------------------------------------------------------------------------
-Slack (MET) :             0.552ns  (required time - arrival time)
-  Source:                 main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[72]/C
+Slack (MET) :             0.787ns  (required time - arrival time)
+  Source:                 main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/C
                             (rising edge-triggered cell FDRE clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Destination:            main_basesoc_ethcore_mac_core_cdc_dout_reg[0]/CE
+  Destination:            main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/D
                             (rising edge-triggered cell FDRE clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
   Path Group:             eth_rx_clk
   Path Type:              Setup (Max at Slow Process Corner)
   Requirement:            8.000ns  (eth_rx_clk rise@8.000ns - eth_rx_clk rise@0.000ns)
-  Data Path Delay:        7.103ns  (logic 2.550ns (35.900%)  route 4.553ns (64.100%))
-  Logic Levels:           13  (CARRY4=3 LUT2=1 LUT4=3 LUT5=2 LUT6=4)
+  Data Path Delay:        7.105ns  (logic 2.903ns (40.859%)  route 4.202ns (59.141%))
+  Logic Levels:           12  (CARRY4=3 LUT2=3 LUT3=1 LUT4=1 LUT5=1 LUT6=3)
   Clock Path Skew:        -0.145ns (DCD - SCD + CPR)
     Destination Clock Delay (DCD):    0.501ns = ( 8.501 - 8.000 ) 
     Source Clock Delay      (SCD):    0.646ns
@@ -779,55 +779,53 @@ Slack (MET) :             0.552ns  (required time - arrival time)
                                                       0.000     0.000 r  
                          BUFG                         0.000     0.000 r  BUFG_4/O
                          net (fo=2536, unplaced)      0.646     0.646    eth_rx_clk
-                         FDRE                                         r  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[72]/C
+                         FDRE                                         r  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/C
   -------------------------------------------------------------------    -------------------
-                         FDRE (Prop_fdre_C_Q)         0.379     1.025 f  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[72]/Q
-                         net (fo=5, unplaced)         0.627     1.652    main_basesoc_ethcore_ip_rx_source_source_param_protocol[0]
-                         LUT4 (Prop_lut4_I1_O)        0.252     1.904 r  builder_liteethudp_liteethudprx_state[0]_i_4/O
-                         net (fo=1, unplaced)         0.347     2.251    builder_liteethudp_liteethudprx_state[0]_i_4_n_0
-                         LUT5 (Prop_lut5_I4_O)        0.105     2.356 f  builder_liteethudp_liteethudprx_state[0]_i_2/O
-                         net (fo=5, unplaced)         0.356     2.712    builder_liteethudp_liteethudprx_state[0]_i_2_n_0
-                         LUT4 (Prop_lut4_I0_O)        0.105     2.817 f  storage_13_reg_i_18/O
-                         net (fo=79, unplaced)        0.441     3.258    storage_13_reg_i_18_n_0
-                         LUT2 (Prop_lut2_I1_O)        0.106     3.364 r  storage_14_reg_0_1_96_101_i_13/O
-                         net (fo=1, unplaced)         0.000     3.364    main_basesoc_ethcore_icmp_rx_sink_sink_param_length[3]
-                         CARRY4 (Prop_carry4_DI[1]_CO[3])
-                                                      0.451     3.815 r  storage_14_reg_0_1_96_101_i_8/CO[3]
-                         net (fo=1, unplaced)         0.008     3.823    storage_14_reg_0_1_96_101_i_8_n_0
-                         CARRY4 (Prop_carry4_CI_CO[3])
-                                                      0.100     3.923 r  storage_14_reg_0_1_102_107_i_2/CO[3]
-                         net (fo=1, unplaced)         0.000     3.923    storage_14_reg_0_1_102_107_i_2_n_0
-                         CARRY4 (Prop_carry4_CI_O[3])
-                                                      0.277     4.200 r  storage_13_reg_i_24/O[3]
-                         net (fo=1, unplaced)         0.476     4.676    main_basesoc_ethcore_icmp_rx_source_source_param_length[13]
-                         LUT4 (Prop_lut4_I1_O)        0.250     4.926 r  storage_13_reg_i_25/O
-                         net (fo=1, unplaced)         0.347     5.273    storage_13_reg_i_25_n_0
-                         LUT5 (Prop_lut5_I4_O)        0.105     5.378 r  storage_13_reg_i_21/O
-                         net (fo=1, unplaced)         0.347     5.725    storage_13_reg_i_21_n_0
-                         LUT6 (Prop_lut6_I0_O)        0.105     5.830 r  storage_13_reg_i_16/O
-                         net (fo=110, unplaced)       0.449     6.279    storage_13_reg_i_16_n_0
-                         LUT6 (Prop_lut6_I0_O)        0.105     6.384 r  main_basesoc_ethcore_mac_core_cdc_dout[11]_i_5/O
-                         net (fo=2, unplaced)         0.358     6.742    main_basesoc_ethcore_mac_core_cdc_dout[11]_i_5_n_0
-                         LUT6 (Prop_lut6_I2_O)        0.105     6.847 r  main_basesoc_ethcore_mac_core_cdc_dout[11]_i_3/O
-                         net (fo=5, unplaced)         0.375     7.222    main_basesoc_ethcore_mac_core_cdc_dout[11]_i_3_n_0
-                         LUT6 (Prop_lut6_I1_O)        0.105     7.327 r  main_basesoc_ethcore_mac_core_cdc_dout[11]_i_1/O
-                         net (fo=17, unplaced)        0.422     7.749    main_basesoc_ethcore_mac_core_cdc_asyncfifo_re
-                         FDRE                                         r  main_basesoc_ethcore_mac_core_cdc_dout_reg[0]/CE
+                         FDRE (Prop_fdre_C_Q)         0.379     1.025 f  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/Q
+                         net (fo=4, unplaced)         0.623     1.648    main_basesoc_ethcore_ip_rx_source_source_param_protocol[2]
+                         LUT4 (Prop_lut4_I1_O)        0.252     1.900 f  builder_liteethudp_liteethudprx_state[1]_i_5/O
+                         net (fo=3, unplaced)         0.346     2.246    builder_liteethudp_liteethudprx_state[1]_i_5_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.105     2.351 f  builder_liteethip_sel_ongoing[0]_i_2/O
+                         net (fo=5, unplaced)         0.356     2.707    builder_liteethip_sel_ongoing[0]_i_2_n_0
+                         LUT2 (Prop_lut2_I0_O)        0.105     2.812 f  storage_13_reg_i_19/O
+                         net (fo=77, unplaced)        0.440     3.252    storage_13_reg_i_19_n_0
+                         LUT2 (Prop_lut2_I1_O)        0.106     3.358 r  storage_14_reg_0_1_96_101_i_13/O
+                         net (fo=1, unplaced)         0.000     3.358    main_basesoc_ethcore_icmp_rx_sink_sink_param_length[3]
+                         CARRY4 (Prop_carry4_DI[1]_O[3])
+                                                      0.540     3.898 f  storage_14_reg_0_1_96_101_i_8/O[3]
+                         net (fo=2, unplaced)         0.661     4.559    main_basesoc_ethcore_icmp_rx_source_source_param_length[5]
+                         LUT5 (Prop_lut5_I1_O)        0.250     4.809 f  storage_13_reg_i_24/O
+                         net (fo=1, unplaced)         0.582     5.391    storage_13_reg_i_24_n_0
+                         LUT6 (Prop_lut6_I2_O)        0.105     5.496 f  storage_13_reg_i_16/O
+                         net (fo=111, unplaced)       0.449     5.945    storage_13_reg_i_16_n_0
+                         LUT3 (Prop_lut3_I0_O)        0.105     6.050 f  storage_13_reg_i_20/O
+                         net (fo=2, unplaced)         0.358     6.408    storage_13_reg_i_20_n_0
+                         LUT6 (Prop_lut6_I0_O)        0.105     6.513 r  storage_13_reg_i_12/O
+                         net (fo=6, unplaced)         0.379     6.892    p_502_in
+                         LUT2 (Prop_lut2_I1_O)        0.105     6.997 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0[4]_i_2/O
+                         net (fo=1, unplaced)         0.000     6.997    main_basesoc_ethcore_icmp_echo_payload_fifo_level0[4]_i_2_n_0
+                         CARRY4 (Prop_carry4_DI[0]_CO[3])
+                                                      0.477     7.474 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[4]_i_1/CO[3]
+                         net (fo=1, unplaced)         0.008     7.482    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[4]_i_1_n_0
+                         CARRY4 (Prop_carry4_CI_O[1])
+                                                      0.269     7.751 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[7]_i_2/O[1]
+                         net (fo=1, unplaced)         0.000     7.751    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[7]_i_2_n_6
+                         FDRE                                         r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/D
   -------------------------------------------------------------------    -------------------
 
                          (clock eth_rx_clk rise edge)
                                                       8.000     8.000 r  
                          BUFG                         0.000     8.000 r  BUFG_4/O
                          net (fo=2536, unplaced)      0.501     8.501    eth_rx_clk
-                         FDRE                                         r  main_basesoc_ethcore_mac_core_cdc_dout_reg[0]/C
+                         FDRE                                         r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/C
                          clock pessimism              0.000     8.501    
                          clock uncertainty           -0.035     8.465    
-                         FDRE (Setup_fdre_C_CE)      -0.165     8.300    main_basesoc_ethcore_mac_core_cdc_dout_reg[0]
+                         FDRE (Setup_fdre_C_D)        0.072     8.537    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]
   -------------------------------------------------------------------
-                         required time                          8.300    
-                         arrival time                          -7.749    
+                         required time                          8.537    
+                         arrival time                          -7.751    
   -------------------------------------------------------------------
-                         slack                                  0.552    
+                         slack                                  0.787    
 
 
 

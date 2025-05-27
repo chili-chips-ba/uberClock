@@ -4,10 +4,10 @@
 <!-- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.                   -->
 <!-- Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.   -->
 
-<Project Product="Vivado" Version="7" Minor="68" Path="/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware/alinx_ax7203.xpr">
+<Project Product="Vivado" Version="7" Minor="68" Path="/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/gateware/alinx_ax7203.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="88114e230ca1401ab2b18988a2d8ffdb"/>
+    <Option Name="Id" Val="679c353624e54032b788bf581216a488"/>
     <Option Name="Part" Val="xc7a200tfbg484-2"/>
     <Option Name="CompiledLibDir" Val="$PCACHEDIR/compile_simlib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
@@ -47,6 +47,7 @@
     <Option Name="ActiveSimSet" Val="sim_1"/>
     <Option Name="DefaultLib" Val="xil_defaultlib"/>
     <Option Name="ProjectType" Val="Default"/>
+    <Option Name="IPOutputRepo" Val="$PCACHEDIR/ip"/>
     <Option Name="IPDefaultOutputPath" Val="$PGENDIR/sources_1"/>
     <Option Name="IPCachePermission" Val="read"/>
     <Option Name="IPCachePermission" Val="write"/>
@@ -88,42 +89,42 @@
   <FileSets Version="1" Minor="32">
     <FileSet Name="sources_1" Type="DesignSrcs" RelSrcDir="$PSRCDIR/sources_1" RelGenDir="$PGENDIR/sources_1">
       <Filter Type="Srcs"/>
-      <File Path="$PPRDIR/../../../litex-examples/cordic-dac/verilog/cordic_pre_rotate.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_pre_rotate.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../litex-examples/cordic-dac/verilog/cordic_pipeline_stage.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_pipeline_stage.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../litex-examples/cordic-dac/verilog/cordic_round.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_round.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../litex-examples/cordic-dac/verilog/cordic.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../litex-examples/cordic-dac/verilog/cordic_dac.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_dac.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v">
+      <File Path="$PPRDIR/../../../../../../../../Tools/litex-hub/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

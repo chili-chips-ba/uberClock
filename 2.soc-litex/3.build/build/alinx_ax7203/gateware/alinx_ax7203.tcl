@@ -15,7 +15,7 @@ read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog
 read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic.v}
 read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_dac.v}
 read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v}
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware/alinx_ax7203.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/gateware/alinx_ax7203.v}
 
 # Add EDIFs
 

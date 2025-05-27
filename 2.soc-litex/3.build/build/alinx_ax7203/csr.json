@@ -1,422 +1,397 @@
 {
     "csr_bases": {
-        "ctrl": 4026576896,
-        "ddrphy": 4026578944,
-        "ethphy": 4026580992,
-        "identifier_mem": 4026583040,
-        "main": 4026585088,
-        "sdram": 4026587136,
-        "timer0": 4026589184,
-        "uart": 4026591232
+        "ctrl": 4026566656,
+        "ddrphy": 4026568704,
+        "ethphy": 4026570752,
+        "identifier_mem": 4026572800,
+        "main": 4026574848,
+        "sdram": 4026576896,
+        "timer0": 4026578944,
+        "uart": 4026580992
     },
     "csr_registers": {
         "ctrl_reset": {
-            "addr": 4026576896,
+            "addr": 4026566656,
             "size": 1,
             "type": "rw"
         },
         "ctrl_scratch": {
-            "addr": 4026576900,
+            "addr": 4026566660,
             "size": 1,
             "type": "rw"
         },
         "ctrl_bus_errors": {
-            "addr": 4026576904,
+            "addr": 4026566664,
             "size": 1,
             "type": "ro"
         },
         "ddrphy_rst": {
-            "addr": 4026578944,
+            "addr": 4026568704,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_dly_sel": {
-            "addr": 4026578948,
+            "addr": 4026568708,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_half_sys8x_taps": {
-            "addr": 4026578952,
+            "addr": 4026568712,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_wlevel_en": {
-            "addr": 4026578956,
+            "addr": 4026568716,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_wlevel_strobe": {
-            "addr": 4026578960,
+            "addr": 4026568720,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_rdly_dq_rst": {
-            "addr": 4026578964,
+            "addr": 4026568724,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_rdly_dq_inc": {
-            "addr": 4026578968,
+            "addr": 4026568728,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_rdly_dq_bitslip_rst": {
-            "addr": 4026578972,
+            "addr": 4026568732,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_rdly_dq_bitslip": {
-            "addr": 4026578976,
+            "addr": 4026568736,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_wdly_dq_bitslip_rst": {
-            "addr": 4026578980,
+            "addr": 4026568740,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_wdly_dq_bitslip": {
-            "addr": 4026578984,
+            "addr": 4026568744,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_rdphase": {
-            "addr": 4026578988,
+            "addr": 4026568748,
             "size": 1,
             "type": "rw"
         },
         "ddrphy_wrphase": {
-            "addr": 4026578992,
+            "addr": 4026568752,
             "size": 1,
             "type": "rw"
         },
         "ethphy_crg_reset": {
-            "addr": 4026580992,
+            "addr": 4026570752,
             "size": 1,
             "type": "rw"
         },
         "ethphy_mdio_w": {
-            "addr": 4026580996,
+            "addr": 4026570756,
             "size": 1,
             "type": "rw"
         },
         "ethphy_mdio_r": {
-            "addr": 4026581000,
+            "addr": 4026570760,
             "size": 1,
             "type": "ro"
         },
         "main_bypass_en": {
-            "addr": 4026585088,
+            "addr": 4026574848,
             "size": 1,
             "type": "rw"
         },
         "main_mux_sel": {
-            "addr": 4026585092,
+            "addr": 4026574852,
             "size": 1,
             "type": "rw"
         },
         "main_method_sel": {
-            "addr": 4026585096,
-            "size": 1,
-            "type": "rw"
-        },
-        "main_upsample_factor": {
-            "addr": 4026585100,
-            "size": 1,
-            "type": "rw"
-        },
-        "main_tx_lpf_cutoff": {
-            "addr": 4026585104,
+            "addr": 4026574856,
             "size": 1,
             "type": "rw"
         },
         "main_cordic_tx_phase": {
-            "addr": 4026585108,
-            "size": 1,
-            "type": "rw"
-        },
-        "main_downsample_factor": {
-            "addr": 4026585112,
-            "size": 1,
-            "type": "rw"
-        },
-        "main_rx_lpf_cutoff": {
-            "addr": 4026585116,
+            "addr": 4026574860,
             "size": 1,
             "type": "rw"
         },
         "main_cordic_rx_phase": {
-            "addr": 4026585120,
+            "addr": 4026574864,
             "size": 1,
             "type": "rw"
         },
-        "main_gain_tx": {
-            "addr": 4026585124,
+        "main_gain0": {
+            "addr": 4026574868,
             "size": 1,
             "type": "rw"
         },
-        "main_gain_rx": {
-            "addr": 4026585128,
+        "main_gain1": {
+            "addr": 4026574872,
             "size": 1,
             "type": "rw"
         },
-        "main_physics_run": {
-            "addr": 4026585132,
+        "main_gain2": {
+            "addr": 4026574876,
             "size": 1,
             "type": "rw"
         },
-        "main_physics_busy": {
-            "addr": 4026585136,
+        "main_gain3": {
+            "addr": 4026574880,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
+        },
+        "main_gain4": {
+            "addr": 4026574884,
+            "size": 1,
+            "type": "rw"
         },
         "main_hs_dbg_addr": {
-            "addr": 4026585140,
+            "addr": 4026574888,
             "size": 1,
             "type": "rw"
         },
         "main_hs_dbg_wdata": {
-            "addr": 4026585144,
+            "addr": 4026574892,
             "size": 1,
             "type": "rw"
         },
         "main_hs_dbg_rdata": {
-            "addr": 4026585148,
+            "addr": 4026574896,
             "size": 1,
             "type": "ro"
         },
         "main_ls_dbg_addr": {
-            "addr": 4026585152,
+            "addr": 4026574900,
             "size": 1,
             "type": "rw"
         },
         "main_ls_dbg_wdata": {
-            "addr": 4026585156,
+            "addr": 4026574904,
             "size": 1,
             "type": "rw"
         },
         "main_ls_dbg_rdata": {
-            "addr": 4026585160,
-            "size": 1,
-            "type": "ro"
-        },
-        "main_sd_cmd": {
-            "addr": 4026585164,
-            "size": 1,
-            "type": "rw"
-        },
-        "main_sd_status": {
-            "addr": 4026585168,
+            "addr": 4026574908,
             "size": 1,
             "type": "ro"
         },
         "main_phase_inc": {
-            "addr": 4026585172,
+            "addr": 4026574912,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_control": {
-            "addr": 4026587136,
+            "addr": 4026576896,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi0_command": {
-            "addr": 4026587140,
+            "addr": 4026576900,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi0_command_issue": {
-            "addr": 4026587144,
+            "addr": 4026576904,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi0_address": {
-            "addr": 4026587148,
+            "addr": 4026576908,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi0_baddress": {
-            "addr": 4026587152,
+            "addr": 4026576912,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi0_wrdata": {
-            "addr": 4026587156,
+            "addr": 4026576916,
             "size": 2,
             "type": "rw"
         },
         "sdram_dfii_pi0_rddata": {
-            "addr": 4026587164,
+            "addr": 4026576924,
             "size": 2,
             "type": "ro"
         },
         "sdram_dfii_pi1_command": {
-            "addr": 4026587172,
+            "addr": 4026576932,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi1_command_issue": {
-            "addr": 4026587176,
+            "addr": 4026576936,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi1_address": {
-            "addr": 4026587180,
+            "addr": 4026576940,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi1_baddress": {
-            "addr": 4026587184,
+            "addr": 4026576944,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi1_wrdata": {
-            "addr": 4026587188,
+            "addr": 4026576948,
             "size": 2,
             "type": "rw"
         },
         "sdram_dfii_pi1_rddata": {
-            "addr": 4026587196,
+            "addr": 4026576956,
             "size": 2,
             "type": "ro"
         },
         "sdram_dfii_pi2_command": {
-            "addr": 4026587204,
+            "addr": 4026576964,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi2_command_issue": {
-            "addr": 4026587208,
+            "addr": 4026576968,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi2_address": {
-            "addr": 4026587212,
+            "addr": 4026576972,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi2_baddress": {
-            "addr": 4026587216,
+            "addr": 4026576976,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi2_wrdata": {
-            "addr": 4026587220,
+            "addr": 4026576980,
             "size": 2,
             "type": "rw"
         },
         "sdram_dfii_pi2_rddata": {
-            "addr": 4026587228,
+            "addr": 4026576988,
             "size": 2,
             "type": "ro"
         },
         "sdram_dfii_pi3_command": {
-            "addr": 4026587236,
+            "addr": 4026576996,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi3_command_issue": {
-            "addr": 4026587240,
+            "addr": 4026577000,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi3_address": {
-            "addr": 4026587244,
+            "addr": 4026577004,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi3_baddress": {
-            "addr": 4026587248,
+            "addr": 4026577008,
             "size": 1,
             "type": "rw"
         },
         "sdram_dfii_pi3_wrdata": {
-            "addr": 4026587252,
+            "addr": 4026577012,
             "size": 2,
             "type": "rw"
         },
         "sdram_dfii_pi3_rddata": {
-            "addr": 4026587260,
+            "addr": 4026577020,
             "size": 2,
             "type": "ro"
         },
         "timer0_load": {
-            "addr": 4026589184,
+            "addr": 4026578944,
             "size": 1,
             "type": "rw"
         },
         "timer0_reload": {
-            "addr": 4026589188,
+            "addr": 4026578948,
             "size": 1,
             "type": "rw"
         },
         "timer0_en": {
-            "addr": 4026589192,
+            "addr": 4026578952,
             "size": 1,
             "type": "rw"
         },
         "timer0_update_value": {
-            "addr": 4026589196,
+            "addr": 4026578956,
             "size": 1,
             "type": "rw"
         },
         "timer0_value": {
-            "addr": 4026589200,
+            "addr": 4026578960,
             "size": 1,
             "type": "ro"
         },
         "timer0_ev_status": {
-            "addr": 4026589204,
+            "addr": 4026578964,
             "size": 1,
             "type": "ro"
         },
         "timer0_ev_pending": {
-            "addr": 4026589208,
+            "addr": 4026578968,
             "size": 1,
             "type": "rw"
         },
         "timer0_ev_enable": {
-            "addr": 4026589212,
+            "addr": 4026578972,
             "size": 1,
             "type": "rw"
         },
         "uart_rxtx": {
-            "addr": 4026591232,
+            "addr": 4026580992,
             "size": 1,
             "type": "rw"
         },
         "uart_txfull": {
-            "addr": 4026591236,
+            "addr": 4026580996,
             "size": 1,
             "type": "ro"
         },
         "uart_rxempty": {
-            "addr": 4026591240,
+            "addr": 4026581000,
             "size": 1,
             "type": "ro"
         },
         "uart_ev_status": {
-            "addr": 4026591244,
+            "addr": 4026581004,
             "size": 1,
             "type": "ro"
         },
         "uart_ev_pending": {
-            "addr": 4026591248,
+            "addr": 4026581008,
             "size": 1,
             "type": "rw"
         },
         "uart_ev_enable": {
-            "addr": 4026591252,
+            "addr": 4026581012,
             "size": 1,
             "type": "rw"
         },
         "uart_txempty": {
-            "addr": 4026591256,
+            "addr": 4026581016,
             "size": 1,
             "type": "ro"
         },
         "uart_rxfull": {
-            "addr": 4026591260,
+            "addr": 4026581020,
             "size": 1,
             "type": "ro"
         }
@@ -434,7 +409,7 @@
         "config_cpu_name": "vexriscv",
         "config_cpu_human_name": "vexriscv",
         "config_cpu_nop": "nop",
-        "config_identifier": "litex soc on alinx ax7203 2025-05-27 13:34:42",
+        "config_identifier": "litex soc on alinx ax7203 2025-05-27 16:25:11",
         "config_l2_size": 8192,
         "config_csr_data_width": 32,
         "config_csr_alignment": 32,

@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/gateware/alinx_ax7203.xdc rfile:../alinx_ax7203.xdc id:1 order:EARLY} [current_design]
+set_property SRC_FILE_INFO {cfile:/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/gateware/alinx_ax7203.xdc rfile:../alinx_ax7203.xdc id:1 order:EARLY} [current_design]
 set_property src_info {type:XDC file:1 line:5 export:INPUT save:INPUT read:READ} [current_design]
 set_property LOC R4 [get_ports {clk200_p}]
 set_property src_info {type:XDC file:1 line:9 export:INPUT save:INPUT read:READ} [current_design]
