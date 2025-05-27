@@ -13,7 +13,7 @@ PICOLIBC_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-pi
 PICOLIBC_FORMAT=integer
 COMPILER_RT_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-compiler_rt/pythondata_software_compiler_rt/data
 export BUILDINC_DIRECTORY
-BUILDINC_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/include
+BUILDINC_DIRECTORY=/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include
 LIBC_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libc
 LIBCOMPILER_RT_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libcompiler_rt
 LIBBASE_DIRECTORY=/home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libbase

@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Tue May 27 13:37:25 2025
+| Date         : Tue May 27 16:27:29 2025
 | Host         : archlinux running 64-bit Arch Linux
 | Command      : report_utilization -hierarchical -file alinx_ax7203_utilization_hierarchical_synth.rpt
 | Design       : alinx_ax7203
@@ -22,12 +22,12 @@ Table of Contents
 +----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
 |          Instance          |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
 +----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
-| alinx_ax7203               |            (top) |       8041 |       7481 |     542 |   18 | 7432 |     12 |     42 |          4 |
-|   (alinx_ax7203)           |            (top) |       5112 |       4552 |     542 |   18 | 6176 |     11 |     34 |          0 |
-|   VexRiscv                 |         VexRiscv |       2929 |       2929 |       0 |    0 | 1256 |      1 |      8 |          4 |
-|     (VexRiscv)             |         VexRiscv |       1611 |       1611 |       0 |    0 | 1097 |      0 |      2 |          4 |
-|     IBusCachedPlugin_cache | InstructionCache |        810 |        810 |       0 |    0 |  100 |      1 |      1 |          0 |
-|     dataCache_1            |        DataCache |        508 |        508 |       0 |    0 |   59 |      0 |      5 |          0 |
+| alinx_ax7203               |            (top) |       8290 |       7730 |     542 |   18 | 7438 |     12 |     42 |          4 |
+|   (alinx_ax7203)           |            (top) |       5289 |       4729 |     542 |   18 | 6182 |     11 |     34 |          0 |
+|   VexRiscv                 |         VexRiscv |       3001 |       3001 |       0 |    0 | 1256 |      1 |      8 |          4 |
+|     (VexRiscv)             |         VexRiscv |       1629 |       1629 |       0 |    0 | 1097 |      0 |      2 |          4 |
+|     IBusCachedPlugin_cache | InstructionCache |        890 |        890 |       0 |    0 |  100 |      1 |      1 |          0 |
+|     dataCache_1            |        DataCache |        482 |        482 |       0 |    0 |   59 |      0 |      5 |          0 |
 |   cordic_dac               |       cordic_dac |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
 +----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
 

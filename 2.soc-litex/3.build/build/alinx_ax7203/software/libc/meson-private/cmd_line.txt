@@ -9,5 +9,5 @@ includedir = picolibc/riscv64-linux-gnu/include
 libdir = picolibc/riscv64-linux-gnu/lib
 
 [properties]
-cross_file = ['/home/hamed/FPGA/Tools/litex-hub/build/alinx_ax7203/software/libc/cross.txt']
+cross_file = ['/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/libc/cross.txt']
 
