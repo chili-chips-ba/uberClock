@@ -1,6 +1,6 @@
 **MAIN ICD Register Bank**  
 All of the registers listed below live in the MAIN ICD bank, which is memory-mapped at `CSR_MAIN_BASE = CSR_BASE + 0x2000` (i.e. address `0xF000_2000`).
-Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown under “Bits” are implemented; all other bit-positions are reserved and should be written as zero (reads return zero).
+Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown under “Bits” are implemented; all other bit-positions are reserved and should be written as zero.
 
 
 
