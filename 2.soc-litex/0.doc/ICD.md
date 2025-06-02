@@ -1,4 +1,7 @@
 **MAIN ICD Register Bank**  
+
+**Memory** : 4 Gbit (512 MB) external DDR3 as “main RAM.”
+
 All of the registers listed below live in the MAIN ICD bank, which is memory-mapped at `CSR_MAIN_BASE = CSR_BASE + 0x2000` (i.e. address `0xF000_2000`).
 Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown under “Bits” are implemented; all other bit-positions are reserved and should be written as zero (reads return zero).
 
@@ -55,3 +58,10 @@ Each entry occupies one full 32-bit word in the CSR bus.  Only the bits shown un
 
 
 
+## TODO:
+- [x] Specify the 5 processing modes in the ICD
+- [x] Specify RAM memory capacity
+- [ ] Figure for GAIN to have a clearer picture
+- [x] Add 5x CORDIC_RX and CORDIC_TX registers to ICD
+- [x] Add Buffer/Latch register to ICD
+- [x] Add Amplitude ArcTan register to ICD
