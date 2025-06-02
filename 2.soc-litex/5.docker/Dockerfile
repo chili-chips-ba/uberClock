@@ -69,16 +69,11 @@ RUN python3 -m venv ${LITEX_VENV}
 # ensure venv’s bin directory is on PATH
 ENV PATH="${LITEX_VENV}/bin:${PATH}"
 
-# upgrade pip and install LiteX, Migen, boards, cores, drams, eth, scope, etc.
-RUN pip install --upgrade pip && \
-    pip install \
-      git+https://github.com/enjoy-digital/migen.git@master \
-      git+https://github.com/enjoy-digital/litex.git@master \
-      git+https://github.com/enjoy-digital/litex-boards.git@master \
-      liteeth \
-      litedram \
-      litescope \
-      litex-soc-cores
+RUN mkdir -p /opt/litex && \
+    cd /opt/litex && \
+    wget https://raw.githubusercontent.com/enjoy-digital/litex/master/litex_setup.py && \
+    chmod +x litex_setup.py && \
+    /opt/litex-venv/bin/python3 litex_setup.py --init --install --gcc=riscv --config=full
 
 # Additional repositories for FPGA and memory modeling
 RUN git config --global http.postBuffer 1048576000 && \
@@ -105,55 +100,3 @@ RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | bash -s -- -y &&
 
 # Set the working directory
 WORKDIR /workspace
-
-#======================================================#
-#               LXQT Desktop Environment              #
-#======================================================#
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        lxqt-core qtwayland5 xfwm4 \
-        featherpad lxqt-about lxqt-config lxqt-qtplugin \
-        pavucontrol-qt qlipper qterminal \
-        adwaita-icon-theme papirus-icon-theme oxygen-icon-theme hicolor-icon-theme \
-    && rm -rf /var/lib/apt/lists/*
-
-# Configure LXQT desktop
-RUN mkdir -p /etc/skel/.config/lxqt && \
-    echo '[General]\n\
-__userfile__=true\n\
-icon_theme=Adwaita\n\
-single_click_activate=false\n\
-theme=ambiance\n\
-tool_button_style=ToolButtonTextBesideIcon\n\
-\n\
-[Qt]\n\
-doubleClickInterval=400\n\
-font="Sans,11,-1,5,50,0,0,0,0,0"\n\
-style=Fusion\n\
-wheelScrollLines=3\n\
-' >/etc/skel/.config/lxqt/lxqt.conf
-
-# Update GTK icon cache
-RUN gtk-update-icon-cache -f /usr/share/icons/Adwaita
-
-# Add quicklaunch configuration for LXQT panel
-RUN mkdir -p /etc/xdg/lxqt && echo '[quicklaunch]\n\
-alignment=Left\n\
-apps\\1\desktop=/usr/share/applications/pcmanfm-qt.desktop\n\
-apps\\2\desktop=/usr/share/applications/qterminal.desktop\n\
-apps\\3\desktop=/usr/share/applications/juffed.desktop\n\
-apps\size=3\n\
-type=quicklaunch\n\
-' >> /etc/xdg/lxqt/panel.conf
-
-# Add start script for LXQT
-RUN echo '#! /bin/bash\n\
-xdpyinfo | grep -q -i COMPOSITE || echo "x11docker/lxqt: X extension COMPOSITE not found.\n\
-Graphical glitches might occur.\n\
-If you run with x11docker option --nxagent, please add option --composite.\n\
-" >&2\n\
-startlxqt\n\
-' > /usr/local/bin/start && chmod +x /usr/local/bin/start
-
-# Default to LXQT startup
-CMD ["start"]

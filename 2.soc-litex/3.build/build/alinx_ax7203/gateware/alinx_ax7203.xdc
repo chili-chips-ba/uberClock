@@ -17,6 +17,22 @@ set_property IOSTANDARD LVCMOS33 [get_ports {serial_tx}]
 set_property LOC P20 [get_ports {serial_rx}]
 set_property IOSTANDARD LVCMOS33 [get_ports {serial_rx}]
 
+# user_led:0
+set_property LOC B13 [get_ports {user_led0}]
+set_property IOSTANDARD LVCMOS33 [get_ports {user_led0}]
+
+# user_led:1
+set_property LOC C13 [get_ports {user_led1}]
+set_property IOSTANDARD LVCMOS33 [get_ports {user_led1}]
+
+# user_led:2
+set_property LOC D14 [get_ports {user_led2}]
+set_property IOSTANDARD LVCMOS33 [get_ports {user_led2}]
+
+# user_led:3
+set_property LOC D15 [get_ports {user_led3}]
+set_property IOSTANDARD LVCMOS33 [get_ports {user_led3}]
+
 # ddram:0.a
 set_property LOC AA4 [get_ports {ddram_a[0]}]
 set_property SLEW FAST [get_ports {ddram_a[0]}]
@@ -412,79 +428,6 @@ set_property LOC W6 [get_ports {ddram_reset_n}]
 set_property SLEW FAST [get_ports {ddram_reset_n}]
 set_property IOSTANDARD LVCMOS15 [get_ports {ddram_reset_n}]
 
-# eth_clocks:0.tx
-set_property LOC E18 [get_ports {eth_clocks_tx}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_clocks_tx}]
-
-# eth_clocks:0.rx
-set_property LOC B17 [get_ports {eth_clocks_rx}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_clocks_rx}]
-
-# eth:0.rst_n
-set_property LOC D16 [get_ports {eth_rst_n}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rst_n}]
-set_property SLEW FAST [get_ports {eth_rst_n}]
-
-# eth:0.mdio
-set_property LOC B15 [get_ports {eth_mdio}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_mdio}]
-set_property SLEW FAST [get_ports {eth_mdio}]
-
-# eth:0.mdc
-set_property LOC B16 [get_ports {eth_mdc}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_mdc}]
-set_property SLEW FAST [get_ports {eth_mdc}]
-
-# eth:0.rx_ctl
-set_property LOC A15 [get_ports {eth_rx_ctl}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rx_ctl}]
-set_property SLEW FAST [get_ports {eth_rx_ctl}]
-
-# eth:0.rx_data
-set_property LOC A16 [get_ports {eth_rx_data[0]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rx_data[0]}]
-set_property SLEW FAST [get_ports {eth_rx_data[0]}]
-
-# eth:0.rx_data
-set_property LOC B18 [get_ports {eth_rx_data[1]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rx_data[1]}]
-set_property SLEW FAST [get_ports {eth_rx_data[1]}]
-
-# eth:0.rx_data
-set_property LOC C18 [get_ports {eth_rx_data[2]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rx_data[2]}]
-set_property SLEW FAST [get_ports {eth_rx_data[2]}]
-
-# eth:0.rx_data
-set_property LOC C19 [get_ports {eth_rx_data[3]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_rx_data[3]}]
-set_property SLEW FAST [get_ports {eth_rx_data[3]}]
-
-# eth:0.tx_ctl
-set_property LOC F18 [get_ports {eth_tx_ctl}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_tx_ctl}]
-set_property SLEW FAST [get_ports {eth_tx_ctl}]
-
-# eth:0.tx_data
-set_property LOC C20 [get_ports {eth_tx_data[0]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_tx_data[0]}]
-set_property SLEW FAST [get_ports {eth_tx_data[0]}]
-
-# eth:0.tx_data
-set_property LOC D20 [get_ports {eth_tx_data[1]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_tx_data[1]}]
-set_property SLEW FAST [get_ports {eth_tx_data[1]}]
-
-# eth:0.tx_data
-set_property LOC A19 [get_ports {eth_tx_data[2]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_tx_data[2]}]
-set_property SLEW FAST [get_ports {eth_tx_data[2]}]
-
-# eth:0.tx_data
-set_property LOC A18 [get_ports {eth_tx_data[3]}]
-set_property IOSTANDARD LVCMOS33 [get_ports {eth_tx_data[3]}]
-set_property SLEW FAST [get_ports {eth_tx_data[3]}]
-
 # da1_clk:0
 set_property LOC Y17 [get_ports {da1_clk}]
 set_property IOSTANDARD LVCMOS33 [get_ports {da1_clk}]
@@ -624,10 +567,6 @@ set_property IOSTANDARD LVCMOS33 [get_ports {da2_data[13]}]
 
 create_clock -name clk200_p -period 5.0 [get_ports clk200_p]
 
-create_clock -name eth_rx_clk -period 8.0 [get_nets eth_rx_clk]
-
-create_clock -name eth_tx_clk -period 8.0 [get_nets eth_tx_clk]
-
 ################################################################################
 # False path constraints
 ################################################################################
@@ -639,10 +578,4 @@ set_false_path -quiet -to [get_pins -filter {REF_PIN_NAME == PRE} -of_objects [g
 
 set_max_delay 2 -quiet -from [get_pins -filter {REF_PIN_NAME == C} -of_objects [get_cells -hierarchical -filter {ars_ff1 == TRUE}]] -to [get_pins -filter {REF_PIN_NAME == D} -of_objects [get_cells -hierarchical -filter {ars_ff2 == TRUE}]]
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets main_crg_clkin]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets crg_clkin]] -asynchronous

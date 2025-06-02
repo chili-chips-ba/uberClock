@@ -9,11 +9,12 @@ set_msg_config -id {Common 17-55} -new_severity {Warning}
 
 # Add Sources
 
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_pre_rotate.v}
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_pipeline_stage.v}
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_round.v}
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic.v}
-read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex-examples/cordic-dac/verilog/cordic_dac.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/cordic/cordic_pre_rotate.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/cordic/cordic_pipeline_stage.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/cordic/cordic_round.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/cordic/cordic.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/dac/dac.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/1.hw/cordic-dac/cordic_dac.v}
 read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v}
 read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/gateware/alinx_ax7203.v}
 
