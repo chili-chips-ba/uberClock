@@ -22,6 +22,7 @@ set -euo pipefail
 ### Defaults
 LITEX_DIR="${HOME}/litex"
 VENV_DIR="${HOME}/litex-venv"
+REPOSITORY_DIR="$(pwd)"
 
 ### Parse arguments
 while [[ $# -gt 0 ]]; do
