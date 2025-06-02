@@ -172,15 +172,16 @@ _io = [
     ),
 
     # ------------------ ADC on J11 (AD9238) ------------------
-    # Channel 1: 12-bit data + clock
-    ("ad9238_clk_ch1",  0, Pins("B22"), IOStandard("LVCMOS33")),
-    ("ad9238_data_ch1", 0,
-     Pins("C22 A20 B20 F20 F19 J16 F15 F21 M17 A21 B21 D21"), IOStandard("LVCMOS33")),
 
     # Channel 0: 12-bit data + clock
-    ("ad9238_clk_ch0",  0, Pins("C19"), IOStandard("LVCMOS33")),
-    ("ad9238_data_ch0", 0,
+    ("adc_clk_ch0",  0, Pins("C19"), IOStandard("LVCMOS33")),
+    ("adc_data_ch0", 0,
      Pins("J19 H19 G15 G16 E19 D19 D20 C20 A18 A19 F18 E18"), IOStandard("LVCMOS33")),
+
+    # Channel 1: 12-bit data + clock
+    ("adc_clk_ch1",  0, Pins("B22"), IOStandard("LVCMOS33")),
+    ("adc_data_ch1", 0,
+     Pins("C22 A20 B20 F20 F19 J16 F15 F21 M17 A21 B21 D21"), IOStandard("LVCMOS33")),
 
     # ------------------ DAC on J13 ------------------
     # DAC1: 14-bit data + write strobe + clock
