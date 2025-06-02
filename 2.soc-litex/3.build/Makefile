@@ -1,4 +1,3 @@
-# 3.build/Makefile
 SHELL := /bin/bash
 
 # ------------------------------------------------------------------
@@ -13,13 +12,15 @@ BUILD_DIR     := $(PROJECT_ROOT)/3.build
 SIM_DIR       := $(PROJECT_ROOT)/4.sim
 
 # ------------------------------------------------------------------
-#  Litex / Python virtual‐env settings (override via env)
+#  LiteX / Python virtual‐env settings (override via environment)
 # ------------------------------------------------------------------
-# where your litex checkout lives
-LITEX_ROOT      ?= $(HOME)/FPGA/Tools/litex-hub/litex
-# where your venv activate script lives
-VENV_ACTIVATE   ?= $(LITEX_ROOT)/litex-venv/bin/activate
-PYTHON          := python3
+# If LITEX_PATH is set in the environment, it will be used.
+LITEX_PATH   ?= $(HOME)/FPGA/Tools/litex-hub/litex
+
+# If LITEX_VENV is set in the environment, it will be used.
+LITEX_VENV   ?= $(LITEX_PATH)/litex-venv/bin/activate
+
+PYTHON       := python3
 
 # ------------------------------------------------------------------
 #  SoC & example definitions
@@ -49,12 +50,12 @@ SIM_BIOS      ?= $(EXAMPLE_DIR)/cordic/demo.bin
 
 help:
 	@echo "Usage:"
-	@echo "  make open-target   file=<name>"
-	@echo "  make open-example  file=<proj>"
-	@echo "  make build-board   [FREQ=..] [OPTIONS='..']"
-	@echo "  make load          [FREQ=..] [OPTIONS='..']"
-	@echo "  make term               [PORT=..]"
-	@echo "  make build-sw           [DEMO_FLAGS='..']"
+	@echo "  make open-target    file=<name>"
+	@echo "  make open-example   file=<proj>"
+	@echo "  make build-board    [FREQ=..] [OPTIONS='..']"
+	@echo "  make load           [FREQ=..] [OPTIONS='..']"
+	@echo "  make term                [PORT=..]"
+	@echo "  make build-sw            [DEMO_FLAGS='..']"
 	@echo "  make sim"
 	@echo "  make view-sim"
 	@echo "  make clean-sim"
@@ -63,7 +64,7 @@ help:
 #  Open the target or example in your editor
 # ——————————————————————————————————————————————————————————————
 open-target:
-	$(EDITOR) $(LITEX_ROOT)/litex-boards/litex_boards/targets/$(file).py
+	$(EDITOR) $(LITEX_PATH)/litex-boards/litex_boards/targets/$(file).py
 
 open-example:
 	$(EDITOR) $(EXAMPLE_DIR)/$(file)/
@@ -73,7 +74,7 @@ open-example:
 # ——————————————————————————————————————————————————————————————
 build-board:
 	@echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --build \
 	  --sys-clk-freq=$(FREQ) \
@@ -81,7 +82,7 @@ build-board:
 
 load:
 	@echo "[litex load]"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --load \
 	  $(OPTIONS)
@@ -91,7 +92,7 @@ load:
 # ——————————————————————————————————————————————————————————————
 term:
 	@echo "[serial term] port=$(PORT)"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
 	if [ -z "$${KERNEL_PATH}" ]; then \
 	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
@@ -105,7 +106,7 @@ term:
 build-sw:
 	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
 	@echo "→ Executing demo.py in $(SW_DIR)"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	cd $(SW_DIR) && \
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
@@ -120,7 +121,7 @@ $(SIM_DIR):
 
 $(SIM_JSON) $(SIM_CSV): | $(SIM_DIR)
 	@echo "[sim-gen] soc.json & csr.csv @ $(SIM_FREQ)Hz"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --sys-clk-freq=$(SIM_FREQ) \
 	  --with-cordic \
@@ -132,7 +133,7 @@ $(SIM_JSON) $(SIM_CSV): | $(SIM_DIR)
 .PHONY: sim
 sim: $(SIM_JSON) $(SIM_CSV)
 	@echo "[sim] Verilator + litex_sim @ $(SIM_FREQ)Hz, BIOS=$(SIM_BIOS)"
-	source $(VENV_ACTIVATE) && \
+	source $(LITEX_VENV) && \
 	litex_sim \
 	  --soc-json=$(SIM_JSON) \
 	  --csr-json=$(SIM_CSV) \

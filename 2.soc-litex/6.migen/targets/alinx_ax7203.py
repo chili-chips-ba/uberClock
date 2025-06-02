@@ -31,6 +31,9 @@ from liteeth.phy.s7rgmii import LiteEthPHYRGMII
 
 from litescope import LiteScopeAnalyzer
 
+# NOTE: Change this accordingly!
+repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock" # Absolute path to the root of your cloned repo
+verilog_dir = repository_dir + "/2.soc-litex/1.hw"
 
 # -------------------------------------------------------------------------
 #  Clock Reset Generator
@@ -76,6 +79,7 @@ class BaseSoC(SoCCore):
                  with_cordic            = False,
                  with_dac               = False,
                  with_cordic_dac        = False,
+                 with_adc_dac           = False,
                  with_icd               = False,
                  **kwargs):
         platform = alinx_ax7203.Platform(toolchain=toolchain)
@@ -89,6 +93,11 @@ class BaseSoC(SoCCore):
         SoCCore.__init__(self, platform, sys_clk_freq,
                          ident="LiteX SoC on Alinx AX7203",
                          **kwargs)
+
+        self._heartbeat = Signal(24)
+        self.sync += self._heartbeat.eq(self._heartbeat + 1)
+        leds = Cat(*platform.request_all("user_led"))
+        self.comb += leds[0].eq(self._heartbeat[23])
 
         # DDR3 SDRAM
         if not self.integrated_main_ram_size:
@@ -186,58 +195,45 @@ class BaseSoC(SoCCore):
         # CORDIC
         if with_cordic:
 
-            self._cordic_phase = CSRStorage(19, description="CORDIC phase")
-            self._cordic_phase.storage.reset = 0x12345
-            self._cordic_y     = CSRStatus(12, description="CORDIC y out")
-            self._cordic_aux   = CSRStatus(1,  description="CORDIC valid")
+            for filename in [
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "cordic/cordic_top.v",
+            ]:
+                full_path = f"{verilog_dir}/{filename}"
+                self.platform.add_source(full_path)
 
-            i_ce    = Signal()
-            x_in    = Signal(12)
-            y_in    = Signal(12)
-            phase   = self._cordic_phase.storage
-            aux_in  = Signal()
-            x_out   = Signal(12)
-            y_out   = Signal(12)
-            aux_out = Signal()
+            self._cordic_cos = CSRStatus(12, description="CORDIC NCO cosine out")
+            self._cordic_sin = CSRStatus(12, description="CORDIC NCO sine out")
+            self._cordic_aux = CSRStatus(1,   description="CORDIC NCO valid (tied high)")
 
-            self.comb += [
-                i_ce.eq(1),
-                x_in.eq((1 << (12-1))-1),
-                y_in.eq(0),
-                aux_in.eq(1),
-            ]
+            i_ce   = Signal(reset=1)
+            cos_sig = Signal(12)
+            sin_sig = Signal(12)
 
-            cordic_inst = Instance("cordic",
-                i_i_clk    = ClockSignal("sys"),
-                i_i_reset  = ResetSignal("sys"),
-                i_i_ce     = i_ce,
-                i_i_xval   = x_in,
-                i_i_yval   = y_in,
-                i_i_phase  = phase,
-                i_i_aux    = aux_in,
-                o_o_xval   = x_out,
-                o_o_yval   = y_out,
-                o_o_aux    = aux_out,
+            cordic_inst = Instance("cordic_top",
+                # clock/reset/enable
+                i_clk    = ClockSignal("sys"),
+                i_reset  = ResetSignal("sys"),
+                i_ce     = i_ce,
+                # outputs: wire signed [11:0] o_cos, o_sin
+                o_o_cos    = cos_sig,
+                o_o_sin    = sin_sig
             )
             self.specials += cordic_inst
 
             self.comb += [
-                self._cordic_y.status .eq(y_out),
-                self._cordic_aux.status.eq(aux_out),
-            ]
-
-            leds = Cat(*platform.request_all("user_led"))
-            self.comb += [
-                leds[0].eq(i_ce),
-                leds[1].eq(y_out[10]),
-                leds[2].eq(y_out[9]),
-                leds[3].eq(aux_out),
+                self._cordic_cos .status.eq(cos_sig),
+                self._cordic_sin .status.eq(sin_sig),
+                self._cordic_aux .status.eq(1),
             ]
 
             analyzer_signals = [
-                i_ce, x_in, y_in,
-                phase, aux_in,
-                x_out, y_out, aux_out
+                i_ce,
+                cos_sig,
+                sin_sig,
             ]
             self.submodules.analyzer = LiteScopeAnalyzer(
                 analyzer_signals,
@@ -250,6 +246,10 @@ class BaseSoC(SoCCore):
 
         # Stand-alone DAC
         if with_dac:
+
+            filename = "dac/dac_control.v"
+            self.platform.add_source(f"{verilog_dir}/{filename}")
+
             self._dac1_data   = CSRStorage(14, description="DAC1 data")
             self._dac1_wrt_en = CSRStorage(1,  description="DAC1 write enable")
             self._dac2_data   = CSRStorage(14, description="DAC2 data")
@@ -259,10 +259,6 @@ class BaseSoC(SoCCore):
             wrt1_en = self._dac1_wrt_en.storage
             data2   = self._dac2_data.storage
             wrt2_en = self._dac2_wrt_en.storage
-
-            platform.add_source(
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples/dac/verilog/dac_control.v"
-            )
 
             self.specials += Instance("dac_control",
                 i_sys_clk  = ClockSignal("sys"),
@@ -283,100 +279,108 @@ class BaseSoC(SoCCore):
         # ICD-defined register banks (8–15)
         # ---------------------------------------------------------------------
         if with_icd:
-            # Bank 8: GLOBAL_CTRL @ 0xF000_4000
-            self._bypass_en         = CSRStorage(1,  description="0=processed path, 1=raw bypass")
-            self._mux_sel           = CSRStorage(3,  description="TX channel select (0–4)")
-            self._method_sel        = CSRStorage(3,  description="Operating method (1–5)")
+            # GLOBAL_CTRL
+            self._bypass_en   = CSRStorage(1, description="0 = CPU processing chain; 1 = raw bypass")
+            self._mux_sel     = CSRStorage(3, description="Select frequency path (0…4)")
+            self._method_sel  = CSRStorage(3, description="Select algorithm variant (1…5)")
             self.add_csr("bypass_en")
             self.add_csr("mux_sel")
             self.add_csr("method_sel")
 
-            # Bank 9: TX_PATH @ 0xF000_4800
-            self._upsample_factor   = CSRStorage(4,  description="Upsample ratio")
-            self._tx_lpf_cutoff     = CSRStorage(8,  description="TX LPF cutoff code")
-            self._cordic_tx_phase   = CSRStorage(19, description="TX-CORDIC phase")
-            self.add_csr("upsample_factor")
-            self.add_csr("tx_lpf_cutoff")
+            # TX_PATH
+            self._cordic_tx_phase = CSRStorage(19, description="TX-CORDIC phase word")
             self.add_csr("cordic_tx_phase")
 
-            # Bank 10: RX_PATH @ 0xF000_5000
-            self._downsample_factor = CSRStorage(4,  description="Downsample ratio")
-            self._rx_lpf_cutoff     = CSRStorage(8,  description="RX LPF cutoff code")
-            self._cordic_rx_phase   = CSRStorage(19, description="RX-CORDIC phase")
-            self.add_csr("downsample_factor")
-            self.add_csr("rx_lpf_cutoff")
+            # RX_PATH
+            self._cordic_rx_phase   = CSRStorage(19, description="RX-CORDIC phase word")
             self.add_csr("cordic_rx_phase")
 
-            # Bank 11: GAIN @ 0xF000_5800
-            self._gain_tx           = CSRStorage(12, description="TX gain")
-            self._gain_rx           = CSRStorage(12, description="RX gain")
-            self.add_csr("gain_tx")
-            self.add_csr("gain_rx")
+            # GAIN
+            self._gain0 = CSRStorage(12, description="Gain for path 0")
+            self._gain1 = CSRStorage(12, description="Gain for path 1")
+            self._gain2 = CSRStorage(12, description="Gain for path 2")
+            self._gain3 = CSRStorage(12, description="Gain for path 3")
+            self._gain4 = CSRStorage(12, description="Gain for path 4")
+            self.add_csr("gain0")
+            self.add_csr("gain1")
+            self.add_csr("gain2")
+            self.add_csr("gain3")
+            self.add_csr("gain4")
 
-            # Bank 12: PHYSICS @ 0xF000_6000
-            self._physics_run       = CSRStorage(1,description="Start/stop resonator physics")
-            self._physics_busy      = CSRStatus (1,description="Physics engine busy flag")
-            self.add_csr("physics_run")
-            self.add_csr("physics_busy")
-
-            # Bank 13: DEBUG_HS @ 0xF000_6800
-            self._hs_dbg_addr       = CSRStorage(16,  description="HS debug RAM address")
-            self._hs_dbg_wdata      = CSRStorage(32,  description="HS debug RAM write data")
-            self._hs_dbg_rdata      = CSRStatus (32,  description="HS debug RAM read data")
+            # DEBUG_HS
+            self._hs_dbg_addr  = CSRStorage(16, description="High-speed debug RAM address")
+            self._hs_dbg_wdata = CSRStorage(32, description="High-speed debug RAM write data")
+            self._hs_dbg_rdata = CSRStatus(32,  description="High-speed debug RAM read data")
             self.add_csr("hs_dbg_addr")
             self.add_csr("hs_dbg_wdata")
             self.add_csr("hs_dbg_rdata")
 
-            # Bank 14: DEBUG_LS @ 0xF000_7000
-            self._ls_dbg_addr  = CSRStorage(16,  description="LS debug RAM address")
-            self._ls_dbg_wdata = CSRStorage(32,  description="LS debug RAM write data")
-            self._ls_dbg_rdata = CSRStatus (32,  description="LS debug RAM read data")
+            # DEBUG_LS
+            self._ls_dbg_addr  = CSRStorage(16, description="Low-speed debug RAM address")
+            self._ls_dbg_wdata = CSRStorage(32, description="Low-speed debug RAM write data")
+            self._ls_dbg_rdata = CSRStatus(32,  description="Low-speed debug RAM read data")
             self.add_csr("ls_dbg_addr")
             self.add_csr("ls_dbg_wdata")
             self.add_csr("ls_dbg_rdata")
 
-            # Bank 15: SD_CARD @ 0xF000_7800
-            self._sd_cmd       = CSRStorage(8,  description="SD command register")
-            self._sd_status    = CSRStatus (8,  description="SD status flags")
-            self.add_csr("sd_cmd")
-            self.add_csr("sd_status")
-
         # CORDIC + DAC (fused)
         if with_cordic_dac:
-            self._phase_inc = CSRStorage(19,
-                name="phase_inc",
-                description="CORDIC_DAC phase increment"
-            )
+
+            for filename in [
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "dac/dac.v",
+                "cordic-dac/cordic_dac.v",
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+            self._phase_inc = CSRStorage(19, description="CORDIC_DAC phase increment")
             phase_inc = self._phase_inc.storage
 
-            for f in [
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples"
-                "/cordic-dac/verilog/cordic_pre_rotate.v",
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples"
-                "/cordic-dac/verilog/cordic_pipeline_stage.v",
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples"
-                "/cordic-dac/verilog/cordic_round.v",
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples"
-                "/cordic-dac/verilog/cordic.v",
-                "/home/hamed/FPGA/Tools/litex-hub/litex-examples"
-                "/cordic-dac/verilog/cordic_dac.v",
-            ]:
-                self.platform.add_source(f)
-
-            self.specials += Instance("cordic_dac",
-                i_sys_clk   = ClockSignal("sys"),
-                i_rst_n     = ResetSignal("sys"),
-
-                i_phase_inc = phase_inc,
-
-                o_da1_clk   = self.platform.request("da1_clk"),
-                o_da1_wrt   = self.platform.request("da1_wrt"),
-                o_da1_data  = self.platform.request("da1_data"),
-                o_da2_clk   = self.platform.request("da2_clk"),
-                o_da2_wrt   = self.platform.request("da2_wrt"),
-                o_da2_data  = self.platform.request("da2_data"),
+            self.specials += Instance(
+                "cordic_dac",
+                i_sys_clk    = ClockSignal("sys"),
+                i_rst_n      = ~ResetSignal("sys"),
+                i_phase_inc  = phase_inc,
+                o_da1_clk    = platform.request("da1_clk"),
+                o_da1_wrt    = platform.request("da1_wrt"),
+                o_da1_data   = platform.request("da1_data"),
+                o_da2_clk    = platform.request("da2_clk"),
+                o_da2_wrt    = platform.request("da2_wrt"),
+                o_da2_data   = platform.request("da2_data"),
             )
-            self.add_csr("phase_inc")
+
+        # ---------------------------------------------------------------------
+        #  ADC + DAC (fused)
+        # ---------------------------------------------------------------------
+        if with_adc_dac:
+            for fname in ["adc/adc.v", "dac/dac.v", "adc-dac/adc_dac.v"]:
+                self.platform.add_source(f"{verilog_dir}/{fname}")
+
+            # <– This Instance must be *outside* the for-loop
+            self.specials += Instance(
+                "adc_dac",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst_n        = ~ResetSignal("sys"),
+
+                # ADC ports
+                o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0  = platform.request("adc_data_ch0"),
+                i_adc_data_ch1  = platform.request("adc_data_ch1"),
+
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
+            )
 
 
     # optionally export analyzer CSV
@@ -431,6 +435,8 @@ def main():
         help="Instantiate CORDIC_DAC module")
     parser.add_argument("--with-icd", action="store_true",
         help="Add ICD register banks (GLOBAL_CTRL, TX_PATH, ..., SD_CARD)")
+    parser.add_argument("--with-adc-dac", action="store_true",
+        help="Instantiate ADC-DAC interface")
 
     args = parser.parse_args()
 
@@ -452,6 +458,7 @@ def main():
         with_dac               = args.with_dac,
         with_cordic_dac        = args.with_cordic_dac,
         with_icd               = args.with_icd,
+        with_adc_dac           = args.with_adc_dac,
         **parser.soc_argdict
     )
 

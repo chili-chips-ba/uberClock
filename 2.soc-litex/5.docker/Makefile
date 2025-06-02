@@ -28,19 +28,6 @@ shell:
 		$(IMAGE) \
 		/bin/bash
 
-# Run LXQt GUI session (requires a local X server).
-# Assumes Docker has permission to connect to $DISPLAY.
-.PHONY: gui
-gui:
-	@echo "Granting X11 permissions and launching LXQt desktop…"
-	xhost +local:docker >/dev/null 2>&1 || true
-	docker run --rm -it \
-		--name $(CONTAINER_NAME) \
-		-e DISPLAY=$(DISPLAY) \
-		-v /tmp/.X11-unix:/tmp/.X11-unix \
-		-v $(HOST_DIR):$(CONTAINER_WORK) \
-		$(IMAGE)
-
 # Remove the local Docker image
 .PHONY: clean
 clean:
@@ -53,5 +40,4 @@ help:
 	@echo "Usage:"
 	@echo "  make build     # Build the Docker image"
 	@echo "  make shell     # Run an interactive shell in the container"
-	@echo "  make gui       # Run an LXQt desktop session (requires X11 forwarding)"
 	@echo "  make clean     # Remove the Docker image"
