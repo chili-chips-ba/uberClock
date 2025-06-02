@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date             : Tue May 27 16:29:11 2025
+| Date             : Mon Jun  2 02:46:45 2025
 | Host             : archlinux running 64-bit Arch Linux
 | Command          : report_power -file alinx_ax7203_power.rpt
 | Design           : alinx_ax7203
@@ -30,14 +30,14 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 0.884        |
+| Total On-Chip Power (W)  | 1.008        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 0.734        |
+| Dynamic (W)              | 0.857        |
 | Device Static (W)        | 0.151        |
 | Effective TJA (C/W)      | 2.5          |
-| Max Ambient (C)          | 82.8         |
-| Junction Temperature (C) | 27.2         |
+| Max Ambient (C)          | 82.5         |
+| Junction Temperature (C) | 27.5         |
 | Confidence Level         | Low          |
 | Setting File             | ---          |
 | Simulation Activity File | ---          |
@@ -52,22 +52,22 @@ Table of Contents
 +--------------------------+-----------+----------+-----------+-----------------+
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
-| Clocks                   |     0.038 |       13 |       --- |             --- |
-| Slice Logic              |     0.011 |    18040 |       --- |             --- |
-|   LUT as Logic           |     0.009 |     7404 |    133800 |            5.53 |
-|   CARRY4                 |     0.001 |      381 |     33450 |            1.14 |
-|   Register               |    <0.001 |     7433 |    267600 |            2.78 |
-|   LUT as Distributed RAM |    <0.001 |      534 |     46200 |            1.16 |
-|   F7/F8 Muxes            |    <0.001 |       80 |    133800 |            0.06 |
-|   LUT as Shift Register  |    <0.001 |       10 |     46200 |            0.02 |
-|   Others                 |     0.000 |       14 |       --- |             --- |
-| Signals                  |     0.013 |    15218 |       --- |             --- |
-| Block RAM                |     0.033 |       33 |       365 |            9.04 |
-| PLL                      |     0.279 |        2 |        10 |           20.00 |
+| Clocks                   |     0.023 |        8 |       --- |             --- |
+| Slice Logic              |     0.013 |    12780 |       --- |             --- |
+|   LUT as Logic           |     0.011 |     5689 |    133800 |            4.25 |
+|   CARRY4                 |     0.001 |      372 |     33450 |            1.11 |
+|   Register               |    <0.001 |     5209 |    267600 |            1.95 |
+|   LUT as Distributed RAM |    <0.001 |      144 |     46200 |            0.31 |
+|   F7/F8 Muxes            |    <0.001 |       51 |    133800 |            0.04 |
+|   LUT as Shift Register  |    <0.001 |        5 |     46200 |            0.01 |
+|   Others                 |     0.000 |       51 |       --- |             --- |
+| Signals                  |     0.015 |    10949 |       --- |             --- |
+| Block RAM                |     0.031 |     31.5 |       365 |            8.63 |
+| PLL                      |     0.144 |        1 |        10 |           10.00 |
 | DSPs                     |     0.002 |        4 |       740 |            0.54 |
-| I/O                      |     0.357 |      122 |       285 |           42.81 |
+| I/O                      |     0.630 |      108 |       285 |           37.89 |
 | Static Power             |     0.151 |          |           |                 |
-| Total                    |     0.884 |          |           |                 |
+| Total                    |     1.008 |          |           |                 |
 +--------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -77,9 +77,9 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.160 |       0.127 |      0.034 |       NA    | Unspecified | NA         |
-| Vccaux    |       1.800 |     0.249 |       0.218 |      0.031 |       NA    | Unspecified | NA         |
-| Vcco33    |       3.300 |     0.016 |       0.011 |      0.005 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.136 |       0.102 |      0.034 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.193 |       0.163 |      0.031 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.091 |       0.086 |      0.005 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco15    |       1.500 |     0.123 |       0.118 |      0.005 |       NA    | Unspecified | NA         |
@@ -130,21 +130,16 @@ Table of Contents
 2.2 Clock Constraints
 ---------------------
 
-+--------------------------------+--------------------------------+-----------------+
-| Clock                          | Domain                         | Constraint (ns) |
-+--------------------------------+--------------------------------+-----------------+
-| builder_crg_pll_fb             | builder_crg_pll_fb             |             5.0 |
-| builder_liteethphyrgmii_pll_fb | builder_liteethphyrgmii_pll_fb |             8.0 |
-| clk200_p                       | clk200_p                       |             5.0 |
-| eth_rx_clk                     | eth_rx_clk                     |             8.0 |
-| eth_tx_clk                     | eth_tx_clk                     |             8.0 |
-| main_crg_clkout0               | main_crg_clkout0               |            20.0 |
-| main_crg_clkout1               | main_crg_clkout1               |             5.0 |
-| main_crg_clkout2               | main_crg_clkout2               |             5.0 |
-| main_crg_clkout3               | main_crg_clkout3               |             5.0 |
-| main_ethphy_clkout0            | main_ethphy_clkout0            |             8.0 |
-| main_ethphy_clkout1            | main_ethphy_clkout1            |             8.0 |
-+--------------------------------+--------------------------------+-----------------+
++-------------+-------------+-----------------+
+| Clock       | Domain      | Constraint (ns) |
++-------------+-------------+-----------------+
+| clk200_p    | clk200_p    |             5.0 |
+| crg_clkout0 | crg_clkout0 |            20.0 |
+| crg_clkout1 | crg_clkout1 |             5.0 |
+| crg_clkout2 | crg_clkout2 |             5.0 |
+| crg_clkout3 | crg_clkout3 |             5.0 |
+| pll_fb      | pll_fb      |             5.0 |
++-------------+-------------+-----------------+
 
 
 3. Detailed Reports
@@ -156,18 +151,18 @@ Table of Contents
 +----------------------------+-----------+
 | Name                       | Power (W) |
 +----------------------------+-----------+
-| alinx_ax7203               |     0.734 |
+| alinx_ax7203               |     0.857 |
 |   IOBUF                    |     0.002 |
-|   IOBUFDS                  |     0.013 |
-|     OBUFTDS                |     0.001 |
-|   IOBUFDS_1                |     0.013 |
-|     OBUFTDS                |     0.001 |
-|   IOBUFDS_2                |     0.013 |
-|     OBUFTDS                |     0.001 |
-|   IOBUFDS_3                |     0.013 |
-|     OBUFTDS                |     0.001 |
-|   IOBUF_1                  |     0.002 |
-|   IOBUF_10                 |     0.003 |
+|   IOBUFDS                  |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_1                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_2                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUFDS_3                |     0.014 |
+|     OBUFTDS                |     0.002 |
+|   IOBUF_1                  |     0.003 |
+|   IOBUF_10                 |     0.002 |
 |   IOBUF_11                 |     0.002 |
 |   IOBUF_12                 |     0.002 |
 |   IOBUF_13                 |     0.002 |
@@ -176,19 +171,19 @@ Table of Contents
 |   IOBUF_16                 |     0.002 |
 |   IOBUF_17                 |     0.002 |
 |   IOBUF_18                 |     0.002 |
-|   IOBUF_19                 |     0.003 |
-|   IOBUF_2                  |     0.003 |
+|   IOBUF_19                 |     0.002 |
+|   IOBUF_2                  |     0.002 |
 |   IOBUF_20                 |     0.002 |
 |   IOBUF_21                 |     0.002 |
-|   IOBUF_22                 |     0.002 |
+|   IOBUF_22                 |     0.003 |
 |   IOBUF_23                 |     0.002 |
 |   IOBUF_24                 |     0.002 |
 |   IOBUF_25                 |     0.002 |
-|   IOBUF_26                 |     0.002 |
+|   IOBUF_26                 |     0.003 |
 |   IOBUF_27                 |     0.002 |
 |   IOBUF_28                 |     0.002 |
 |   IOBUF_29                 |     0.002 |
-|   IOBUF_3                  |     0.002 |
+|   IOBUF_3                  |     0.003 |
 |   IOBUF_30                 |     0.002 |
 |   IOBUF_31                 |     0.003 |
 |   IOBUF_4                  |     0.002 |
@@ -201,6 +196,9 @@ Table of Contents
 |   VexRiscv                 |     0.020 |
 |     IBusCachedPlugin_cache |     0.004 |
 |     dataCache_1            |     0.003 |
+|   cordic_dac               |     0.013 |
+|     u_cordic               |     0.011 |
+|     u_dac_out              |     0.002 |
 +----------------------------+-----------+
 
 

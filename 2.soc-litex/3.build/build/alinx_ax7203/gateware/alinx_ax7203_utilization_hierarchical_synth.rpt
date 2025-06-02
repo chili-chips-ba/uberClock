@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Tue May 27 16:27:29 2025
+| Date         : Mon Jun  2 02:45:28 2025
 | Host         : archlinux running 64-bit Arch Linux
 | Command      : report_utilization -hierarchical -file alinx_ax7203_utilization_hierarchical_synth.rpt
 | Design       : alinx_ax7203
@@ -19,16 +19,37 @@ Table of Contents
 1. Utilization by Hierarchy
 ---------------------------
 
-+----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
-|          Instance          |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
-+----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
-| alinx_ax7203               |            (top) |       8290 |       7730 |     542 |   18 | 7438 |     12 |     42 |          4 |
-|   (alinx_ax7203)           |            (top) |       5289 |       4729 |     542 |   18 | 6182 |     11 |     34 |          0 |
-|   VexRiscv                 |         VexRiscv |       3001 |       3001 |       0 |    0 | 1256 |      1 |      8 |          4 |
-|     (VexRiscv)             |         VexRiscv |       1629 |       1629 |       0 |    0 | 1097 |      0 |      2 |          4 |
-|     IBusCachedPlugin_cache | InstructionCache |        890 |        890 |       0 |    0 |  100 |      1 |      1 |          0 |
-|     dataCache_1            |        DataCache |        482 |        482 |       0 |    0 |   59 |      0 |      5 |          0 |
-|   cordic_dac               |       cordic_dac |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
-+----------------------------+------------------+------------+------------+---------+------+------+--------+--------+------------+
++------------------------------------+------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+|              Instance              |                  Module                  | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs | RAMB36 | RAMB18 | DSP Blocks |
++------------------------------------+------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
+| alinx_ax7203                       |                                    (top) |       6075 |       5926 |     144 |    5 | 5214 |     11 |     41 |          4 |
+|   (alinx_ax7203)                   |                                    (top) |       2415 |       2269 |     144 |    2 | 3151 |     10 |     33 |          0 |
+|   VexRiscv                         |                                 VexRiscv |       2944 |       2944 |       0 |    0 | 1256 |      1 |      8 |          4 |
+|     (VexRiscv)                     |                                 VexRiscv |       1716 |       1716 |       0 |    0 | 1097 |      0 |      2 |          4 |
+|     IBusCachedPlugin_cache         |                         InstructionCache |        718 |        718 |       0 |    0 |  100 |      1 |      1 |          0 |
+|     dataCache_1                    |                                DataCache |        510 |        510 |       0 |    0 |   59 |      0 |      5 |          0 |
+|   cordic_dac                       |                               cordic_dac |        716 |        713 |       0 |    3 |  807 |      0 |      0 |          0 |
+|     (cordic_dac)                   |                               cordic_dac |         21 |         21 |       0 |    0 |   68 |      0 |      0 |          0 |
+|     u_cordic                       |                                   cordic |        695 |        692 |       0 |    3 |  739 |      0 |      0 |          0 |
+|       (u_cordic)                   |                                   cordic |          5 |          4 |       0 |    1 |   18 |      0 |      0 |          0 |
+|       cordic_round_inst            |                             cordic_round |          0 |          0 |       0 |    0 |   24 |      0 |      0 |          0 |
+|       cordic_stages[0].stage_inst  |                    cordic_pipeline_stage |         41 |         41 |       0 |    0 |   37 |      0 |      0 |          0 |
+|       cordic_stages[10].stage_inst |    cordic_pipeline_stage__parameterized9 |         46 |         45 |       0 |    1 |   48 |      0 |      0 |          0 |
+|       cordic_stages[11].stage_inst |   cordic_pipeline_stage__parameterized10 |         46 |         46 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[12].stage_inst |   cordic_pipeline_stage__parameterized11 |         47 |         47 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[13].stage_inst |   cordic_pipeline_stage__parameterized12 |         30 |         30 |       0 |    0 |   31 |      0 |      0 |          0 |
+|       cordic_stages[14].stage_inst | cordic_pipeline_stage__parameterized12_0 |         28 |         28 |       0 |    0 |   30 |      0 |      0 |          0 |
+|       cordic_stages[1].stage_inst  |    cordic_pipeline_stage__parameterized0 |         43 |         43 |       0 |    0 |   40 |      0 |      0 |          0 |
+|       cordic_stages[2].stage_inst  |    cordic_pipeline_stage__parameterized1 |         45 |         44 |       0 |    1 |   46 |      0 |      0 |          0 |
+|       cordic_stages[3].stage_inst  |    cordic_pipeline_stage__parameterized2 |         46 |         46 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[4].stage_inst  |    cordic_pipeline_stage__parameterized3 |         48 |         48 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[5].stage_inst  |    cordic_pipeline_stage__parameterized4 |         48 |         48 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[6].stage_inst  |    cordic_pipeline_stage__parameterized5 |         48 |         48 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[7].stage_inst  |    cordic_pipeline_stage__parameterized6 |         46 |         46 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[8].stage_inst  |    cordic_pipeline_stage__parameterized7 |         48 |         48 |       0 |    0 |   49 |      0 |      0 |          0 |
+|       cordic_stages[9].stage_inst  |    cordic_pipeline_stage__parameterized8 |         44 |         44 |       0 |    0 |   48 |      0 |      0 |          0 |
+|       pre_stage                    |                        cordic_pre_rotate |         36 |         36 |       0 |    0 |   25 |      0 |      0 |          0 |
+|     u_dac_out                      |                                      dac |          0 |          0 |       0 |    0 |    0 |      0 |      0 |          0 |
++------------------------------------+------------------------------------------+------------+------------+---------+------+------+--------+--------+------------+
 
 

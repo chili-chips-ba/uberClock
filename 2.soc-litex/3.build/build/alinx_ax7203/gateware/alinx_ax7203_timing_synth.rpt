@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Tue May 27 16:27:29 2025
+| Date         : Mon Jun  2 02:45:28 2025
 | Host         : archlinux running 64-bit Arch Linux
 | Command      : report_timing_summary -file alinx_ax7203_timing_synth.rpt
 | Design       : alinx_ax7203
@@ -53,8 +53,8 @@ Table of Contents
 2. checking constant_clock (0)
 3. checking pulse_width_clock (0)
 4. checking unconstrained_internal_endpoints (0)
-5. checking no_input_delay (39)
-6. checking no_output_delay (108)
+5. checking no_input_delay (33)
+6. checking no_output_delay (100)
 7. checking multiple_clock (0)
 8. checking generated_clocks (0)
 9. checking loops (0)
@@ -84,16 +84,16 @@ Table of Contents
  There are 0 pins that are not constrained for maximum delay due to constant clock.
 
 
-5. checking no_input_delay (39)
+5. checking no_input_delay (33)
 -------------------------------
- There are 39 input ports with no input delay specified. (HIGH)
+ There are 33 input ports with no input delay specified. (HIGH)
 
  There are 0 input ports with no input delay but user has a false path constraint.
 
 
-6. checking no_output_delay (108)
+6. checking no_output_delay (100)
 ---------------------------------
- There are 108 ports with no output delay specified. (HIGH)
+ There are 100 ports with no output delay specified. (HIGH)
 
  There are 0 ports with no output delay but user has a false path constraint
 
@@ -138,10 +138,10 @@ Table of Contents
 
     WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
     -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
-      0.787        0.000                      0                21718        0.003        0.000                      0                21718        0.264        0.000                       0                  8915  
+      1.208        0.000                      0                14248       -0.008       -0.560                     66                14248        0.264        0.000                       0                  5878  
 
 
-All user specified timing constraints are met.
+Timing constraints are not met.
 
 
 ------------------------------------------------------------------------------------------------
@@ -149,19 +149,14 @@ All user specified timing constraints are met.
 | -------------
 ------------------------------------------------------------------------------------------------
 
-Clock                             Waveform(ns)         Period(ns)      Frequency(MHz)
------                             ------------         ----------      --------------
-clk200_p                          {0.000 2.500}        5.000           200.000         
-  builder_crg_pll_fb              {0.000 2.500}        5.000           200.000         
-  main_crg_clkout0                {0.000 10.000}       20.000          50.000          
-  main_crg_clkout1                {0.000 2.500}        5.000           200.000         
-  main_crg_clkout2                {1.250 3.750}        5.000           200.000         
-  main_crg_clkout3                {0.000 2.500}        5.000           200.000         
-eth_rx_clk                        {0.000 4.000}        8.000           125.000         
-  builder_liteethphyrgmii_pll_fb  {0.000 4.000}        8.000           125.000         
-  main_ethphy_clkout0             {0.000 4.000}        8.000           125.000         
-  main_ethphy_clkout1             {2.000 6.000}        8.000           125.000         
-eth_tx_clk                        {0.000 4.000}        8.000           125.000         
+Clock          Waveform(ns)         Period(ns)      Frequency(MHz)
+-----          ------------         ----------      --------------
+clk200_p       {0.000 2.500}        5.000           200.000         
+  crg_clkout0  {0.000 10.000}       20.000          50.000          
+  crg_clkout1  {0.000 2.500}        5.000           200.000         
+  crg_clkout2  {1.250 3.750}        5.000           200.000         
+  crg_clkout3  {0.000 2.500}        5.000           200.000         
+  pll_fb       {0.000 2.500}        5.000           200.000         
 
 
 ------------------------------------------------------------------------------------------------
@@ -169,19 +164,14 @@ eth_tx_clk                        {0.000 4.000}        8.000           125.000
 | -----------------
 ------------------------------------------------------------------------------------------------
 
-Clock                                 WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
------                                 -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
-clk200_p                                4.013        0.000                      0                    7        0.140        0.000                      0                    7        1.100        0.000                       0                    10  
-  builder_crg_pll_fb                                                                                                                                                                3.751        0.000                       0                     2  
-  main_crg_clkout0                      1.208        0.000                      0                15365        0.003        0.000                      0                15365        8.870        0.000                       0                  6058  
-  main_crg_clkout1                                                                                                                                                                  3.408        0.000                       0                   128  
-  main_crg_clkout2                                                                                                                                                                  3.408        0.000                       0                     6  
-  main_crg_clkout3                      1.216        0.000                      0                   14        0.037        0.000                      0                   14        0.264        0.000                       0                    10  
-eth_rx_clk                              0.787        0.000                      0                 5975        0.029        0.000                      0                 5975        2.000        0.000                       0                  2536  
-  builder_liteethphyrgmii_pll_fb                                                                                                                                                    6.751        0.000                       0                     2  
-  main_ethphy_clkout0                                                                                                                                                               6.408        0.000                       0                     2  
-  main_ethphy_clkout1                                                                                                                                                               6.408        0.000                       0                     3  
-eth_tx_clk                              1.209        0.000                      0                  357        0.037        0.000                      0                  357        3.500        0.000                       0                   158  
+Clock              WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
+-----              -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
+clk200_p             4.013        0.000                      0                    7        0.140        0.000                      0                    7        1.100        0.000                       0                    10  
+  crg_clkout0        1.208        0.000                      0                14159       -0.008       -0.560                     66                14159        8.870        0.000                       0                  5722  
+  crg_clkout1                                                                                                                                                    3.408        0.000                       0                   128  
+  crg_clkout2                                                                                                                                                    3.408        0.000                       0                     6  
+  crg_clkout3        1.216        0.000                      0                   14        0.037        0.000                      0                   14        0.264        0.000                       0                    10  
+  pll_fb                                                                                                                                                         3.751        0.000                       0                     2  
 
 
 ------------------------------------------------------------------------------------------------
@@ -198,8 +188,9 @@ From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS
 | -----------------------
 ------------------------------------------------------------------------------------------------
 
-Path Group    From Clock    To Clock          WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
-----------    ----------    --------          -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+Path Group         From Clock         To Clock               WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints  
+----------         ----------         --------               -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------  
+**async_default**  crg_clkout0        crg_clkout0             18.534        0.000                      0                   68        0.343        0.000                      0                   68  
 
 
 ------------------------------------------------------------------------------------------------
@@ -249,11 +240,11 @@ Slack (MET) :             4.013ns  (required time - arrival time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.842     0.842 r  IBUFDS/O
                          net (fo=1, unplaced)         0.646     1.487    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.082     1.569 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.584     2.153    main_crg_clkin
+                         net (fo=9, unplaced)         0.584     2.153    crg_clkin
                          FDCE                                         r  FDCE/C
   -------------------------------------------------------------------    -------------------
                          FDCE (Prop_fdce_C_Q)         0.379     2.532 r  FDCE/Q
-                         net (fo=1, unplaced)         0.256     2.788    builder_crg_reset0
+                         net (fo=1, unplaced)         0.256     2.788    reset0
                          FDCE                                         r  FDCE_1/D
   -------------------------------------------------------------------    -------------------
 
@@ -264,7 +255,7 @@ Slack (MET) :             4.013ns  (required time - arrival time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.804     5.804 r  IBUFDS/O
                          net (fo=1, unplaced)         0.613     6.417    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.078     6.495 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.439     6.934    main_crg_clkin
+                         net (fo=9, unplaced)         0.439     6.934    crg_clkin
                          FDCE                                         r  FDCE_1/C
                          clock pessimism              0.074     7.008    
                          clock uncertainty           -0.035     6.973    
@@ -305,11 +296,11 @@ Slack (MET) :             0.140ns  (arrival time - required time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.360     0.360 r  IBUFDS/O
                          net (fo=1, unplaced)         0.320     0.680    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.027     0.707 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.114     0.821    main_crg_clkin
+                         net (fo=9, unplaced)         0.114     0.821    crg_clkin
                          FDCE                                         r  FDCE/C
   -------------------------------------------------------------------    -------------------
                          FDCE (Prop_fdce_C_Q)         0.141     0.962 r  FDCE/Q
-                         net (fo=1, unplaced)         0.127     1.089    builder_crg_reset0
+                         net (fo=1, unplaced)         0.127     1.089    reset0
                          FDCE                                         r  FDCE_1/D
   -------------------------------------------------------------------    -------------------
 
@@ -320,7 +311,7 @@ Slack (MET) :             0.140ns  (arrival time - required time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.391     0.391 r  IBUFDS/O
                          net (fo=1, unplaced)         0.337     0.728    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.030     0.758 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.259     1.017    main_crg_clkin
+                         net (fo=9, unplaced)         0.259     1.017    crg_clkin
                          FDCE                                         r  FDCE_1/C
                          clock pessimism             -0.051     0.966    
                          FDCE (Hold_fdce_C_D)        -0.017     0.949    FDCE_1
@@ -350,34 +341,11 @@ High Pulse Width  Slow    PLLE2_ADV/CLKIN1  n/a            1.400         2.500  
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  builder_crg_pll_fb
-  To Clock:  builder_crg_pll_fb
-
-Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-PW    :            0  Failing Endpoints,  Worst Slack        3.751ns,  Total Violation        0.000ns
----------------------------------------------------------------------------------------------------
-
-
-Pulse Width Checks
---------------------------------------------------------------------------------------
-Clock Name:         builder_crg_pll_fb
-Waveform(ns):       { 0.000 2.500 }
-Period(ns):         5.000
-Sources:            { PLLE2_ADV/CLKFBOUT }
-
-Check Type  Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period  n/a     PLLE2_ADV/CLKFBOUT  n/a            1.249         5.000       3.751                PLLE2_ADV/CLKFBOUT
-Max Period  n/a     PLLE2_ADV/CLKFBIN   n/a            52.633        5.000       47.633               PLLE2_ADV/CLKFBIN
-
-
-
----------------------------------------------------------------------------------------------------
-From Clock:  main_crg_clkout0
-  To Clock:  main_crg_clkout0
+From Clock:  crg_clkout0
+  To Clock:  crg_clkout0
 
 Setup :            0  Failing Endpoints,  Worst Slack        1.208ns,  Total Violation        0.000ns
-Hold  :            0  Failing Endpoints,  Worst Slack        0.003ns,  Total Violation        0.000ns
+Hold  :           66  Failing Endpoints,  Worst Slack       -0.008ns,  Total Violation       -0.560ns
 PW    :            0  Failing Endpoints,  Worst Slack        8.870ns,  Total Violation        0.000ns
 ---------------------------------------------------------------------------------------------------
 
@@ -386,10 +354,10 @@ Max Delay Paths
 --------------------------------------------------------------------------------------
 Slack (MET) :             1.208ns  (required time - arrival time)
   Source:                 FDPE/C
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+                            (rising edge-triggered cell FDPE clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
   Destination:            FDPE_1/D
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
-  Path Group:             main_crg_clkout0
+                            (rising edge-triggered cell FDPE clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             crg_clkout0
   Path Type:              Setup (Max at Slow Process Corner)
   Requirement:            2.000ns  (MaxDelay Path 2.000ns)
   Data Path Delay:        0.544ns  (logic 0.397ns (72.978%)  route 0.147ns (27.022%))
@@ -406,23 +374,23 @@ Slack (MET) :             1.208ns  (required time - arrival time)
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock main_crg_clkout0 rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.842     0.842 r  IBUFDS/O
                          net (fo=1, unplaced)         0.646     1.487    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.082     1.569 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.584     2.153    main_crg_clkin
+                         net (fo=9, unplaced)         0.584     2.153    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
                                                       0.077     2.230 r  PLLE2_ADV/CLKOUT0
-                         net (fo=1, unplaced)         0.646     2.876    main_crg_clkout0
+                         net (fo=1, unplaced)         0.646     2.876    crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.081     2.957 r  BUFG/O
-                         net (fo=6056, unplaced)      0.646     3.603    sys_clk
+                         net (fo=5720, unplaced)      0.646     3.603    sys_clk
                          FDPE                                         r  FDPE/C
   -------------------------------------------------------------------    -------------------
                          FDPE (Prop_fdpe_C_Q)         0.397     4.000 r  FDPE/Q
-                         net (fo=1, unplaced)         0.147     4.147    builder_xilinxasyncresetsynchronizerimpl0_rst_meta
+                         net (fo=1, unplaced)         0.147     4.147    xilinxasyncresetsynchronizerimpl0_rst_meta
                          FDPE                                         r  FDPE_1/D
   -------------------------------------------------------------------    -------------------
 
@@ -432,12 +400,12 @@ Slack (MET) :             1.208ns  (required time - arrival time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.804     2.804 r  IBUFDS/O
                          net (fo=1, unplaced)         0.613     3.417    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.078     3.495 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.439     3.934    main_crg_clkin
+                         net (fo=9, unplaced)         0.439     3.934    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
                                                       0.073     4.007 r  PLLE2_ADV/CLKOUT0
-                         net (fo=1, unplaced)         0.613     4.621    main_crg_clkout0
+                         net (fo=1, unplaced)         0.613     4.621    crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.077     4.698 r  BUFG/O
-                         net (fo=6056, unplaced)      0.501     5.198    sys_clk
+                         net (fo=5720, unplaced)      0.501     5.198    sys_clk
                          FDPE                                         r  FDPE_1/C
                          clock pessimism              0.259     5.458    
                          clock uncertainty           -0.059     5.398    
@@ -454,15 +422,15 @@ Slack (MET) :             1.208ns  (required time - arrival time)
 
 Min Delay Paths
 --------------------------------------------------------------------------------------
-Slack (MET) :             0.003ns  (arrival time - required time)
-  Source:                 main_a7ddrphy_rst_storage_reg/C
-                            (rising edge-triggered cell FDRE clocked by main_crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+Slack (VIOLATED) :        -0.008ns  (arrival time - required time)
+  Source:                 a7ddrphy_rst_storage_reg/C
+                            (rising edge-triggered cell FDRE clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
   Destination:            OSERDESE2/RST
-                            (rising edge-triggered cell OSERDESE2 clocked by main_crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
-  Path Group:             main_crg_clkout0
+                            (rising edge-triggered cell OSERDESE2 clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             crg_clkout0
   Path Type:              Hold (Min at Fast Process Corner)
-  Requirement:            0.000ns  (main_crg_clkout0 rise@0.000ns - main_crg_clkout0 rise@0.000ns)
-  Data Path Delay:        0.707ns  (logic 0.239ns (33.785%)  route 0.468ns (66.215%))
+  Requirement:            0.000ns  (crg_clkout0 rise@0.000ns - crg_clkout0 rise@0.000ns)
+  Data Path Delay:        0.696ns  (logic 0.239ns (34.363%)  route 0.457ns (65.637%))
   Logic Levels:           1  (LUT2=1)
   Clock Path Skew:        0.145ns (DCD - SCD - CPR)
     Destination Clock Delay (DCD):    1.773ns
@@ -471,50 +439,50 @@ Slack (MET) :             0.003ns  (arrival time - required time)
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock main_crg_clkout0 rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.360     0.360 r  IBUFDS/O
                          net (fo=1, unplaced)         0.320     0.680    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.027     0.707 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.114     0.821    main_crg_clkin
+                         net (fo=9, unplaced)         0.114     0.821    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
                                                       0.050     0.871 r  PLLE2_ADV/CLKOUT0
-                         net (fo=1, unplaced)         0.320     1.191    main_crg_clkout0
+                         net (fo=1, unplaced)         0.320     1.191    crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.026     1.217 r  BUFG/O
-                         net (fo=6056, unplaced)      0.192     1.409    sys_clk
-                         FDRE                                         r  main_a7ddrphy_rst_storage_reg/C
+                         net (fo=5720, unplaced)      0.192     1.409    sys_clk
+                         FDRE                                         r  a7ddrphy_rst_storage_reg/C
   -------------------------------------------------------------------    -------------------
-                         FDRE (Prop_fdre_C_Q)         0.141     1.550 r  main_a7ddrphy_rst_storage_reg/Q
-                         net (fo=19, unplaced)        0.148     1.698    main_a7ddrphy_rst_storage
-                         LUT2 (Prop_lut2_I1_O)        0.098     1.796 r  OSERDESE2_3_i_5/O
-                         net (fo=98, unplaced)        0.320     2.116    RST0
+                         FDRE (Prop_fdre_C_Q)         0.141     1.550 r  a7ddrphy_rst_storage_reg/Q
+                         net (fo=7, unplaced)         0.136     1.686    a7ddrphy_rst_storage
+                         LUT2 (Prop_lut2_I1_O)        0.098     1.784 r  OSERDESE2_i_1/O
+                         net (fo=106, unplaced)       0.320     2.104    RST0
     OLOGIC_X1Y144        OSERDESE2                                    r  OSERDESE2/RST
   -------------------------------------------------------------------    -------------------
 
-                         (clock main_crg_clkout0 rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.391     0.391 r  IBUFDS/O
                          net (fo=1, unplaced)         0.337     0.728    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.030     0.758 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.259     1.017    main_crg_clkin
+                         net (fo=9, unplaced)         0.259     1.017    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
                                                       0.053     1.070 r  PLLE2_ADV/CLKOUT0
-                         net (fo=1, unplaced)         0.337     1.407    main_crg_clkout0
+                         net (fo=1, unplaced)         0.337     1.407    crg_clkout0
                          BUFG (Prop_bufg_I_O)         0.029     1.436 r  BUFG/O
-                         net (fo=6056, unplaced)      0.337     1.773    sys_clk
+                         net (fo=5720, unplaced)      0.337     1.773    sys_clk
     OLOGIC_X1Y144        OSERDESE2                                    r  OSERDESE2/CLKDIV
                          clock pessimism             -0.219     1.554    
     OLOGIC_X1Y144        OSERDESE2 (Hold_oserdese2_CLKDIV_RST)
                                                       0.559     2.113    OSERDESE2
   -------------------------------------------------------------------
                          required time                         -2.113    
-                         arrival time                           2.116    
+                         arrival time                           2.104    
   -------------------------------------------------------------------
-                         slack                                  0.003    
+                         slack                                 -0.008    
 
 
 
@@ -522,22 +490,22 @@ Slack (MET) :             0.003ns  (arrival time - required time)
 
 Pulse Width Checks
 --------------------------------------------------------------------------------------
-Clock Name:         main_crg_clkout0
+Clock Name:         crg_clkout0
 Waveform(ns):       { 0.000 10.000 }
 Period(ns):         20.000
 Sources:            { PLLE2_ADV/CLKOUT0 }
 
 Check Type        Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period        n/a     RAMB36E1/CLKARDCLK  n/a            2.472         20.000      17.528               storage_20_reg/CLKARDCLK
+Min Period        n/a     RAMB18E1/CLKARDCLK  n/a            2.472         20.000      17.528               VexRiscv/RegFilePlugin_regFile_reg_1/CLKARDCLK
 Max Period        n/a     PLLE2_ADV/CLKOUT0   n/a            160.000       20.000      140.000              PLLE2_ADV/CLKOUT0
-Low Pulse Width   Slow    RAMD32/CLK          n/a            1.130         10.000      8.870                storage_15_reg_0_3_0_5/RAMA/CLK
-High Pulse Width  Slow    RAMD32/CLK          n/a            1.130         10.000      8.870                storage_15_reg_0_3_0_5/RAMA/CLK
+Low Pulse Width   Slow    RAMD32/CLK          n/a            1.130         10.000      8.870                storage_10_reg_0_7_0_5/RAMA/CLK
+High Pulse Width  Slow    RAMD32/CLK          n/a            1.130         10.000      8.870                storage_10_reg_0_7_0_5/RAMA/CLK
 
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  main_crg_clkout1
-  To Clock:  main_crg_clkout1
+From Clock:  crg_clkout1
+  To Clock:  crg_clkout1
 
 Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
 Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
@@ -547,7 +515,7 @@ PW    :            0  Failing Endpoints,  Worst Slack        3.408ns,  Total Vio
 
 Pulse Width Checks
 --------------------------------------------------------------------------------------
-Clock Name:         main_crg_clkout1
+Clock Name:         crg_clkout1
 Waveform(ns):       { 0.000 2.500 }
 Period(ns):         5.000
 Sources:            { PLLE2_ADV/CLKOUT1 }
@@ -559,8 +527,8 @@ Max Period  n/a     PLLE2_ADV/CLKOUT1  n/a            160.000       5.000       
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  main_crg_clkout2
-  To Clock:  main_crg_clkout2
+From Clock:  crg_clkout2
+  To Clock:  crg_clkout2
 
 Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
 Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
@@ -570,7 +538,7 @@ PW    :            0  Failing Endpoints,  Worst Slack        3.408ns,  Total Vio
 
 Pulse Width Checks
 --------------------------------------------------------------------------------------
-Clock Name:         main_crg_clkout2
+Clock Name:         crg_clkout2
 Waveform(ns):       { 1.250 3.750 }
 Period(ns):         5.000
 Sources:            { PLLE2_ADV/CLKOUT2 }
@@ -582,8 +550,8 @@ Max Period  n/a     PLLE2_ADV/CLKOUT2  n/a            160.000       5.000       
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  main_crg_clkout3
-  To Clock:  main_crg_clkout3
+From Clock:  crg_clkout3
+  To Clock:  crg_clkout3
 
 Setup :            0  Failing Endpoints,  Worst Slack        1.216ns,  Total Violation        0.000ns
 Hold  :            0  Failing Endpoints,  Worst Slack        0.037ns,  Total Violation        0.000ns
@@ -595,10 +563,10 @@ Max Delay Paths
 --------------------------------------------------------------------------------------
 Slack (MET) :             1.216ns  (required time - arrival time)
   Source:                 FDPE_6/C
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
+                            (rising edge-triggered cell FDPE clocked by crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
   Destination:            FDPE_7/D
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
-  Path Group:             main_crg_clkout3
+                            (rising edge-triggered cell FDPE clocked by crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Path Group:             crg_clkout3
   Path Type:              Setup (Max at Slow Process Corner)
   Requirement:            2.000ns  (MaxDelay Path 2.000ns)
   Data Path Delay:        0.544ns  (logic 0.397ns (72.978%)  route 0.147ns (27.022%))
@@ -615,23 +583,23 @@ Slack (MET) :             1.216ns  (required time - arrival time)
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock main_crg_clkout3 rise edge)
+                         (clock crg_clkout3 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.842     0.842 r  IBUFDS/O
                          net (fo=1, unplaced)         0.646     1.487    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.082     1.569 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.584     2.153    main_crg_clkin
+                         net (fo=9, unplaced)         0.584     2.153    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT3)
                                                       0.077     2.230 r  PLLE2_ADV/CLKOUT3
-                         net (fo=1, unplaced)         0.646     2.876    main_crg_clkout3
+                         net (fo=1, unplaced)         0.646     2.876    crg_clkout3
                          BUFG (Prop_bufg_I_O)         0.081     2.957 r  BUFG_3/O
-                         net (fo=8, unplaced)         0.584     3.541    idelay_clk
+                         net (fo=8, unplaced)         0.584     3.541    crg_clkout_buf3
                          FDPE                                         r  FDPE_6/C
   -------------------------------------------------------------------    -------------------
                          FDPE (Prop_fdpe_C_Q)         0.397     3.938 r  FDPE_6/Q
-                         net (fo=1, unplaced)         0.147     4.085    builder_xilinxasyncresetsynchronizerimpl3_rst_meta
+                         net (fo=1, unplaced)         0.147     4.085    xilinxasyncresetsynchronizerimpl3_rst_meta
                          FDPE                                         r  FDPE_7/D
   -------------------------------------------------------------------    -------------------
 
@@ -641,12 +609,12 @@ Slack (MET) :             1.216ns  (required time - arrival time)
     R4                   IBUFDS (Prop_ibufds_I_O)     0.804     2.804 r  IBUFDS/O
                          net (fo=1, unplaced)         0.613     3.417    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.078     3.495 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.439     3.934    main_crg_clkin
+                         net (fo=9, unplaced)         0.439     3.934    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT3)
                                                       0.073     4.007 r  PLLE2_ADV/CLKOUT3
-                         net (fo=1, unplaced)         0.613     4.621    main_crg_clkout3
+                         net (fo=1, unplaced)         0.613     4.621    crg_clkout3
                          BUFG (Prop_bufg_I_O)         0.077     4.698 r  BUFG_3/O
-                         net (fo=8, unplaced)         0.439     5.137    idelay_clk
+                         net (fo=8, unplaced)         0.439     5.137    crg_clkout_buf3
                          FDPE                                         r  FDPE_7/C
                          clock pessimism              0.259     5.396    
                          clock uncertainty           -0.051     5.345    
@@ -665,12 +633,12 @@ Min Delay Paths
 --------------------------------------------------------------------------------------
 Slack (MET) :             0.037ns  (arrival time - required time)
   Source:                 FDPE_6/C
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
+                            (rising edge-triggered cell FDPE clocked by crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
   Destination:            FDPE_7/D
-                            (rising edge-triggered cell FDPE clocked by main_crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
-  Path Group:             main_crg_clkout3
+                            (rising edge-triggered cell FDPE clocked by crg_clkout3  {rise@0.000ns fall@2.500ns period=5.000ns})
+  Path Group:             crg_clkout3
   Path Type:              Hold (Min at Fast Process Corner)
-  Requirement:            0.000ns  (main_crg_clkout3 rise@0.000ns - main_crg_clkout3 rise@0.000ns)
+  Requirement:            0.000ns  (crg_clkout3 rise@0.000ns - crg_clkout3 rise@0.000ns)
   Data Path Delay:        0.220ns  (logic 0.147ns (66.849%)  route 0.073ns (33.151%))
   Logic Levels:           0  
   Clock Path Skew:        0.145ns (DCD - SCD - CPR)
@@ -680,39 +648,39 @@ Slack (MET) :             0.037ns  (arrival time - required time)
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock main_crg_clkout3 rise edge)
+                         (clock crg_clkout3 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.360     0.360 r  IBUFDS/O
                          net (fo=1, unplaced)         0.320     0.680    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.027     0.707 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.114     0.821    main_crg_clkin
+                         net (fo=9, unplaced)         0.114     0.821    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT3)
                                                       0.050     0.871 r  PLLE2_ADV/CLKOUT3
-                         net (fo=1, unplaced)         0.320     1.191    main_crg_clkout3
+                         net (fo=1, unplaced)         0.320     1.191    crg_clkout3
                          BUFG (Prop_bufg_I_O)         0.026     1.217 r  BUFG_3/O
-                         net (fo=8, unplaced)         0.114     1.331    idelay_clk
+                         net (fo=8, unplaced)         0.114     1.331    crg_clkout_buf3
                          FDPE                                         r  FDPE_6/C
   -------------------------------------------------------------------    -------------------
                          FDPE (Prop_fdpe_C_Q)         0.147     1.478 r  FDPE_6/Q
-                         net (fo=1, unplaced)         0.073     1.551    builder_xilinxasyncresetsynchronizerimpl3_rst_meta
+                         net (fo=1, unplaced)         0.073     1.551    xilinxasyncresetsynchronizerimpl3_rst_meta
                          FDPE                                         r  FDPE_7/D
   -------------------------------------------------------------------    -------------------
 
-                         (clock main_crg_clkout3 rise edge)
+                         (clock crg_clkout3 rise edge)
                                                       0.000     0.000 r  
     R4                                                0.000     0.000 r  clk200_p (IN)
                          net (fo=0)                   0.000     0.000    clk200_p
     R4                   IBUFDS (Prop_ibufds_I_O)     0.391     0.391 r  IBUFDS/O
                          net (fo=1, unplaced)         0.337     0.728    IBUFDS_n_0_BUFG_inst_n_0
                          BUFG (Prop_bufg_I_O)         0.030     0.758 r  IBUFDS_n_0_BUFG_inst/O
-                         net (fo=9, unplaced)         0.259     1.017    main_crg_clkin
+                         net (fo=9, unplaced)         0.259     1.017    crg_clkin
                          PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT3)
                                                       0.053     1.070 r  PLLE2_ADV/CLKOUT3
-                         net (fo=1, unplaced)         0.337     1.407    main_crg_clkout3
+                         net (fo=1, unplaced)         0.337     1.407    crg_clkout3
                          BUFG (Prop_bufg_I_O)         0.029     1.436 r  BUFG_3/O
-                         net (fo=8, unplaced)         0.259     1.695    idelay_clk
+                         net (fo=8, unplaced)         0.259     1.695    crg_clkout_buf3
                          FDPE                                         r  FDPE_7/C
                          clock pessimism             -0.219     1.476    
                          FDPE (Hold_fdpe_C_D)         0.038     1.514    FDPE_7
@@ -728,7 +696,7 @@ Slack (MET) :             0.037ns  (arrival time - required time)
 
 Pulse Width Checks
 --------------------------------------------------------------------------------------
-Clock Name:         main_crg_clkout3
+Clock Name:         crg_clkout3
 Waveform(ns):       { 0.000 2.500 }
 Period(ns):         5.000
 Sources:            { PLLE2_ADV/CLKOUT3 }
@@ -742,284 +710,103 @@ High Pulse Width  Slow    FDPE/C             n/a            0.500         2.500 
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  eth_rx_clk
-  To Clock:  eth_rx_clk
-
-Setup :            0  Failing Endpoints,  Worst Slack        0.787ns,  Total Violation        0.000ns
-Hold  :            0  Failing Endpoints,  Worst Slack        0.029ns,  Total Violation        0.000ns
-PW    :            0  Failing Endpoints,  Worst Slack        2.000ns,  Total Violation        0.000ns
----------------------------------------------------------------------------------------------------
-
-
-Max Delay Paths
---------------------------------------------------------------------------------------
-Slack (MET) :             0.787ns  (required time - arrival time)
-  Source:                 main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/C
-                            (rising edge-triggered cell FDRE clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Destination:            main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/D
-                            (rising edge-triggered cell FDRE clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Path Group:             eth_rx_clk
-  Path Type:              Setup (Max at Slow Process Corner)
-  Requirement:            8.000ns  (eth_rx_clk rise@8.000ns - eth_rx_clk rise@0.000ns)
-  Data Path Delay:        7.105ns  (logic 2.903ns (40.859%)  route 4.202ns (59.141%))
-  Logic Levels:           12  (CARRY4=3 LUT2=3 LUT3=1 LUT4=1 LUT5=1 LUT6=3)
-  Clock Path Skew:        -0.145ns (DCD - SCD + CPR)
-    Destination Clock Delay (DCD):    0.501ns = ( 8.501 - 8.000 ) 
-    Source Clock Delay      (SCD):    0.646ns
-    Clock Pessimism Removal (CPR):    0.000ns
-  Clock Uncertainty:      0.035ns  ((TSJ^2 + TIJ^2)^1/2 + DJ) / 2 + PE
-    Total System Jitter     (TSJ):    0.071ns
-    Total Input Jitter      (TIJ):    0.000ns
-    Discrete Jitter          (DJ):    0.000ns
-    Phase Error              (PE):    0.000ns
-
-    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
-  -------------------------------------------------------------------    -------------------
-                         (clock eth_rx_clk rise edge)
-                                                      0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_4/O
-                         net (fo=2536, unplaced)      0.646     0.646    eth_rx_clk
-                         FDRE                                         r  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/C
-  -------------------------------------------------------------------    -------------------
-                         FDRE (Prop_fdre_C_Q)         0.379     1.025 f  main_basesoc_ethcore_ip_rx_depacketizer_sr_reg[74]/Q
-                         net (fo=4, unplaced)         0.623     1.648    main_basesoc_ethcore_ip_rx_source_source_param_protocol[2]
-                         LUT4 (Prop_lut4_I1_O)        0.252     1.900 f  builder_liteethudp_liteethudprx_state[1]_i_5/O
-                         net (fo=3, unplaced)         0.346     2.246    builder_liteethudp_liteethudprx_state[1]_i_5_n_0
-                         LUT6 (Prop_lut6_I0_O)        0.105     2.351 f  builder_liteethip_sel_ongoing[0]_i_2/O
-                         net (fo=5, unplaced)         0.356     2.707    builder_liteethip_sel_ongoing[0]_i_2_n_0
-                         LUT2 (Prop_lut2_I0_O)        0.105     2.812 f  storage_13_reg_i_19/O
-                         net (fo=77, unplaced)        0.440     3.252    storage_13_reg_i_19_n_0
-                         LUT2 (Prop_lut2_I1_O)        0.106     3.358 r  storage_14_reg_0_1_96_101_i_13/O
-                         net (fo=1, unplaced)         0.000     3.358    main_basesoc_ethcore_icmp_rx_sink_sink_param_length[3]
-                         CARRY4 (Prop_carry4_DI[1]_O[3])
-                                                      0.540     3.898 f  storage_14_reg_0_1_96_101_i_8/O[3]
-                         net (fo=2, unplaced)         0.661     4.559    main_basesoc_ethcore_icmp_rx_source_source_param_length[5]
-                         LUT5 (Prop_lut5_I1_O)        0.250     4.809 f  storage_13_reg_i_24/O
-                         net (fo=1, unplaced)         0.582     5.391    storage_13_reg_i_24_n_0
-                         LUT6 (Prop_lut6_I2_O)        0.105     5.496 f  storage_13_reg_i_16/O
-                         net (fo=111, unplaced)       0.449     5.945    storage_13_reg_i_16_n_0
-                         LUT3 (Prop_lut3_I0_O)        0.105     6.050 f  storage_13_reg_i_20/O
-                         net (fo=2, unplaced)         0.358     6.408    storage_13_reg_i_20_n_0
-                         LUT6 (Prop_lut6_I0_O)        0.105     6.513 r  storage_13_reg_i_12/O
-                         net (fo=6, unplaced)         0.379     6.892    p_502_in
-                         LUT2 (Prop_lut2_I1_O)        0.105     6.997 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0[4]_i_2/O
-                         net (fo=1, unplaced)         0.000     6.997    main_basesoc_ethcore_icmp_echo_payload_fifo_level0[4]_i_2_n_0
-                         CARRY4 (Prop_carry4_DI[0]_CO[3])
-                                                      0.477     7.474 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[4]_i_1/CO[3]
-                         net (fo=1, unplaced)         0.008     7.482    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[4]_i_1_n_0
-                         CARRY4 (Prop_carry4_CI_O[1])
-                                                      0.269     7.751 r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[7]_i_2/O[1]
-                         net (fo=1, unplaced)         0.000     7.751    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[7]_i_2_n_6
-                         FDRE                                         r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/D
-  -------------------------------------------------------------------    -------------------
-
-                         (clock eth_rx_clk rise edge)
-                                                      8.000     8.000 r  
-                         BUFG                         0.000     8.000 r  BUFG_4/O
-                         net (fo=2536, unplaced)      0.501     8.501    eth_rx_clk
-                         FDRE                                         r  main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]/C
-                         clock pessimism              0.000     8.501    
-                         clock uncertainty           -0.035     8.465    
-                         FDRE (Setup_fdre_C_D)        0.072     8.537    main_basesoc_ethcore_icmp_echo_payload_fifo_level0_reg[6]
-  -------------------------------------------------------------------
-                         required time                          8.537    
-                         arrival time                          -7.751    
-  -------------------------------------------------------------------
-                         slack                                  0.787    
-
-
-
-
-
-Min Delay Paths
---------------------------------------------------------------------------------------
-Slack (MET) :             0.029ns  (arrival time - required time)
-  Source:                 main_basesoc_ethcore_mac_core_bufferizeendpoints_pipe_valid_source_payload_data_reg[0]/C
-                            (rising edge-triggered cell FDRE clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Destination:            storage_11_reg_0_7_0_5/RAMA/I
-                            (rising edge-triggered cell RAMD32 clocked by eth_rx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Path Group:             eth_rx_clk
-  Path Type:              Hold (Min at Fast Process Corner)
-  Requirement:            0.000ns  (eth_rx_clk rise@0.000ns - eth_rx_clk rise@0.000ns)
-  Data Path Delay:        0.268ns  (logic 0.141ns (52.621%)  route 0.127ns (47.379%))
-  Logic Levels:           0  
-  Clock Path Skew:        0.145ns (DCD - SCD - CPR)
-    Destination Clock Delay (DCD):    0.337ns
-    Source Clock Delay      (SCD):    0.192ns
-    Clock Pessimism Removal (CPR):    -0.000ns
-
-    Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
-  -------------------------------------------------------------------    -------------------
-                         (clock eth_rx_clk rise edge)
-                                                      0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_4/O
-                         net (fo=2536, unplaced)      0.192     0.192    eth_rx_clk
-                         FDRE                                         r  main_basesoc_ethcore_mac_core_bufferizeendpoints_pipe_valid_source_payload_data_reg[0]/C
-  -------------------------------------------------------------------    -------------------
-                         FDRE (Prop_fdre_C_Q)         0.141     0.333 r  main_basesoc_ethcore_mac_core_bufferizeendpoints_pipe_valid_source_payload_data_reg[0]/Q
-                         net (fo=1, unplaced)         0.127     0.460    storage_11_reg_0_7_0_5/DIA0
-                         RAMD32                                       r  storage_11_reg_0_7_0_5/RAMA/I
-  -------------------------------------------------------------------    -------------------
-
-                         (clock eth_rx_clk rise edge)
-                                                      0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_4/O
-                         net (fo=2536, unplaced)      0.337     0.337    storage_11_reg_0_7_0_5/WCLK
-                         RAMD32                                       r  storage_11_reg_0_7_0_5/RAMA/CLK
-                         clock pessimism              0.000     0.337    
-                         RAMD32 (Hold_ramd32_CLK_I)
-                                                      0.094     0.431    storage_11_reg_0_7_0_5/RAMA
-  -------------------------------------------------------------------
-                         required time                         -0.431    
-                         arrival time                           0.460    
-  -------------------------------------------------------------------
-                         slack                                  0.029    
-
-
-
-
-
-Pulse Width Checks
---------------------------------------------------------------------------------------
-Clock Name:         eth_rx_clk
-Waveform(ns):       { 0.000 4.000 }
-Period(ns):         8.000
-Sources:            { BUFG_4/O }
-
-Check Type        Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period        n/a     RAMB18E1/CLKARDCLK  n/a            2.472         8.000       5.528                storage_13_reg/CLKARDCLK
-Max Period        n/a     PLLE2_ADV/CLKIN1    n/a            52.633        8.000       44.633               PLLE2_ADV_1/CLKIN1
-Low Pulse Width   Slow    PLLE2_ADV/CLKIN1    n/a            2.000         4.000       2.000                PLLE2_ADV_1/CLKIN1
-High Pulse Width  Slow    PLLE2_ADV/CLKIN1    n/a            2.000         4.000       2.000                PLLE2_ADV_1/CLKIN1
-
-
-
----------------------------------------------------------------------------------------------------
-From Clock:  builder_liteethphyrgmii_pll_fb
-  To Clock:  builder_liteethphyrgmii_pll_fb
+From Clock:  pll_fb
+  To Clock:  pll_fb
 
 Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
 Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-PW    :            0  Failing Endpoints,  Worst Slack        6.751ns,  Total Violation        0.000ns
+PW    :            0  Failing Endpoints,  Worst Slack        3.751ns,  Total Violation        0.000ns
 ---------------------------------------------------------------------------------------------------
 
 
 Pulse Width Checks
 --------------------------------------------------------------------------------------
-Clock Name:         builder_liteethphyrgmii_pll_fb
-Waveform(ns):       { 0.000 4.000 }
-Period(ns):         8.000
-Sources:            { PLLE2_ADV_1/CLKFBOUT }
+Clock Name:         pll_fb
+Waveform(ns):       { 0.000 2.500 }
+Period(ns):         5.000
+Sources:            { PLLE2_ADV/CLKFBOUT }
 
 Check Type  Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period  n/a     PLLE2_ADV/CLKFBOUT  n/a            1.249         8.000       6.751                PLLE2_ADV_1/CLKFBOUT
-Max Period  n/a     PLLE2_ADV/CLKFBIN   n/a            52.633        8.000       44.633               PLLE2_ADV_1/CLKFBIN
+Min Period  n/a     PLLE2_ADV/CLKFBOUT  n/a            1.249         5.000       3.751                PLLE2_ADV/CLKFBOUT
+Max Period  n/a     PLLE2_ADV/CLKFBIN   n/a            52.633        5.000       47.633               PLLE2_ADV/CLKFBIN
 
 
 
 ---------------------------------------------------------------------------------------------------
-From Clock:  main_ethphy_clkout0
-  To Clock:  main_ethphy_clkout0
+Path Group:  **async_default**
+From Clock:  crg_clkout0
+  To Clock:  crg_clkout0
 
-Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-PW    :            0  Failing Endpoints,  Worst Slack        6.408ns,  Total Violation        0.000ns
----------------------------------------------------------------------------------------------------
-
-
-Pulse Width Checks
---------------------------------------------------------------------------------------
-Clock Name:         main_ethphy_clkout0
-Waveform(ns):       { 0.000 4.000 }
-Period(ns):         8.000
-Sources:            { PLLE2_ADV_1/CLKOUT0 }
-
-Check Type  Corner  Lib Pin            Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period  n/a     BUFG/I             n/a            1.592         8.000       6.408                BUFG_5/I
-Max Period  n/a     PLLE2_ADV/CLKOUT0  n/a            160.000       8.000       152.000              PLLE2_ADV_1/CLKOUT0
-
-
-
----------------------------------------------------------------------------------------------------
-From Clock:  main_ethphy_clkout1
-  To Clock:  main_ethphy_clkout1
-
-Setup :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-Hold  :           NA  Failing Endpoints,  Worst Slack           NA  ,  Total Violation           NA
-PW    :            0  Failing Endpoints,  Worst Slack        6.408ns,  Total Violation        0.000ns
----------------------------------------------------------------------------------------------------
-
-
-Pulse Width Checks
---------------------------------------------------------------------------------------
-Clock Name:         main_ethphy_clkout1
-Waveform(ns):       { 2.000 6.000 }
-Period(ns):         8.000
-Sources:            { PLLE2_ADV_1/CLKOUT1 }
-
-Check Type  Corner  Lib Pin            Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period  n/a     BUFG/I             n/a            1.592         8.000       6.408                BUFG_6/I
-Max Period  n/a     PLLE2_ADV/CLKOUT1  n/a            160.000       8.000       152.000              PLLE2_ADV_1/CLKOUT1
-
-
-
----------------------------------------------------------------------------------------------------
-From Clock:  eth_tx_clk
-  To Clock:  eth_tx_clk
-
-Setup :            0  Failing Endpoints,  Worst Slack        1.209ns,  Total Violation        0.000ns
-Hold  :            0  Failing Endpoints,  Worst Slack        0.037ns,  Total Violation        0.000ns
-PW    :            0  Failing Endpoints,  Worst Slack        3.500ns,  Total Violation        0.000ns
+Setup :            0  Failing Endpoints,  Worst Slack       18.534ns,  Total Violation        0.000ns
+Hold  :            0  Failing Endpoints,  Worst Slack        0.343ns,  Total Violation        0.000ns
 ---------------------------------------------------------------------------------------------------
 
 
 Max Delay Paths
 --------------------------------------------------------------------------------------
-Slack (MET) :             1.209ns  (required time - arrival time)
-  Source:                 FDPE_10/C
-                            (rising edge-triggered cell FDPE clocked by eth_tx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Destination:            FDPE_11/D
-                            (rising edge-triggered cell FDPE clocked by eth_tx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Path Group:             eth_tx_clk
-  Path Type:              Setup (Max at Slow Process Corner)
-  Requirement:            2.000ns  (MaxDelay Path 2.000ns)
-  Data Path Delay:        0.544ns  (logic 0.397ns (72.978%)  route 0.147ns (27.022%))
+Slack (MET) :             18.534ns  (required time - arrival time)
+  Source:                 FDPE_1/C
+                            (rising edge-triggered cell FDPE clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            cordic_dac/aux_d1_reg/CLR
+                            (recovery check against rising-edge clock crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             **async_default**
+  Path Type:              Recovery (Max at Slow Process Corner)
+  Requirement:            20.000ns  (crg_clkout0 rise@20.000ns - crg_clkout0 rise@0.000ns)
+  Data Path Delay:        0.801ns  (logic 0.397ns (49.563%)  route 0.404ns (50.437%))
   Logic Levels:           0  
   Clock Path Skew:        -0.145ns (DCD - SCD + CPR)
-    Destination Clock Delay (DCD):    0.501ns
-    Source Clock Delay      (SCD):    0.646ns
-    Clock Pessimism Removal (CPR):    0.000ns
-  Clock Uncertainty:      0.058ns  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Destination Clock Delay (DCD):    3.198ns = ( 23.198 - 20.000 ) 
+    Source Clock Delay      (SCD):    3.603ns
+    Clock Pessimism Removal (CPR):    0.259ns
+  Clock Uncertainty:      0.059ns  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
     Total System Jitter     (TSJ):    0.071ns
-    Discrete Jitter          (DJ):    0.091ns
+    Discrete Jitter          (DJ):    0.095ns
     Phase Error              (PE):    0.000ns
-  Timing Exception:       MaxDelay Path 2.000ns
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock eth_tx_clk rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=158, unplaced)       0.646     0.646    eth_tx_clk
-                         FDPE                                         r  FDPE_10/C
+    R4                                                0.000     0.000 r  clk200_p (IN)
+                         net (fo=0)                   0.000     0.000    clk200_p
+    R4                   IBUFDS (Prop_ibufds_I_O)     0.842     0.842 r  IBUFDS/O
+                         net (fo=1, unplaced)         0.646     1.487    IBUFDS_n_0_BUFG_inst_n_0
+                         BUFG (Prop_bufg_I_O)         0.082     1.569 r  IBUFDS_n_0_BUFG_inst/O
+                         net (fo=9, unplaced)         0.584     2.153    crg_clkin
+                         PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
+                                                      0.077     2.230 r  PLLE2_ADV/CLKOUT0
+                         net (fo=1, unplaced)         0.646     2.876    crg_clkout0
+                         BUFG (Prop_bufg_I_O)         0.081     2.957 r  BUFG/O
+                         net (fo=5720, unplaced)      0.646     3.603    sys_clk
+                         FDPE                                         r  FDPE_1/C
   -------------------------------------------------------------------    -------------------
-                         FDPE (Prop_fdpe_C_Q)         0.397     1.043 r  FDPE_10/Q
-                         net (fo=1, unplaced)         0.147     1.190    builder_xilinxasyncresetsynchronizerimpl5_rst_meta
-                         FDPE                                         r  FDPE_11/D
+                         FDPE (Prop_fdpe_C_Q)         0.397     4.000 f  FDPE_1/Q
+                         net (fo=2085, unplaced)      0.404     4.404    cordic_dac/sys_rst
+                         FDCE                                         f  cordic_dac/aux_d1_reg/CLR
   -------------------------------------------------------------------    -------------------
 
-                         max delay                    2.000     2.000    
-                         BUFG                         0.000     2.000 r  BUFG_5/O
-                         net (fo=158, unplaced)       0.501     2.501    eth_tx_clk
-                         FDPE                                         r  FDPE_11/C
-                         clock pessimism              0.000     2.501    
-                         clock uncertainty           -0.058     2.443    
-                         FDPE (Setup_fdpe_C_D)       -0.044     2.399    FDPE_11
+                         (clock crg_clkout0 rise edge)
+                                                     20.000    20.000 r  
+    R4                                                0.000    20.000 r  clk200_p (IN)
+                         net (fo=0)                   0.000    20.000    clk200_p
+    R4                   IBUFDS (Prop_ibufds_I_O)     0.804    20.804 r  IBUFDS/O
+                         net (fo=1, unplaced)         0.613    21.417    IBUFDS_n_0_BUFG_inst_n_0
+                         BUFG (Prop_bufg_I_O)         0.078    21.495 r  IBUFDS_n_0_BUFG_inst/O
+                         net (fo=9, unplaced)         0.439    21.934    crg_clkin
+                         PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
+                                                      0.073    22.007 r  PLLE2_ADV/CLKOUT0
+                         net (fo=1, unplaced)         0.613    22.621    crg_clkout0
+                         BUFG (Prop_bufg_I_O)         0.077    22.698 r  BUFG/O
+                         net (fo=5720, unplaced)      0.501    23.198    cordic_dac/out
+                         FDCE                                         r  cordic_dac/aux_d1_reg/C
+                         clock pessimism              0.259    23.458    
+                         clock uncertainty           -0.059    23.398    
+                         FDCE (Recov_fdce_C_CLR)     -0.461    22.937    cordic_dac/aux_d1_reg
   -------------------------------------------------------------------
-                         required time                          2.399    
-                         arrival time                          -1.190    
+                         required time                         22.937    
+                         arrival time                          -4.404    
   -------------------------------------------------------------------
-                         slack                                  1.209    
+                         slack                                 18.534    
 
 
 
@@ -1027,62 +814,66 @@ Slack (MET) :             1.209ns  (required time - arrival time)
 
 Min Delay Paths
 --------------------------------------------------------------------------------------
-Slack (MET) :             0.037ns  (arrival time - required time)
-  Source:                 FDPE_10/C
-                            (rising edge-triggered cell FDPE clocked by eth_tx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Destination:            FDPE_11/D
-                            (rising edge-triggered cell FDPE clocked by eth_tx_clk  {rise@0.000ns fall@4.000ns period=8.000ns})
-  Path Group:             eth_tx_clk
-  Path Type:              Hold (Min at Fast Process Corner)
-  Requirement:            0.000ns  (eth_tx_clk rise@0.000ns - eth_tx_clk rise@0.000ns)
-  Data Path Delay:        0.220ns  (logic 0.147ns (66.849%)  route 0.073ns (33.151%))
+Slack (MET) :             0.343ns  (arrival time - required time)
+  Source:                 FDPE_1/C
+                            (rising edge-triggered cell FDPE clocked by crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Destination:            cordic_dac/phase_acc_reg[0]/CLR
+                            (removal check against rising-edge clock crg_clkout0  {rise@0.000ns fall@10.000ns period=20.000ns})
+  Path Group:             **async_default**
+  Path Type:              Removal (Min at Fast Process Corner)
+  Requirement:            0.000ns  (crg_clkout0 rise@0.000ns - crg_clkout0 rise@0.000ns)
+  Data Path Delay:        0.347ns  (logic 0.147ns (42.321%)  route 0.200ns (57.679%))
   Logic Levels:           0  
   Clock Path Skew:        0.145ns (DCD - SCD - CPR)
-    Destination Clock Delay (DCD):    0.337ns
-    Source Clock Delay      (SCD):    0.192ns
-    Clock Pessimism Removal (CPR):    -0.000ns
+    Destination Clock Delay (DCD):    1.773ns
+    Source Clock Delay      (SCD):    1.409ns
+    Clock Pessimism Removal (CPR):    0.219ns
 
     Location             Delay type                Incr(ns)  Path(ns)    Netlist Resource(s)
   -------------------------------------------------------------------    -------------------
-                         (clock eth_tx_clk rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=158, unplaced)       0.192     0.192    eth_tx_clk
-                         FDPE                                         r  FDPE_10/C
+    R4                                                0.000     0.000 r  clk200_p (IN)
+                         net (fo=0)                   0.000     0.000    clk200_p
+    R4                   IBUFDS (Prop_ibufds_I_O)     0.360     0.360 r  IBUFDS/O
+                         net (fo=1, unplaced)         0.320     0.680    IBUFDS_n_0_BUFG_inst_n_0
+                         BUFG (Prop_bufg_I_O)         0.027     0.707 r  IBUFDS_n_0_BUFG_inst/O
+                         net (fo=9, unplaced)         0.114     0.821    crg_clkin
+                         PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
+                                                      0.050     0.871 r  PLLE2_ADV/CLKOUT0
+                         net (fo=1, unplaced)         0.320     1.191    crg_clkout0
+                         BUFG (Prop_bufg_I_O)         0.026     1.217 r  BUFG/O
+                         net (fo=5720, unplaced)      0.192     1.409    sys_clk
+                         FDPE                                         r  FDPE_1/C
   -------------------------------------------------------------------    -------------------
-                         FDPE (Prop_fdpe_C_Q)         0.147     0.339 r  FDPE_10/Q
-                         net (fo=1, unplaced)         0.073     0.412    builder_xilinxasyncresetsynchronizerimpl5_rst_meta
-                         FDPE                                         r  FDPE_11/D
+                         FDPE (Prop_fdpe_C_Q)         0.147     1.556 f  FDPE_1/Q
+                         net (fo=2085, unplaced)      0.200     1.756    cordic_dac/sys_rst
+                         FDCE                                         f  cordic_dac/phase_acc_reg[0]/CLR
   -------------------------------------------------------------------    -------------------
 
-                         (clock eth_tx_clk rise edge)
+                         (clock crg_clkout0 rise edge)
                                                       0.000     0.000 r  
-                         BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=158, unplaced)       0.337     0.337    eth_tx_clk
-                         FDPE                                         r  FDPE_11/C
-                         clock pessimism              0.000     0.337    
-                         FDPE (Hold_fdpe_C_D)         0.038     0.375    FDPE_11
+    R4                                                0.000     0.000 r  clk200_p (IN)
+                         net (fo=0)                   0.000     0.000    clk200_p
+    R4                   IBUFDS (Prop_ibufds_I_O)     0.391     0.391 r  IBUFDS/O
+                         net (fo=1, unplaced)         0.337     0.728    IBUFDS_n_0_BUFG_inst_n_0
+                         BUFG (Prop_bufg_I_O)         0.030     0.758 r  IBUFDS_n_0_BUFG_inst/O
+                         net (fo=9, unplaced)         0.259     1.017    crg_clkin
+                         PLLE2_ADV (Prop_plle2_adv_CLKIN1_CLKOUT0)
+                                                      0.053     1.070 r  PLLE2_ADV/CLKOUT0
+                         net (fo=1, unplaced)         0.337     1.407    crg_clkout0
+                         BUFG (Prop_bufg_I_O)         0.029     1.436 r  BUFG/O
+                         net (fo=5720, unplaced)      0.337     1.773    cordic_dac/out
+                         FDCE                                         r  cordic_dac/phase_acc_reg[0]/C
+                         clock pessimism             -0.219     1.554    
+                         FDCE (Remov_fdce_C_CLR)     -0.141     1.413    cordic_dac/phase_acc_reg[0]
   -------------------------------------------------------------------
-                         required time                         -0.375    
-                         arrival time                           0.412    
+                         required time                         -1.413    
+                         arrival time                           1.756    
   -------------------------------------------------------------------
-                         slack                                  0.037    
+                         slack                                  0.343    
 
 
-
-
-
-Pulse Width Checks
---------------------------------------------------------------------------------------
-Clock Name:         eth_tx_clk
-Waveform(ns):       { 0.000 4.000 }
-Period(ns):         8.000
-Sources:            { BUFG_5/O }
-
-Check Type        Corner  Lib Pin  Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location       Pin
-Min Period        n/a     ODDR/C   n/a            1.474         8.000       6.526      OLOGIC_X0Y220  ODDR_1/C
-Low Pulse Width   Slow    FDPE/C   n/a            0.500         4.000       3.500                     FDPE_10/C
-High Pulse Width  Slow    FDPE/C   n/a            0.500         4.000       3.500                     FDPE_10/C
 
 
 

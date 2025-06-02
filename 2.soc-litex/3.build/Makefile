@@ -45,7 +45,7 @@ SIM_CSV       := $(SIM_DIR)/csr.csv
 SIM_BIOS      ?= $(EXAMPLE_DIR)/cordic/demo.bin
 
 .PHONY: help open-target open-example build-board load term \
-        build-example sim view-sim clean-sim
+        build-sw sim view-sim clean-sim
 
 help:
 	@echo "Usage:"
@@ -53,8 +53,8 @@ help:
 	@echo "  make open-example  file=<proj>"
 	@echo "  make build-board   [FREQ=..] [OPTIONS='..']"
 	@echo "  make load          [FREQ=..] [OPTIONS='..']"
-	@echo "  make term          file=<example-name> [PORT=..]"
-	@echo "  make build-example file=<proj> [DEMO_FLAGS='..']"
+	@echo "  make term               [PORT=..]"
+	@echo "  make build-sw           [DEMO_FLAGS='..']"
 	@echo "  make sim"
 	@echo "  make view-sim"
 	@echo "  make clean-sim"
@@ -80,26 +80,21 @@ build-board:
 	  $(OPTIONS)
 
 load:
-	@echo "[litex load] freq=$(FREQ) opts='$(OPTIONS)'"
+	@echo "[litex load]"
 	source $(VENV_ACTIVATE) && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --load \
-	  --sys-clk-freq=$(FREQ) \
 	  $(OPTIONS)
 
 # ——————————————————————————————————————————————————————————————
 #  Serial terminal into built example
 # ——————————————————————————————————————————————————————————————
 term:
-ifndef file
-	$(error You must specify example folder:  make term file=<example-name> [PORT=…])
-endif
-	@echo "[serial term] port=$(PORT) example=$(file)"
-	@source $(VENV_ACTIVATE) && \
-	# find the first .bin in that example dir
-	KERNEL_PATH=$$(find $(EXAMPLE_DIR)/$(file) -maxdepth 1 -type f -name '*.bin' | head -n1); \
+	@echo "[serial term] port=$(PORT)"
+	source $(VENV_ACTIVATE) && \
+	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
 	if [ -z "$${KERNEL_PATH}" ]; then \
-	  echo "Error: no .bin found in $(EXAMPLE_DIR)/$(file)" >&2; \
+	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
 	  exit 1; \
 	fi; \
 	litex_term $(PORT) --kernel="$${KERNEL_PATH}"
@@ -107,19 +102,18 @@ endif
 # ——————————————————————————————————————————————————————————————
 #  Build & run software example under 2.sw/
 # ——————————————————————————————————————————————————————————————
-build-example:
-	@echo "[example build] proj=$(file) flags='$(DEMO_FLAGS)'"
-	# ensure the build subdir exists
-	mkdir -p $(BUILD_DIR)/$(BOARD)
+build-sw:
+	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
+	@echo "→ Executing demo.py in $(SW_DIR)"
 	source $(VENV_ACTIVATE) && \
-	cd $(EXAMPLE_DIR)/$(file) && \
+	cd $(SW_DIR) && \
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
 	  --mem=main_ram \
 	  $(DEMO_FLAGS)
 
 # ——————————————————————————————————————————————————————————————
-#  Verilator-based simulation
+#  Verilator-based simulation (IN PROGRESS)
 # ——————————————————————————————————————————————————————————————
 $(SIM_DIR):
 	mkdir -p $(SIM_DIR)
