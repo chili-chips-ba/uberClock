@@ -18,7 +18,7 @@ SIM_DIR       := $(PROJECT_ROOT)/4.sim
 LITEX_PATH   ?= $(HOME)/FPGA/Tools/litex-hub/litex
 
 # If LITEX_VENV is set in the environment, it will be used.
-LITEX_VENV   ?= $(LITEX_PATH)/litex-venv/bin/activate
+LITEX_VENV   ?= $(LITEX_PATH)/litex-venv
 
 PYTHON       := python3
 
@@ -74,7 +74,7 @@ open-example:
 # ——————————————————————————————————————————————————————————————
 build-board:
 	@echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --build \
 	  --sys-clk-freq=$(FREQ) \
@@ -82,7 +82,7 @@ build-board:
 
 load:
 	@echo "[litex load]"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --load \
 	  $(OPTIONS)
@@ -92,7 +92,7 @@ load:
 # ——————————————————————————————————————————————————————————————
 term:
 	@echo "[serial term] port=$(PORT)"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
 	if [ -z "$${KERNEL_PATH}" ]; then \
 	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
@@ -106,7 +106,7 @@ term:
 build-sw:
 	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
 	@echo "→ Executing demo.py in $(SW_DIR)"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	cd $(SW_DIR) && \
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
@@ -121,7 +121,7 @@ $(SIM_DIR):
 
 $(SIM_JSON) $(SIM_CSV): | $(SIM_DIR)
 	@echo "[sim-gen] soc.json & csr.csv @ $(SIM_FREQ)Hz"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	$(PYTHON) -m $(BOARDS_PKG) \
 	  --sys-clk-freq=$(SIM_FREQ) \
 	  --with-cordic \
@@ -133,7 +133,7 @@ $(SIM_JSON) $(SIM_CSV): | $(SIM_DIR)
 .PHONY: sim
 sim: $(SIM_JSON) $(SIM_CSV)
 	@echo "[sim] Verilator + litex_sim @ $(SIM_FREQ)Hz, BIOS=$(SIM_BIOS)"
-	source $(LITEX_VENV) && \
+	source $(LITEX_VENV)/bin/activate && \
 	litex_sim \
 	  --soc-json=$(SIM_JSON) \
 	  --csr-json=$(SIM_CSV) \
