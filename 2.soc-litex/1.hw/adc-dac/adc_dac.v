@@ -13,6 +13,15 @@ module adc_dac(
     input  [11:0]             adc_data_ch0, // AD channel 0 data
     input  [11:0]             adc_data_ch1, // AD channel 1 data
 
+    
+     // ————————————————————————————————————————————
+     // Debug outputs for LiteScope
+     output [11:0]             debug_adc_data_ch0,
+     output [11:0]             debug_adc_data_ch1,
+     output [13:0]             debug_dac_data1,
+     output [13:0]             debug_dac_data2,
+     // ————————————————————————————————————————————
+
     // DDR‐output DAC (14-bit output; AN9767 on J13)
     output                    da1_clk,         // DA1 clock (DDR‐output)
     output                    da1_wrt,         // DA1 write strobe (DDR‐output)
@@ -21,61 +30,59 @@ module adc_dac(
     output                    da2_wrt,         // DA2 write strobe (DDR‐output)
     output [13:0]             da2_data         // DA2 14‐bit data bus (DDR‐output)
 );
-
     //======================================================================
-    //  Internal signals
+    // Instantiate the “adc” module
     //======================================================================
 
-    assign adc_clk_ch0 = sys_clk;
-    assign adc_clk_ch1 = sys_clk;
+    wire [11:0] ad_data_ch0_12;
+    wire [11:0] ad_data_ch1_12;
 
-    //======================================================================
-    // Sample each AD channel and produce buffer write signals
-    //======================================================================
-    // Channel 0 sampler
-    adc adc_sample_m0 (
-        .adc_clk      (sys_clk),
-        .rst          (~rst_n),
-        .adc_data     (adc_data_ch0),
-        .adc_buf_wr   (/* unused */),
-        .adc_buf_addr (/* unused */),
-        .adc_buf_data (/* unused */)
-    );
+    adc u_adc (
+        .sys_clk      (sys_clk),
+        .rst_n        (rst_n),
 
-    // Channel 1 sampler
-    adc adc_sample_m1 (
-        .adc_clk      (sys_clk),
-        .rst          (~rst_n),
-        .adc_data     (adc_data_ch1),
-        .adc_buf_wr   (/* unused */),
-        .adc_buf_addr (/* unused */),
-        .adc_buf_data (/* unused */)
+        // Raw DDR-pinned inputs from the board
+        .adc_data_ch0 (adc_data_ch0),
+        .adc_data_ch1 (adc_data_ch1),
+
+        // DDR clocks to drive each AD9238 chip
+        .adc_clk_ch0  (adc_clk_ch0),
+        .adc_clk_ch1  (adc_clk_ch1),
+
+        // 12-bit, single-clock-domain outputs (rising-edge captures)
+        .ad_data_ch0  (ad_data_ch0_12),
+        .ad_data_ch1  (ad_data_ch1_12)
     );
 
     //======================================================================
     //  Sign‐extend each 12‐bit ADC sample into a 14‐bit two’s‐complement
     //  {MSB,MSB, [11:0]} yields a 14-bit word
     //======================================================================
-    wire [13:0] dac1_input = { {2{adc_data_ch0[11]}}, adc_data_ch0 };
-    wire [13:0] dac2_input = { {2{adc_data_ch1[11]}}, adc_data_ch1 };
+    wire [13:0] dac1_input_14 = {{2{ad_data_ch0_12[11]}}, ad_data_ch0_12};
+    wire [13:0] dac2_input_14 = {{2{ad_data_ch1_12[11]}}, ad_data_ch1_12};
 
     //======================================================================
     // Instantiate the DDR-output DAC module
     //======================================================================
     dac u_dac (
-        .sys_clk   (sys_clk),
-        .rst_n     (rst_n),
+            .sys_clk   (sys_clk),
+            .rst_n     (rst_n),
 
-        .data1     (dac1_input),  // 14-bit sine word from channel 0
-        .data2     (dac2_input),  // 14-bit cosine word from channel 1
+            .data1     (dac1_input_14),
+            .data2     (dac2_input_14),
 
-        .da1_clk   (da1_clk),
-        .da1_wrt   (da1_wrt),
-        .da1_data  (da1_data),
+            .da1_clk   (da1_clk),
+            .da1_wrt   (da1_wrt),
+            .da1_data  (da1_data),
 
-        .da2_clk   (da2_clk),
-        .da2_wrt   (da2_wrt),
-        .da2_data  (da2_data)
+            .da2_clk   (da2_clk),
+            .da2_wrt   (da2_wrt),
+            .da2_data  (da2_data)
     );
 
+   assign debug_adc_data_ch0 = ad_data_ch0_12;
+   assign debug_adc_data_ch1 = ad_data_ch1_12;
+   assign debug_dac_data1    = dac1_input_14;
+   assign debug_dac_data2    = dac2_input_14;
+   
 endmodule

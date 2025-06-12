@@ -359,18 +359,23 @@ class BaseSoC(SoCCore):
             for fname in ["adc/adc.v", "dac/dac.v", "adc-dac/adc_dac.v"]:
                 self.platform.add_source(f"{verilog_dir}/{fname}")
 
-            # <– This Instance must be *outside* the for-loop
+            adc_debug_ch0 = Signal(12, name="adc_debug_ch0")
+            adc_debug_ch1 = Signal(12, name="adc_debug_ch1")
+            dac_debug_1   = Signal(14, name="dac_debug_1")
+            dac_debug_2   = Signal(14, name="dac_debug_2")
             self.specials += Instance(
                 "adc_dac",
                 # Clocks / reset
                 i_sys_clk      = ClockSignal("sys"),
-                i_rst_n        = ~ResetSignal("sys"),
+                i_rst_n        = ResetSignal("sys"),
 
                 # ADC ports
                 o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
                 o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
                 i_adc_data_ch0  = platform.request("adc_data_ch0"),
                 i_adc_data_ch1  = platform.request("adc_data_ch1"),
+                o_debug_adc_data_ch0 = adc_debug_ch0,
+                o_debug_adc_data_ch1 = adc_debug_ch1,
 
 
                 # DAC ports
@@ -380,7 +385,20 @@ class BaseSoC(SoCCore):
                 o_da2_clk       = platform.request("da2_clk",  0),
                 o_da2_wrt       = platform.request("da2_wrt",  0),
                 o_da2_data      = platform.request("da2_data", 0),
+                o_debug_dac_data1 = dac_debug_1,
+                o_debug_dac_data2 = dac_debug_2,
             )
+            analyzer_signals = [
+                 adc_debug_ch0, adc_debug_ch1,
+                 dac_debug_1, dac_debug_2
+            ]
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                analyzer_signals,
+                depth        = 1024,
+                clock_domain = "sys"
+            )
+            self.add_csr("analyzer")
 
 
     # optionally export analyzer CSV

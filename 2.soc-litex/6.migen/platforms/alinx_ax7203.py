@@ -171,32 +171,34 @@ _io = [
         IOStandard("LVCMOS33")
     ),
 
-    # ------------------ ADC on J11 (AD9238) ------------------
-
-    # Channel 0: 12-bit data + clock
-    ("adc_clk_ch0",  0, Pins("C19"), IOStandard("LVCMOS33")),
+    # ------------------ ADC on J13 (AD9238) ------------------
+    # Channel 0 clock & rising-edge data (12 bits)
+    ("adc_clk_ch0",  0, Pins("W16"), IOStandard("LVCMOS33")),
     ("adc_data_ch0", 0,
-     Pins("J19 H19 G15 G16 E19 D19 D20 C20 A18 A19 F18 E18"), IOStandard("LVCMOS33")),
-
-    # Channel 1: 12-bit data + clock
-    ("adc_clk_ch1",  0, Pins("B22"), IOStandard("LVCMOS33")),
+        Pins("W15 V17 W17 U15 V15 AB21 AB22 AA21 AA20 AB20 AA19 AA18"),
+        IOStandard("LVCMOS33")
+    ),
+    # Channel 1 clock & rising-edge data (12 bits)
+    ("adc_clk_ch1",  0, Pins("T18"), IOStandard("LVCMOS33")),
     ("adc_data_ch1", 0,
-     Pins("C22 A20 B20 F20 F19 J16 F15 F21 M17 A21 B21 D21"), IOStandard("LVCMOS33")),
+        Pins("W21 W22 U21 T21 Y22 Y21 W19 W20 Y18 Y19 U22 V22"),
+        IOStandard("LVCMOS33")
+    ),
 
-    # ------------------ DAC on J13 ------------------
+    # ------------------ DAC on J11 ------------------
     # DAC1: 14-bit data + write strobe + clock
+    ("da1_clk",  0, Pins("V20"), IOStandard("LVCMOS33")),
+    ("da1_wrt",  0, Pins("U20"), IOStandard("LVCMOS33")),
     ("da1_data", 0,
-        Pins("AB18 AA18 AA19 AB20 AA20 AA21 AB21 AB22 V15 U15 W17 V17 W15 W16"),
+        Pins("V19 V18 R19 P19 U18 U17 T16 U16 P17 N17 P15 R16 R17 P16"),
         IOStandard("LVCMOS33")),
-    ("da1_wrt",  0, Pins("T20"), IOStandard("LVCMOS33")),
-    ("da1_clk",  0, Pins("Y17"), IOStandard("LVCMOS33")),
 
     # DAC2: 14-bit data + write strobe + clock
+    ("da2_clk",  0, Pins("AA9"), IOStandard("LVCMOS33")),
+    ("da2_wrt",  0, Pins("AB10"), IOStandard("LVCMOS33")),
     ("da2_data", 0,
-        Pins("P14 R14 R18 T18 U22 V22 Y18 Y19 W19 W20 Y22 Y21 U21 T21"),
+        Pins("AB17 AB16 AA16 Y16 AB15 AA15 W11 W12 Y11 Y12 V10 W10 AA11 AA10"),
         IOStandard("LVCMOS33")),
-    ("da2_wrt",  0, Pins("W21"), IOStandard("LVCMOS33")),
-    ("da2_clk",  0, Pins("W22"), IOStandard("LVCMOS33")),
 
 ]
 
