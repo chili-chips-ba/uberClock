@@ -116,7 +116,7 @@ python3 litex_setup.py --init --install --gcc=riscv --config=full
 echo
 echo "5) Copying target/platform files from local 2.soc-litex/6.migen to LiteX boards..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
-SOURCE_MIGEN_DIR="${SCRIPT_DIR}/2.soc-litex/6.migen"
+SOURCE_MIGEN_DIR="${SCRIPT_DIR}/6.migen"
 LITEX_BOARDS_DIR="${LITEX_DIR}/litex-boards/litex_boards"
 
 if [[ ! -d "$SOURCE_MIGEN_DIR" ]]; then

@@ -58,9 +58,11 @@ module adc_dac(
     //  Sign‐extend each 12‐bit ADC sample into a 14‐bit two’s‐complement
     //  {MSB,MSB, [11:0]} yields a 14-bit word
     //======================================================================
-    wire [13:0] dac1_input_14 = {{2{ad_data_ch0_12[11]}}, ad_data_ch0_12};
-    wire [13:0] dac2_input_14 = {{2{ad_data_ch1_12[11]}}, ad_data_ch1_12};
+    // wire [13:0] dac1_input_14 = {{2{ad_data_ch0_12[11]}}, ad_data_ch0_12};
+    // wire [13:0] dac2_input_14 = {{2{ad_data_ch1_12[11]}}, ad_data_ch1_12};
 
+    wire [13:0] dac1_input_14 = ad_data_ch0_12 << 2;
+    wire [13:0] dac2_input_14 = ad_data_ch1_12 << 2;
     //======================================================================
     // Instantiate the DDR-output DAC module
     //======================================================================

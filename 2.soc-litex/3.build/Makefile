@@ -15,10 +15,10 @@ SIM_DIR       := $(PROJECT_ROOT)/4.sim
 #  LiteX / Python virtual‐env settings (override via environment)
 # ------------------------------------------------------------------
 # If LITEX_PATH is set in the environment, it will be used.
-LITEX_PATH   ?= $(HOME)/FPGA/Tools/litex-hub/litex
+LITEX_PATH   ?= $(HOME)/litex
 
 # If LITEX_VENV is set in the environment, it will be used.
-LITEX_VENV   ?= $(LITEX_PATH)/litex-venv
+LITEX_VENV   ?= $(HOME)/litex-venv
 
 PYTHON       := python3
 
