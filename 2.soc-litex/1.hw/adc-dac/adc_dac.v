@@ -13,15 +13,6 @@ module adc_dac(
     input  [11:0]             adc_data_ch0, // AD channel 0 data
     input  [11:0]             adc_data_ch1, // AD channel 1 data
 
-    
-     // ————————————————————————————————————————————
-     // Debug outputs for LiteScope
-     output [11:0]             debug_adc_data_ch0,
-     output [11:0]             debug_adc_data_ch1,
-     output [13:0]             debug_dac_data1,
-     output [13:0]             debug_dac_data2,
-     // ————————————————————————————————————————————
-
     // DDR‐output DAC (14-bit output; AN9767 on J13)
     output                    da1_clk,         // DA1 clock (DDR‐output)
     output                    da1_wrt,         // DA1 write strobe (DDR‐output)
@@ -79,10 +70,5 @@ module adc_dac(
             .da2_wrt   (da2_wrt),
             .da2_data  (da2_data)
     );
-
-   assign debug_adc_data_ch0 = ad_data_ch0_12;
-   assign debug_adc_data_ch1 = ad_data_ch1_12;
-   assign debug_dac_data1    = dac1_input_14;
-   assign debug_dac_data2    = dac2_input_14;
    
 endmodule
