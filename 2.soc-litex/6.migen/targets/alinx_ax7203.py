@@ -80,6 +80,7 @@ class BaseSoC(SoCCore):
                  with_dac               = False,
                  with_cordic_dac        = False,
                  with_adc_dac           = False,
+                 with_input_mux         = False,
                  with_icd               = False,
                  **kwargs):
         platform = alinx_ax7203.Platform(toolchain=toolchain)
@@ -192,7 +193,9 @@ class BaseSoC(SoCCore):
                 sys_clk_freq = sys_clk_freq
             )
 
-        # CORDIC
+        # ---------------------------------------------------------------------
+        #  CORDIC
+        # ---------------------------------------------------------------------
         if with_cordic:
 
             for filename in [
@@ -244,7 +247,10 @@ class BaseSoC(SoCCore):
             )
             self.add_csr("analyzer")
 
-        # Stand-alone DAC
+
+        # ---------------------------------------------------------------------
+        #  Standalone DAC
+        # ---------------------------------------------------------------------
         if with_dac:
 
             filename = "dac/dac_control.v"
@@ -259,6 +265,7 @@ class BaseSoC(SoCCore):
             wrt1_en = self._dac1_wrt_en.storage
             data2   = self._dac2_data.storage
             wrt2_en = self._dac2_wrt_en.storage
+
 
             self.specials += Instance("dac_control",
                 i_sys_clk  = ClockSignal("sys"),
@@ -323,7 +330,9 @@ class BaseSoC(SoCCore):
             self.add_csr("ls_dbg_wdata")
             self.add_csr("ls_dbg_rdata")
 
-        # CORDIC + DAC (fused)
+        # ---------------------------------------------------------------------
+        #  CORDIC + DAC
+        # ---------------------------------------------------------------------
         if with_cordic_dac:
 
             for filename in [
@@ -353,16 +362,13 @@ class BaseSoC(SoCCore):
             )
 
         # ---------------------------------------------------------------------
-        #  ADC + DAC (fused)
+        #  ADC + DAC
         # ---------------------------------------------------------------------
         if with_adc_dac:
-            for fname in ["adc/adc.v", "dac/dac.v", "adc-dac/adc_dac.v"]:
-                self.platform.add_source(f"{verilog_dir}/{fname}")
 
-            adc_debug_ch0 = Signal(12, name="adc_debug_ch0")
-            adc_debug_ch1 = Signal(12, name="adc_debug_ch1")
-            dac_debug_1   = Signal(14, name="dac_debug_1")
-            dac_debug_2   = Signal(14, name="dac_debug_2")
+            for filename in ["adc/adc.v", "dac/dac.v", "adc-dac/adc_dac.v"]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
             self.specials += Instance(
                 "adc_dac",
                 # Clocks / reset
@@ -374,9 +380,6 @@ class BaseSoC(SoCCore):
                 o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
                 i_adc_data_ch0  = platform.request("adc_data_ch0"),
                 i_adc_data_ch1  = platform.request("adc_data_ch1"),
-                o_debug_adc_data_ch0 = adc_debug_ch0,
-                o_debug_adc_data_ch1 = adc_debug_ch1,
-
 
                 # DAC ports
                 o_da1_clk       = platform.request("da1_clk",  0),
@@ -385,20 +388,53 @@ class BaseSoC(SoCCore):
                 o_da2_clk       = platform.request("da2_clk",  0),
                 o_da2_wrt       = platform.request("da2_wrt",  0),
                 o_da2_data      = platform.request("da2_data", 0),
-                o_debug_dac_data1 = dac_debug_1,
-                o_debug_dac_data2 = dac_debug_2,
             )
-            analyzer_signals = [
-                 adc_debug_ch0, adc_debug_ch1,
-                 dac_debug_1, dac_debug_2
-            ]
 
-            self.submodules.analyzer = LiteScopeAnalyzer(
-                analyzer_signals,
-                depth        = 1024,
-                clock_domain = "sys"
+        # ---------------------------------------------------------------------
+        #  Input Mux
+        # ---------------------------------------------------------------------
+        if with_input_mux:
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "input-mux/input_mux.v"
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+            self._phase_inc = CSRStorage(19, description="CORDIC_DAC phase increment")
+            phase_inc = self._phase_inc.storage
+
+            self._input_sw_reg = CSRStorage(1, description="Input Switch Register")
+            input_sw_reg = self._input_sw_reg.storage
+
+            self.specials += Instance(
+                "input_mux",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst_n        = ResetSignal("sys"),
+
+                # CPU Inputs
+                i_phase_inc    = phase_inc,
+                i_input_sw_reg = input_sw_reg,
+
+                # ADC ports
+                o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0  = platform.request("adc_data_ch0"),
+                i_adc_data_ch1  = platform.request("adc_data_ch1"),
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
             )
-            self.add_csr("analyzer")
 
 
     # optionally export analyzer CSV
@@ -455,6 +491,9 @@ def main():
         help="Add ICD register banks (GLOBAL_CTRL, TX_PATH, ..., SD_CARD)")
     parser.add_argument("--with-adc-dac", action="store_true",
         help="Instantiate ADC-DAC interface")
+    parser.add_argument("--with-input-mux", action="store_true",
+        help="Instantiate input_mux module")
+
 
     args = parser.parse_args()
 
@@ -477,6 +516,7 @@ def main():
         with_cordic_dac        = args.with_cordic_dac,
         with_icd               = args.with_icd,
         with_adc_dac           = args.with_adc_dac,
+        with_input_mux         = args.with_input_mux,
         **parser.soc_argdict
     )
 

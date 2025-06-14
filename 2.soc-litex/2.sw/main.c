@@ -8,13 +8,16 @@
 #include <generated/csr.h>
 #include <generated/mem.h>
 
-
 #ifdef CSR_MAIN_DAC1_DATA_ADDR
 #  define WITH_DAC
 #endif
 
 #ifdef CSR_MAIN_PHASE_INC_ADDR
 #  define WITH_CORDIC_DAC
+#endif
+
+#ifdef CSR_MAIN_INPUT_SW_REG_ADDR
+#  define WITH_INPUT_MUX
 #endif
 
 /*-----------------------------------------------------------------------*/
@@ -74,22 +77,25 @@ static void prompt(void) {
 static void help(void) {
 	puts("\nuberClock built " __DATE__ " " __TIME__ "\n");
 	puts("Available commands:");
-	puts("  help               - Show this command");
-	puts("  reboot             - Reboot CPU");
+	puts("  help                  - Show this command");
+	puts("  reboot                - Reboot CPU");
 	#ifdef CSR_LEDS_BASE
-	puts("  led                - LED demo");
+	puts("  led                   - LED demo");
 	#endif
-	puts("  donut              - Spinning Donut demo");
-	puts("  helloc             - Hello C");
+	puts("  donut                 - Spinning Donut demo");
+	puts("  helloc                - Hello C");
 	#ifdef WITH_CXX
-	puts("  hellocpp           - Hello C++");
+	puts("  hellocpp              - Hello C++");
 	#endif
 	#ifdef WITH_DAC
-	puts("  dac1 <value>       - Set DAC1 output (0–0x3FFF)");
-	puts("  dac2 <value>       - Set DAC2 output (0–0x3FFF)");
+	puts("  dac1 <value>          - Set DAC1 output (0–0x3FFF)");
+	puts("  dac2 <value>          - Set DAC2 output (0–0x3FFF)");
 	#endif
 	#ifdef WITH_CORDIC_DAC
-	puts("  phase <value>      - Set CORDIC_DAC phase (0..524287)");
+	puts("  phase <value>         - Set CORDIC_DAC phase (0..524287)");
+	#endif
+	#ifdef WITH_INPUT_MUX
+	puts("  input_sw_reg <value>  - Set input_mux select to 1 or 0");
 	#endif
 }
 
@@ -174,6 +180,13 @@ static void phase_cmd(char *args) {
 }
 #endif
 
+#ifdef WITH_INPUT_MUX
+static void input_sw_reg_cmd(char *args) {
+	    unsigned v = strtoul(args, NULL, 0) & 0x1;
+	    main_input_sw_reg_write(v);
+	    printf("input_sw_reg set to %u\n", v);
+}
+#endif
 /*-----------------------------------------------------------------------*/
 /* Console service / Main                                                */
 /*-----------------------------------------------------------------------*/
@@ -206,6 +219,12 @@ static void console_service(void) {
 	else if (!strcmp(token, "phase")) {
 		char *arg = get_token(&line);
 		phase_cmd(arg);
+	}
+	#endif
+	#ifdef WITH_INPUT_MUX
+	else if (!strcmp(token, "input_sw_reg")) {
+		char *arg = get_token(&line);
+		input_sw_reg_cmd(arg);
 	}
 	#endif
 	else {

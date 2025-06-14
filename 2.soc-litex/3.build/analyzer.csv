@@ -1,0 +1,9 @@
+config,None,data_width,68
+config,None,depth,1024
+config,None,samplerate,50000000
+signal,0,main_phase_inc_storage,19
+signal,0,main_input_sw_reg_storage,1
+signal,0,main_debug_sin,14
+signal,0,main_debug_cos,14
+signal,0,main_phase_acc_out,19
+signal,0,main_cordic_aux_out,1
