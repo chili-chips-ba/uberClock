@@ -135,6 +135,45 @@ addrmap csr {
          hw = r;
       } PRODUCT[15:0] = 0xC10C;
    } hw_id;
+   
+   
+   reg {
+      name = "csr.adc";
+      desc = "ADC Register";
+
+      field {
+         name = "csr.adc.ch1";
+         desc = "Implement the first channel for the AD converter";
+         sw = r;
+         hw = w;
+      } ch1[27:16] = 0;
+
+      field {
+         name = "csr.adc.ch2";
+         desc = "Implement the second channel for the AD converter";
+         sw = r;
+         hw = w;
+      } ch2[11:0] = 0;
+   } adc;
+   
+   reg {
+      name = "csr.dac";
+      desc = "DAC Register";
+
+      field {
+         name = "csr.dac.ch1";
+         desc = "Implement the first channel for the DA converter";
+         sw = rw;
+         hw = r;
+      } ch1[29:16] = 0;
+
+      field {
+         name = "csr.dac.ch2";
+         desc = "Implement the second channel for the DA converter";
+         sw = rw;
+         hw = r;
+      } ch2[13:0] = 0;
+   } dac;
 
    reg {
       name = "csr.hw_version";
