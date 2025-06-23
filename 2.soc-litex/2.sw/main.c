@@ -20,9 +20,12 @@
 #  define WITH_INPUT_MUX
 #endif
 
-/*-----------------------------------------------------------------------*/
-/* UART input helper                                                    */
-/*-----------------------------------------------------------------------*/
+#if defined(CSR_MAIN_DOWNSAMPLED_ADDR) && defined(CSR_MAIN_UPSAMPLER_IN_ADDR)
+#  define WITH_DSP
+#endif
+
+static volatile int dsp_loop_running = 0;
+
 static char *readstr(void) {
 	char c[2];
 	static char s[64];
@@ -67,9 +70,6 @@ static char *get_token(char **str) {
 	return t;
 }
 
-/*-----------------------------------------------------------------------*/
-/* Prompt & Help                                                        */
-/*-----------------------------------------------------------------------*/
 static void prompt(void) {
 	printf("\e[92;1muberClock\e[0m> ");
 }
@@ -79,14 +79,6 @@ static void help(void) {
 	puts("Available commands:");
 	puts("  help                  - Show this command");
 	puts("  reboot                - Reboot CPU");
-	#ifdef CSR_LEDS_BASE
-	puts("  led                   - LED demo");
-	#endif
-	puts("  donut                 - Spinning Donut demo");
-	puts("  helloc                - Hello C");
-	#ifdef WITH_CXX
-	puts("  hellocpp              - Hello C++");
-	#endif
 	#ifdef WITH_DAC
 	puts("  dac1 <value>          - Set DAC1 output (0–0x3FFF)");
 	puts("  dac2 <value>          - Set DAC2 output (0–0x3FFF)");
@@ -97,58 +89,22 @@ static void help(void) {
 	#ifdef WITH_INPUT_MUX
 	puts("  input_sw_reg <value>  - Set input_mux select to 1 or 0");
 	#endif
+	#ifdef WITH_DSP
+	puts("  dsp                   - Single step: read downsampled, invert, send to upsampler");
+	puts("  dsploop               - Start continuous DSP loop (20 kHz)");
+	puts("  dspstop               - Stop DSP loop");
+	#endif
+	#ifdef CSR_MAIN_DOWNSAMPLED_ADDR
+	puts("  profile_adc           - Measure ADC CSR read speed");
+	#endif
+	#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
+	puts("  profile_dac           - Measure DAC CSR write speed");
+	#endif
 }
 
-/*-----------------------------------------------------------------------*/
-/* Commands                                                              */
-/*-----------------------------------------------------------------------*/
 static void reboot_cmd(void) {
 	ctrl_reset_write(1);
 }
-
-#ifdef CSR_LEDS_BASE
-static void led_cmd(void) {
-	printf("LED demo...\n");
-	for (int i = 0; i < 32; i++) {
-		leds_out_write(i);
-		busy_wait(100);
-	}
-	for (int i = 0; i < 4; i++) {
-		leds_out_write(1 << i);
-		busy_wait(200);
-	}
-	for (int i = 0; i < 4; i++) {
-		leds_out_write(1 << (3 - i));
-		busy_wait(200);
-	}
-	for (int i = 0; i < 4; i++) {
-		leds_out_write(0x55);
-		busy_wait(200);
-		leds_out_write(0xAA);
-		busy_wait(200);
-	}
-}
-#endif
-
-extern void donut(void);
-static void donut_cmd(void) {
-	printf("Donut demo...\n");
-	donut();
-}
-
-extern void helloc(void);
-static void helloc_cmd(void) {
-	printf("Hello C demo...\n");
-	helloc();
-}
-
-#ifdef WITH_CXX
-extern void hellocpp(void);
-static void hellocpp_cmd(void) {
-	printf("Hello C++ demo...\n");
-	hellocpp();
-}
-#endif
 
 #ifdef WITH_DAC
 static void dac1_cmd(char *args) {
@@ -182,14 +138,89 @@ static void phase_cmd(char *args) {
 
 #ifdef WITH_INPUT_MUX
 static void input_sw_reg_cmd(char *args) {
-	    unsigned v = strtoul(args, NULL, 0) & 0x1;
-	    main_input_sw_reg_write(v);
-	    printf("input_sw_reg set to %u\n", v);
+	unsigned v = strtoul(args, NULL, 0) & 0x1;
+	main_input_sw_reg_write(v);
+	printf("input_sw_reg set to %u\n", v);
 }
 #endif
-/*-----------------------------------------------------------------------*/
-/* Console service / Main                                                */
-/*-----------------------------------------------------------------------*/
+
+#ifdef WITH_DSP
+static void dsp_cmd(void) {
+	uint16_t ds = main_downsampled_read();
+	uint16_t inv = ~ds;
+	main_upsampler_in_write(inv);
+	printf("dsp: downsampled=0x%04X, upsampler_in=0x%04X\n", ds, inv);
+}
+
+static void dsp_loop_cmd(void) {
+	if (dsp_loop_running) {
+		printf("DSP loop already running!\n");
+		return;
+	}
+	printf("Starting DSP loop... Press dspstop to interrupt.\n");
+	dsp_loop_running = 1;
+	while (dsp_loop_running) {
+		uint16_t ds = main_downsampled_read();
+		uint16_t inv = ~ds;
+		main_upsampler_in_write(inv);
+		busy_wait(3250); // ~50µs delay
+	}
+	printf("DSP loop stopped.\n");
+}
+
+static void dsp_stop_cmd(void) {
+	if (!dsp_loop_running) {
+		printf("DSP loop not running.\n");
+		return;
+	}
+	dsp_loop_running = 0;
+}
+#endif
+
+#ifdef CSR_MAIN_DOWNSAMPLED_ADDR
+static void profile_adc(void) {
+	const uint64_t N = 10000;
+	uint16_t dummy;
+	uint32_t start = timer0_value_read();
+	for (int i = 0; i < N; ++i) {
+		dummy = main_downsampled_read();
+	}
+	(void)dummy;
+	uint32_t end = timer0_value_read();
+	uint32_t cycles = start - end;
+
+	// Use microseconds as integer
+	uint32_t us_per_read = (1000000UL * cycles) / CONFIG_CLOCK_FREQUENCY / N;
+	uint32_t reads_per_sec = ((uint64_t)CONFIG_CLOCK_FREQUENCY * N) / cycles;
+
+	printf("ADC read rate: %lu reads/sec, %lu us/read\n",
+		   (unsigned long)reads_per_sec,
+		   (unsigned long)us_per_read);
+}
+
+#endif
+
+#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
+static void profile_dac(void) {
+	const uint64_t N = 10000;
+	uint32_t start = timer0_value_read();
+	for (int i = 0; i < N; ++i) {
+		main_dac1_data_write(i & 0x3FFF);
+		main_dac1_wrt_en_write(1);
+		main_dac1_wrt_en_write(0);
+	}
+	uint32_t end = timer0_value_read();
+	uint32_t cycles = start - end;
+
+	uint32_t us_per_write = (1000000UL * cycles) / CONFIG_CLOCK_FREQUENCY / N;
+	uint32_t writes_per_sec = (CONFIG_CLOCK_FREQUENCY * N) / cycles;
+
+	printf("DAC write rate: %lu writes/sec, %lu us/write\n",
+		   (unsigned long)writes_per_sec,
+		   (unsigned long)us_per_write);
+}
+#endif
+
 static void console_service(void) {
 	char *line = readstr();
 	if (!line) return;
@@ -197,20 +228,11 @@ static void console_service(void) {
 	char *token = get_token(&line);
 	if      (!strcmp(token, "help"))    help();
 	else if (!strcmp(token, "reboot"))  reboot_cmd();
-	#ifdef CSR_LEDS_BASE
-	else if (!strcmp(token, "led"))     led_cmd();
-	#endif
-	else if (!strcmp(token, "donut"))   donut_cmd();
-	else if (!strcmp(token, "helloc"))  helloc_cmd();
-	#ifdef WITH_CXX
-	else if (!strcmp(token, "hellocpp")) hellocpp_cmd();
-	#endif
 	#ifdef WITH_DAC
 	else if (!strcmp(token, "dac1")) {
 		char *arg = get_token(&line);
 		dac1_cmd(arg);
-	}
-	else if (!strcmp(token, "dac2")) {
+	} else if (!strcmp(token, "dac2")) {
 		char *arg = get_token(&line);
 		dac2_cmd(arg);
 	}
@@ -227,6 +249,19 @@ static void console_service(void) {
 		input_sw_reg_cmd(arg);
 	}
 	#endif
+	#ifdef WITH_DSP
+	else if (!strcmp(token, "dsp"))      dsp_cmd();
+	else if (!strcmp(token, "dsploop"))  dsp_loop_cmd();
+	else if (!strcmp(token, "dspstop"))  dsp_stop_cmd();
+	#endif
+	#ifdef CSR_MAIN_DOWNSAMPLED_ADDR
+	else if (!strcmp(token, "profile_adc")) profile_adc();
+	#endif
+
+	#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
+	else if (!strcmp(token, "profile_dac")) profile_dac();
+	#endif
+
 	else {
 		printf("Unknown command: %s\n", token);
 	}
