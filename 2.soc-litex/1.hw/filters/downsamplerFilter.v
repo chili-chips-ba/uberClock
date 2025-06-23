@@ -8,7 +8,7 @@ module downsamplerFilter (
 );
 
     // Intermediate wires
-    wire signed [15:0] cic_out;
+    wire signed [11:0] cic_out;
     wire               cic_ce_out;
 
     wire signed [15:0] comp_out;
@@ -17,7 +17,7 @@ module downsamplerFilter (
 
 	cic #(
 	 .DATA_WIDTH_I(12),         // Input data width
-	 .DATA_WIDTH_O(16),
+	 .DATA_WIDTH_O(12),
 	 .REGISTER_WIDTH(56),     // Internal accumulator width
 	 .DECIMATION_RATIO(1625)     // Decimation factor
 	) cic_inst (
@@ -32,23 +32,53 @@ module downsamplerFilter (
 
 
     // Stage 2: CIC Compensation Filter
-    cic_comp_down_opt comp_inst (
-        .clk(clk),
-        .clk_enable(cic_ce_out),   // Enable only when CIC produces output
-        .reset(reset),
-        .filter_in(cic_out),
-        .filter_out(comp_out),
-        .ce_out(comp_ce_out)
+    // cic_comp_down_opt comp_inst (
+    //     .clk(clk),
+    //     .clk_enable(cic_ce_out),   // Enable only when CIC produces output
+    //     .reset(reset),
+    //     .filter_in(cic_out),
+    //     .filter_out(comp_out),
+    //     .ce_out(comp_ce_out)
+    // );
+    cic_comp_down_mac #(
+        .DW_IN           (12),
+        .DW_OUT          (16),
+        .CW              (15),
+        .POLYPHASE_DEPTH (17),
+        .COEFF_INIT_FILE ("comp_down_coeffs.mem")
+    ) dut_mac (
+        .clk        (clk),
+        .clk_enable (cic_ce_out),
+        .reset      (reset),
+        .filter_in  (cic_out),
+        .filter_out (comp_out),
+        .ce_out     (comp_ce_out)
     );
 
     // Stage 3: Half-Band Filter
-    hb_down_opt hb_inst (
-        .clk(clk),
-        .clk_enable(comp_ce_out),  // Enable only when compensation stage produces output
-        .reset(reset),
-        .filter_in(comp_out),
-        .filter_out(filter_out),
-        .ce_out(ce_out)
+    // hb_down_opt hb_inst (
+    //     .clk(clk),
+    //     .clk_enable(comp_ce_out),  // Enable only when compensation stage produces output
+    //     .reset(reset),
+    //     .filter_in(comp_out),
+    //     .filter_out(filter_out),
+    //     .ce_out(ce_out)
+    // );
+    hb_down_mac #(
+        .DW_IN           (16),
+        .DW_OUT          (16),
+        .CW              (19),
+        .POLYPHASE_DEPTH (48),
+        .DEPTH           (64),
+        .COEFF_INIT_FILE ("hb_down_coeffs.mem")
+    ) dut_mac (
+        .clk        (clk),
+        .clk_enable (comp_ce_out),
+        .reset      (reset),
+        .filter_in  (comp_out),
+        .filter_out (filter_out),
+        .ce_out     (ce_out)
     );
+ 
 
 endmodule
