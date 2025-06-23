@@ -18,7 +18,13 @@ module adc_dsp_dac(
     output                    da2_wrt,         // DA2 write strobe (DDR‐output)
     output [13:0]             da2_data,         // DA2 14‐bit data bus (DDR‐output)
     output signed [15:0]      downsampledData,
-    input signed  [15:0]      upsamplerInput
+    input signed  [15:0]      upsamplerInput,
+
+    output [15:0] debug_downsampledY,
+    output [15:0] debug_upsampledY,
+    output        debug_ce_out_down,
+    output        debug_ce_out_up,
+    output [15:0] debug_adc_input
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -97,4 +103,11 @@ module adc_dsp_dac(
             .da2_wrt   (da2_wrt),
             .da2_data  (da2_data)
     );
+
+    assign debug_downsampledY = downsampledY;
+    assign debug_upsampledY   = upsampledY;
+    assign debug_ce_out_down  = ce_out_down;       // clk enable of downsampler
+    assign debug_ce_out_up    = ce_out_up;         // clk enable of upsampler
+    assign debug_adc_input    = filter_in;
+
 endmodule
