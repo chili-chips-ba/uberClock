@@ -24,11 +24,42 @@ module top (
    output       uart_tx,
 
 // Keys
-   input [1:0]  key_in,
+   input  user_key1,
+   input  user_key2,
 
 // LEDs
-   output [1:0] led
+   output [3:0] led,
+   
+ //ADC
+   output                           ad9238_clk_ch0,          //AD channel 0 sampling clock
+   output                           ad9238_clk_ch1,          //AD channel 1 sampling clock
+   input[11:0]                      ad9238_data_ch0,         //AD channel 0 data 
+   input[11:0]                      ad9238_data_ch1,         //AD channel 1 data 
+    
+   //DAC
+   output                           da1_clk,                 //DA1 clock signal
+   output                           da1_wrt,                 //DA1 data write signal
+   output[13:0]                     da1_data,                //DA1 data	 
+   output                           da2_clk,                 //DA2 clock signal
+   output                           da2_wrt,                 //DA2 data write signal
+   output[13:0]                     da2_data                 //DA2 data
 );
+
+   wire                            adc_clk;                 //ADC data processing clock
+   wire                            adc0_buf_wr;             //ADC channel 0 write buf enable
+   wire[10:0]                      adc0_buf_addr;           //ADC channel 0 write buf address
+   wire[7:0]                       adc0_buf_data;           //ADC channel 0 buf data
+   wire                            adc1_buf_wr;             //ADC channel 1 write buf enable       
+   wire[10:0]                      adc1_buf_addr;           //ADC channel 1 write buf address
+   wire[7:0]                       adc1_buf_data;           //ADC channel 1 data 
+   wire                            dac_clk;                 //single end clock 
+   
+  
+
+   assign ad9238_clk_ch0            = adc_clk;
+   assign ad9238_clk_ch1            = adc_clk;
+   
+   
    import csr_pkg::*;
    import soc_pkg::*;
 
@@ -45,7 +76,9 @@ module top (
       .rst_n           (rst_n),
       .sys_clk         (sys_clk),
       .sys_rst         (sys_rst),
-      .sys_rst_n       (sys_rst_n)
+      .sys_rst_n       (sys_rst_n),
+      .adc_clk          (adc_clk),
+      .dac_clk          (dac_clk)
    );
 
    csr_pkg::csr__in_t  to_csr;
@@ -120,14 +153,40 @@ module top (
       .imem_wdat       (imem_wdat),     //o[31:0]
       
       .bus             (bus_uart)       //MST
-   );
+   );   
+
+   assign da1_clk = sys_clk;
+   assign da1_wrt = sys_clk;
+
+   assign da2_clk = sys_clk;
+   assign da2_wrt = sys_clk;
+   
+
+
+
+   // output absolute sampled values
+//   assign da1_data = ad9238_data_ch0[11] ? {1'b0, ad9238_data_ch0[10:0], 2'b00} : {ad9238_data_ch0, 2'b00};
+//   assign da2_data = ad9238_data_ch1[11] ? {1'b0, ad9238_data_ch1[10:0], 2'b00} : {ad9238_data_ch1, 2'b00};
+   // assign da1_data = ad9238_data_ch0[11] ? -({ad9238_data_ch0, 2'b00}) : ({ad9238_data_ch0, 2'b00});
+  // assign da2_data = ad9238_data_ch1[11] ? -({ad9238_data_ch1, 2'b00}) : ({ad9238_data_ch1, 2'b00});
+ // assign da2_data = ad9238_data_ch1[11] ? -({ad9238_data_ch1, 2'b00}) : ({ad9238_data_ch1, 2'b00});
+ 
+ assign to_csr.adc.ch1.next = ad9238_data_ch0;
+ assign to_csr.adc.ch2.next = ad9238_data_ch1;
+ 
+ 
+ assign da1_data = from_csr.dac.ch1.value;
+ assign da2_data = from_csr.dac.ch2.value;
+
+
+   //assign da1_data = ({ad9238_data_ch0, 2'b00});
 
 //==========================================================================
 // GPIO
 //==========================================================================
    assign led[1] = ~from_csr.gpio.led2.value;
    assign led[0] = ~from_csr.gpio.led1.value;
-   assign to_csr.gpio.key2.next = ~key_in[1];  //TODO: Add debounce
-   assign to_csr.gpio.key1.next = ~key_in[0];  //TODO: Add debounce
+   assign to_csr.gpio.key2.next = ~user_key2;  //TODO: Add debounce
+   assign to_csr.gpio.key1.next = ~user_key1;  //TODO: Add debounce
 
 endmodule

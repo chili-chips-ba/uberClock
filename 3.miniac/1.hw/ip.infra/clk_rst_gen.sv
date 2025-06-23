@@ -21,7 +21,9 @@ module clk_rst_gen
    input  rst_n,
    output sys_clk,
    output sys_rst,
-   output sys_rst_n
+   output sys_rst_n,
+   output adc_clk,
+   output dac_clk
 );
 
 //==========================================================================
@@ -64,6 +66,27 @@ module clk_rst_gen
    assign sys_rst = sync_reg[3];
    assign sys_rst_n = ~sync_reg[3];
    assign sys_clk = sys_pll_clk;
+   
+   
+    /*************************************************************************
+   Generate the clock required for the AD data processing
+   ***************************************************************************/
+   adc_pll adc_pll_m0 (
+      .clk_out1 (adc_clk),
+      .reset    (1'b0),
+      .locked   (),
+      .clk_in1  (clk)
+   );
+   
+
+   /*************************************************************************
+   Generate the clock required for the DA data 
+   **************************************************************************/
+   dac_pll dac_pll_0 (
+      .clk_out1(dac_clk),
+      .reset(1'b0),
+      .locked(),
+      .clk_in1(clk)
+   );
 
 endmodule: clk_rst_gen
-
