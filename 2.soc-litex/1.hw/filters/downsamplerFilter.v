@@ -46,7 +46,7 @@ module downsamplerFilter (
         .CW              (15),
         .POLYPHASE_DEPTH (17),
         .COEFF_INIT_FILE ("comp_down_coeffs.mem")
-    ) dut_mac (
+    ) comp_inst (
         .clk        (clk),
         .clk_enable (cic_ce_out),
         .reset      (reset),
@@ -71,7 +71,7 @@ module downsamplerFilter (
         .POLYPHASE_DEPTH (48),
         .DEPTH           (64),
         .COEFF_INIT_FILE ("hb_down_coeffs.mem")
-    ) dut_mac (
+    ) hb_inst (
         .clk        (clk),
         .clk_enable (comp_ce_out),
         .reset      (reset),
