@@ -163,7 +163,6 @@ static void dsp_loop_cmd(void) {
 		uint16_t ds = main_downsampled_read();
 		uint16_t inv = ~ds;
 		main_upsampler_in_write(inv);
-		busy_wait(3250); // ~50µs delay
 	}
 	printf("DSP loop stopped.\n");
 }

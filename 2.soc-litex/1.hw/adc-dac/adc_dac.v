@@ -19,7 +19,11 @@ module adc_dac(
     output [13:0]             da1_data,        // DA1 14‐bit data bus (DDR‐output)
     output                    da2_clk,         // DA2 clock (DDR‐output)
     output                    da2_wrt,         // DA2 write strobe (DDR‐output)
-    output [13:0]             da2_data         // DA2 14‐bit data bus (DDR‐output)
+    output [13:0]             da2_data,        // DA2 14‐bit data bus (DDR‐output)
+    output [11:0] debug_adc_ch0,
+    output [11:0] debug_adc_ch1,
+    output [13:0] debug_dac1_input,
+    output [13:0] debug_dac2_input
 );
     //======================================================================
     // Instantiate the “adc” module
@@ -72,5 +76,9 @@ module adc_dac(
             .da2_wrt   (da2_wrt),
             .da2_data  (da2_data)
     );
-   
+    assign debug_adc_ch0     = ad_data_ch0_12;
+    assign debug_adc_ch1     = ad_data_ch1_12;
+    assign debug_dac1_input  = dac1_input_14;
+    assign debug_dac2_input  = dac2_input_14;
+
 endmodule

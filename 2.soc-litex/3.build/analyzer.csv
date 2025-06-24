@@ -1,8 +1,7 @@
-config,None,data_width,50
+config,None,data_width,52
 config,None,depth,1024
 config,None,samplerate,65000000
-signal,0,main_debug_downsampledY,16
-signal,0,main_debug_upsampledY,16
-signal,0,main_debug_ce_out_down,1
-signal,0,main_debug_ce_out_up,1
-signal,0,main_debug_adc_input,16
+signal,0,main_debug_adc_ch0,12
+signal,0,main_debug_adc_ch1,12
+signal,0,main_debug_dac1_input,14
+signal,0,main_debug_dac2_input,14
