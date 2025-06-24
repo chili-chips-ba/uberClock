@@ -10,16 +10,17 @@ HW_DIR        := $(PROJECT_ROOT)/1.hw
 SW_DIR        := $(PROJECT_ROOT)/2.sw
 BUILD_DIR     := $(PROJECT_ROOT)/3.build
 SIM_DIR       := $(PROJECT_ROOT)/4.sim
+ETH_IFACE     ?= enp0s13f0u3u1
+STATIC_IP     ?= 192.168.1.100/24
+CSV_FILE      ?= analyzer.csv
+CSR_CSV_FILE  ?= $(BUILD_DIR)/$(BOARD)/csr.csv
+SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 
 # ------------------------------------------------------------------
 #  LiteX / Python virtual‐env settings (override via environment)
 # ------------------------------------------------------------------
-# If LITEX_PATH is set in the environment, it will be used.
-LITEX_PATH   ?= $(HOME)/litex
-
-# If LITEX_VENV is set in the environment, it will be used.
-LITEX_VENV   ?= $(HOME)/litex-venv
-
+LITEX_PATH   ?= $(HOME)/FPGA/Tools/litex-hub/litex
+LITEX_VENV   ?= $(LITEX_PATH)/litex-venv
 PYTHON       := python3
 
 # ------------------------------------------------------------------

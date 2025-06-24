@@ -110,13 +110,9 @@ end
 
 always @(posedge clk) begin
   if (phase_0_running) begin
-   current_sample <= mem0[r_ptr0]; 
-  end
-end
-
-always @(posedge clk) begin
-  if (phase_1_running) begin
-   current_sample <= mem1[r_ptr1]; 
+    current_sample <= mem0[r_ptr0];
+  end else if (phase_1_running) begin
+    current_sample <= mem1[r_ptr1];
   end
 end
 

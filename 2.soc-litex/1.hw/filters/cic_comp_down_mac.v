@@ -1,4 +1,3 @@
-
 module cic_comp_down_mac #(
     parameter DW_IN           = 12,
     parameter DW_ACC          = 32,
@@ -112,16 +111,11 @@ end
 
 always @(posedge clk) begin
   if (phase_0_running) begin
-   current_sample <= mem0[r_ptr0]; 
+    current_sample <= mem0[r_ptr0];
+  end else if (phase_1_running) begin
+    current_sample <= mem1[r_ptr1];
   end
 end
-
-always @(posedge clk) begin
-  if (phase_1_running) begin
-   current_sample <= mem1[r_ptr1]; 
-  end
-end
-
 
 // read pointer for coefficients
 reg [ADDR_C-1:0] coeff_addr;
