@@ -8,7 +8,7 @@
 *output*
 
 # ignore the LiteX build output
-/2.soc-litex/3.build/build/
+2.soc-litex/3.build/build/
 #*impl*
 *temp*
 
