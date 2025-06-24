@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Copyright (C) 2017-2024, Gisselquist Technology, LLC
-// 
+//
 // The CORDIC related project set is free software (firmware): you can
 // redistribute it and/or modify it under the terms of the GNU Lesser General
 // Public License as published by the Free Software Foundation, either version
@@ -38,12 +38,12 @@ module cordic #(
   //--------------------------------------------------------------------------
   // Auxiliary (valid) signal pipeline: shift in i_aux for NSTAGES+2 cycles
   //--------------------------------------------------------------------------
-  reg [NSTAGES+1:0] ax;
+  reg [NSTAGES+5:0] ax;
   always @(posedge i_clk) begin
     if (i_reset)
       ax <= 0;
     else if (i_ce)
-      ax <= { ax[NSTAGES:0], i_aux };
+      ax <= { ax[NSTAGES+4:0], i_aux };
   end
 
   //--------------------------------------------------------------------------
@@ -99,7 +99,7 @@ module cordic #(
 	// and right shifting by 32 bits.
 	// }}}
 	// }}}
-  
+
   genvar i;
   generate
     for (i = 0; i < NSTAGES; i = i + 1) begin : cordic_stages
@@ -125,6 +125,7 @@ module cordic #(
   //--------------------------------------------------------------------------
   // Final Rounding Stage
   //--------------------------------------------------------------------------
+  wire signed [OW-1:0] round_x, round_y;
   cordic_round #(
     .WW(WW),
     .OW(OW)
@@ -134,11 +135,25 @@ module cordic #(
     .i_ce   (i_ce),
     .x_in   (x_pipe[NSTAGES]),
     .y_in   (y_pipe[NSTAGES]),
-    .o_xval (o_xval),
-    .o_yval (o_yval)
+    .o_xval (round_x),
+    .o_yval (round_y)
   );
 
+    wire signed [OW-1:0] sat_x, sat_y;
+    gain_and_saturate #(.OW(OW)) gain_sat_inst (
+      .clk  (i_clk),
+      .ce   (i_ce),
+      .x_in (round_x),
+      .y_in (round_y),
+      .x_out(sat_x),
+      .y_out(sat_y)
+    );
+
+    assign o_xval = sat_x;
+    assign o_yval = sat_y;
+
+
   // The auxiliary output (valid signal)
-  assign o_aux = ax[NSTAGES+1];
+  assign o_aux = ax[NSTAGES+5];
 
 endmodule
