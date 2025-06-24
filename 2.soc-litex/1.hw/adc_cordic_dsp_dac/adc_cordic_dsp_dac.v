@@ -67,7 +67,6 @@ module adc_cordic_dsp_dac(
 
    wire signed [11:0] down_i_xval = 0;
    wire signed [11:0] down_i_yval = filter_in;
-   wire                o_down_aux;
    
    cordic #(
        .IW(12),
@@ -77,7 +76,7 @@ module adc_cordic_dsp_dac(
        .PW(19)
    ) cordic_down (
        .i_clk(sys_clk),
-       .i_reset(~rst_n),
+       .i_reset(rst_n),
        .i_ce(1'b1),
        .i_xval(down_i_xval),
        .i_yval(down_i_yval),
@@ -137,8 +136,8 @@ module adc_cordic_dsp_dac(
        .WW(19),
        .PW(23)
    ) cordic_up (
-       .i_clk(i_clk),
-       .i_reset(~rst_n),
+       .i_clk(sys_clk),
+       .i_reset(rst_n),
        .i_ce(1'b1),
        .i_xval(upsampledY),
        .i_yval(upsampledX),
