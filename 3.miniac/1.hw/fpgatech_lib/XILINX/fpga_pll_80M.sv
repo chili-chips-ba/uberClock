@@ -11,7 +11,7 @@
 // and maintenance purposes only.
 //--------------------------------------------------------------------------
 // Description:
-//   System clock domain PLL (f_in = 200 MHz, f_out = 80 MHz)
+//   System clock domain PLL (f_in = 200 MHz, f_out = 65 MHz)
 //     • Synthesizable variant:
 //         - Xilinx PLLE2_BASE
 //     • Simulation-only variant (`SIM_ONLY`):
