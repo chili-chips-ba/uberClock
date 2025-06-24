@@ -44,20 +44,7 @@ module top (
    output                           da2_wrt,                 //DA2 data write signal
    output[13:0]                     da2_data                 //DA2 data
 );
-
-   wire                            adc_clk;                 //ADC data processing clock
-   wire                            adc0_buf_wr;             //ADC channel 0 write buf enable
-   wire[10:0]                      adc0_buf_addr;           //ADC channel 0 write buf address
-   wire[7:0]                       adc0_buf_data;           //ADC channel 0 buf data
-   wire                            adc1_buf_wr;             //ADC channel 1 write buf enable       
-   wire[10:0]                      adc1_buf_addr;           //ADC channel 1 write buf address
-   wire[7:0]                       adc1_buf_data;           //ADC channel 1 data 
-   wire                            dac_clk;                 //single end clock 
-   
   
-
-   assign ad9238_clk_ch0            = adc_clk;
-   assign ad9238_clk_ch1            = adc_clk;
    
    
    import csr_pkg::*;
@@ -76,9 +63,7 @@ module top (
       .rst_n           (rst_n),
       .sys_clk         (sys_clk),
       .sys_rst         (sys_rst),
-      .sys_rst_n       (sys_rst_n),
-      .adc_clk          (adc_clk),
-      .dac_clk          (dac_clk)
+      .sys_rst_n       (sys_rst_n)
    );
 
    csr_pkg::csr__in_t  to_csr;
@@ -154,32 +139,49 @@ module top (
       
       .bus             (bus_uart)       //MST
    );   
-
-   assign da1_clk = sys_clk;
-   assign da1_wrt = sys_clk;
-
-   assign da2_clk = sys_clk;
-   assign da2_wrt = sys_clk;
    
 
+// We instantiate the ADC module
+    wire [11:0] ad_data_ch1_12;
+    wire [11:0] ad_data_ch2_12;
 
-
-   // output absolute sampled values
-//   assign da1_data = ad9238_data_ch0[11] ? {1'b0, ad9238_data_ch0[10:0], 2'b00} : {ad9238_data_ch0, 2'b00};
-//   assign da2_data = ad9238_data_ch1[11] ? {1'b0, ad9238_data_ch1[10:0], 2'b00} : {ad9238_data_ch1, 2'b00};
-   // assign da1_data = ad9238_data_ch0[11] ? -({ad9238_data_ch0, 2'b00}) : ({ad9238_data_ch0, 2'b00});
-  // assign da2_data = ad9238_data_ch1[11] ? -({ad9238_data_ch1, 2'b00}) : ({ad9238_data_ch1, 2'b00});
- // assign da2_data = ad9238_data_ch1[11] ? -({ad9238_data_ch1, 2'b00}) : ({ad9238_data_ch1, 2'b00});
+adc u_adc (
+        .sys_clk      (sys_clk),
+        .rst_n        (rst_n),
+        // Raw DDR-pinned inputs from the board
+        .adc_data_ch0 (ad9238_data_ch0), //channel 1 input from ADC to the module
+        .adc_data_ch1 (ad9238_data_ch1), //channel 2 input from ADC to the module
+        // DDR clocks to drive each AD9238 chip
+        .adc_clk_ch0  (ad9238_clk_ch0),
+        .adc_clk_ch1  (ad9238_clk_ch1),
+        // 12-bit, single-clock-domain outputs (rising-edge captures)
+        .ad_data_ch0  (ad_data_ch1_12), //Modules output data which we send to CSR; Channel 1
+        .ad_data_ch1  (ad_data_ch2_12) //Modules output data which we send to CSR; Channel 2
+    );
+    
+  
+ assign to_csr.adc.ch1.next = ad_data_ch1_12;
+ assign to_csr.adc.ch2.next = ad_data_ch2_12;
  
- assign to_csr.adc.ch1.next = ad9238_data_ch0;
- assign to_csr.adc.ch2.next = ad9238_data_ch1;
- 
- 
- assign da1_data = from_csr.dac.ch1.value;
- assign da2_data = from_csr.dac.ch2.value;
+   
+   wire[13:0] da_data_ch1_14 = from_csr.dac.ch1.value;
+   wire[13:0] da_data_ch2_14 = from_csr.dac.ch2.value;
+   
+   
+//We instatiate the DAC module
+   dac u_dac (
+            .sys_clk   (sys_clk),
+            .rst_n     (rst_n),
+            .data1     (da_data_ch1_14), //dac1_input_14_reg
+            .data2     (da_data_ch2_14), //dac2_input_14_reg
+            .da1_clk   (da1_clk),//da1_clk
+            .da1_wrt   (da1_wrt),//da1_wrt
+            .da1_data  (da1_data),
+            .da2_clk   (da2_clk),//da2_clk
+            .da2_wrt   (da2_wrt),//da2_wrt
+            .da2_data  (da2_data)
+    );
 
-
-   //assign da1_data = ({ad9238_data_ch0, 2'b00});
 
 //==========================================================================
 // GPIO
