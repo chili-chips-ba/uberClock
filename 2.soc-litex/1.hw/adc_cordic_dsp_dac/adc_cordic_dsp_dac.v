@@ -17,7 +17,21 @@ module adc_cordic_dsp_dac(
     output [13:0]             da1_data,        // DA1 14‐bit data bus (DDR‐output)
     output                    da2_clk,         // DA2 clock (DDR‐output)
     output                    da2_wrt,         // DA2 write strobe (DDR‐output)
-    output [13:0]             da2_data         // DA2 14‐bit data bus (DDR‐output)
+    output [13:0]             da2_data,        // DA2 14‐bit data bus (DDR‐output)
+
+    output [11:0] debug_filter_in,
+    output [18:0] debug_phase2,
+    output [11:0] debug_xval_downconverted,
+    output [11:0] debug_yval_downconverted,
+    output [15:0] debug_downsampledX,
+    output [15:0] debug_downsampledY,
+    output [15:0] debug_upsampledX,
+    output [15:0] debug_upsampledY,
+    output [22:0] debug_phase2_inv_alt,
+    output [15:0] debug_xval_upconverted,
+    output [15:0] debug_yval_upconverted,
+    output        debug_ce_out_down_x,
+    output        debug_ce_out_up_x
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -42,7 +56,7 @@ module adc_cordic_dsp_dac(
     wire signed [15:0] upsampledY, upsampledX;
     wire ce_out_down_x, ce_out_down_y, ce_out_up_x, ce_out_up_y;
 
-    reg signed [15:0] filter_in;
+    reg signed [11:0] filter_in;
     always @(posedge sys_clk) begin
         filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
     end
@@ -54,8 +68,8 @@ module adc_cordic_dsp_dac(
     *************************************************************************/
    localparam PHASE_INC_999kHz = 80652;
    reg [18:0] phase2;
-   always @(posedge sys_clk or negedge rst_n) begin
-       if (~rst_n)
+   always @(posedge sys_clk or posedge rst_n) begin
+       if (rst_n)
            phase2 <= 0;
        else
            phase2 <= phase2 + PHASE_INC_999kHz;
@@ -149,8 +163,8 @@ module adc_cordic_dsp_dac(
    );   
 
 
-    wire [13:0] dac1_input_14 =yval_upconverted[15:2];
-    wire [13:0] dac2_input_14 =xval_upconverted[15:2];
+    wire [13:0] dac1_input_14 = downsampledY[15:2];
+    wire [13:0] dac2_input_14 = upsampledY[15:2];
     reg [13:0] dac1_input_14_reg, dac2_input_14_reg;
 
     always @(posedge sys_clk) begin
@@ -174,4 +188,19 @@ module adc_cordic_dsp_dac(
             .da2_wrt   (da2_wrt),
             .da2_data  (da2_data)
     );
+
+    assign debug_filter_in         = filter_in;
+    assign debug_phase2            = phase2;
+    assign debug_xval_downconverted = xval_downconverted;
+    assign debug_yval_downconverted = yval_downconverted;
+    assign debug_downsampledX      = downsampledX;
+    assign debug_downsampledY      = downsampledY;
+    assign debug_upsampledX        = upsampledX;
+    assign debug_upsampledY        = upsampledY;
+    assign debug_phase2_inv_alt    = phase2_inv_alt;
+    assign debug_xval_upconverted  = xval_upconverted;
+    assign debug_yval_upconverted  = yval_upconverted;
+    assign debug_ce_out_down_x     = ce_out_down_x;
+    assign debug_ce_out_up_x       = ce_out_up_x;
+
 endmodule

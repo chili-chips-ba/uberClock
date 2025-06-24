@@ -38,12 +38,12 @@ module cordic16 #(
   //--------------------------------------------------------------------------
   // Auxiliary (valid) signal pipeline: shift in i_aux for NSTAGES+2 cycles
   //--------------------------------------------------------------------------
-  reg [NSTAGES+1:0] ax;
+  reg [NSTAGES+5:0] ax;
   always @(posedge i_clk) begin
     if (i_reset)
       ax <= 0;
     else if (i_ce)
-      ax <= { ax[NSTAGES:0], i_aux };
+      ax <= { ax[NSTAGES+4:0], i_aux };
   end
 
   //--------------------------------------------------------------------------
@@ -150,6 +150,6 @@ module cordic16 #(
     assign o_yval = sat_y;
 
   // The auxiliary output (valid signal)
-  assign o_aux = ax[NSTAGES+1];
+  assign o_aux = ax[NSTAGES+5];
 
 endmodule
