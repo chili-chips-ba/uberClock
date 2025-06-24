@@ -51,7 +51,7 @@ module adc_dsp_dac_nocpu(
     downsamplerFilter downDsp (
         .clk         (sys_clk),
         .clk_enable  (1'b1),
-        .reset       (~rst_n), // active-high reset
+        .reset       (rst_n), // active-high reset
         .filter_in   (filter_in),
         .filter_out  (downsampledY),
         .ce_out      (ce_out_down)
@@ -63,15 +63,15 @@ module adc_dsp_dac_nocpu(
     upsamplerFilter upDsp (
         .clk         (sys_clk),
         .clk_enable  (1'b1),
-        .reset       (~rst_n), // active-high reset
+        .reset       (rst_n), // active-high reset
         .filter_in   (downsampledY),
         .filter_out  (upsampledY),
         .ce_out      (ce_out_up)
     );
 
     // ========== DAC Output ==========
-    wire [13:0] dac1_input_14 = downsampledY[15:2] + 14'd8192;
-    wire [13:0] dac2_input_14 = upsampledY[15:2]   + 14'd8192;
+    wire signed [13:0] dac1_input_14 = downsampledY[15:2] + 14'd8192;
+    wire signed [13:0] dac2_input_14 = upsampledY[15:2]   + 14'd8192;
 
     reg [13:0] dac1_input_14_reg, dac2_input_14_reg;
     always @(posedge sys_clk) begin
