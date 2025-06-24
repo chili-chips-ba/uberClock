@@ -46,13 +46,16 @@ module fpga_pll_80M
    wire sys_pll_rst = ~rst_n;
    wire sys_pll_clkfb;
    wire sys_pll_out;
+   
+   // Modified to output 65MHZ
+   //24.6.2025
 
    PLLE2_BASE #(
-      .CLKFBOUT_MULT(4),
+      .CLKFBOUT_MULT(13),
       .CLKFBOUT_PHASE(0.0),
       .CLKIN1_PERIOD(5.0),
 
-      .CLKOUT0_DIVIDE(10),
+      .CLKOUT0_DIVIDE(20),
       .CLKOUT1_DIVIDE(1),
       .CLKOUT2_DIVIDE(1),
       .CLKOUT3_DIVIDE(1),
@@ -73,7 +76,7 @@ module fpga_pll_80M
       .CLKOUT4_PHASE(0.0),
       .CLKOUT5_PHASE(0.0),
 
-      .DIVCLK_DIVIDE(1)
+      .DIVCLK_DIVIDE(2)
    ) sys_pll (
       .CLKOUT0(sys_pll_out),
       .CLKOUT1(),
