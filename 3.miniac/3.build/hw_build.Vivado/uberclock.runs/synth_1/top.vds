@@ -1,0 +1,708 @@
+#-----------------------------------------------------------
+# Vivado v2024.2 (64-bit)
+# SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
+# IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
+# SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
+# Start of session at: Wed Jun 25 11:39:03 2025
+# Process ID         : 204736
+# Current directory  : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1
+# Command line       : vivado -log top.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source top.tcl
+# Log file           : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.vds
+# Journal file       : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/vivado.jou
+# Running On         : nikola-IdeaPad-5-Pro-16IAH7
+# Platform           : Ubuntu
+# Operating System   : Ubuntu 24.04.2 LTS
+# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-12700H
+# CPU Frequency      : 908.406 MHz
+# CPU Physical cores : 14
+# CPU Logical cores  : 20
+# Host memory        : 16475 MB
+# Swap memory        : 4294 MB
+# Total Virtual      : 20770 MB
+# Available Virtual  : 16076 MB
+#-----------------------------------------------------------
+source top.tcl -notrace
+Command: synth_design -top top -part xc7a200tfbg484-2 -flatten_hierarchy none -verilog_define YOSYS
+Starting synth_design
+Attempting to get a license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200t'
+INFO: [Device 21-403] Loading part xc7a200tfbg484-2
+INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
+INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
+INFO: [Synth 8-7075] Helper process launched with PID 204775
+---------------------------------------------------------------------------------
+Starting RTL Elaboration : Time (s): cpu = 00:00:02 ; elapsed = 00:00:03 . Memory (MB): peak = 1942.832 ; gain = 427.801 ; free physical = 3717 ; free virtual = 14272
+---------------------------------------------------------------------------------
+INFO: [Synth 8-11241] undeclared symbol 'uart_rx_sync', assumed default net type 'wire' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:177]
+INFO: [Synth 8-11241] undeclared symbol 'bus_vld', assumed default net type 'wire' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:363]
+WARNING: [Synth 8-8895] 'bus_vld' is already implicitly declared on line 363 [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:574]
+INFO: [Synth 8-6157] synthesizing module 'top' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/top.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'clk_rst_gen' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'IBUFGDS' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
+INFO: [Synth 8-6155] done synthesizing module 'IBUFGDS' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
+INFO: [Synth 8-6157] synthesizing module 'fpga_pll_80M' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
+INFO: [Synth 8-6157] synthesizing module 'PLLE2_BASE' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
+	Parameter CLKFBOUT_MULT bound to: 13 - type: integer 
+	Parameter CLKFBOUT_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKIN1_PERIOD bound to: 5.000000 - type: double 
+	Parameter CLKOUT0_DIVIDE bound to: 20 - type: integer 
+	Parameter CLKOUT0_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT0_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT1_DIVIDE bound to: 1 - type: integer 
+	Parameter CLKOUT1_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT1_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT2_DIVIDE bound to: 1 - type: integer 
+	Parameter CLKOUT2_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT2_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT3_DIVIDE bound to: 1 - type: integer 
+	Parameter CLKOUT3_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT3_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT4_DIVIDE bound to: 1 - type: integer 
+	Parameter CLKOUT4_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT4_PHASE bound to: 0.000000 - type: double 
+	Parameter CLKOUT5_DIVIDE bound to: 1 - type: integer 
+	Parameter CLKOUT5_DUTY_CYCLE bound to: 0.500000 - type: double 
+	Parameter CLKOUT5_PHASE bound to: 0.000000 - type: double 
+	Parameter DIVCLK_DIVIDE bound to: 2 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'PLLE2_BASE' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
+INFO: [Synth 8-6157] synthesizing module 'BUFG' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
+INFO: [Synth 8-6155] done synthesizing module 'BUFG' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
+INFO: [Synth 8-6155] done synthesizing module 'fpga_pll_80M' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
+INFO: [Synth 8-6155] done synthesizing module 'clk_rst_gen' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'soc_cpu' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
+	Parameter ADDR_RESET bound to: 0 - type: integer 
+	Parameter NUM_WORDS_IMEM bound to: 8192 - type: integer 
+INFO: [Synth 8-6157] synthesizing module 'picorv32' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
+	Parameter PROGADDR_RESET bound to: 0 - type: integer 
+	Parameter STACKADDR bound to: 268468224 - type: integer 
+	Parameter COMPRESSED_ISA bound to: 1'b0 
+	Parameter TWO_STAGE_SHIFT bound to: 1'b1 
+	Parameter TWO_CYCLE_COMPARE bound to: 1'b0 
+	Parameter TWO_CYCLE_ALU bound to: 1'b0 
+	Parameter LATCHED_MEM_RDATA bound to: 1'b0 
+	Parameter BARREL_SHIFTER bound to: 1'b0 
+	Parameter ENABLE_MUL bound to: 1'b0 
+	Parameter ENABLE_FAST_MUL bound to: 1'b0 
+	Parameter ENABLE_DIV bound to: 1'b0 
+	Parameter ENABLE_REGS_DUALPORT bound to: 1'b1 
+	Parameter ENABLE_REGS_16_31 bound to: 1'b1 
+	Parameter ENABLE_PCPI bound to: 1'b0 
+	Parameter ENABLE_COUNTERS bound to: 1'b0 
+	Parameter ENABLE_COUNTERS64 bound to: 1'b0 
+	Parameter ENABLE_TRACE bound to: 1'b0 
+	Parameter ENABLE_IRQ bound to: 1'b0 
+	Parameter ENABLE_IRQ_QREGS bound to: 1'b0 
+	Parameter ENABLE_IRQ_TIMER bound to: 1'b0 
+	Parameter MASKED_IRQ bound to: 0 - type: integer 
+	Parameter LATCHED_IRQ bound to: -1 - type: integer 
+	Parameter PROGADDR_IRQ bound to: 16 - type: integer 
+	Parameter CATCH_MISALIGN bound to: 1'b1 
+	Parameter CATCH_ILLINSN bound to: 1'b1 
+	Parameter REGS_INIT_ZERO bound to: 1'b0 
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
+INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
+INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
+INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1053]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1184]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
+INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1903]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1944]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2043]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2054]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2073]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2107]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2130]
+INFO: [Synth 8-6155] done synthesizing module 'picorv32' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
+INFO: [Synth 8-6157] synthesizing module 'imem' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
+	Parameter NUM_WORDS bound to: 8192 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'imem' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
+INFO: [Synth 8-6155] done synthesizing module 'soc_cpu' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
+INFO: [Synth 8-6157] synthesizing module 'soc_fabric' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_fabric' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_ram' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
+	Parameter NUM_WORDS bound to: 8192 - type: integer 
+INFO: [Synth 8-6155] done synthesizing module 'soc_ram' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
+INFO: [Synth 8-6157] synthesizing module 'soc_csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'csr' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
+WARNING: [Synth 8-689] width (7) of port connection 's_cpuif_addr' does not match port width (6) of module 'csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:40]
+INFO: [Synth 8-6155] done synthesizing module 'soc_csr' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'uart' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:282]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:310]
+INFO: [Synth 8-6157] synthesizing module 'sync_fifo_ram' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
+	Parameter DWIDTH bound to: 8 - type: integer 
+	Parameter AWIDTH bound to: 4 - type: integer 
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:91]
+INFO: [Synth 8-6155] done synthesizing module 'sync_fifo_ram' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:443]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:638]
+INFO: [Synth 8-6155] done synthesizing module 'uart' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
+INFO: [Synth 8-6157] synthesizing module 'adc' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/adc/adc.v:1]
+INFO: [Synth 8-6157] synthesizing module 'IDDR' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
+	Parameter DDR_CLK_EDGE bound to: SAME_EDGE_PIPELINED - type: string 
+	Parameter INIT_Q1 bound to: 1'b0 
+	Parameter INIT_Q2 bound to: 1'b0 
+INFO: [Synth 8-6155] done synthesizing module 'IDDR' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
+INFO: [Synth 8-6157] synthesizing module 'ODDR' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
+	Parameter DDR_CLK_EDGE bound to: SAME_EDGE - type: string 
+INFO: [Synth 8-6155] done synthesizing module 'ODDR' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
+INFO: [Synth 8-6155] done synthesizing module 'adc' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/adc/adc.v:1]
+INFO: [Synth 8-6157] synthesizing module 'dac' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/dac/dac.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'dac' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/dac/dac.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/top.sv:17]
+WARNING: [Synth 8-6014] Unused sequential element mem_la_firstword_reg_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
+WARNING: [Synth 8-6014] Unused sequential element last_mem_valid_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
+WARNING: [Synth 8-6014] Unused sequential element next_insn_opcode_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:441]
+WARNING: [Synth 8-6014] Unused sequential element mem_la_secondword_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:337]
+WARNING: [Synth 8-6014] Unused sequential element prefetched_high_word_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:353]
+WARNING: [Synth 8-6014] Unused sequential element clear_prefetched_high_word_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1231]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rinst_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1392]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rdata_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1393]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_wdata_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1394]
+WARNING: [Synth 8-6014] Unused sequential element alu_out_0_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1396]
+WARNING: [Synth 8-6014] Unused sequential element alu_wait_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1399]
+WARNING: [Synth 8-6014] Unused sequential element alu_wait_2_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1400]
+WARNING: [Synth 8-6014] Unused sequential element next_irq_pending_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1439]
+WARNING: [Synth 8-6014] Unused sequential element decoder_trigger_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1451]
+WARNING: [Synth 8-6014] Unused sequential element decoder_pseudo_trigger_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1453]
+WARNING: [Synth 8-6014] Unused sequential element latched_trace_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1472]
+WARNING: [Synth 8-6014] Unused sequential element irq_active_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_delay_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_mask_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_state_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1487]
+WARNING: [Synth 8-6014] Unused sequential element irq_timer_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1488]
+WARNING: [Synth 8-6014] Unused sequential element current_pc_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1509]
+WARNING: [Synth 8-6014] Unused sequential element irq_pending_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element count_instr_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1436]
+WARNING: [Synth 8-6014] Unused sequential element trace_valid_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1456]
+WARNING: [Synth 8-6014] Unused sequential element instr_ecall_ebreak_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1020]
+WARNING: [Synth 8-6014] Unused sequential element count_cycle_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1435]
+WARNING: [Synth 8-6014] Unused sequential element pcpi_timeout_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1482]
+INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'tx_state_reg' through user attribute
+WARNING: [Synth 8-3848] Net to_csr[gpio][key1][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[gpio][key2][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[adc][ch2][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[adc][ch1][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-7129] Port rst_n in module dac is either unconnected or has no load
+WARNING: [Synth 8-7129] Port rst_n in module adc is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[gpio][key1][next] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[gpio][key2][next] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch2][next][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port to_csr[adc][ch1][next][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port bus\.arst_n in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port bus\.clk in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[uart][rx_trigger][read][value] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[uart][tx][data][swmod] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[gpio][led1][value] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[gpio][led2][value] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][15] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][14] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][13] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][12] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][PRODUCT][value][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][15] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][14] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][13] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][12] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_id][VENDOR][value][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][13] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][12] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch2][value][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][13] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][12] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][10] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][9] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][8] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][7] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][6] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][5] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][4] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][3] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][2] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][1] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[dac][ch1][value][0] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][15] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][14] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][13] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][12] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][11] in module uart is either unconnected or has no load
+WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][10] in module uart is either unconnected or has no load
+INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+---------------------------------------------------------------------------------
+Finished RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2037.801 ; gain = 522.770 ; free physical = 3607 ; free virtual = 14163
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2046.707 ; gain = 531.676 ; free physical = 3607 ; free virtual = 14163
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2046.707 ; gain = 531.676 ; free physical = 3607 ; free virtual = 14163
+---------------------------------------------------------------------------------
+Netlist sorting complete. Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.03 . Memory (MB): peak = 2052.645 ; gain = 0.000 ; free physical = 3615 ; free virtual = 14171
+INFO: [Netlist 29-17] Analyzing 60 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+
+Processing XDC Constraints
+Initializing timing engine
+Parsing XDC File [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]
+Finished Parsing XDC File [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/top_propImpl.xdc].
+Resolution: To avoid this warning, move constraints listed in [.Xil/top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
+INFO: [Timing 38-2] Deriving generated clocks
+Completed Processing XDC Constraints
+
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2202.457 ; gain = 0.000 ; free physical = 3612 ; free virtual = 14169
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 2 instances were transformed.
+  IBUFGDS => IBUFDS: 1 instance 
+  PLLE2_BASE => PLLE2_ADV: 1 instance 
+
+Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2202.457 ; gain = 0.000 ; free physical = 3612 ; free virtual = 14169
+---------------------------------------------------------------------------------
+Finished Constraint Validation : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2202.457 ; gain = 687.426 ; free physical = 3642 ; free virtual = 14198
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Loading Part and Timing Information
+---------------------------------------------------------------------------------
+Loading part: xc7a200tfbg484-2
+---------------------------------------------------------------------------------
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3642 ; free virtual = 14198
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying 'set_property' XDC Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3642 ; free virtual = 14198
+---------------------------------------------------------------------------------
+INFO: [Synth 8-802] inferred FSM for state register 'mem_state_reg' in module 'picorv32'
+INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'tx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'tx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
+INFO: [Synth 8-4490] FSM extraction disabled for register 'tx_state_reg' through user attribute
+INFO: [Synth 8-802] inferred FSM for state register 'state_reg' in module 'uart'
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+                 iSTATE2 |                               00 |                               00
+                 iSTATE0 |                               01 |                               10
+                  iSTATE |                               10 |                               01
+                 iSTATE1 |                               11 |                               11
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'mem_state_reg' using encoding 'sequential' in module 'picorv32'
+WARNING: [Synth 8-6841] Block RAM (mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
+(address width (13) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
+---------------------------------------------------------------------------------------------------
+                   State |                     New Encoding |                Previous Encoding 
+---------------------------------------------------------------------------------------------------
+       T_STATES_WAIT_SOP |                           000000 |                           000000
+       T_STATES_WAIT_CMD |                           000001 |                           000001
+T_STATES_IMPR_WAIT_LEN_LB |                           000010 |                           000010
+T_STATES_IMPR_WAIT_LEN_HB |                           000011 |                           000011
+T_STATES_IMPR_WAIT_DATA0 |                           000100 |                           000100
+T_STATES_IMPR_WAIT_DATA1 |                           000101 |                           000101
+T_STATES_IMPR_WAIT_DATA2 |                           000110 |                           000110
+T_STATES_IMPR_WAIT_DATA3 |                           000111 |                           000111
+  T_STATES_IMPR_CHECKSUM |                           001000 |                           001000
+      T_STATES_IMPR_DONE |                           001001 |                           001001
+T_STATES_BUSW_WAIT_ADDR0 |                           001010 |                           001010
+T_STATES_BUSW_WAIT_ADDR1 |                           001011 |                           001011
+T_STATES_BUSW_WAIT_ADDR2 |                           001100 |                           001100
+T_STATES_BUSW_WAIT_ADDR3 |                           001101 |                           001101
+T_STATES_BUSW_WAIT_DATA0 |                           001110 |                           001110
+T_STATES_BUSW_WAIT_DATA1 |                           001111 |                           001111
+T_STATES_BUSW_WAIT_DATA2 |                           010000 |                           010000
+T_STATES_BUSW_WAIT_DATA3 |                           010001 |                           010001
+   T_STATES_BUSW_WAIT_WE |                           010010 |                           010010
+  T_STATES_BUSW_CHECKSUM |                           010011 |                           010011
+      T_STATES_BUSW_DONE |                           010100 |                           010100
+T_STATES_BUSR_WAIT_ADDR0 |                           010101 |                           010101
+T_STATES_BUSR_WAIT_ADDR1 |                           010110 |                           010110
+T_STATES_BUSR_WAIT_ADDR2 |                           010111 |                           010111
+T_STATES_BUSR_WAIT_ADDR3 |                           011000 |                           011000
+ T_STATES_BUSR_WAIT_DATA |                           011001 |                           011001
+     T_STATES_BUSR_DATA0 |                           011010 |                           011010
+     T_STATES_BUSR_DATA1 |                           011011 |                           011011
+     T_STATES_BUSR_DATA2 |                           011100 |                           011100
+     T_STATES_BUSR_DATA3 |                           011101 |                           011101
+  T_STATES_BUSR_CHECKSUM |                           011110 |                           011110
+      T_STATES_BUSR_DONE |                           011111 |                           011111
+T_STATES_IMWR_WAIT_ADDR0 |                           100000 |                           100000
+T_STATES_IMWR_WAIT_ADDR1 |                           100001 |                           100001
+T_STATES_IMWR_WAIT_DATA0 |                           100010 |                           100010
+T_STATES_IMWR_WAIT_DATA1 |                           100011 |                           100011
+T_STATES_IMWR_WAIT_DATA2 |                           100100 |                           100100
+T_STATES_IMWR_WAIT_DATA3 |                           100101 |                           100101
+  T_STATES_IMWR_CHECKSUM |                           100110 |                           100110
+      T_STATES_IMWR_DONE |                           100111 |                           100111
+        T_STATES_TIMEOUT |                           101000 |                           101000
+---------------------------------------------------------------------------------------------------
+INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'uart'
+---------------------------------------------------------------------------------
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:09 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3647 ; free virtual = 14204
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start RTL Component Statistics 
+---------------------------------------------------------------------------------
+Detailed RTL Component Info : 
++---Adders : 
+	   2 Input   32 Bit       Adders := 4     
+	   3 Input   32 Bit       Adders := 1     
+	   2 Input   22 Bit       Adders := 1     
+	   2 Input   16 Bit       Adders := 1     
+	   2 Input    8 Bit       Adders := 1     
+	   2 Input    6 Bit       Adders := 1     
+	   2 Input    5 Bit       Adders := 3     
+	   2 Input    4 Bit       Adders := 8     
++---XORs : 
+	   2 Input     32 Bit         XORs := 1     
++---Registers : 
+	               36 Bit    Registers := 1     
+	               32 Bit    Registers := 20    
+	               22 Bit    Registers := 1     
+	               16 Bit    Registers := 2     
+	               14 Bit    Registers := 2     
+	                8 Bit    Registers := 6     
+	                6 Bit    Registers := 1     
+	                5 Bit    Registers := 8     
+	                4 Bit    Registers := 11    
+	                3 Bit    Registers := 1     
+	                2 Bit    Registers := 2     
+	                1 Bit    Registers := 87    
++---RAMs : 
+	             256K Bit	(8192 X 32 bit)          RAMs := 2     
+	             1024 Bit	(32 X 32 bit)          RAMs := 1     
+	              128 Bit	(16 X 8 bit)          RAMs := 2     
++---Muxes : 
+	   2 Input   32 Bit        Muxes := 33    
+	   8 Input   32 Bit        Muxes := 3     
+	   4 Input   32 Bit        Muxes := 5     
+	   3 Input   32 Bit        Muxes := 1     
+	  41 Input   32 Bit        Muxes := 8     
+	   2 Input   30 Bit        Muxes := 2     
+	   2 Input   22 Bit        Muxes := 1     
+	  41 Input   22 Bit        Muxes := 1     
+	   2 Input   16 Bit        Muxes := 1     
+	  41 Input   16 Bit        Muxes := 3     
+	   2 Input   14 Bit        Muxes := 2     
+	   2 Input   12 Bit        Muxes := 2     
+	   4 Input    8 Bit        Muxes := 1     
+	   2 Input    8 Bit        Muxes := 4     
+	  41 Input    8 Bit        Muxes := 3     
+	   2 Input    6 Bit        Muxes := 1     
+	  73 Input    6 Bit        Muxes := 1     
+	   8 Input    5 Bit        Muxes := 2     
+	   5 Input    4 Bit        Muxes := 1     
+	   2 Input    4 Bit        Muxes := 9     
+	   4 Input    4 Bit        Muxes := 1     
+	   3 Input    4 Bit        Muxes := 1     
+	   8 Input    4 Bit        Muxes := 1     
+	  41 Input    4 Bit        Muxes := 1     
+	   2 Input    3 Bit        Muxes := 5     
+	   8 Input    3 Bit        Muxes := 1     
+	   6 Input    3 Bit        Muxes := 1     
+	   3 Input    3 Bit        Muxes := 1     
+	   8 Input    2 Bit        Muxes := 1     
+	   4 Input    2 Bit        Muxes := 3     
+	   2 Input    2 Bit        Muxes := 4     
+	   3 Input    2 Bit        Muxes := 2     
+	   8 Input    1 Bit        Muxes := 25    
+	   2 Input    1 Bit        Muxes := 48    
+	   3 Input    1 Bit        Muxes := 10    
+	   4 Input    1 Bit        Muxes := 9     
+	   6 Input    1 Bit        Muxes := 1     
+	   5 Input    1 Bit        Muxes := 1     
+	  41 Input    1 Bit        Muxes := 15    
+	  12 Input    1 Bit        Muxes := 1     
+---------------------------------------------------------------------------------
+Finished RTL Component Statistics 
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Part Resource Summary
+---------------------------------------------------------------------------------
+Part Resources:
+DSPs: 740 (col length:100)
+BRAMs: 730 (col length: RAMB18 100 RAMB36 50)
+---------------------------------------------------------------------------------
+Finished Part Resource Summary
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Cross Boundary and Area Optimization
+---------------------------------------------------------------------------------
+WARNING: [Synth 8-7080] Parallel synthesis criteria is not met
+WARNING: [Synth 8-6841] Block RAM (mem_reg) originally specified as a Byte Wide Write Enable RAM cannot take advantage of ByteWide feature and is implemented with single write enable per RAM due to following reason.
+(address width (13) is more than optimal threshold of 12. Implementing using BWWE will require more logic and timing would be suboptimal. Please use attribute ram_decomp = power if BWWE is desired.)
+WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
+WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
+WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
+WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
+---------------------------------------------------------------------------------
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:14 ; elapsed = 00:00:14 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3598 ; free virtual = 14163
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Preliminary Mapping Report (see note below)
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name  | RTL Object | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|u_cpu/u_imem | mem_reg    | 8 K x 32(READ_FIRST)   | W |   | 8 K x 32(WRITE_FIRST)  |   | R | Port A and B     | 0      | 8      | 
+|u_dmem       | mem_reg    | 8 K x 32(READ_FIRST)   | W | R |                        |   |   | Port A           | 0      | 8      | 
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+Note: The table above is a preliminary report that shows the Block RAMs at the current stage of the synthesis flow. Some Block RAMs may be reimplemented as non Block RAM primitives later in the synthesis flow. Multiple instantiated Block RAMs are reported only once. 
+
+Distributed RAM: Preliminary Mapping Report (see note below)
++---------------+-------------+-----------+----------------------+--------------+
+|Module Name    | RTL Object  | Inference | Size (Depth x Width) | Primitives   | 
++---------------+-------------+-----------+----------------------+--------------+
+|u_cpu/u_cpu    | cpuregs_reg | Implied   | 32 x 32              | RAM32M x 12  | 
+|sync_fifo_ram: | mem_reg     | Implied   | 16 x 8               | RAM32M x 2   | 
+|sync_fifo_ram: | mem_reg     | Implied   | 16 x 8               | RAM32M x 2   | 
++---------------+-------------+-----------+----------------------+--------------+
+
+Note: The table above is a preliminary report that shows the Distributed RAMs at the current stage of the synthesis flow. Some Distributed RAMs may be reimplemented as non Distributed RAM primitives later in the synthesis flow. Multiple instantiated RAMs are reported only once.
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Applying XDC Timing Constraints
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:18 ; elapsed = 00:00:18 . Memory (MB): peak = 2240.461 ; gain = 725.430 ; free physical = 3562 ; free virtual = 14127
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Timing Optimization
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Timing Optimization : Time (s): cpu = 00:00:19 ; elapsed = 00:00:20 . Memory (MB): peak = 2288.977 ; gain = 773.945 ; free physical = 3522 ; free virtual = 14084
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+
+Block RAM: Final Mapping Report
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|Module Name  | RTL Object | PORT A (Depth x Width) | W | R | PORT B (Depth x Width) | W | R | Ports driving FF | RAMB18 | RAMB36 | 
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+|u_cpu/u_imem | mem_reg    | 8 K x 32(READ_FIRST)   | W |   | 8 K x 32(WRITE_FIRST)  |   | R | Port A and B     | 0      | 8      | 
+|u_dmem       | mem_reg    | 8 K x 32(READ_FIRST)   | W | R |                        |   |   | Port A           | 0      | 8      | 
++-------------+------------+------------------------+---+---+------------------------+---+---+------------------+--------+--------+
+
+
+Distributed RAM: Final Mapping Report
++---------------+-------------+-----------+----------------------+--------------+
+|Module Name    | RTL Object  | Inference | Size (Depth x Width) | Primitives   | 
++---------------+-------------+-----------+----------------------+--------------+
+|u_cpu/u_cpu    | cpuregs_reg | Implied   | 32 x 32              | RAM32M x 12  | 
+|sync_fifo_ram: | mem_reg     | Implied   | 16 x 8               | RAM32M x 2   | 
+|sync_fifo_ram: | mem_reg     | Implied   | 16 x 8               | RAM32M x 2   | 
++---------------+-------------+-----------+----------------------+--------------+
+
+---------------------------------------------------------------------------------
+Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Technology Mapping
+---------------------------------------------------------------------------------
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_2 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_3 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_4 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_5 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_6 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_cpu/u_imem/mem_reg_7 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_0_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_0_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_1_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_1_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_2_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_2_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
+---------------------------------------------------------------------------------
+Finished Technology Mapping : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2304.992 ; gain = 789.961 ; free physical = 3507 ; free virtual = 14069
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start IO Insertion
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Final Netlist Cleanup
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished IO Insertion : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2440.805 ; gain = 925.773 ; free physical = 3397 ; free virtual = 13960
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Renaming Generated Instances
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Renaming Generated Instances : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2440.805 ; gain = 925.773 ; free physical = 3397 ; free virtual = 13960
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Handling Custom Attributes
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.773 ; gain = 928.742 ; free physical = 3397 ; free virtual = 13960
+---------------------------------------------------------------------------------
+---------------------------------------------------------------------------------
+Start Writing Synthesis Report
+---------------------------------------------------------------------------------
+
+Report BlackBoxes: 
++-+--------------+----------+
+| |BlackBox name |Instances |
++-+--------------+----------+
++-+--------------+----------+
+
+Report Cell Usage: 
++------+-----------+------+
+|      |Cell       |Count |
++------+-----------+------+
+|1     |BUFG       |     1|
+|2     |CARRY4     |    65|
+|3     |IDDR       |    24|
+|4     |LUT1       |    23|
+|5     |LUT2       |   209|
+|6     |LUT3       |   214|
+|7     |LUT4       |   304|
+|8     |LUT5       |   233|
+|9     |LUT6       |   613|
+|10    |ODDR       |    34|
+|11    |PLLE2_BASE |     1|
+|12    |RAM32M     |    12|
+|13    |RAM32X1D   |     8|
+|14    |RAMB36E1   |    16|
+|23    |FDCE       |   263|
+|24    |FDPE       |    17|
+|25    |FDRE       |   440|
+|26    |FDSE       |    24|
+|27    |IBUF       |    28|
+|28    |IBUFGDS    |     1|
+|29    |OBUF       |    37|
+|30    |OBUFT      |     2|
++------+-----------+------+
+---------------------------------------------------------------------------------
+Finished Writing Synthesis Report : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.773 ; gain = 928.742 ; free physical = 3397 ; free virtual = 13960
+---------------------------------------------------------------------------------
+Synthesis finished with 0 errors, 0 critical warnings and 293 warnings.
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2443.773 ; gain = 772.992 ; free physical = 3389 ; free virtual = 13952
+Synthesis Optimization Complete : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.781 ; gain = 928.742 ; free physical = 3389 ; free virtual = 13952
+INFO: [Project 1-571] Translating synthesized netlist
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2443.781 ; gain = 0.000 ; free physical = 3553 ; free virtual = 14116
+INFO: [Netlist 29-17] Analyzing 161 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
+INFO: [Project 1-570] Preparing netlist for logic optimization
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2499.801 ; gain = 0.000 ; free physical = 3555 ; free virtual = 14118
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 22 instances were transformed.
+  IBUFGDS => IBUFDS: 1 instance 
+  PLLE2_BASE => PLLE2_ADV: 1 instance 
+  RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 12 instances
+  RAM32X1D => RAM32X1D (RAMD32(x2)): 8 instances
+
+Synth Design complete | Checksum: 9860a5fb
+INFO: [Common 17-83] Releasing license: Synthesis
+122 Infos, 151 Warnings, 0 Critical Warnings and 0 Errors encountered.
+synth_design completed successfully
+synth_design: Time (s): cpu = 00:00:27 ; elapsed = 00:00:26 . Memory (MB): peak = 2499.801 ; gain = 1046.238 ; free physical = 3555 ; free virtual = 14118
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1751.335; main = 1652.890; forked = 268.086
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3247.383; main = 2499.805; forked = 942.387
+Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2523.812 ; gain = 0.000 ; free physical = 3554 ; free virtual = 14117
+INFO: [Common 17-1381] The checkpoint '/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.dcp' has been generated.
+INFO: [Vivado 12-24828] Executing command : report_utilization -file top_utilization_synth.rpt -pb top_utilization_synth.pb
+INFO: [Common 17-206] Exiting Vivado at Wed Jun 25 11:39:32 2025...

@@ -15,12 +15,12 @@ module dac (
 
     // DDR outputs for DAC #1
     output wire        da1_clk,    // half-rate clock strobe
-    output wire        da1_wrt,    // write strobe (always “1” on positive edge)
+    output wire        da1_wrt,    // write strobe (always "1" on positive edge)
     output wire [13:0] da1_data,   // 14-bit data bus
 
     // DDR outputs for DAC #2
     output wire        da2_clk,    // half-rate clock strobe
-    output wire        da2_wrt,    // write strobe (always “1” on positive edge)
+    output wire        da2_wrt,    // write strobe (always "1" on positive edge)
     output wire [13:0] da2_data    // 14-bit data bus
 );
 

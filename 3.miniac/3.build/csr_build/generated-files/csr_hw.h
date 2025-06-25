@@ -184,6 +184,46 @@ private:
 
 // -----------------------------------------------------
 //
+class csr__adc_vp_t {
+public:
+    csr__adc_vp_t (uint32_t* reg_addr = 0) : reg((csr__adc_t*)reg_addr) {};
+
+    inline void     full(const uint32_t data) {reg->w = data;};
+    inline uint32_t full()                    {return reg->w;};
+
+    inline void     ch2(const uint32_t data) {reg->f.ch2 = data;};
+    inline uint32_t ch2()                    {return reg->f.ch2;};
+    inline void     ch1(const uint32_t data) {reg->f.ch1 = data;};
+    inline uint32_t ch1()                    {return reg->f.ch1;};
+
+    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
+
+private:
+    csr__adc_t* reg;
+};
+
+// -----------------------------------------------------
+//
+class csr__dac_vp_t {
+public:
+    csr__dac_vp_t (uint32_t* reg_addr = 0) : reg((csr__dac_t*)reg_addr) {};
+
+    inline void     full(const uint32_t data) {reg->w = data;};
+    inline uint32_t full()                    {return reg->w;};
+
+    inline void     ch2(const uint32_t data) {reg->f.ch2 = data;};
+    inline uint32_t ch2()                    {return reg->f.ch2;};
+    inline void     ch1(const uint32_t data) {reg->f.ch1 = data;};
+    inline uint32_t ch1()                    {return reg->f.ch1;};
+
+    inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
+
+private:
+    csr__dac_t* reg;
+};
+
+// -----------------------------------------------------
+//
 class csr__hw_version_vp_t {
 public:
     csr__hw_version_vp_t (uint32_t* reg_addr = 0) : reg((csr__hw_version_t*)reg_addr) {};
@@ -218,16 +258,31 @@ public:
                                                                                    sizeof(csr__uart_t)/4 + 
                                                                                    sizeof(csr__gpio_t)/4
                                                                                     );
-        hw_version = new csr__hw_version_vp_t (base_addr +
+        adc = new csr__adc_vp_t (base_addr +
                                                                                    sizeof(csr__uart_t)/4 + 
                                                                                    sizeof(csr__gpio_t)/4 + 
                                                                                    sizeof(csr__hw_id_t)/4
+                                                                                    );
+        dac = new csr__dac_vp_t (base_addr +
+                                                                                   sizeof(csr__uart_t)/4 + 
+                                                                                   sizeof(csr__gpio_t)/4 + 
+                                                                                   sizeof(csr__hw_id_t)/4 + 
+                                                                                   sizeof(csr__adc_t)/4
+                                                                                    );
+        hw_version = new csr__hw_version_vp_t (base_addr +
+                                                                                   sizeof(csr__uart_t)/4 + 
+                                                                                   sizeof(csr__gpio_t)/4 + 
+                                                                                   sizeof(csr__hw_id_t)/4 + 
+                                                                                   sizeof(csr__adc_t)/4 + 
+                                                                                   sizeof(csr__dac_t)/4
                                                                                     );
     };
 
     csr__uart_vp_t* uart;
     csr__gpio_vp_t* gpio;
     csr__hw_id_vp_t* hw_id;
+    csr__adc_vp_t* adc;
+    csr__dac_vp_t* dac;
     csr__hw_version_vp_t* hw_version;
 } ;
 
