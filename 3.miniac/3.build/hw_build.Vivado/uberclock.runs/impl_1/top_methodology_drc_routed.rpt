@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Wed Jun 25 11:40:55 2025
-| Host         : nikola-IdeaPad-5-Pro-16IAH7 running 64-bit Ubuntu 24.04.2 LTS
+| Date         : Wed Jun 25 12:03:04 2025
+| Host         : minela-HP-ProBook running 64-bit Ubuntu 24.04.2 LTS
 | Command      : report_methodology -file top_methodology_drc_routed.rpt -pb top_methodology_drc_routed.pb -rpx top_methodology_drc_routed.rpx
 | Design       : top
 | Device       : xc7a200tfbg484-2
@@ -5181,9 +5181,9 @@ XDCB-4#1 Warning
 create_clock constraint set on both sides of diff pair port  
 Two clock definitions clk_p and clk_n found on differential ports clk_p and clk_n. It is recommended to only create a clock on port P.
 create_clock -period 5.000 [get_ports clk_p]
-/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc (Line: 31)
+/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc (Line: 31)
 create_clock -period 5.000 [get_ports clk_n]
-/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc (Line: 34)
+/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc (Line: 34)
 Related violations: <none>
 
 

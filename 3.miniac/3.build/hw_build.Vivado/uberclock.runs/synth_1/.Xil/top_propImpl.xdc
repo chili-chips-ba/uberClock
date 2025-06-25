@@ -1,4 +1,4 @@
-set_property SRC_FILE_INFO {cfile:/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc rfile:../../../../../1.hw/constraints/top.xdc id:1} [current_design]
+set_property SRC_FILE_INFO {cfile:/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc rfile:../../../../../1.hw/constraints/top.xdc id:1} [current_design]
 set_property src_info {type:XDC file:1 line:32 export:INPUT save:INPUT read:READ} [current_design]
 set_property PACKAGE_PIN R4 [get_ports clk_p]
 set_property src_info {type:XDC file:1 line:35 export:INPUT save:INPUT read:READ} [current_design]
