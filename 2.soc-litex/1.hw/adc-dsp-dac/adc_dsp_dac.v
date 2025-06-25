@@ -19,6 +19,7 @@ module adc_dsp_dac(
     output [13:0]             da2_data,         // DA2 14‐bit data bus (DDR‐output)
     output signed [15:0]      downsampledData,
     input signed  [15:0]      upsamplerInput,
+    input [7:0]               gain,
 
     output [15:0] debug_downsampledY,
     output [15:0] debug_upsampledY,
@@ -69,6 +70,9 @@ module adc_dsp_dac(
         .ce_out(ce_out_down)
     );
     assign downsampledData = downsampledY;
+
+    wire signed [23:0] gain_product = $signed(upsamplerInput) * $signed(gain);
+    wire signed [15:0] gain_scaled_input = gain_product[22:7];  // scale appropriately
 
     upsamplerFilter upDsp (
         .clk(sys_clk),

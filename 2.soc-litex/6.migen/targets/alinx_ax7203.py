@@ -47,15 +47,16 @@ class _CRG(LiteXModule):
             self.cd_sys4x_dqs = ClockDomain()
             self.cd_idelay    = ClockDomain()
 
+        margin = 2e-2 # 2% tolerance
         self.pll = pll = S7PLL(speedgrade=-2)
         self.comb += pll.reset.eq(self.rst)
         pll.register_clkin(platform.request("clk200"), 200e6)
-        pll.create_clkout(self.cd_sys, sys_clk_freq)
+        pll.create_clkout(self.cd_sys, sys_clk_freq, margin=margin)
         platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin)
         if with_dram:
-            pll.create_clkout(self.cd_sys4x,     4*sys_clk_freq)
-            pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90)
-            pll.create_clkout(self.cd_idelay,    200e6)
+            pll.create_clkout(self.cd_sys4x,     4*sys_clk_freq, margin=margin)
+            pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90, margin=margin)
+            pll.create_clkout(self.cd_idelay,    200e6, margin=margin)
             self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
 
@@ -81,7 +82,11 @@ class BaseSoC(SoCCore):
                  with_cordic_dac        = False,
                  with_adc_dac           = False,
                  with_input_mux         = False,
+                 with_adc_dsp_dac       = False,
+                 with_adc_dsp_dac_nocpu = False,
+                 with_cordic_dsp_dac    = False,
                  with_icd               = False,
+                 with_adc_cordic_dsp_dac = False,
                  **kwargs):
         platform = alinx_ax7203.Platform(toolchain=toolchain)
 
@@ -128,8 +133,8 @@ class BaseSoC(SoCCore):
                 self.add_ethernet(phy=self.ethphy)
             if with_etherbone:
                 self.add_etherbone(phy=self.ethphy,
-                    ip_address = "192.168.1.50",
-                    mac_address=0x10e2d5_000001
+                    ip_address = "192.168.1.123",
+                    mac_address=0x0200000000AB
                 )
 
         # SPI Flash
@@ -340,6 +345,7 @@ class BaseSoC(SoCCore):
                 "cordic/cordic_pipeline_stage.v",
                 "cordic/cordic_round.v",
                 "cordic/cordic.v",
+                "cordic/cordic_logic.v",
                 "dac/dac.v",
                 "cordic-dac/cordic_dac.v",
             ]:
@@ -369,6 +375,11 @@ class BaseSoC(SoCCore):
             for filename in ["adc/adc.v", "dac/dac.v", "adc-dac/adc_dac.v"]:
                 self.platform.add_source(f"{verilog_dir}/{filename}")
 
+
+            debug_adc_ch0     = Signal(12)
+            debug_adc_ch1     = Signal(12)
+            debug_dac1_input  = Signal(14)
+            debug_dac2_input  = Signal(14)
             self.specials += Instance(
                 "adc_dac",
                 # Clocks / reset
@@ -388,7 +399,27 @@ class BaseSoC(SoCCore):
                 o_da2_clk       = platform.request("da2_clk",  0),
                 o_da2_wrt       = platform.request("da2_wrt",  0),
                 o_da2_data      = platform.request("da2_data", 0),
+
+                o_debug_adc_ch0     = debug_adc_ch0,
+                o_debug_adc_ch1     = debug_adc_ch1,
+                o_debug_dac1_input  = debug_dac1_input,
+                o_debug_dac2_input  = debug_dac2_input,
             )
+            analyzer_signals = [
+                debug_adc_ch0,
+                debug_adc_ch1,
+                debug_dac1_input,
+                debug_dac2_input,
+            ]
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                analyzer_signals,
+                depth        = 1024,
+                clock_domain = "sys",
+                samplerate   = sys_clk_freq,
+                csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
 
         # ---------------------------------------------------------------------
         #  Input Mux
@@ -401,6 +432,7 @@ class BaseSoC(SoCCore):
                 "cordic/cordic_pipeline_stage.v",
                 "cordic/cordic_round.v",
                 "cordic/cordic.v",
+                "cordic/cordic_logic.v",
                 "input-mux/input_mux.v"
             ]:
                 self.platform.add_source(f"{verilog_dir}/{filename}")
@@ -411,6 +443,11 @@ class BaseSoC(SoCCore):
             self._input_sw_reg = CSRStorage(1, description="Input Switch Register")
             input_sw_reg = self._input_sw_reg.storage
 
+
+            debug_sin = Signal(14)
+            debug_cos = Signal(14)
+            phase_acc_out = Signal(19)
+            cordic_aux_out = Signal()
             self.specials += Instance(
                 "input_mux",
                 # Clocks / reset
@@ -434,8 +471,296 @@ class BaseSoC(SoCCore):
                 o_da2_clk       = platform.request("da2_clk",  0),
                 o_da2_wrt       = platform.request("da2_wrt",  0),
                 o_da2_data      = platform.request("da2_data", 0),
+
+                o_debug_sin    = debug_sin,
+                o_debug_cos    = debug_cos,
+                o_phase_acc_out = phase_acc_out,
+                o_cordic_aux_out = cordic_aux_out,
             )
 
+            analyzer_signals =  [phase_inc, input_sw_reg, debug_sin, debug_cos, phase_acc_out, cordic_aux_out]
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                analyzer_signals,
+                depth        = 1024,
+                clock_domain = "sys",
+                samplerate   = sys_clk_freq,
+                csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
+
+        # ---------------------------------------------------------------------
+        #  ADC - DSP - DAC
+        # ---------------------------------------------------------------------
+        if with_adc_dsp_dac:
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+                "filters/cic.v",
+                "filters/cic_comp_down_opt.v",
+                "filters/cic_comp_down_mac.v",
+                "filters/cic_comp_up_mac.v",
+                "filters/cic_int.v",
+                "filters/downsamplerFilter.v",
+                "filters/upsamplerFilter.v",
+                "filters/hb_down_opt.v",
+                "filters/hb_down_mac.v",
+                "filters/hb_up_mac.v",
+                "adc-dsp-dac/adc_dsp_dac.v",
+                "filters/coeffs.mem",
+                "filters/coeffs_comp.mem",
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+            self._downsampled = CSRStatus(16, description="Downsampled data from filter")
+            self._upsampler_in = CSRStorage(16, description="Upsampler input to filter")
+            self._upsampler_gain = CSRStorage(8, description="Gain for upsampler (signed, 8-bit)")
+
+            downsampled_sig = Signal(16)
+            upsampler_in_sig = Signal(16)
+
+            # Debug signals
+            debug_downsampledY = Signal(16)
+            debug_upsampledY   = Signal(16)
+            debug_ce_out_down  = Signal()
+            debug_ce_out_up    = Signal()
+            debug_adc_input    = Signal(16)
+
+            self.specials += Instance(
+                "adc_dsp_dac",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst_n        = ResetSignal("sys"),
+
+                # ADC ports
+                o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0  = platform.request("adc_data_ch0"),
+                i_adc_data_ch1  = platform.request("adc_data_ch1"),
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
+
+                o_downsampledData = downsampled_sig,
+                i_upsamplerInput  = upsampler_in_sig,
+                i_gain = self._upsampler_gain.storage,
+
+                o_debug_downsampledY = debug_downsampledY,
+                o_debug_upsampledY   = debug_upsampledY,
+                o_debug_ce_out_down  = debug_ce_out_down,
+                o_debug_ce_out_up    = debug_ce_out_up,
+                o_debug_adc_input    = debug_adc_input,
+            )
+
+            self.comb += [
+                self._downsampled.status.eq(downsampled_sig),
+                upsampler_in_sig.eq(self._upsampler_in.storage),
+            ]
+
+
+            analyzer_signals = [
+                debug_downsampledY,
+                debug_upsampledY,
+                debug_ce_out_down,
+                debug_ce_out_up,
+                debug_adc_input
+            ]
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                analyzer_signals,
+                depth        = 1024,
+                clock_domain = "sys",
+                samplerate   = sys_clk_freq,
+                csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
+
+
+        # ---------------------------------------------------------------------
+        #  ADC - CORDIC - DSP - DAC
+        # ---------------------------------------------------------------------
+        if with_adc_cordic_dsp_dac:
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+                "filters/cic.v",
+                "filters/cic_comp_down_opt.v",
+                "filters/cic_comp_down_mac.v",
+                "filters/cic_comp_up_mac.v",
+                "filters/cic_int.v",
+                "filters/downsamplerFilter.v",
+                "filters/upsamplerFilter.v",
+                "filters/hb_down_opt.v",
+                "filters/hb_down_mac.v",
+                "filters/hb_up_mac.v",
+                "adc_cordic_dsp_dac/adc_cordic_dsp_dac.v",
+                "filters/coeffs.mem",
+                "filters/coeffs_comp.mem",
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "cordic/cordic_logic.v",
+                "cordic/gain_and_saturate.v",
+                "cordic16/cordic16.v",
+                "cordic16/gain_and_saturate.v",
+                "cordic16/cordic_round.v",
+                "cordic16/cordic_pre_rotate_16.v",
+                "cordic16/cordic_pipeline_stage.v",
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+
+            debug_filter_in         = Signal(12)
+            debug_phase2            = Signal(19)
+            debug_xval_downconverted = Signal(12)
+            debug_yval_downconverted = Signal(12)
+            debug_downsampledX      = Signal(16)
+            debug_downsampledY      = Signal(16)
+            debug_upsampledX        = Signal(16)
+            debug_upsampledY        = Signal(16)
+            debug_phase2_inv_alt    = Signal(23)
+            debug_xval_upconverted  = Signal(16)
+            debug_yval_upconverted  = Signal(16)
+            debug_ce_out_down_x     = Signal()
+            debug_ce_out_up_x       = Signal()
+
+            self.specials += Instance(
+                "adc_cordic_dsp_dac",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst_n        = ResetSignal("sys"),
+
+                # ADC ports
+                o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0  = platform.request("adc_data_ch0"),
+                i_adc_data_ch1  = platform.request("adc_data_ch1"),
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
+
+                o_debug_filter_in         = debug_filter_in,
+                o_debug_phase2            = debug_phase2,
+                o_debug_xval_downconverted = debug_xval_downconverted,
+                o_debug_yval_downconverted = debug_yval_downconverted,
+                o_debug_downsampledX      = debug_downsampledX,
+                o_debug_downsampledY      = debug_downsampledY,
+                o_debug_upsampledX        = debug_upsampledX,
+                o_debug_upsampledY        = debug_upsampledY,
+                o_debug_phase2_inv_alt    = debug_phase2_inv_alt,
+                o_debug_xval_upconverted  = debug_xval_upconverted,
+                o_debug_yval_upconverted  = debug_yval_upconverted,
+                o_debug_ce_out_down_x     = debug_ce_out_down_x,
+                o_debug_ce_out_up_x       = debug_ce_out_up_x
+            )
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+            [
+                debug_filter_in,
+                debug_phase2,
+                debug_xval_downconverted,
+                debug_yval_downconverted,
+                debug_downsampledX,
+                debug_downsampledY,
+                debug_upsampledX,
+                debug_upsampledY,
+                debug_phase2_inv_alt,
+                debug_xval_upconverted,
+                debug_yval_upconverted,
+                debug_ce_out_down_x,
+                debug_ce_out_up_x,
+            ],
+            depth        = 2048,
+            clock_domain = "sys",
+            samplerate   = sys_clk_freq,
+            csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
+
+
+        # ---------------------------------------------------------------------
+        #  ADC - DSP - DAC (no CPU)
+        # ---------------------------------------------------------------------
+        if with_adc_dsp_dac_nocpu:
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+                "filters/cic.v",
+                "filters/cic_comp_down_opt.v",
+                "filters/cic_comp_down_mac.v",
+                "filters/cic_comp_up_mac.v",
+                "filters/cic_int.v",
+                "filters/downsamplerFilter.v",
+                "filters/upsamplerFilter.v",
+                "filters/hb_down_opt.v",
+                "filters/hb_down_mac.v",
+                "filters/hb_up_mac.v",
+                "adc-dsp-dac/adc_dsp_dac_nocpu.v",
+                "filters/coeffs.mem",
+                "filters/coeffs_comp.mem"
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+
+            debug_downsampledY = Signal(16)
+            debug_upsampledY   = Signal(16)
+            debug_ce_out_down  = Signal()
+            debug_ce_out_up    = Signal()
+            debug_adc_input    = Signal(16)
+
+            self.specials += Instance(
+                "adc_dsp_dac_nocpu",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst_n        = ResetSignal("sys"),
+
+                # ADC ports
+                o_adc_clk_ch0   = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1   = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0  = platform.request("adc_data_ch0"),
+                i_adc_data_ch1  = platform.request("adc_data_ch1"),
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
+
+                o_debug_downsampledY = debug_downsampledY,
+                o_debug_upsampledY   = debug_upsampledY,
+                o_debug_ce_out_down  = debug_ce_out_down,
+                o_debug_ce_out_up    = debug_ce_out_up,
+                o_debug_adc_input    = debug_adc_input,
+            )
+
+            analyzer_signals = [
+                debug_downsampledY,
+                debug_upsampledY,
+                debug_ce_out_down,
+                debug_ce_out_up,
+                debug_adc_input
+            ]
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                analyzer_signals,
+                depth        = 1024,
+                clock_domain = "sys",
+                samplerate   = sys_clk_freq,
+                csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
 
     # optionally export analyzer CSV
     # def do_exit(self, vns, **kwargs):
@@ -493,7 +818,12 @@ def main():
         help="Instantiate ADC-DAC interface")
     parser.add_argument("--with-input-mux", action="store_true",
         help="Instantiate input_mux module")
-
+    parser.add_argument("--with-adc-dsp-dac", action="store_true",
+        help="Instantiate ADC - DSP - DAC Path")
+    parser.add_argument("--with-adc-dsp-dac-nocpu", action="store_true",
+        help="Instantiate ADC - DSP - DAC Path (no CPU)")
+    parser.add_argument("--with-adc-cordic-dsp-dac", action="store_true",
+        help="Instantiate ADC - CORDIC -DSP - DAC Path (no CPU)")
 
     args = parser.parse_args()
 
@@ -517,6 +847,9 @@ def main():
         with_icd               = args.with_icd,
         with_adc_dac           = args.with_adc_dac,
         with_input_mux         = args.with_input_mux,
+        with_adc_dsp_dac       = args.with_adc_dsp_dac,
+        with_adc_dsp_dac_nocpu = args.with_adc_dsp_dac_nocpu,
+        with_adc_cordic_dsp_dac = args.with_adc_cordic_dsp_dac,
         **parser.soc_argdict
     )
 
