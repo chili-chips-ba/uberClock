@@ -3,23 +3,23 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Wed Jun 25 11:39:03 2025
-# Process ID         : 204736
-# Current directory  : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1
+# Start of session at: Wed Jun 25 11:58:22 2025
+# Process ID         : 42936
+# Current directory  : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1
 # Command line       : vivado -log top.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source top.tcl
-# Log file           : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.vds
-# Journal file       : /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/vivado.jou
-# Running On         : nikola-IdeaPad-5-Pro-16IAH7
+# Log file           : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.vds
+# Journal file       : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/vivado.jou
+# Running On         : minela-HP-ProBook
 # Platform           : Ubuntu
 # Operating System   : Ubuntu 24.04.2 LTS
-# Processor Detail   : 12th Gen Intel(R) Core(TM) i7-12700H
-# CPU Frequency      : 908.406 MHz
-# CPU Physical cores : 14
-# CPU Logical cores  : 20
-# Host memory        : 16475 MB
+# Processor Detail   : Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz
+# CPU Frequency      : 2184.971 MHz
+# CPU Physical cores : 4
+# CPU Logical cores  : 8
+# Host memory        : 16600 MB
 # Swap memory        : 4294 MB
-# Total Virtual      : 20770 MB
-# Available Virtual  : 16076 MB
+# Total Virtual      : 20895 MB
+# Available Virtual  : 16898 MB
 #-----------------------------------------------------------
 source top.tcl -notrace
 Command: synth_design -top top -part xc7a200tfbg484-2 -flatten_hierarchy none -verilog_define YOSYS
@@ -29,27 +29,27 @@ INFO: [Common 17-349] Got license for feature 'Synthesis' and/or device 'xc7a200
 INFO: [Device 21-403] Loading part xc7a200tfbg484-2
 INFO: [Synth 8-7079] Multithreading enabled for synth_design using a maximum of 7 processes.
 INFO: [Synth 8-7078] Launching helper process for spawning children vivado processes
-INFO: [Synth 8-7075] Helper process launched with PID 204775
+INFO: [Synth 8-7075] Helper process launched with PID 43021
 ---------------------------------------------------------------------------------
-Starting RTL Elaboration : Time (s): cpu = 00:00:02 ; elapsed = 00:00:03 . Memory (MB): peak = 1942.832 ; gain = 427.801 ; free physical = 3717 ; free virtual = 14272
+Starting RTL Elaboration : Time (s): cpu = 00:00:06 ; elapsed = 00:00:07 . Memory (MB): peak = 1880.891 ; gain = 427.832 ; free physical = 5824 ; free virtual = 14954
 ---------------------------------------------------------------------------------
-INFO: [Synth 8-11241] undeclared symbol 'uart_rx_sync', assumed default net type 'wire' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:177]
-INFO: [Synth 8-11241] undeclared symbol 'bus_vld', assumed default net type 'wire' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:363]
-WARNING: [Synth 8-8895] 'bus_vld' is already implicitly declared on line 363 [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:574]
-INFO: [Synth 8-6157] synthesizing module 'top' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/top.sv:17]
-INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
-INFO: [Synth 8-6157] synthesizing module 'clk_rst_gen' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
-INFO: [Synth 8-6157] synthesizing module 'IBUFGDS' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
-INFO: [Synth 8-6155] done synthesizing module 'IBUFGDS' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
-INFO: [Synth 8-6157] synthesizing module 'fpga_pll_80M' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
-INFO: [Synth 8-6157] synthesizing module 'PLLE2_BASE' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
+INFO: [Synth 8-11241] undeclared symbol 'uart_rx_sync', assumed default net type 'wire' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:177]
+INFO: [Synth 8-11241] undeclared symbol 'bus_vld', assumed default net type 'wire' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:363]
+WARNING: [Synth 8-8895] 'bus_vld' is already implicitly declared on line 363 [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:574]
+INFO: [Synth 8-6157] synthesizing module 'top' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/top.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_if' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_if' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'clk_rst_gen' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'IBUFGDS' [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
+INFO: [Synth 8-6155] done synthesizing module 'IBUFGDS' (0#1) [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:76323]
+INFO: [Synth 8-6157] synthesizing module 'fpga_pll_80M' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
+INFO: [Synth 8-6157] synthesizing module 'PLLE2_BASE' [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
 	Parameter CLKFBOUT_MULT bound to: 13 - type: integer 
 	Parameter CLKFBOUT_PHASE bound to: 0.000000 - type: double 
 	Parameter CLKIN1_PERIOD bound to: 5.000000 - type: double 
@@ -72,15 +72,15 @@ INFO: [Synth 8-6157] synthesizing module 'PLLE2_BASE' [/home/nikola/ChiliChips/V
 	Parameter CLKOUT5_DUTY_CYCLE bound to: 0.500000 - type: double 
 	Parameter CLKOUT5_PHASE bound to: 0.000000 - type: double 
 	Parameter DIVCLK_DIVIDE bound to: 2 - type: integer 
-INFO: [Synth 8-6155] done synthesizing module 'PLLE2_BASE' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
-INFO: [Synth 8-6157] synthesizing module 'BUFG' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
-INFO: [Synth 8-6155] done synthesizing module 'BUFG' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
-INFO: [Synth 8-6155] done synthesizing module 'fpga_pll_80M' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
-INFO: [Synth 8-6155] done synthesizing module 'clk_rst_gen' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
-INFO: [Synth 8-6157] synthesizing module 'soc_cpu' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
+INFO: [Synth 8-6155] done synthesizing module 'PLLE2_BASE' (0#1) [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:117799]
+INFO: [Synth 8-6157] synthesizing module 'BUFG' [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
+INFO: [Synth 8-6155] done synthesizing module 'BUFG' (0#1) [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:2676]
+INFO: [Synth 8-6155] done synthesizing module 'fpga_pll_80M' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv:25]
+INFO: [Synth 8-6155] done synthesizing module 'clk_rst_gen' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'soc_cpu' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
 	Parameter ADDR_RESET bound to: 0 - type: integer 
 	Parameter NUM_WORDS_IMEM bound to: 8192 - type: integer 
-INFO: [Synth 8-6157] synthesizing module 'picorv32' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
+INFO: [Synth 8-6157] synthesizing module 'picorv32' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
 	Parameter PROGADDR_RESET bound to: 0 - type: integer 
 	Parameter STACKADDR bound to: 268468224 - type: integer 
 	Parameter COMPRESSED_ISA bound to: 1'b0 
@@ -107,111 +107,111 @@ INFO: [Synth 8-6157] synthesizing module 'picorv32' [/home/nikola/Documents/GitH
 	Parameter CATCH_MISALIGN bound to: 1'b1 
 	Parameter CATCH_ILLINSN bound to: 1'b1 
 	Parameter REGS_INIT_ZERO bound to: 1'b0 
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
-INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
-INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
-INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1053]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1184]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
-INFO: [Synth 8-226] default block is never used [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
-WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1903]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1944]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2043]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2054]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2073]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2107]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2130]
-INFO: [Synth 8-6155] done synthesizing module 'picorv32' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
-INFO: [Synth 8-6157] synthesizing module 'imem' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
+INFO: [Synth 8-226] default block is never used [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:411]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
+INFO: [Synth 8-226] default block is never used [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:421]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
+INFO: [Synth 8-226] default block is never used [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:647]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1053]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1184]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1199]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1262]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
+INFO: [Synth 8-226] default block is never used [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1497]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1512]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1639]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
+WARNING: [Synth 8-151] case item 1'b0 is unreachable [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1706]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1903]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1944]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2043]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2054]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2073]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2107]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:2130]
+INFO: [Synth 8-6155] done synthesizing module 'picorv32' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:67]
+INFO: [Synth 8-6157] synthesizing module 'imem' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
 	Parameter NUM_WORDS bound to: 8192 - type: integer 
-INFO: [Synth 8-6155] done synthesizing module 'imem' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
-INFO: [Synth 8-6155] done synthesizing module 'soc_cpu' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
-INFO: [Synth 8-6157] synthesizing module 'soc_fabric' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
-INFO: [Synth 8-6155] done synthesizing module 'soc_fabric' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
-INFO: [Synth 8-6157] synthesizing module 'soc_ram' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
+INFO: [Synth 8-6155] done synthesizing module 'imem' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/imem.sv:21]
+INFO: [Synth 8-6155] done synthesizing module 'soc_cpu' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv:60]
+INFO: [Synth 8-6157] synthesizing module 'soc_fabric' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
+INFO: [Synth 8-6155] done synthesizing module 'soc_fabric' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv:28]
+INFO: [Synth 8-6157] synthesizing module 'soc_ram' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
 	Parameter NUM_WORDS bound to: 8192 - type: integer 
-INFO: [Synth 8-6155] done synthesizing module 'soc_ram' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
-INFO: [Synth 8-6157] synthesizing module 'soc_csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
-INFO: [Synth 8-6157] synthesizing module 'csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
-INFO: [Synth 8-6155] done synthesizing module 'csr' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
-WARNING: [Synth 8-689] width (7) of port connection 's_cpuif_addr' does not match port width (6) of module 'csr' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:40]
-INFO: [Synth 8-6155] done synthesizing module 'soc_csr' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
-INFO: [Synth 8-6157] synthesizing module 'uart' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:282]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:310]
-INFO: [Synth 8-6157] synthesizing module 'sync_fifo_ram' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
+INFO: [Synth 8-6155] done synthesizing module 'soc_ram' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv:18]
+INFO: [Synth 8-6157] synthesizing module 'soc_csr' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'csr' [/home/minela/Projects/Work/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
+INFO: [Synth 8-6155] done synthesizing module 'csr' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv:4]
+WARNING: [Synth 8-689] width (7) of port connection 's_cpuif_addr' does not match port width (6) of module 'csr' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:40]
+INFO: [Synth 8-6155] done synthesizing module 'soc_csr' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv:17]
+INFO: [Synth 8-6157] synthesizing module 'uart' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:282]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:310]
+INFO: [Synth 8-6157] synthesizing module 'sync_fifo_ram' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
 	Parameter DWIDTH bound to: 8 - type: integer 
 	Parameter AWIDTH bound to: 4 - type: integer 
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:91]
-INFO: [Synth 8-6155] done synthesizing module 'sync_fifo_ram' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:443]
-INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:638]
-INFO: [Synth 8-6155] done synthesizing module 'uart' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
-INFO: [Synth 8-6157] synthesizing module 'adc' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/adc/adc.v:1]
-INFO: [Synth 8-6157] synthesizing module 'IDDR' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:91]
+INFO: [Synth 8-6155] done synthesizing module 'sync_fifo_ram' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv:40]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:443]
+INFO: [Synth 8-294] found qualifier unique on case statement: implementing as parallel_case [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:638]
+INFO: [Synth 8-6155] done synthesizing module 'uart' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:32]
+INFO: [Synth 8-6157] synthesizing module 'adc' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/adc/adc.v:1]
+INFO: [Synth 8-6157] synthesizing module 'IDDR' [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
 	Parameter DDR_CLK_EDGE bound to: SAME_EDGE_PIPELINED - type: string 
 	Parameter INIT_Q1 bound to: 1'b0 
 	Parameter INIT_Q2 bound to: 1'b0 
-INFO: [Synth 8-6155] done synthesizing module 'IDDR' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
-INFO: [Synth 8-6157] synthesizing module 'ODDR' [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
+INFO: [Synth 8-6155] done synthesizing module 'IDDR' (0#1) [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:77799]
+INFO: [Synth 8-6157] synthesizing module 'ODDR' [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
 	Parameter DDR_CLK_EDGE bound to: SAME_EDGE - type: string 
-INFO: [Synth 8-6155] done synthesizing module 'ODDR' (0#1) [/home/nikola/ChiliChips/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
-INFO: [Synth 8-6155] done synthesizing module 'adc' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/adc/adc.v:1]
-INFO: [Synth 8-6157] synthesizing module 'dac' [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/dac/dac.v:8]
-INFO: [Synth 8-6155] done synthesizing module 'dac' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/dac/dac.v:8]
-INFO: [Synth 8-6155] done synthesizing module 'top' (0#1) [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/top.sv:17]
-WARNING: [Synth 8-6014] Unused sequential element mem_la_firstword_reg_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
-WARNING: [Synth 8-6014] Unused sequential element last_mem_valid_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
-WARNING: [Synth 8-6014] Unused sequential element next_insn_opcode_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:441]
-WARNING: [Synth 8-6014] Unused sequential element mem_la_secondword_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:337]
-WARNING: [Synth 8-6014] Unused sequential element prefetched_high_word_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:353]
-WARNING: [Synth 8-6014] Unused sequential element clear_prefetched_high_word_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1231]
-WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rinst_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1392]
-WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rdata_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1393]
-WARNING: [Synth 8-6014] Unused sequential element set_mem_do_wdata_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1394]
-WARNING: [Synth 8-6014] Unused sequential element alu_out_0_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1396]
-WARNING: [Synth 8-6014] Unused sequential element alu_wait_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1399]
-WARNING: [Synth 8-6014] Unused sequential element alu_wait_2_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1400]
-WARNING: [Synth 8-6014] Unused sequential element next_irq_pending_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1439]
-WARNING: [Synth 8-6014] Unused sequential element decoder_trigger_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1451]
-WARNING: [Synth 8-6014] Unused sequential element decoder_pseudo_trigger_q_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1453]
-WARNING: [Synth 8-6014] Unused sequential element latched_trace_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1472]
-WARNING: [Synth 8-6014] Unused sequential element irq_active_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
-WARNING: [Synth 8-6014] Unused sequential element irq_delay_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
-WARNING: [Synth 8-6014] Unused sequential element irq_mask_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
-WARNING: [Synth 8-6014] Unused sequential element irq_state_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1487]
-WARNING: [Synth 8-6014] Unused sequential element irq_timer_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1488]
-WARNING: [Synth 8-6014] Unused sequential element current_pc_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1509]
-WARNING: [Synth 8-6014] Unused sequential element irq_pending_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
-WARNING: [Synth 8-6014] Unused sequential element count_instr_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1436]
-WARNING: [Synth 8-6014] Unused sequential element trace_valid_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1456]
-WARNING: [Synth 8-6014] Unused sequential element instr_ecall_ebreak_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1020]
-WARNING: [Synth 8-6014] Unused sequential element count_cycle_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1435]
-WARNING: [Synth 8-6014] Unused sequential element pcpi_timeout_reg was removed.  [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1482]
+INFO: [Synth 8-6155] done synthesizing module 'ODDR' (0#1) [/home/minela/tools/Xilinx/Vivado/2024.2/scripts/rt/data/unisim_comp.v:103072]
+INFO: [Synth 8-6155] done synthesizing module 'adc' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/adc/adc.v:1]
+INFO: [Synth 8-6157] synthesizing module 'dac' [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/dac/dac.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'dac' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/dac/dac.v:8]
+INFO: [Synth 8-6155] done synthesizing module 'top' (0#1) [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/top.sv:17]
+WARNING: [Synth 8-6014] Unused sequential element mem_la_firstword_reg_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
+WARNING: [Synth 8-6014] Unused sequential element last_mem_valid_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:341]
+WARNING: [Synth 8-6014] Unused sequential element next_insn_opcode_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:441]
+WARNING: [Synth 8-6014] Unused sequential element mem_la_secondword_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:337]
+WARNING: [Synth 8-6014] Unused sequential element prefetched_high_word_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:353]
+WARNING: [Synth 8-6014] Unused sequential element clear_prefetched_high_word_q_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1231]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rinst_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1392]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_rdata_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1393]
+WARNING: [Synth 8-6014] Unused sequential element set_mem_do_wdata_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1394]
+WARNING: [Synth 8-6014] Unused sequential element alu_out_0_q_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1396]
+WARNING: [Synth 8-6014] Unused sequential element alu_wait_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1399]
+WARNING: [Synth 8-6014] Unused sequential element alu_wait_2_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1400]
+WARNING: [Synth 8-6014] Unused sequential element next_irq_pending_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1439]
+WARNING: [Synth 8-6014] Unused sequential element decoder_trigger_q_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1451]
+WARNING: [Synth 8-6014] Unused sequential element decoder_pseudo_trigger_q_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1453]
+WARNING: [Synth 8-6014] Unused sequential element latched_trace_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1472]
+WARNING: [Synth 8-6014] Unused sequential element irq_active_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_delay_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_mask_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element irq_state_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1487]
+WARNING: [Synth 8-6014] Unused sequential element irq_timer_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1488]
+WARNING: [Synth 8-6014] Unused sequential element current_pc_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1509]
+WARNING: [Synth 8-6014] Unused sequential element irq_pending_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1378]
+WARNING: [Synth 8-6014] Unused sequential element count_instr_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1436]
+WARNING: [Synth 8-6014] Unused sequential element trace_valid_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1456]
+WARNING: [Synth 8-6014] Unused sequential element instr_ecall_ebreak_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1020]
+WARNING: [Synth 8-6014] Unused sequential element count_cycle_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1435]
+WARNING: [Synth 8-6014] Unused sequential element pcpi_timeout_reg was removed.  [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv:1482]
 INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
 INFO: [Synth 8-4490] FSM extraction disabled for register 'tx_state_reg' through user attribute
-WARNING: [Synth 8-3848] Net to_csr[gpio][key1][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
-WARNING: [Synth 8-3848] Net to_csr[gpio][key2][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
-WARNING: [Synth 8-3848] Net to_csr[adc][ch2][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
-WARNING: [Synth 8-3848] Net to_csr[adc][ch1][next] in module/entity uart does not have driver. [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[gpio][key1][next] in module/entity uart does not have driver. [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[gpio][key2][next] in module/entity uart does not have driver. [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[adc][ch2][next] in module/entity uart does not have driver. [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
+WARNING: [Synth 8-3848] Net to_csr[adc][ch1][next] in module/entity uart does not have driver. [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv:42]
 WARNING: [Synth 8-7129] Port rst_n in module dac is either unconnected or has no load
 WARNING: [Synth 8-7129] Port rst_n in module adc is either unconnected or has no load
 WARNING: [Synth 8-7129] Port to_csr[gpio][key1][next] in module uart is either unconnected or has no load
@@ -314,53 +314,53 @@ WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][11] in module ua
 WARNING: [Synth 8-7129] Port from_csr[hw_version][PATCH][value][10] in module uart is either unconnected or has no load
 INFO: [Common 17-14] Message 'Synth 8-7129' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
 ---------------------------------------------------------------------------------
-Finished RTL Elaboration : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2037.801 ; gain = 522.770 ; free physical = 3607 ; free virtual = 14163
+Finished RTL Elaboration : Time (s): cpu = 00:00:09 ; elapsed = 00:00:09 . Memory (MB): peak = 1976.859 ; gain = 523.801 ; free physical = 5754 ; free virtual = 14885
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2046.707 ; gain = 531.676 ; free physical = 3607 ; free virtual = 14163
+Finished Handling Custom Attributes : Time (s): cpu = 00:00:09 ; elapsed = 00:00:10 . Memory (MB): peak = 1988.734 ; gain = 535.676 ; free physical = 5754 ; free virtual = 14885
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:04 ; elapsed = 00:00:04 . Memory (MB): peak = 2046.707 ; gain = 531.676 ; free physical = 3607 ; free virtual = 14163
+Finished RTL Optimization Phase 1 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:10 . Memory (MB): peak = 1988.734 ; gain = 535.676 ; free physical = 5754 ; free virtual = 14885
 ---------------------------------------------------------------------------------
-Netlist sorting complete. Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.03 . Memory (MB): peak = 2052.645 ; gain = 0.000 ; free physical = 3615 ; free virtual = 14171
+Netlist sorting complete. Time (s): cpu = 00:00:00.06 ; elapsed = 00:00:00.06 . Memory (MB): peak = 1994.672 ; gain = 0.000 ; free physical = 5754 ; free virtual = 14885
 INFO: [Netlist 29-17] Analyzing 60 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 
 Processing XDC Constraints
 Initializing timing engine
-Parsing XDC File [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]
-Finished Parsing XDC File [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]
-INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/top_propImpl.xdc].
+Parsing XDC File [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc]
+Finished Parsing XDC File [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc]
+INFO: [Project 1-236] Implementation specific constraints were found while reading constraint file [/home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc]. These constraints will be ignored for synthesis but will be used in implementation. Impacted constraints are listed in the file [.Xil/top_propImpl.xdc].
 Resolution: To avoid this warning, move constraints listed in [.Xil/top_propImpl.xdc] to another XDC file and exclude this new file from synthesis with the used_in_synthesis property (File Properties dialog in GUI) and re-run elaboration/synthesis.
 INFO: [Timing 38-2] Deriving generated clocks
 Completed Processing XDC Constraints
 
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2202.457 ; gain = 0.000 ; free physical = 3612 ; free virtual = 14169
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2134.484 ; gain = 0.000 ; free physical = 5809 ; free virtual = 14957
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 2 instances were transformed.
   IBUFGDS => IBUFDS: 1 instance 
   PLLE2_BASE => PLLE2_ADV: 1 instance 
 
-Constraint Validation Runtime : Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2202.457 ; gain = 0.000 ; free physical = 3612 ; free virtual = 14169
+Constraint Validation Runtime : Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2134.484 ; gain = 0.000 ; free physical = 5809 ; free virtual = 14953
 ---------------------------------------------------------------------------------
-Finished Constraint Validation : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2202.457 ; gain = 687.426 ; free physical = 3642 ; free virtual = 14198
+Finished Constraint Validation : Time (s): cpu = 00:00:23 ; elapsed = 00:00:23 . Memory (MB): peak = 2134.484 ; gain = 681.426 ; free physical = 5795 ; free virtual = 14976
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Loading Part and Timing Information
 ---------------------------------------------------------------------------------
 Loading part: xc7a200tfbg484-2
 ---------------------------------------------------------------------------------
-Finished Loading Part and Timing Information : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3642 ; free virtual = 14198
+Finished Loading Part and Timing Information : Time (s): cpu = 00:00:23 ; elapsed = 00:00:23 . Memory (MB): peak = 2142.488 ; gain = 689.430 ; free physical = 5795 ; free virtual = 14973
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Applying 'set_property' XDC Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:08 ; elapsed = 00:00:08 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3642 ; free virtual = 14198
+Finished applying 'set_property' XDC Constraints : Time (s): cpu = 00:00:23 ; elapsed = 00:00:23 . Memory (MB): peak = 2142.488 ; gain = 689.430 ; free physical = 5795 ; free virtual = 14977
 ---------------------------------------------------------------------------------
 INFO: [Synth 8-802] inferred FSM for state register 'mem_state_reg' in module 'picorv32'
 INFO: [Synth 8-4490] FSM extraction disabled for register 'rx_state_reg' through user attribute
@@ -428,7 +428,7 @@ T_STATES_IMWR_WAIT_DATA3 |                           100101 |                   
 ---------------------------------------------------------------------------------------------------
 INFO: [Synth 8-3354] encoded FSM with state register 'state_reg' using encoding 'sequential' in module 'uart'
 ---------------------------------------------------------------------------------
-Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:09 ; elapsed = 00:00:09 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3647 ; free virtual = 14204
+Finished RTL Optimization Phase 2 : Time (s): cpu = 00:00:26 ; elapsed = 00:00:27 . Memory (MB): peak = 2142.488 ; gain = 689.430 ; free physical = 5800 ; free virtual = 14978
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start RTL Component Statistics 
@@ -526,7 +526,7 @@ WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sy
 WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
 WARNING: [Synth 8-6849] Infeasible attribute ram_style = "block" set for RAM "sync_fifo_ram:/mem_reg",trying to implement using LUTRAM
 ---------------------------------------------------------------------------------
-Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:14 ; elapsed = 00:00:14 . Memory (MB): peak = 2210.461 ; gain = 695.430 ; free physical = 3598 ; free virtual = 14163
+Finished Cross Boundary and Area Optimization : Time (s): cpu = 00:00:42 ; elapsed = 00:00:43 . Memory (MB): peak = 2142.488 ; gain = 689.430 ; free physical = 5884 ; free virtual = 15063
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -559,13 +559,13 @@ Finished ROM, RAM, DSP, Shift Register and Retiming Reporting
 Start Applying XDC Timing Constraints
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:18 ; elapsed = 00:00:18 . Memory (MB): peak = 2240.461 ; gain = 725.430 ; free physical = 3562 ; free virtual = 14127
+Finished Applying XDC Timing Constraints : Time (s): cpu = 00:00:52 ; elapsed = 00:00:53 . Memory (MB): peak = 2179.488 ; gain = 726.430 ; free physical = 5844 ; free virtual = 15007
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Timing Optimization
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Timing Optimization : Time (s): cpu = 00:00:19 ; elapsed = 00:00:20 . Memory (MB): peak = 2288.977 ; gain = 773.945 ; free physical = 3522 ; free virtual = 14084
+Finished Timing Optimization : Time (s): cpu = 00:00:57 ; elapsed = 00:00:58 . Memory (MB): peak = 2228.004 ; gain = 774.945 ; free physical = 5746 ; free virtual = 14944
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start ROM, RAM, DSP, Shift Register and Retiming Reporting
@@ -612,7 +612,7 @@ INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_2_1 (implemented
 INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_3_0 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 INFO: [Synth 8-7052] The timing for the instance u_dmem/mem_reg_3_1 (implemented as a Block RAM) might be sub-optimal as no optional output register could be merged into the ram block. Providing additional output register may help in improving timing.
 ---------------------------------------------------------------------------------
-Finished Technology Mapping : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2304.992 ; gain = 789.961 ; free physical = 3507 ; free virtual = 14069
+Finished Technology Mapping : Time (s): cpu = 00:00:58 ; elapsed = 00:00:59 . Memory (MB): peak = 2244.020 ; gain = 790.961 ; free physical = 5770 ; free virtual = 14941
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start IO Insertion
@@ -624,19 +624,19 @@ Start Final Netlist Cleanup
 Finished Final Netlist Cleanup
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished IO Insertion : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2440.805 ; gain = 925.773 ; free physical = 3397 ; free virtual = 13960
+Finished IO Insertion : Time (s): cpu = 00:01:04 ; elapsed = 00:01:04 . Memory (MB): peak = 2378.832 ; gain = 925.773 ; free physical = 5693 ; free virtual = 14847
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Renaming Generated Instances
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Renaming Generated Instances : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2440.805 ; gain = 925.773 ; free physical = 3397 ; free virtual = 13960
+Finished Renaming Generated Instances : Time (s): cpu = 00:01:04 ; elapsed = 00:01:04 . Memory (MB): peak = 2378.832 ; gain = 925.773 ; free physical = 5693 ; free virtual = 14847
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Handling Custom Attributes
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
-Finished Handling Custom Attributes : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.773 ; gain = 928.742 ; free physical = 3397 ; free virtual = 13960
+Finished Handling Custom Attributes : Time (s): cpu = 00:01:04 ; elapsed = 00:01:05 . Memory (MB): peak = 2381.801 ; gain = 928.742 ; free physical = 5694 ; free virtual = 14848
 ---------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------
 Start Writing Synthesis Report
@@ -676,18 +676,18 @@ Report Cell Usage:
 |30    |OBUFT      |     2|
 +------+-----------+------+
 ---------------------------------------------------------------------------------
-Finished Writing Synthesis Report : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.773 ; gain = 928.742 ; free physical = 3397 ; free virtual = 13960
+Finished Writing Synthesis Report : Time (s): cpu = 00:01:04 ; elapsed = 00:01:05 . Memory (MB): peak = 2381.801 ; gain = 928.742 ; free physical = 5694 ; free virtual = 14848
 ---------------------------------------------------------------------------------
 Synthesis finished with 0 errors, 0 critical warnings and 293 warnings.
-Synthesis Optimization Runtime : Time (s): cpu = 00:00:20 ; elapsed = 00:00:20 . Memory (MB): peak = 2443.773 ; gain = 772.992 ; free physical = 3389 ; free virtual = 13952
-Synthesis Optimization Complete : Time (s): cpu = 00:00:22 ; elapsed = 00:00:22 . Memory (MB): peak = 2443.781 ; gain = 928.742 ; free physical = 3389 ; free virtual = 13952
+Synthesis Optimization Runtime : Time (s): cpu = 00:00:59 ; elapsed = 00:01:00 . Memory (MB): peak = 2381.801 ; gain = 782.992 ; free physical = 5686 ; free virtual = 14840
+Synthesis Optimization Complete : Time (s): cpu = 00:01:04 ; elapsed = 00:01:05 . Memory (MB): peak = 2381.809 ; gain = 928.742 ; free physical = 5686 ; free virtual = 14840
 INFO: [Project 1-571] Translating synthesized netlist
-Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.02 . Memory (MB): peak = 2443.781 ; gain = 0.000 ; free physical = 3553 ; free virtual = 14116
+Netlist sorting complete. Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.03 . Memory (MB): peak = 2381.809 ; gain = 0.000 ; free physical = 5864 ; free virtual = 15018
 INFO: [Netlist 29-17] Analyzing 161 Unisim elements for replacement
 INFO: [Netlist 29-28] Unisim Transformation completed in 0 CPU seconds
 INFO: [Project 1-570] Preparing netlist for logic optimization
 INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
-Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2499.801 ; gain = 0.000 ; free physical = 3555 ; free virtual = 14118
+Netlist sorting complete. Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2437.828 ; gain = 0.000 ; free physical = 5885 ; free virtual = 15039
 INFO: [Project 1-111] Unisim Transformation Summary:
   A total of 22 instances were transformed.
   IBUFGDS => IBUFDS: 1 instance 
@@ -699,10 +699,10 @@ Synth Design complete | Checksum: 9860a5fb
 INFO: [Common 17-83] Releasing license: Synthesis
 122 Infos, 151 Warnings, 0 Critical Warnings and 0 Errors encountered.
 synth_design completed successfully
-synth_design: Time (s): cpu = 00:00:27 ; elapsed = 00:00:26 . Memory (MB): peak = 2499.801 ; gain = 1046.238 ; free physical = 3555 ; free virtual = 14118
-INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1751.335; main = 1652.890; forked = 268.086
-INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3247.383; main = 2499.805; forked = 942.387
-Write ShapeDB Complete: Time (s): cpu = 00:00:00 ; elapsed = 00:00:00 . Memory (MB): peak = 2523.812 ; gain = 0.000 ; free physical = 3554 ; free virtual = 14117
-INFO: [Common 17-1381] The checkpoint '/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.dcp' has been generated.
+synth_design: Time (s): cpu = 00:01:19 ; elapsed = 00:01:15 . Memory (MB): peak = 2437.828 ; gain = 1025.395 ; free physical = 5887 ; free virtual = 15041
+INFO: [Common 17-2834] synth_design peak Physical Memory [PSS] (MB): overall = 1688.854; main = 1584.658; forked = 268.117
+INFO: [Common 17-2834] synth_design peak Virtual Memory [VSS] (MB): overall = 3187.352; main = 2437.832; forked = 943.328
+Write ShapeDB Complete: Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 2461.840 ; gain = 0.000 ; free physical = 5887 ; free virtual = 15041
+INFO: [Common 17-1381] The checkpoint '/home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.dcp' has been generated.
 INFO: [Vivado 12-24828] Executing command : report_utilization -file top_utilization_synth.rpt -pb top_utilization_synth.pb
-INFO: [Common 17-206] Exiting Vivado at Wed Jun 25 11:39:32 2025...
+INFO: [Common 17-206] Exiting Vivado at Wed Jun 25 11:59:42 2025...

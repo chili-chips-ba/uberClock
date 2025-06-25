@@ -1,12 +1,12 @@
 
-/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/sw_build/main.elf:     file format elf32-littleriscv
+/home/minela/Projects/Work/uberClock/3.miniac/3.build/sw_build/main.elf:     file format elf32-littleriscv
 
 
 Disassembly of section .text:
 
 00000000 <_boot_crt>:
    0:	00000517          	auipc	a0,0x0
-   4:	26c50513          	addi	a0,a0,620 # 26c <_idata_start>
+   4:	28c50513          	addi	a0,a0,652 # 28c <_idata_start>
    8:	10000597          	auipc	a1,0x10000
    c:	ff858593          	addi	a1,a1,-8 # 10000000 <heap_memory>
   10:	10000617          	auipc	a2,0x10000
@@ -23,50 +23,50 @@ Disassembly of section .text:
 00000030 <end_copy_idata>:
   30:	10000517          	auipc	a0,0x10000
   34:	fd050513          	addi	a0,a0,-48 # 10000000 <heap_memory>
-  38:	00418593          	addi	a1,gp,4 # 10000804 <_bss_end>
-  3c:	00b55863          	bge	a0,a1,4c <end_clear_bss>
+  38:	10000597          	auipc	a1,0x10000
+  3c:	7cc58593          	addi	a1,a1,1996 # 10000804 <_bss_end>
+  40:	00b55863          	bge	a0,a1,50 <end_clear_bss>
 
-00000040 <loop_clear_bss>:
-  40:	00052023          	sw	zero,0(a0)
-  44:	00450513          	addi	a0,a0,4
-  48:	feb54ce3          	blt	a0,a1,40 <loop_clear_bss>
+00000044 <loop_clear_bss>:
+  44:	00052023          	sw	zero,0(a0)
+  48:	00450513          	addi	a0,a0,4
+  4c:	feb54ce3          	blt	a0,a1,44 <loop_clear_bss>
 
-0000004c <end_clear_bss>:
-  4c:	10008117          	auipc	sp,0x10008
-  50:	fb410113          	addi	sp,sp,-76 # 10008000 <_stack_start>
-  54:	10000197          	auipc	gp,0x10000
-  58:	7ac18193          	addi	gp,gp,1964 # 10000800 <heap_memory_used>
-  5c:	00a54533          	xor	a0,a0,a0
-  60:	00b5c5b3          	xor	a1,a1,a1
-  64:	00c64633          	xor	a2,a2,a2
-  68:	07c000ef          	jal	e4 <main>
+00000050 <end_clear_bss>:
+  50:	10008117          	auipc	sp,0x10008
+  54:	fb010113          	addi	sp,sp,-80 # 10008000 <_stack_start>
+  58:	10000197          	auipc	gp,0x10000
+  5c:	7a818193          	addi	gp,gp,1960 # 10000800 <heap_memory_used>
+  60:	00a54533          	xor	a0,a0,a0
+  64:	00b5c5b3          	xor	a1,a1,a1
+  68:	00c64633          	xor	a2,a2,a2
+  6c:	078000ef          	jal	e4 <main>
 
-0000006c <loop_forever>:
-  6c:	0000006f          	j	6c <loop_forever>
+00000070 <loop_forever>:
+  70:	0000006f          	j	70 <loop_forever>
 
-00000070 <malloc>:
-  70:	0001a703          	lw	a4,0(gp) # 10000800 <heap_memory_used>
-  74:	100007b7          	lui	a5,0x10000
-  78:	00078793          	mv	a5,a5
-  7c:	00f707b3          	add	a5,a4,a5
-  80:	00a70733          	add	a4,a4,a0
-  84:	00e1a023          	sw	a4,0(gp) # 10000800 <heap_memory_used>
-  88:	000016b7          	lui	a3,0x1
-  8c:	80068693          	addi	a3,a3,-2048 # 800 <_HEAP_SIZE+0x400>
-  90:	00e6d463          	bge	a3,a4,98 <malloc+0x28>
-  94:	00100073          	ebreak
-  98:	00078513          	mv	a0,a5
-  9c:	00008067          	ret
+00000074 <malloc>:
+  74:	0001a703          	lw	a4,0(gp) # 10000800 <heap_memory_used>
+  78:	100007b7          	lui	a5,0x10000
+  7c:	00078793          	mv	a5,a5
+  80:	00f707b3          	add	a5,a4,a5
+  84:	00a70733          	add	a4,a4,a0
+  88:	00e1a023          	sw	a4,0(gp) # 10000800 <heap_memory_used>
+  8c:	000016b7          	lui	a3,0x1
+  90:	80068693          	addi	a3,a3,-2048 # 800 <_HEAP_SIZE+0x400>
+  94:	00e6d463          	bge	a3,a4,9c <malloc+0x28>
+  98:	00100073          	ebreak
+  9c:	00078513          	mv	a0,a5
+  a0:	00008067          	ret
 
-000000a0 <memset>:
-  a0:	0ff5f593          	zext.b	a1,a1
+000000a4 <memset>:
   a4:	00000793          	li	a5,0
-  a8:	00c79463          	bne	a5,a2,b0 <memset+0x10>
+  a8:	00c79463          	bne	a5,a2,b0 <memset+0xc>
   ac:	00008067          	ret
   b0:	00f50733          	add	a4,a0,a5
   b4:	00b70023          	sb	a1,0(a4)
   b8:	00178793          	addi	a5,a5,1 # 10000001 <heap_memory+0x1>
-  bc:	fedff06f          	j	a8 <memset+0x8>
+  bc:	fedff06f          	j	a8 <memset+0x4>
 
 000000c0 <memcpy>:
   c0:	00000793          	li	a5,0
@@ -85,99 +85,107 @@ Disassembly of section .text:
   ec:	00112623          	sw	ra,12(sp)
   f0:	00812423          	sw	s0,8(sp)
   f4:	00912223          	sw	s1,4(sp)
-  f8:	f79ff0ef          	jal	70 <malloc>
+  f8:	f7dff0ef          	jal	74 <malloc>
   fc:	00050413          	mv	s0,a0
  100:	01000513          	li	a0,16
- 104:	f6dff0ef          	jal	70 <malloc>
+ 104:	f71ff0ef          	jal	74 <malloc>
  108:	00050493          	mv	s1,a0
  10c:	00400513          	li	a0,4
- 110:	f61ff0ef          	jal	70 <malloc>
+ 110:	f65ff0ef          	jal	74 <malloc>
  114:	200007b7          	lui	a5,0x20000
  118:	00f52023          	sw	a5,0(a0)
  11c:	00a4a023          	sw	a0,0(s1)
  120:	00400513          	li	a0,4
- 124:	f4dff0ef          	jal	70 <malloc>
+ 124:	f51ff0ef          	jal	74 <malloc>
  128:	200007b7          	lui	a5,0x20000
  12c:	00478793          	addi	a5,a5,4 # 20000004 <_stack_start+0xfff8004>
  130:	00f52023          	sw	a5,0(a0)
  134:	00a4a223          	sw	a0,4(s1)
  138:	00400513          	li	a0,4
- 13c:	f35ff0ef          	jal	70 <malloc>
+ 13c:	f39ff0ef          	jal	74 <malloc>
  140:	200007b7          	lui	a5,0x20000
  144:	00878793          	addi	a5,a5,8 # 20000008 <_stack_start+0xfff8008>
  148:	00f52023          	sw	a5,0(a0)
  14c:	00a4a423          	sw	a0,8(s1)
  150:	00400513          	li	a0,4
- 154:	f1dff0ef          	jal	70 <malloc>
+ 154:	f21ff0ef          	jal	74 <malloc>
  158:	200007b7          	lui	a5,0x20000
  15c:	00c78793          	addi	a5,a5,12 # 2000000c <_stack_start+0xfff800c>
  160:	00f52023          	sw	a5,0(a0)
  164:	00a4a623          	sw	a0,12(s1)
  168:	00942023          	sw	s1,0(s0)
  16c:	00400513          	li	a0,4
- 170:	f01ff0ef          	jal	70 <malloc>
+ 170:	f05ff0ef          	jal	74 <malloc>
  174:	200007b7          	lui	a5,0x20000
  178:	01078793          	addi	a5,a5,16 # 20000010 <_stack_start+0xfff8010>
  17c:	00f52023          	sw	a5,0(a0)
  180:	00a42223          	sw	a0,4(s0)
  184:	00400513          	li	a0,4
- 188:	ee9ff0ef          	jal	70 <malloc>
+ 188:	eedff0ef          	jal	74 <malloc>
  18c:	200007b7          	lui	a5,0x20000
  190:	01478793          	addi	a5,a5,20 # 20000014 <_stack_start+0xfff8014>
  194:	00f52023          	sw	a5,0(a0)
  198:	00a42423          	sw	a0,8(s0)
  19c:	00400513          	li	a0,4
- 1a0:	ed1ff0ef          	jal	70 <malloc>
+ 1a0:	ed5ff0ef          	jal	74 <malloc>
  1a4:	200007b7          	lui	a5,0x20000
  1a8:	01878793          	addi	a5,a5,24 # 20000018 <_stack_start+0xfff8018>
  1ac:	00f52023          	sw	a5,0(a0)
  1b0:	00a42623          	sw	a0,12(s0)
  1b4:	00400513          	li	a0,4
- 1b8:	eb9ff0ef          	jal	70 <malloc>
+ 1b8:	ebdff0ef          	jal	74 <malloc>
  1bc:	200007b7          	lui	a5,0x20000
  1c0:	01c78793          	addi	a5,a5,28 # 2000001c <_stack_start+0xfff801c>
  1c4:	00f52023          	sw	a5,0(a0)
  1c8:	00a42823          	sw	a0,16(s0)
  1cc:	00400513          	li	a0,4
- 1d0:	ea1ff0ef          	jal	70 <malloc>
- 1d4:	25c00793          	li	a5,604
- 1d8:	0007c703          	lbu	a4,0(a5)
- 1dc:	04071a63          	bnez	a4,230 <_STACK_SIZE+0x30>
- 1e0:	00001637          	lui	a2,0x1
- 1e4:	000046b7          	lui	a3,0x4
- 1e8:	fff60613          	addi	a2,a2,-1 # fff <_HEAP_SIZE+0xbff>
- 1ec:	fff68693          	addi	a3,a3,-1 # 3fff <_HEAP_SIZE+0x3bff>
- 1f0:	ffffc537          	lui	a0,0xffffc
- 1f4:	01042703          	lw	a4,16(s0)
- 1f8:	00c42783          	lw	a5,12(s0)
- 1fc:	00072583          	lw	a1,0(a4)
- 200:	0007a783          	lw	a5,0(a5)
- 204:	0005a703          	lw	a4,0(a1)
- 208:	0007a783          	lw	a5,0(a5)
- 20c:	00a77733          	and	a4,a4,a0
- 210:	00c7f7b3          	and	a5,a5,a2
- 214:	01079793          	slli	a5,a5,0x10
- 218:	0107d793          	srli	a5,a5,0x10
- 21c:	00279793          	slli	a5,a5,0x2
- 220:	00d7f7b3          	and	a5,a5,a3
- 224:	00f767b3          	or	a5,a4,a5
- 228:	00f5a023          	sw	a5,0(a1)
- 22c:	fc9ff06f          	j	1f4 <main+0x110>
- 230:	00178793          	addi	a5,a5,1
- 234:	00042683          	lw	a3,0(s0)
- 238:	0086a683          	lw	a3,8(a3)
- 23c:	0006a683          	lw	a3,0(a3)
- 240:	0006a683          	lw	a3,0(a3)
- 244:	fe06c8e3          	bltz	a3,234 <_STACK_SIZE+0x34>
- 248:	00042683          	lw	a3,0(s0)
- 24c:	0086a683          	lw	a3,8(a3)
- 250:	0006a683          	lw	a3,0(a3)
- 254:	00e68023          	sb	a4,0(a3)
- 258:	f81ff06f          	j	1d8 <main+0xf4>
- 25c:	6548                	.insn	2, 0x6548
- 25e:	6c6c                	.insn	2, 0x6c6c
- 260:	6f77206f          	j	73156 <_HEAP_SIZE+0x72d56>
- 264:	6c72                	.insn	2, 0x6c72
- 266:	2164                	.insn	2, 0x2164
- 268:	0a0d                	.insn	2, 0x0a0d
+ 1d0:	ea5ff0ef          	jal	74 <malloc>
+ 1d4:	200007b7          	lui	a5,0x20000
+ 1d8:	02078793          	addi	a5,a5,32 # 20000020 <_stack_start+0xfff8020>
+ 1dc:	00f52023          	sw	a5,0(a0)
+ 1e0:	00a42a23          	sw	a0,20(s0)
+ 1e4:	27c00793          	li	a5,636
+ 1e8:	28a00713          	li	a4,650
+ 1ec:	0007c603          	lbu	a2,0(a5)
+ 1f0:	00178793          	addi	a5,a5,1
+ 1f4:	00042683          	lw	a3,0(s0)
+ 1f8:	0086a683          	lw	a3,8(a3)
+ 1fc:	0006a683          	lw	a3,0(a3)
+ 200:	0006a683          	lw	a3,0(a3)
+ 204:	fe06c8e3          	bltz	a3,1f4 <main+0x110>
+ 208:	00042683          	lw	a3,0(s0)
+ 20c:	0086a683          	lw	a3,8(a3)
+ 210:	0006a683          	lw	a3,0(a3)
+ 214:	00c68023          	sb	a2,0(a3)
+ 218:	fce79ae3          	bne	a5,a4,1ec <main+0x108>
+ 21c:	000015b7          	lui	a1,0x1
+ 220:	00004637          	lui	a2,0x4
+ 224:	00000693          	li	a3,0
+ 228:	40000893          	li	a7,1024
+ 22c:	fff58593          	addi	a1,a1,-1 # fff <_HEAP_SIZE+0xbff>
+ 230:	fff60613          	addi	a2,a2,-1 # 3fff <_HEAP_SIZE+0x3bff>
+ 234:	ffffc837          	lui	a6,0xffffc
+ 238:	00c42783          	lw	a5,12(s0)
+ 23c:	00168693          	addi	a3,a3,1
+ 240:	01169463          	bne	a3,a7,248 <_STACK_SIZE+0x48>
+ 244:	00000693          	li	a3,0
+ 248:	01042703          	lw	a4,16(s0)
+ 24c:	00c42783          	lw	a5,12(s0)
+ 250:	00072503          	lw	a0,0(a4)
+ 254:	0007a783          	lw	a5,0(a5)
+ 258:	00052703          	lw	a4,0(a0)
+ 25c:	0007d783          	lhu	a5,0(a5)
+ 260:	01077733          	and	a4,a4,a6
+ 264:	00f5f7b3          	and	a5,a1,a5
+ 268:	00279793          	slli	a5,a5,0x2
+ 26c:	00c7f7b3          	and	a5,a5,a2
+ 270:	00f767b3          	or	a5,a4,a5
+ 274:	00f52023          	sw	a5,0(a0)
+ 278:	fc1ff06f          	j	238 <_STACK_SIZE+0x38>
+ 27c:	6548                	.insn	2, 0x6548
+ 27e:	6c6c                	.insn	2, 0x6c6c
+ 280:	6f77206f          	j	73176 <_HEAP_SIZE+0x72d76>
+ 284:	6c72                	.insn	2, 0x6c72
+ 286:	2164                	.insn	2, 0x2164
+ 288:	0a0d                	.insn	2, 0x0a0d
 	...

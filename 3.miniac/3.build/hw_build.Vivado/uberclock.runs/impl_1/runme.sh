@@ -8,9 +8,9 @@
 # 
 
 if [ -z "$PATH" ]; then
-  PATH=/home/nikola/ChiliChips/Vitis/2024.2/bin:/home/nikola/ChiliChips/Vivado/2024.2/ids_lite/ISE/bin/lin64:/home/nikola/ChiliChips/Vivado/2024.2/bin
+  PATH=/home/minela/tools/Xilinx/Vitis/2024.2/bin:/home/minela/tools/Xilinx/Vivado/2024.2/ids_lite/ISE/bin/lin64:/home/minela/tools/Xilinx/Vivado/2024.2/bin
 else
-  PATH=/home/nikola/ChiliChips/Vitis/2024.2/bin:/home/nikola/ChiliChips/Vivado/2024.2/ids_lite/ISE/bin/lin64:/home/nikola/ChiliChips/Vivado/2024.2/bin:$PATH
+  PATH=/home/minela/tools/Xilinx/Vitis/2024.2/bin:/home/minela/tools/Xilinx/Vivado/2024.2/ids_lite/ISE/bin/lin64:/home/minela/tools/Xilinx/Vivado/2024.2/bin:$PATH
 fi
 export PATH
 
@@ -21,7 +21,7 @@ else
 fi
 export LD_LIBRARY_PATH
 
-HD_PWD='/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1'
+HD_PWD='/home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1'
 cd "$HD_PWD"
 
 HD_LOG=runme.log

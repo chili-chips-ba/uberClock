@@ -1,7 +1,7 @@
 -------------------------------------
 | Tool Version : Vivado v.2024.2
-| Date         : Wed Jun 25 11:39:57 2025
-| Host         : nikola-IdeaPad-5-Pro-16IAH7
+| Date         : Wed Jun 25 12:00:31 2025
+| Host         : minela-HP-ProBook
 | Design       : design_1
 | Device       : xc7a200t-fbg484-2--
 -------------------------------------

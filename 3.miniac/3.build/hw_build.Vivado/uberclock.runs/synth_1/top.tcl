@@ -4,7 +4,7 @@
 
 set TIME_start [clock seconds] 
 namespace eval ::optrace {
-  variable script "/home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.tcl"
+  variable script "/home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/synth_1/top.tcl"
   variable category "vivado_synth"
 }
 
@@ -56,46 +56,44 @@ if {$::dispatch::connected} {
 }
 
 OPTRACE "synth_1" START { ROLLUP_AUTO }
-set_param chipscope.maxJobs 5
-set_param xicom.use_bs_reader 1
 OPTRACE "Creating in-memory project" START { }
 create_project -in_memory -part xc7a200tfbg484-2
 
 set_param project.singleFileAddWarning.threshold 0
 set_param project.compositeFile.enableAutoGeneration 0
 set_param synth.vivado.isSynthRun true
-set_property webtalk.parent_dir /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.cache/wt [current_project]
-set_property parent.project_path /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.xpr [current_project]
+set_property webtalk.parent_dir /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.cache/wt [current_project]
+set_property parent.project_path /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.xpr [current_project]
 set_property default_lib xil_defaultlib [current_project]
 set_property target_language Verilog [current_project]
-set_property ip_output_repo /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.cache/ip [current_project]
+set_property ip_output_repo /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.cache/ip [current_project]
 set_property ip_cache_permissions {read write} [current_project]
 OPTRACE "Creating in-memory project" END { }
 OPTRACE "Adding files" START { }
-read_verilog /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/sw_build/imem.INIT.vh
+read_verilog /home/minela/Projects/Work/uberClock/3.miniac/3.build/sw_build/imem.INIT.vh
 read_verilog -library xil_defaultlib -sv {
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/top.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr_pkg.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_mul.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_fast_mul.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_div.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.cpu/imem.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/uart.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/soc_pkg.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/top.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/3.build/csr_build/generated-files/csr_pkg.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/3.build/csr_build/generated-files/csr.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_if.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/soc_cpu.PICORV32.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_fabric.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32.CHILI.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_mul.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_fast_mul.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/cpu.PICORV32/picorv32_pcpi_div.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.cpu/imem.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_ram.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_csr.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/uart.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/sync_fifo_ram.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_pkg.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv
 }
 read_verilog -library xil_defaultlib {
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/dac/dac.v
-  /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/adc/adc.v
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/dac/dac.v
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/adc/adc.v
 }
 OPTRACE "Adding files" END { }
 # Mark all dcp files as not used in implementation to prevent them from being
@@ -106,8 +104,8 @@ OPTRACE "Adding files" END { }
 foreach dcp [get_files -quiet -all -filter file_type=="Design\ Checkpoint"] {
   set_property used_in_implementation false $dcp
 }
-read_xdc /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc
-set_property used_in_implementation false [get_files /home/nikola/Documents/GitHub/uberClock/3.miniac/1.hw/constraints/top.xdc]
+read_xdc /home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc
+set_property used_in_implementation false [get_files /home/minela/Projects/Work/uberClock/3.miniac/1.hw/constraints/top.xdc]
 
 set_param ips.enableIPCacheLiteLoad 1
 close [open __synthesis_is_running__ w]
