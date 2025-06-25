@@ -142,6 +142,44 @@ typedef union {
     uint32_t w;
 } csr__hw_id_t;
 
+// Reg - csr::adc
+#define CSR__ADC__CH2_bm 0xfff
+#define CSR__ADC__CH2_bp 0
+#define CSR__ADC__CH2_bw 12
+#define CSR__ADC__CH2_reset 0x0
+#define CSR__ADC__CH1_bm 0xfff0000
+#define CSR__ADC__CH1_bp 16
+#define CSR__ADC__CH1_bw 12
+#define CSR__ADC__CH1_reset 0x0
+typedef union {
+    struct __attribute__ ((__packed__)) {
+        uint32_t ch2 :12;
+        uint32_t :4;
+        uint32_t ch1 :12;
+        uint32_t :4;
+    } f;
+    uint32_t w;
+} csr__adc_t;
+
+// Reg - csr::dac
+#define CSR__DAC__CH2_bm 0x3fff
+#define CSR__DAC__CH2_bp 0
+#define CSR__DAC__CH2_bw 14
+#define CSR__DAC__CH2_reset 0x0
+#define CSR__DAC__CH1_bm 0x3fff0000
+#define CSR__DAC__CH1_bp 16
+#define CSR__DAC__CH1_bw 14
+#define CSR__DAC__CH1_reset 0x0
+typedef union {
+    struct __attribute__ ((__packed__)) {
+        uint32_t ch2 :14;
+        uint32_t :2;
+        uint32_t ch1 :14;
+        uint32_t :2;
+    } f;
+    uint32_t w;
+} csr__dac_t;
+
 // Reg - csr::hw_version
 #define CSR__HW_VERSION__PATCH_bm 0xffff
 #define CSR__HW_VERSION__PATCH_bp 0
@@ -169,6 +207,8 @@ typedef struct __attribute__ ((__packed__)) {
     csr__uart_t uart;
     csr__gpio_t gpio;
     csr__hw_id_t hw_id;
+    csr__adc_t adc;
+    csr__dac_t dac;
     csr__hw_version_t hw_version;
 } csr_t;
 
@@ -182,7 +222,7 @@ typedef struct __attribute__ ((__packed__)) {
 } uberclock_t;
 
 
-static_assert(sizeof(uberclock_t) == 0x2000001c, "Packing error");
+static_assert(sizeof(uberclock_t) == 0x20000024, "Packing error");
 
 #ifdef __cplusplus
 }

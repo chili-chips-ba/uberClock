@@ -14,7 +14,7 @@ int main(void)
    char rx_data[UART_RXBUF_SIZE];
 
    // Turn on LED2
-   csr->gpio->led2(1);
+   //csr->gpio->led2(1);
 
    
 
@@ -23,9 +23,9 @@ int main(void)
    
    while(1){
         // Set LED1 to the value of KEY1
-        csr->gpio->led1(csr->gpio->key1());
+        //csr->gpio->led1(csr->gpio->key1());
    
-        csr->dac->ch1(csr->adc->ch1() * 4);
+        //csr->dac->ch1(csr->adc->ch1() * 4);
         csr->dac->ch2(csr->adc->ch2() * 4);
    }
 

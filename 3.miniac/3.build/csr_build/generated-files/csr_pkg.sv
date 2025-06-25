@@ -4,7 +4,10 @@
 package csr_pkg;
 
     localparam CSR_DATA_WIDTH = 32;
-    localparam CSR_MIN_ADDR_WIDTH = 5;
+    localparam CSR_MIN_ADDR_WIDTH = 6;
+    localparam CSR_SIZE = 'h24;
+
+    
 
     typedef struct {
         logic [7:0] next;
@@ -51,8 +54,22 @@ package csr_pkg;
     } csr__gpio__in_t;
 
     typedef struct {
+        logic [11:0] next;
+    } csr__adc__ch2__in_t;
+
+    typedef struct {
+        logic [11:0] next;
+    } csr__adc__ch1__in_t;
+
+    typedef struct {
+        csr__adc__ch2__in_t ch2;
+        csr__adc__ch1__in_t ch1;
+    } csr__adc__in_t;
+
+    typedef struct {
         csr__uart__in_t uart;
         csr__gpio__in_t gpio;
+        csr__adc__in_t adc;
     } csr__in_t;
 
     typedef struct {
@@ -122,6 +139,19 @@ package csr_pkg;
     } csr__hw_id__out_t;
 
     typedef struct {
+        logic [13:0] value;
+    } csr__dac__ch2__out_t;
+
+    typedef struct {
+        logic [13:0] value;
+    } csr__dac__ch1__out_t;
+
+    typedef struct {
+        csr__dac__ch2__out_t ch2;
+        csr__dac__ch1__out_t ch1;
+    } csr__dac__out_t;
+
+    typedef struct {
         logic [15:0] value;
     } csr__hw_version__PATCH__out_t;
 
@@ -143,6 +173,7 @@ package csr_pkg;
         csr__uart__out_t uart;
         csr__gpio__out_t gpio;
         csr__hw_id__out_t hw_id;
+        csr__dac__out_t dac;
         csr__hw_version__out_t hw_version;
     } csr__out_t;
 endpackage
