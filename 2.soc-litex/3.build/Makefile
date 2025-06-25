@@ -36,7 +36,7 @@ EDITOR       := code
 # ------------------------------------------------------------------
 FREQ         ?= 50e6
 OPTIONS      ?=
-PORT         ?= /dev/ttyUSB1
+PORT         ?= /dev/ttyUSB0
 DEMO_FLAGS   ?= --with-cxx
 
 # simulation settings

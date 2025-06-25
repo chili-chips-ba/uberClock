@@ -24,6 +24,10 @@
 #  define WITH_DSP
 #endif
 
+#ifdef CSR_MAIN_UPSAMPLER_GAIN_ADDR
+#define WITH_UPSAMPLER_GAIN
+#endif
+
 static volatile int dsp_loop_running = 0;
 
 static char *readstr(void) {
@@ -93,6 +97,9 @@ static void help(void) {
 	puts("  dsp                   - Single step: read downsampled, invert, send to upsampler");
 	puts("  dsploop               - Start continuous DSP loop (20 kHz)");
 	puts("  dspstop               - Stop DSP loop");
+	#endif
+	#ifdef WITH_UPSAMPLER_GAIN
+	puts("  gain <val>            - Set upsampler gain (-128 to 127)");
 	#endif
 	#ifdef CSR_MAIN_DOWNSAMPLED_ADDR
 	puts("  profile_adc           - Measure ADC CSR read speed");
@@ -173,6 +180,18 @@ static void dsp_stop_cmd(void) {
 		return;
 	}
 	dsp_loop_running = 0;
+}
+#endif
+
+#ifdef WITH_UPSAMPLER_GAIN
+static void gain_cmd(char *args) {
+	int gain = atoi(args);
+	if (gain < -128 || gain > 127) {
+		printf("Gain must be in -128 to 127 range.\n");
+		return;
+	}
+	main_upsampler_gain_write((uint8_t)gain);
+	printf("Upsampler gain set to %d\n", gain);
 }
 #endif
 
@@ -259,6 +278,12 @@ static void console_service(void) {
 
 	#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
 	else if (!strcmp(token, "profile_dac")) profile_dac();
+	#endif
+	#ifdef WITH_UPSAMPLER_GAIN
+	else if (!strcmp(token, "gain")) {
+		char *arg = get_token(&line);
+		gain_cmd(arg);
+	}
 	#endif
 
 	else {
