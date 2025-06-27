@@ -9,6 +9,9 @@
 
 # ignore the LiteX build output
 2.soc-litex/3.build/build/
+2.soc-litex/2.sw/uberClock
+2.soc-litex/3.build/analyzer.csv
+2.soc-litex/3.build/dump.vcd
 #*impl*
 *temp*
 
