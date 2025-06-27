@@ -68,6 +68,7 @@ $(SW_MAIN)/main.cpp
    -fno-exceptions \
    -fno-asynchronous-unwind-tables \
    -fno-unwind-tables \
+   -flto \
    -o $(SW_BLD)/main.elf \
    $(SW_SRC)/boot_crt.s \
    $(SW_APP)/uart.c \
