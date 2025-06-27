@@ -19,8 +19,9 @@ int main(void)
           
           //We store the read data data in our circular buffer
           samples[i] = csr->adc->full();
-          i++;
           if (i > 1023) i = 0;
+          else i++;
+        
         // Set LED1 to the value of KEY1
         //csr->gpio->led1(csr->gpio->key1());
         //csr->dac->ch1(csr->adc->ch1() * 4);

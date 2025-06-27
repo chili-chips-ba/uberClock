@@ -49,13 +49,13 @@ def read_adc_value():
     if len(data) != 5:
         return None
     raw = (
-        (data[0] << 24) |
-        (data[1] << 16) |
-        (data[2] << 8)  |
-        (data[3])
+        (data[3] << 24) |
+        (data[2] << 16) |
+        (data[1] << 8)  |
+        (data[0])
     )
     signed_value = ctypes.c_int32(raw).value
-    scaled_value = signed_value / float(2**31)
+    scaled_value = signed_value #/ float(2**31)
     return scaled_value
 # --- Funkcija za mjerenje frekvencije uzorkovanja ---
 def measure_sampling_frequency(num_samples=20):
@@ -161,7 +161,7 @@ try:
         ax1.clear()
         ax1.plot(t_dense, y_dense, label="Rekonstruisani signal", color='blue')
         ax1.plot(t_original, y_original, 'o', label="Uzorci", color='red', markersize=3)
-        ax1.set_ylim(-1.0, 1.0)
+        #ax1.set_ylim(-1.0, 1.0)
         ax1.set_xlim(t_original[0], t_original[-1])
         # Dodaj informacije o frekvenciji u naslov
         title = f"Rekonstrukcija signala (Fs = {actual_buffer_fs:.1f} Hz"
@@ -193,8 +193,8 @@ try:
         ax2.set_ylabel("Relativna magnituda [dB]")
         ax2.grid(True, alpha=0.3)
         # Pronađi i označi sve značajne peak-ove
-        # Tražimo peak-ove iznad -20dB threshold-a
-        threshold_db = -10
+        # Tražimo peak-ove iznad -30dB threshold-a
+        threshold_db = -30
         peaks = []
         # Ignoriši DC (prva 3 bin-a) i pronađi peak-ove
         start_idx = 3 if len(limited_fft_db) > 3 else 1
