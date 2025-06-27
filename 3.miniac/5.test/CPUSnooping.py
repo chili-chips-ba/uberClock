@@ -6,10 +6,12 @@ import numpy as np
 import ctypes
 import keyboard
 from scipy.interpolate import interp1d
+
 # --- Komande ---
 C_SOP  = 0x12
 C_EOP  = 0x14
 C_BUSR = 0x0F
+
 # --- UART Konfiguracija ---
 ComPort = serial.Serial('/dev/ttyUSB0')
 ComPort.baudrate = 115200
@@ -17,215 +19,321 @@ ComPort.bytesize = serial.EIGHTBITS
 ComPort.parity   = serial.PARITY_NONE
 ComPort.stopbits = serial.STOPBITS_ONE
 ComPort.timeout  = 1
+
 # --- Parametri ---
-buffer_size = 100
-fs = 1000  # Hz - početna vrijednost, biće ažurirana na osnovu mjerenja
-fs_measurements = []  # Lista za čuvanje mjerenja frekvencije
-fs_window_size = 10   # Broj mjerenja za prosjek
-# --- Priprema grafa sa dva subplot-a ---
+SAMPLES_ARRAY_ADDR = 0x10000000  # Adresa samples[] array-a
+BUFFER_SIZE = 1024               # samples[1024]
+ADC_BITS = 12                    # 12-bit ADC (11:0 biti)
+ADC_MASK = 0xFFF                 # Maska za 11:0 bite (0xFFF = 4095)
+
+# Parametri za frekvenciju uzorkovanja
+ESTIMATED_FS = 555600  # Početna procjena (prilagoditi prema vašem sistemu)
+BUFFER_TIME = BUFFER_SIZE / ESTIMATED_FS  # Vrijeme da se popuni buffer
+
+# --- Priprema grafa ---
 plt.ion()
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8))
-# Gornji graf - vremenski domen
-ax1.set_ylim(-1.0, 1.0)
-ax1.set_title(f"Rekonstrukcija signala iz {buffer_size} uzoraka (Fs = {fs} Hz)")
-ax1.set_xlabel("Vrijeme [s]")
-ax1.set_ylabel("Amplituda")
-ax1.grid(True)
-# Donji graf - frekvencijski domen (FFT)
-ax2.set_title("FFT - Frekvencijski spektar")
-ax2.set_xlabel("Frekvencija [Hz]")
-ax2.set_ylabel("Magnituda [dB]")
-ax2.grid(True)
-plt.tight_layout()
-# --- Funkcija za čitanje 32-bitne vrijednosti sa adrese ---
-def read_adc_value():
-    # Ulazak u read mode
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
+
+def read_memory_address(address):
+    """Čita 32-bitnu vrijednost sa memorijske adrese"""
     ComPort.write(struct.pack('B', C_BUSR))
-    ComPort.write(struct.pack('B', 0x00))  # ADDR0
-    ComPort.write(struct.pack('B', 0x00))  # ADDR1
-    ComPort.write(struct.pack('B', 0x00))  # ADDR2
-    ComPort.write(struct.pack('B', 0x10))  # ADDR3
+    ComPort.write(struct.pack('B', (address >> 0) & 0xFF))
+    ComPort.write(struct.pack('B', (address >> 8) & 0xFF))
+    ComPort.write(struct.pack('B', (address >> 16) & 0xFF))
+    ComPort.write(struct.pack('B', (address >> 24) & 0xFF))
+    
     data = ComPort.read(5)
     if len(data) != 5:
         return None
-    raw = (
-        (data[0] << 24) |
-        (data[1] << 16) |
-        (data[2] << 8)  |
-        (data[3])
-    )
-    signed_value = ctypes.c_int32(raw).value
-    scaled_value = signed_value / float(2**31)
-    return scaled_value
-# --- Funkcija za mjerenje frekvencije uzorkovanja ---
-def measure_sampling_frequency(num_samples=20):
+    
+    # Rekonstruiši 32-bit vrijednost
+    raw = (data[3] << 24) | (data[2] << 16) | (data[1] << 8) | data[0]
+    return raw
+
+def read_full_buffer():
     """
-    Mjeri vremenski interval između čitanja i računa frekvenciju uzorkovanja
+    Čita cijeli samples[] buffer (1024 uzorka) i izvlači ADC kanal 2 (11:0 biti)
     """
-    print(f"[INFO] Mjerim frekvenciju uzorkovanja sa {num_samples} uzoraka...")
-    timestamps = []
-    for i in range(num_samples):
-        start_time = time.time()
-        val = read_adc_value()
-        if val is not None:
-            timestamps.append(start_time)
-        # Kratka pauza da izbegnemo prebrza čitanja
-        time.sleep(0.001)
-    if len(timestamps) < 2:
-        print("[WARNING] Nedovoljno timestamp-ova za mjerenje!")
-        return None
-    # Računaj razlike između uzastopnih timestamp-ova
-    intervals = []
-    for i in range(1, len(timestamps)):
-        interval = timestamps[i] - timestamps[i-1]
-        intervals.append(interval)
-    # Ukloni outlier-e (ekstremno kratke ili duge intervale)
-    intervals = np.array(intervals)
-    mean_interval = np.mean(intervals)
-    std_interval = np.std(intervals)
-    # Zadrži samo intervale unutar 2 standardne devijacije
-    valid_intervals = intervals[np.abs(intervals - mean_interval) <= 2 * std_interval]
-    if len(valid_intervals) == 0:
-        print("[WARNING] Nema validnih intervala nakon filtriranja!")
-        return None
-    avg_interval = np.mean(valid_intervals)
-    measured_fs = 1.0 / avg_interval
-    print(f"[INFO] Prosječni interval između čitanja: {avg_interval*1000:.2f} ms")
-    print(f"[INFO] Izmjerena frekvencija uzorkovanja: {measured_fs:.1f} Hz")
-    return measured_fs
-# --- Funkcija za ažuriranje frekvencije uzorkovanja ---
-def update_sampling_frequency():
+    adc_samples = []
+    
+    print(f"[INFO] Čitanje {BUFFER_SIZE} uzoraka sa adrese 0x{SAMPLES_ARRAY_ADDR:08X}...")
+    start_time = time.time()
+    
+    for i in range(BUFFER_SIZE):
+        address = SAMPLES_ARRAY_ADDR + (i * 4)  # 4 bajta po uint32_t
+        
+        raw_value = read_memory_address(address)
+        if raw_value is not None:
+            # Izvuci 11:0 bite (ADC kanal 2)
+            adc_value = raw_value & ADC_MASK
+            
+            # Konvertuj u signed vrijednost (-2048 do +2047 za 12-bit)
+            #if adc_value > 2047:
+            #   adc_signed = adc_value - 4096
+            #else:
+            #    adc_signed = adc_value
+            
+            # Skaliraj na -1.0 do +1.0
+            #adc_scaled = adc_signed / 2048.0
+            adc_scaled = adc_value
+            adc_samples.append(adc_scaled)
+        else:
+            print(f"[ERROR] Neuspješno čitanje adrese 0x{address:08X}")
+            break
+        
+        # Progress indicator
+        if (i + 1) % 128 == 0:
+            progress = (i + 1) / BUFFER_SIZE * 100
+            print(f"[INFO] Progress: {progress:.1f}%")
+    
+    read_time = time.time() - start_time
+    print(f"[INFO] Čitanje završeno: {len(adc_samples)} uzoraka u {read_time:.2f}s")
+    
+    return adc_samples, read_time
+
+def estimate_sampling_frequency(samples, buffer_changes):
     """
-    Ažurira globalnu frekvenciju uzorkovanja na osnovu mjerenja
+    Procjenjuje frekvenciju uzorkovanja na osnovu promjena u buffer-u
     """
-    global fs, fs_measurements
-    measured_fs = measure_sampling_frequency()
-    if measured_fs is not None and measured_fs > 0:
-        fs_measurements.append(measured_fs)
-        # Zadrži samo poslednje mjerenje u prozoru
-        if len(fs_measurements) > fs_window_size:
-            fs_measurements = fs_measurements[-fs_window_size:]
-        # Koristi prosjek poslednjih mjerenja
-        fs = np.mean(fs_measurements)
-        print(f"[INFO] Ažurirana Fs na: {fs:.1f} Hz (prosjek od {len(fs_measurements)} mjerenja)")
+    if len(buffer_changes) < 2:
+        return ESTIMATED_FS
+    
+    # Koristi vremenski interval između promjena
+    time_diffs = np.diff(buffer_changes)
+    avg_time = np.mean(time_diffs)
+    
+    if avg_time > 0:
+        estimated_fs = BUFFER_SIZE / avg_time
+        if 1000 < estimated_fs < 600000:  # Razumne granice
+            return estimated_fs
+    
+    return ESTIMATED_FS
+
+def quadratic_interpolation(x_points, y_points, num_interpolated=2048):
+    """
+    Kvadratna interpolacija između tačaka
+    """
+    if len(x_points) < 3:
+        return x_points, y_points
+    
+    try:
+        # Kreiraj interpolacijski objekat (kvadratna interpolacija)
+        interp_func = interp1d(x_points, y_points, kind='quadratic', 
+                              bounds_error=False, fill_value='extrapolate')
+        
+        # Kreiraj nove x vrijednosti za interpolaciju
+        x_new = np.linspace(x_points[0], x_points[-1], num_interpolated)
+        y_new = interp_func(x_new)
+        
+        return x_new, y_new
+    except Exception as e:
+        print(f"[WARNING] Greška u interpolaciji: {e}")
+        return x_points, y_points
+
+def analyze_adc_signal(samples, fs):
+    """
+    FFT analiza ADC signala
+    """
+    if len(samples) < 64:
+        return None, None, None
+    
+    # Ukloni DC komponentu
+    samples_ac = np.array(samples) - np.mean(samples)
+    
+    # Primijeni Hanning prozor
+    windowed = samples_ac * np.hanning(len(samples_ac))
+    
+    # FFT
+    fft_data = np.fft.fft(windowed)
+    fft_freqs = np.fft.fftfreq(len(samples), 1/fs)
+    
+    # Samo pozitivne frekvencije
+    pos_freqs = fft_freqs[:len(fft_freqs)//2]
+    fft_mag = np.abs(fft_data[:len(fft_data)//2])
+    
+    if len(fft_mag) < 10:
+        return None, None, None
+    
+    # Pronađi peak (ignoriši prvih 1% bin-ova za DC)
+    start_idx = max(1, len(fft_mag) // 100)
+    peak_idx = np.argmax(fft_mag[start_idx:]) + start_idx
+    peak_freq = pos_freqs[peak_idx]
+    
+    # Konvertuj u dB
+    fft_mag_norm = fft_mag / (np.max(fft_mag) + 1e-10)
+    fft_db = 20 * np.log10(fft_mag_norm + 1e-10)
+    
+    return peak_freq, pos_freqs, fft_db
+
+def detect_buffer_activity(current_samples, previous_samples):
+    """
+    Detektuje da li se buffer mijenja (nova aktivnost)
+    """
+    if previous_samples is None or len(previous_samples) != len(current_samples):
         return True
-    return False
-# --- Inicijalizacija komunikacije ---
-print("[INFO] Pokrećem komunikaciju...")
+    
+    # Provjeri razliku
+    diff = np.array(current_samples) - np.array(previous_samples)
+    max_change = np.max(np.abs(diff))
+    
+    return max_change > 0.001  # Prag promjene
+
+# --- Inicijalizacija ---
+print("=" * 60)
+print("RISC-V ADC Buffer Reader - Puni Buffer Mod sa Interpolacijom")
+print("=" * 60)
+
 ComPort.write(struct.pack('B', C_SOP))
 time.sleep(0.1)
-# Početno mjerenje frekvencije uzorkovanja
-print("[INFO] Početno mjerenje frekvencije uzorkovanja...")
-if not update_sampling_frequency():
-    print("[WARNING] Početno mjerenje neuspješno, koristim default Fs = 1000 Hz")
-print(f"[INFO] Prikupljam {buffer_size} uzoraka po ciklusu, Fs = {fs:.1f} Hz...")
-# Brojač za periodično ažuriranje Fs
-fs_update_counter = 0
-fs_update_interval = 5  # Ažuriraj Fs svakih 5 ciklusa
+
+print(f"[INFO] Samples array adresa: 0x{SAMPLES_ARRAY_ADDR:08X}")
+print(f"[INFO] Buffer veličina: {BUFFER_SIZE} uzoraka")
+print(f"[INFO] ADC bits: {ADC_BITS} (maska: 0x{ADC_MASK:03X})")
+print(f"[INFO] Procijenjena Fs: {ESTIMATED_FS} Hz")
+print(f"[INFO] Buffer refresh time: {BUFFER_TIME:.3f}s")
+
+# Test čitanja
+print("\n[INFO] Test čitanja...")
+test_value = read_memory_address(SAMPLES_ARRAY_ADDR)
+if test_value is None:
+    print("[ERROR] Neuspješno test čitanje! Provjerite konekciju i adresu.")
+    exit(1)
+
+test_adc = test_value & ADC_MASK
+print(f"[INFO] Test OK - Raw: 0x{test_value:08X}, ADC: {test_adc}")
+
+# Glavna petlja
+previous_samples = None
+buffer_timestamps = []
+estimated_fs = ESTIMATED_FS
+cycle_count = 0
+
 try:
     while True:
+        print(f"\n{'='*20} CIKLUS {cycle_count + 1} {'='*20}")
+        
+        # Provjeri tipku 'q'
         if keyboard.is_pressed('q'):
-            print("[INFO] 'q' pritisnuto. Zatvaram...")
+            print("[INFO] 'q' pritisnuto - izlazim...")
             break
-        # Periodično ažuriranje frekvencije uzorkovanja
-        if fs_update_counter % fs_update_interval == 0:
-            print(f"[INFO] Periodično ažuriranje Fs (ciklus {fs_update_counter})...")
-            update_sampling_frequency()
-        fs_update_counter += 1
-        buffer = []
-        buffer_start_time = time.time()
-        while len(buffer) < buffer_size:
-            val = read_adc_value()
-            if val is not None:
-                buffer.append(val)
-        buffer_duration = time.time() - buffer_start_time
-        actual_buffer_fs = len(buffer) / buffer_duration
-        # Rekonstrukcija signala
-        t_original = np.arange(buffer_size) / actual_buffer_fs
-        y_original = np.array(buffer)
-        f_interp = interp1d(t_original, y_original, kind='quadratic')
-        t_dense = np.linspace(t_original[0], t_original[-1], 1000)
-        y_dense = f_interp(t_dense)
-        # FFT analiza sa prozorom za bolju rezoluciju
-        # Dodajemo Hanning prozor da smanjimo spektralne curenja
-        windowed_signal = y_original * np.hanning(len(y_original))
-        fft_data = np.fft.fft(windowed_signal)
-        fft_freqs = np.fft.fftfreq(len(y_original), 1/actual_buffer_fs)
-        # Uzimamo samo pozitivne frekvencije
-        positive_freqs = fft_freqs[:len(fft_freqs)//2]
-        fft_magnitude = np.abs(fft_data[:len(fft_data)//2])
-        # Normalizujemo i konvertujemo u dB
-        fft_magnitude_norm = fft_magnitude / np.max(fft_magnitude + 1e-10)
-        fft_db = 20 * np.log10(fft_magnitude_norm + 1e-10)
-        # Crtanje vremenskog domena (gornji graf)
-        ax1.clear()
-        ax1.plot(t_dense, y_dense, label="Rekonstruisani signal", color='blue')
-        ax1.plot(t_original, y_original, 'o', label="Uzorci", color='red', markersize=3)
-        ax1.set_ylim(-1.0, 1.0)
-        ax1.set_xlim(t_original[0], t_original[-1])
-        # Dodaj informacije o frekvenciji u naslov
-        title = f"Rekonstrukcija signala (Fs = {actual_buffer_fs:.1f} Hz"
-        if len(fs_measurements) > 1:
-            title += f", std = ±{np.std(fs_measurements):.1f} Hz"
-        title += f")\nBuffer Fs: {actual_buffer_fs:.1f} Hz"
-        ax1.set_title(title)
-        ax1.set_xlabel("Vrijeme [s]")
-        ax1.set_ylabel("Amplituda")
-        ax1.grid(True)
-        ax1.legend()
-        # Crtanje FFT spektra (donji graf) - fokus na 0-400Hz
-        ax2.clear()
-        # Ograničimo prikaz na 0-400Hz gdje očekujete signal
-        freq_limit = 400
-        freq_mask = positive_freqs <= freq_limit
-        limited_freqs = positive_freqs[freq_mask]
-        limited_fft_db = fft_db[freq_mask]
-        # Provjeri da li imamo dovoljno podataka za prikaz do 400Hz
-        max_available_freq = np.max(positive_freqs)
-        actual_freq_limit = min(freq_limit, max_available_freq)
-        print(f"[DEBUG] Max dostupna frekvencija: {max_available_freq:.1f} Hz, Fs/2: {fs/2:.1f} Hz")
-        print(f"[DEBUG] Broj FFT bin-ova: {len(positive_freqs)}, Frekvencijska rezolucija: {fs/len(y_original):.2f} Hz")
-        ax2.plot(limited_freqs, limited_fft_db, color='green', linewidth=1.5)
-        ax2.set_xlim(0, actual_freq_limit)
-        ax2.set_ylim(-60, 5)  # Fiksiran opseg za stabilniji prikaz
-        ax2.set_title(f"FFT Spektar (0-{actual_freq_limit:.0f}Hz) - Fs={actual_buffer_fs:.1f}Hz")
-        ax2.set_xlabel("Frekvencija [Hz]")
-        ax2.set_ylabel("Relativna magnituda [dB]")
-        ax2.grid(True, alpha=0.3)
-        # Pronađi i označi sve značajne peak-ove
-        # Tražimo peak-ove iznad -20dB threshold-a
-        threshold_db = -10
-        peaks = []
-        # Ignoriši DC (prva 3 bin-a) i pronađi peak-ove
-        start_idx = 3 if len(limited_fft_db) > 3 else 1
-        for i in range(start_idx, len(limited_fft_db)-1):
-            if (limited_fft_db[i] > threshold_db and
-                limited_fft_db[i] > limited_fft_db[i-1] and
-                limited_fft_db[i] > limited_fft_db[i+1]):
-                peaks.append((limited_freqs[i], limited_fft_db[i]))
-        # Sortiraj peak-ove po amplitudi (najveći prvi)
-        peaks.sort(key=lambda x: x[1], reverse=True)
-        # Prikaži top 3 peak-a
-        colors = ['red', 'orange', 'purple']
-        for idx, (freq, mag) in enumerate(peaks[:3]):
-            if freq <= actual_freq_limit:  # Prikaži samo peak-ove unutar granica
-                ax2.axvline(x=freq, color=colors[idx], linestyle='--', alpha=0.8, linewidth=2)
-                ax2.plot(freq, mag, 'o', color=colors[idx], markersize=8)
-                ax2.text(freq, mag + 3, f'{freq:.1f}Hz\n{mag:.1f}dB',
-                        ha='center', va='bottom', fontweight='bold',
-                        bbox=dict(boxstyle='round,pad=0.3', facecolor=colors[idx], alpha=0.3))
-        plt.tight_layout()
-        plt.pause(0.01)
+        
+        cycle_start = time.time()
+        
+        # ČITAJ CIJELI BUFFER
+        current_samples, read_duration = read_full_buffer()
+        
+        if len(current_samples) < BUFFER_SIZE:
+            print(f"[WARNING] Nepotpuno čitanje: {len(current_samples)}/{BUFFER_SIZE}")
+            time.sleep(1)
+            continue
+        
+        # Provjeri aktivnost buffer-a
+        buffer_active = detect_buffer_activity(current_samples, previous_samples)
+        
+        if buffer_active:
+            buffer_timestamps.append(time.time())
+            print("[INFO] Buffer aktivnost detektovana - novi podaci!")
+            
+            # Procijeni frekvenciju uzorkovanja
+            if len(buffer_timestamps) >= 2:
+                estimated_fs = estimate_sampling_frequency(current_samples, buffer_timestamps)
+                # Ažuriraj buffer refresh time
+                BUFFER_TIME = BUFFER_SIZE / estimated_fs
+        else:
+            print("[INFO] Nema promjene u buffer-u")
+        
+        # FFT ANALIZA
+        peak_freq, freqs, fft_db = analyze_adc_signal(current_samples, estimated_fs)
+        
+        # CRTANJE GRAFOVA
+        if len(current_samples) > 0:
+            # Pripremi podatke za prikaz (zadnjih 512 uzoraka)
+            display_samples = current_samples[-512:]
+            time_axis = np.arange(len(display_samples)) / estimated_fs
+            
+            # Graf 1: ADC Signal sa interpolacijom
+            ax1.clear()
+            
+            # Crtaj originalne uzorke kao crvene tačke
+            ax1.plot(time_axis, display_samples, 'ro', markersize=4, alpha=0.7, label='ADC Uzorci')
+            
+            # Kvadratna interpolacija
+            if len(display_samples) >= 3:
+                x_interp, y_interp = quadratic_interpolation(time_axis, display_samples, num_interpolated=2048)
+                ax1.plot(x_interp, y_interp, 'b-', linewidth=1.5, alpha=0.8, label='Kvadratna Interpolacija')
+            
+            # Ukloni y limite da se vidi pravi signal
+            ax1.set_xlim(0, time_axis[-1])
+            
+            title = f"ADC Kanal 2 - Fs: {estimated_fs:.0f}Hz"
+            if peak_freq:
+                title += f" | Signal Peak: {peak_freq:.1f}Hz"
+            title += f" | Ciklus: {cycle_count + 1}"
+            
+            ax1.set_title(title)
+            ax1.set_xlabel("Vrijeme [s]")
+            ax1.set_ylabel("ADC Amplituda (raw)")
+            ax1.legend()
+            ax1.grid(True, alpha=0.3)
+            
+            # Graf 2: FFT Spektar
+            if freqs is not None and fft_db is not None:
+                ax2.clear()
+                
+                # Ograniči frekvenciju
+                freq_limit = min(300000, estimated_fs/2)
+                freq_mask = freqs <= freq_limit
+                
+                plot_freqs = freqs[freq_mask]
+                plot_fft = fft_db[freq_mask]
+                
+                ax2.plot(plot_freqs, plot_fft, 'g-', linewidth=1.5)
+                ax2.set_xlim(0, freq_limit)
+                ax2.set_ylim(-80, 10)
+                
+                # OZNAČI ADC SIGNAL PEAK
+                if peak_freq and peak_freq <= freq_limit:
+                    ax2.axvline(x=peak_freq, color='red', linestyle='--', linewidth=3)
+                    ax2.plot(peak_freq, -5, 'ro', markersize=12)
+                    ax2.text(peak_freq, 5, f'ADC SIGNAL\n{peak_freq:.1f} Hz', 
+                            ha='center', va='bottom', fontweight='bold', fontsize=12,
+                            bbox=dict(boxstyle='round,pad=0.5', facecolor='yellow', alpha=0.9))
+                
+                ax2.set_title("FFT Spektar - ADC Kanal 2")
+                ax2.set_xlabel("Frekvencija [Hz]")
+                ax2.set_ylabel("Magnituda [dB]")
+                ax2.grid(True, alpha=0.3)
+            
+            plt.tight_layout()
+            plt.pause(0.1)
+        
+        # Sačuvaj trenutne uzorke za sljedeće poređenje
+        previous_samples = current_samples.copy()
+        cycle_count += 1
+        
+        # ČEKAJ da se buffer osvježi
+        print(f"[INFO] Čekam {BUFFER_TIME:.3f}s da se buffer osvježi...")
+        
+        # Zatvaranje komunikacije (kao što ste rekli)
+        ComPort.write(struct.pack('B', C_EOP))
+        time.sleep(BUFFER_TIME)
+        
+        # Ponovo otvaranje komunikacije
+        ComPort.write(struct.pack('B', C_SOP))
+        time.sleep(0.1)
+
 except KeyboardInterrupt:
-    print("[INFO] Keyboard interrupt detektovan. Izlazim...")
-# --- Zatvaranje komunikacije ---
+    print("\n[INFO] Keyboard interrupt")
+
+# Zatvaranje
 ComPort.write(struct.pack('B', C_EOP))
-print("[INFO] Poslat C_EOP i zatvoren port.")
-print(f"[INFO] Finalna frekvencija uzorkovanja: {fs:.1f} Hz")
-if len(fs_measurements) > 1:
-    print(f"[INFO] Standardna devijacija Fs: ±{np.std(fs_measurements):.1f} Hz")
 ComPort.close()
 
-
-
-
+print("\n" + "="*60)
+print("ZAVRŠENO")
+print("="*60)
+print(f"Ukupno ciklusa: {cycle_count}")
+print(f"Finalna procjena Fs: {estimated_fs:.0f} Hz")
+if buffer_timestamps:
+    print(f"Buffer refresh rate: {len(buffer_timestamps)/((buffer_timestamps[-1] - buffer_timestamps[0]) or 1):.2f} Hz")
+print("="*60)
