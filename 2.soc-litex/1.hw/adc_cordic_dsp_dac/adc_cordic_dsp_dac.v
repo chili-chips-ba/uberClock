@@ -18,7 +18,8 @@ module adc_cordic_dsp_dac(
     output                    da2_clk,         // DA2 clock (DDR‐output)
     output                    da2_wrt,         // DA2 write strobe (DDR‐output)
     output [13:0]             da2_data,        // DA2 14‐bit data bus (DDR‐output)
-
+    //phase inc input
+    input  [18:0]             phase_inc,       // Phase increment for CORD
     output [11:0] debug_filter_in,
     output [18:0] debug_phase2,
     output [11:0] debug_xval_downconverted,
@@ -31,7 +32,13 @@ module adc_cordic_dsp_dac(
     output [15:0] debug_xval_upconverted,
     output [15:0] debug_yval_upconverted,
     output        debug_ce_out_down_x,
-    output        debug_ce_out_up_x
+    output        debug_ce_out_up_x,
+
+    output wire debug_cic_ce_x,
+    output wire debug_comp_ce_x,
+    output wire debug_hb_ce_x,
+    output wire signed [11:0] debug_cic_out_x,
+    output wire signed [15:0] debug_comp_out_x
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -66,7 +73,7 @@ module adc_cordic_dsp_dac(
     * For a 999 kHz local oscillator at 65 MHz clock:
     *    PHASE_INC_999kHz = (999e3/65e6)*2^19 ≈ 80652.
     *************************************************************************/
-   localparam PHASE_INC_999kHz = 80652;
+   wire [18:0] PHASE_INC_999kHz = phase_inc;
    reg [18:0] phase2;
    always @(posedge sys_clk or posedge rst_n) begin
        if (rst_n)
@@ -100,14 +107,23 @@ module adc_cordic_dsp_dac(
        .o_yval(yval_downconverted),
        .o_aux(o_down_aux)
    );
-
+    wire cic_ce_x;
+    wire comp_ce_x;
+    wire hb_ce_x;
+    wire signed [11:0] ds_cic_out_x;
+    wire signed [15:0] ds_comp_out_x;
     downsamplerFilter downDsp_x (
         .clk(sys_clk),
         .clk_enable(1'b1),
         .reset(rst_n),
         .filter_in(xval_downconverted),
         .filter_out(downsampledX),
-        .ce_out(ce_out_down_x)
+        .ce_out(ce_out_down_x),
+        .debug_cic_ce  (cic_ce_x),
+        .debug_comp_ce (comp_ce_x),
+        .debug_hb_ce   (hb_ce_x),
+        .debug_cic_out (ds_cic_out_x),
+        .debug_comp_out(ds_comp_out_x)
     );
     downsamplerFilter downDsp_y (
         .clk(sys_clk),
@@ -202,5 +218,9 @@ module adc_cordic_dsp_dac(
     assign debug_yval_upconverted  = yval_upconverted;
     assign debug_ce_out_down_x     = ce_out_down_x;
     assign debug_ce_out_up_x       = ce_out_up_x;
-
+    assign debug_cic_ce_x          = cic_ce_x;
+    assign debug_comp_ce_x         = comp_ce_x;
+    assign debug_hb_ce_x           = hb_ce_x;
+    assign debug_cic_out_x         = ds_cic_out_x;
+    assign debug_comp_out_x        = ds_comp_out_x;
 endmodule

@@ -32,7 +32,7 @@ from liteeth.phy.s7rgmii import LiteEthPHYRGMII
 from litescope import LiteScopeAnalyzer
 
 # NOTE: Change this accordingly!
-repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock" # Absolute path to the root of your cloned repo
+repository_dir = "/home/ahmed/ws/uberClock" # Absolute path to the root of your cloned repo
 verilog_dir = repository_dir + "/2.soc-litex/1.hw"
 
 # -------------------------------------------------------------------------
@@ -496,19 +496,22 @@ class BaseSoC(SoCCore):
             for filename in [
                 "adc/adc.v",
                 "dac/dac.v",
+
                 "filters/cic.v",
-                "filters/cic_comp_down_opt.v",
                 "filters/cic_comp_down_mac.v",
-                "filters/cic_comp_up_mac.v",
-                "filters/cic_int.v",
-                "filters/downsamplerFilter.v",
-                "filters/upsamplerFilter.v",
-                "filters/hb_down_opt.v",
+                "filters/comp_down_coeffs.mem",
                 "filters/hb_down_mac.v",
+                "filters/hb_down_coeffs.mem",
+                "filters/downsamplerFilter.v",
+
+                "filters/upsamplerFilter.v",
                 "filters/hb_up_mac.v",
-                "adc-dsp-dac/adc_dsp_dac.v",
                 "filters/coeffs.mem",
+                "filters/cic_comp_up_mac.v",
                 "filters/coeffs_comp.mem",
+                "filters/cic_int.v",
+
+                "adc-dsp-dac/adc_dsp_dac.v"
             ]:
                 self.platform.add_source(f"{verilog_dir}/{filename}")
 
@@ -587,33 +590,42 @@ class BaseSoC(SoCCore):
             for filename in [
                 "adc/adc.v",
                 "dac/dac.v",
+
                 "filters/cic.v",
-                "filters/cic_comp_down_opt.v",
                 "filters/cic_comp_down_mac.v",
-                "filters/cic_comp_up_mac.v",
-                "filters/cic_int.v",
-                "filters/downsamplerFilter.v",
-                "filters/upsamplerFilter.v",
-                "filters/hb_down_opt.v",
+                "filters/comp_down_coeffs.mem",
                 "filters/hb_down_mac.v",
+                "filters/hb_down_coeffs.mem",
+                "filters/downsamplerFilter.v",
+
+                "filters/upsamplerFilter.v",
                 "filters/hb_up_mac.v",
-                "adc_cordic_dsp_dac/adc_cordic_dsp_dac.v",
                 "filters/coeffs.mem",
+                "filters/cic_comp_up_mac.v",
                 "filters/coeffs_comp.mem",
+                "filters/cic_int.v",
+
+
+                "adc_cordic_dsp_dac/adc_cordic_dsp_dac.v",
+
+
                 "cordic/cordic_pre_rotate.v",
                 "cordic/cordic_pipeline_stage.v",
                 "cordic/cordic_round.v",
                 "cordic/cordic.v",
                 "cordic/cordic_logic.v",
                 "cordic/gain_and_saturate.v",
+
                 "cordic16/cordic16.v",
-                "cordic16/gain_and_saturate.v",
-                "cordic16/cordic_round.v",
+                # "cordic16/gain_and_saturate.v",
+                # "cordic16/cordic_round.v",
                 "cordic16/cordic_pre_rotate_16.v",
-                "cordic16/cordic_pipeline_stage.v",
+                # "cordic16/cordic_pipeline_stage.v",
             ]:
                 self.platform.add_source(f"{verilog_dir}/{filename}")
 
+            self._phase_inc = CSRStorage(19, description="CORDIC_DAC phase increment")
+            phase_inc = self._phase_inc.storage
 
             debug_filter_in         = Signal(12)
             debug_phase2            = Signal(19)
@@ -628,6 +640,11 @@ class BaseSoC(SoCCore):
             debug_yval_upconverted  = Signal(16)
             debug_ce_out_down_x     = Signal()
             debug_ce_out_up_x       = Signal()
+            debug_cic_ce_x   = Signal()
+            debug_comp_ce_x  = Signal()
+            debug_hb_ce_x    = Signal()
+            ds_cic_out_x  = Signal(12)
+            ds_comp_out_x = Signal(16)
 
             self.specials += Instance(
                 "adc_cordic_dsp_dac",
@@ -648,6 +665,8 @@ class BaseSoC(SoCCore):
                 o_da2_clk       = platform.request("da2_clk",  0),
                 o_da2_wrt       = platform.request("da2_wrt",  0),
                 o_da2_data      = platform.request("da2_data", 0),
+                # CPU Inputs
+                i_phase_inc    = phase_inc,
 
                 o_debug_filter_in         = debug_filter_in,
                 o_debug_phase2            = debug_phase2,
@@ -661,7 +680,12 @@ class BaseSoC(SoCCore):
                 o_debug_xval_upconverted  = debug_xval_upconverted,
                 o_debug_yval_upconverted  = debug_yval_upconverted,
                 o_debug_ce_out_down_x     = debug_ce_out_down_x,
-                o_debug_ce_out_up_x       = debug_ce_out_up_x
+                o_debug_ce_out_up_x       = debug_ce_out_up_x,
+                o_debug_cic_ce_x   = debug_cic_ce_x,
+                o_debug_comp_ce_x  = debug_comp_ce_x,
+                o_debug_hb_ce_x    = debug_hb_ce_x,
+                o_debug_cic_out_x   = ds_cic_out_x,
+                o_debug_comp_out_x  = ds_comp_out_x
             )
 
             self.submodules.analyzer = LiteScopeAnalyzer(
@@ -679,8 +703,14 @@ class BaseSoC(SoCCore):
                 debug_yval_upconverted,
                 debug_ce_out_down_x,
                 debug_ce_out_up_x,
+                debug_cic_ce_x,
+                debug_comp_ce_x,
+                debug_hb_ce_x,
+                ds_cic_out_x,
+                ds_comp_out_x,
+                phase_inc
             ],
-            depth        = 2048,
+            depth        = 16384,
             clock_domain = "sys",
             samplerate   = sys_clk_freq,
             csr_csv      = "analyzer.csv"
@@ -695,19 +725,23 @@ class BaseSoC(SoCCore):
             for filename in [
                 "adc/adc.v",
                 "dac/dac.v",
+
                 "filters/cic.v",
-                "filters/cic_comp_down_opt.v",
                 "filters/cic_comp_down_mac.v",
-                "filters/cic_comp_up_mac.v",
-                "filters/cic_int.v",
-                "filters/downsamplerFilter.v",
-                "filters/upsamplerFilter.v",
-                "filters/hb_down_opt.v",
+                "filters/comp_down_coeffs.mem",
                 "filters/hb_down_mac.v",
+                "filters/hb_down_coeffs.mem",
+                "filters/downsamplerFilter.v",
+
+                "filters/upsamplerFilter.v",
                 "filters/hb_up_mac.v",
-                "adc-dsp-dac/adc_dsp_dac_nocpu.v",
                 "filters/coeffs.mem",
-                "filters/coeffs_comp.mem"
+                "filters/cic_comp_up_mac.v",
+                "filters/coeffs_comp.mem",
+                "filters/cic_int.v",
+
+                "adc-dsp-dac/adc_dsp_dac_nocpu.v"
+
             ]:
                 self.platform.add_source(f"{verilog_dir}/{filename}")
 
@@ -716,7 +750,7 @@ class BaseSoC(SoCCore):
             debug_upsampledY   = Signal(16)
             debug_ce_out_down  = Signal()
             debug_ce_out_up    = Signal()
-            debug_adc_input    = Signal(16)
+            debug_adc_input    = Signal(12)
 
             self.specials += Instance(
                 "adc_dsp_dac_nocpu",
@@ -755,7 +789,7 @@ class BaseSoC(SoCCore):
 
             self.submodules.analyzer = LiteScopeAnalyzer(
                 analyzer_signals,
-                depth        = 1024,
+                depth        = 16384,
                 clock_domain = "sys",
                 samplerate   = sys_clk_freq,
                 csr_csv      = "analyzer.csv"
