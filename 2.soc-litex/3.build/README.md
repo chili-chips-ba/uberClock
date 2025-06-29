@@ -22,7 +22,7 @@ Usage:
 
 The design currently has different parts that can be built separately using flags. To run the build use the following command:
 ```
-make build-board FREQ=65000000 OPTIONS="--with etherbone --with-adc-cordic-dsp-dac"
+make build-board FREQ=65000000 OPTIONS="--with-etherbone --with-adc-cordic-dsp-dac"
 ```
 
 ## Step 2: Build the software part of the design
