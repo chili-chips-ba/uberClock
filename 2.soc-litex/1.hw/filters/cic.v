@@ -20,7 +20,7 @@ module cic #(
   reg signed [REGISTER_WIDTH-1:0] comb5, comb_d5, comb6, comb_d6, comb7, comb_d7, comb8;
   reg                             valid_comb;
   reg                             decimation_clk;
-  reg        [COUNT_WIDTH-1:0]    count;
+  reg        [COUNT_WIDTH-1:0]    count=0; 
   //=============================//
   //    Integrator section       //
   //=============================//

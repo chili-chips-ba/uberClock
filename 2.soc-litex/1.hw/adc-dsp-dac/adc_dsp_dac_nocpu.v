@@ -22,7 +22,7 @@ module adc_dsp_dac_nocpu(
     output [15:0]             debug_upsampledY,
     output                    debug_ce_out_down,
     output                    debug_ce_out_up,
-    output [15:0]             debug_adc_input
+    output [11:0]             debug_adc_input
 );
 
     // ========== ADC Interface ==========
@@ -97,6 +97,6 @@ module adc_dsp_dac_nocpu(
     assign debug_upsampledY   = upsampledY;
     assign debug_ce_out_down  = ce_out_down;
     assign debug_ce_out_up    = ce_out_up;
-    assign debug_adc_input    = {filter_in, 4'b0000}; // extend signed 12-bit to 16-bit for display
+    assign debug_adc_input    = filter_in; // extend signed 12-bit to 16-bit for display
 
 endmodule

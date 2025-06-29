@@ -1,4 +1,4 @@
-config,None,data_width,176
+config,None,data_width,226
 config,None,depth,16384
 config,None,samplerate,65000000
 signal,0,main_debug_filter_in,12
@@ -14,3 +14,9 @@ signal,0,main_debug_xval_upconverted,16
 signal,0,main_debug_yval_upconverted,16
 signal,0,main_debug_ce_out_down_x,1
 signal,0,main_debug_ce_out_up_x,1
+signal,0,main_debug_cic_ce_x,1
+signal,0,main_debug_comp_ce_x,1
+signal,0,main_debug_hb_ce_x,1
+signal,0,main_ds_cic_out_x,12
+signal,0,main_ds_comp_out_x,16
+signal,0,main_storage,19
