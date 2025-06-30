@@ -32,7 +32,7 @@ from liteeth.phy.s7rgmii import LiteEthPHYRGMII
 from litescope import LiteScopeAnalyzer
 
 # NOTE: Change this accordingly!
-repository_dir = "/home/ahmed/ws/uberClock" # Absolute path to the root of your cloned repo
+repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/" # Absolute path to the root of your cloned repo
 verilog_dir = repository_dir + "/2.soc-litex/1.hw"
 
 # -------------------------------------------------------------------------
@@ -65,28 +65,29 @@ class _CRG(LiteXModule):
 # -------------------------------------------------------------------------
 class BaseSoC(SoCCore):
     def __init__(self, toolchain="vivado", sys_clk_freq=200e6,
-                 with_hdmi              = False,
-                 with_ethernet          = False,
-                 with_etherbone         = False,
-                 with_spi_flash         = False,
-                 with_led_chaser        = False,
-                 with_sdcard            = False,
-                 with_spi_sdcard        = False,
-                 with_pcie              = False,
-                 with_video_terminal    = False,
-                 with_video_framebuffer = False,
-                 with_video_colorbars   = False,
-                 with_ledmem            = False,
-                 with_cordic            = False,
-                 with_dac               = False,
-                 with_cordic_dac        = False,
-                 with_adc_dac           = False,
-                 with_input_mux         = False,
-                 with_adc_dsp_dac       = False,
-                 with_adc_dsp_dac_nocpu = False,
-                 with_cordic_dsp_dac    = False,
-                 with_icd               = False,
-                 with_adc_cordic_dsp_dac = False,
+                 with_hdmi                = False,
+                 with_ethernet            = False,
+                 with_etherbone           = False,
+                 with_spi_flash           = False,
+                 with_led_chaser          = False,
+                 with_sdcard              = False,
+                 with_spi_sdcard          = False,
+                 with_pcie                = False,
+                 with_video_terminal      = False,
+                 with_video_framebuffer   = False,
+                 with_video_colorbars     = False,
+                 with_ledmem              = False,
+                 with_cordic              = False,
+                 with_dac                 = False,
+                 with_cordic_dac          = False,
+                 with_adc_dac             = False,
+                 with_input_mux           = False,
+                 with_adc_dsp_dac         = False,
+                 with_adc_dsp_dac_nocpu   = False,
+                 with_icd                 = False,
+                 with_adc_cordic_dsp_dac  = False,
+                 with_uberclock           = False,
+                 with_cordic_dsp_dac      = False,
                  **kwargs):
         platform = alinx_ax7203.Platform(toolchain=toolchain)
 
@@ -627,6 +628,9 @@ class BaseSoC(SoCCore):
             self._phase_inc = CSRStorage(19, description="CORDIC_DAC phase increment")
             phase_inc = self._phase_inc.storage
 
+            self._output_select= CSRStorage(2, description="Output select for DACs")
+            output_select = self._output_select.storage
+
             debug_filter_in         = Signal(12)
             debug_phase2            = Signal(19)
             debug_xval_downconverted = Signal(12)
@@ -645,6 +649,7 @@ class BaseSoC(SoCCore):
             debug_hb_ce_x    = Signal()
             ds_cic_out_x  = Signal(12)
             ds_comp_out_x = Signal(16)
+            output_select = Signal(2)
 
             self.specials += Instance(
                 "adc_cordic_dsp_dac",
@@ -667,6 +672,7 @@ class BaseSoC(SoCCore):
                 o_da2_data      = platform.request("da2_data", 0),
                 # CPU Inputs
                 i_phase_inc    = phase_inc,
+                i_output_select = output_select,
 
                 o_debug_filter_in         = debug_filter_in,
                 o_debug_phase2            = debug_phase2,
@@ -685,7 +691,7 @@ class BaseSoC(SoCCore):
                 o_debug_comp_ce_x  = debug_comp_ce_x,
                 o_debug_hb_ce_x    = debug_hb_ce_x,
                 o_debug_cic_out_x   = ds_cic_out_x,
-                o_debug_comp_out_x  = ds_comp_out_x
+                o_debug_comp_out_x  = ds_comp_out_x,
             )
 
             self.submodules.analyzer = LiteScopeAnalyzer(
@@ -708,7 +714,8 @@ class BaseSoC(SoCCore):
                 debug_hb_ce_x,
                 ds_cic_out_x,
                 ds_comp_out_x,
-                phase_inc
+                phase_inc,
+                output_select
             ],
             depth        = 16384,
             clock_domain = "sys",
@@ -796,6 +803,222 @@ class BaseSoC(SoCCore):
             )
             self.add_csr("analyzer")
 
+
+
+
+        if with_uberclock:
+
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+
+                "filters/cic.v",
+                "filters/cic_comp_down_mac.v",
+                "filters/comp_down_coeffs.mem",
+                "filters/hb_down_mac.v",
+                "filters/hb_down_coeffs.mem",
+                "filters/downsamplerFilter.v",
+
+                "filters/upsamplerFilter.v",
+                "filters/hb_up_mac.v",
+                "filters/coeffs.mem",
+                "filters/cic_comp_up_mac.v",
+                "filters/coeffs_comp.mem",
+                "filters/cic_int.v",
+
+                "uberclock/uberclock.v",
+
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "cordic/cordic_logic.v",
+                "cordic/gain_and_saturate.v",
+
+                "cordic16/cordic16.v",
+                # "cordic16/gain_and_saturate.v",
+                # "cordic16/cordic_round.v",
+                "cordic16/cordic_pre_rotate_16.v",
+                # "cordic16/cordic_pipeline_stage.v",
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+            # expose a 3-bit CSR to the CPU for mode selection
+            self._mode_sel = CSRStorage(3, description="uberclock signal-path mode (0–4)")
+            self.add_csr("mode_sel")
+            mode_sel = self._mode_sel.storage
+
+            self._phase_inc = CSRStorage(19, description="uberclock CORDIC phase increment")
+            self.add_csr("phase_inc")
+            phase_inc = self._phase_inc.storage
+
+
+            # instantiate your top-level
+            self.specials += Instance(
+                "uberclock",
+                # clocks & reset
+                i_sys_clk   = ClockSignal("sys"),
+                i_rst_n     = ResetSignal("sys"),
+
+                # the CPU-driven selector
+                i_mode_sel  = mode_sel,
+
+                # ADC ports
+                o_adc_clk_ch0  = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1  = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0 = platform.request("adc_data_ch0"),
+                i_adc_data_ch1 = platform.request("adc_data_ch1"),
+
+                # phase increment
+                i_phase_inc = phase_inc,
+
+                # DAC ports
+                o_da1_clk   = platform.request("da1_clk"),
+                o_da1_wrt   = platform.request("da1_wrt"),
+                o_da1_data  = platform.request("da1_data"),
+                o_da2_clk   = platform.request("da2_clk"),
+                o_da2_wrt   = platform.request("da2_wrt"),
+                o_da2_data  = platform.request("da2_data"),
+            )
+
+        # ---------------------------------------------------------------------
+        #  CORDIC - DSP - DAC
+        # ---------------------------------------------------------------------
+        if with_cordic_dsp_dac:
+            for filename in [
+                "adc/adc.v",
+                "dac/dac.v",
+
+                "filters/cic.v",
+                "filters/cic_comp_down_mac.v",
+                "filters/comp_down_coeffs.mem",
+                "filters/hb_down_mac.v",
+                "filters/hb_down_coeffs.mem",
+                "filters/downsamplerFilter.v",
+
+                "filters/upsamplerFilter.v",
+                "filters/hb_up_mac.v",
+                "filters/coeffs.mem",
+                "filters/cic_comp_up_mac.v",
+                "filters/coeffs_comp.mem",
+                "filters/cic_int.v",
+
+                "cordic_dsp_dac/cordic_dsp_dac.v",
+
+                "cordic/cordic_pre_rotate.v",
+                "cordic/cordic_pipeline_stage.v",
+                "cordic/cordic_round.v",
+                "cordic/cordic.v",
+                "cordic/cordic_logic.v",
+                "cordic/gain_and_saturate.v",
+
+                "cordic16/cordic16.v",
+                # "cordic16/gain_and_saturate.v",
+                # "cordic16/cordic_round.v",
+                "cordic16/cordic_pre_rotate_16.v",
+                # "cordic16/cordic_pipeline_stage.v",
+            ]:
+                self.platform.add_source(f"{verilog_dir}/{filename}")
+
+
+            self._phase_inc_nco = CSRStorage(19, description="CORDIC_DAC NCO phase increment")
+            phase_inc_nco = self._phase_inc_nco.storage
+
+            self._phase_inc_down = CSRStorage(19, description="CORDIC_DAC DOWN phase increment")
+            phase_inc_down = self._phase_inc_down.storage
+
+            dbg_nco_cos         = Signal(12)
+            dbg_nco_sin         = Signal(12)
+            dbg_phase_acc_down  = Signal(19)
+            dbg_x_downconverted = Signal(12)
+            dbg_y_downconverted = Signal(12)
+            dbg_downsampled_x   = Signal(16)
+            dbg_downsampled_y   = Signal(16)
+            dbg_upsampled_x     = Signal(16)
+            dbg_upsampled_y     = Signal(16)
+            dbg_phase_inv       = Signal(23)
+            dbg_x_upconverted   = Signal(16)
+            dbg_y_upconverted   = Signal(16)
+            dbg_ce_down_x       = Signal()
+            dbg_ce_up_x         = Signal()
+            dbg_cic_ce_x        = Signal()
+            dbg_comp_ce_x       = Signal()
+            dbg_hb_ce_x         = Signal()
+            dbg_cic_out_x       = Signal(12)
+            dbg_comp_out_x      = Signal(16)
+
+            self.specials += Instance(
+                "cordic_dsp_dac",
+                # Clocks / reset
+                i_sys_clk      = ClockSignal("sys"),
+                i_rst          = ResetSignal("sys"),
+
+                # DAC ports
+                o_da1_clk       = platform.request("da1_clk",  0),
+                o_da1_wrt       = platform.request("da1_wrt",  0),
+                o_da1_data      = platform.request("da1_data", 0),
+                o_da2_clk       = platform.request("da2_clk",  0),
+                o_da2_wrt       = platform.request("da2_wrt",  0),
+                o_da2_data      = platform.request("da2_data", 0),
+
+                # CPU Inputs
+                i_phase_inc_nco  = phase_inc_nco,
+                i_phase_inc_down = phase_inc_down,
+
+                # Debug outputs
+                o_dbg_nco_cos         = dbg_nco_cos,
+                o_dbg_nco_sin         = dbg_nco_sin,
+                o_dbg_phase_acc_down  = dbg_phase_acc_down,
+                o_dbg_x_downconverted = dbg_x_downconverted,
+                o_dbg_y_downconverted = dbg_y_downconverted,
+                o_dbg_downsampled_x   = dbg_downsampled_x,
+                o_dbg_downsampled_y   = dbg_downsampled_y,
+                o_dbg_upsampled_x     = dbg_upsampled_x,
+                o_dbg_upsampled_y     = dbg_upsampled_y,
+                o_dbg_phase_inv       = dbg_phase_inv,
+                o_dbg_x_upconverted   = dbg_x_upconverted,
+                o_dbg_y_upconverted   = dbg_y_upconverted,
+                o_dbg_ce_down_x       = dbg_ce_down_x,
+                o_dbg_ce_up_x         = dbg_ce_up_x,
+                o_dbg_cic_ce_x        = dbg_cic_ce_x,
+                o_dbg_comp_ce_x       = dbg_comp_ce_x,
+                o_dbg_hb_ce_x         = dbg_hb_ce_x,
+                o_dbg_cic_out_x       = dbg_cic_out_x,
+                o_dbg_comp_out_x      = dbg_comp_out_x
+            )
+
+            self.submodules.analyzer = LiteScopeAnalyzer(
+                [
+                    dbg_nco_cos,
+                    dbg_nco_sin,
+                    dbg_phase_acc_down,
+                    dbg_x_downconverted,
+                    dbg_y_downconverted,
+                    dbg_downsampled_x,
+                    dbg_downsampled_y,
+                    dbg_upsampled_x,
+                    dbg_upsampled_y,
+                    dbg_phase_inv,
+                    dbg_x_upconverted,
+                    dbg_y_upconverted,
+                    dbg_ce_down_x,
+                    dbg_ce_up_x,
+                    dbg_cic_ce_x,
+                    dbg_comp_ce_x,
+                    dbg_hb_ce_x,
+                    dbg_cic_out_x,
+                    dbg_comp_out_x,
+                    phase_inc_nco,
+                    phase_inc_down
+                ],
+                depth        = 16384,
+                clock_domain = "sys",
+                samplerate   = sys_clk_freq,
+                csr_csv      = "analyzer.csv"
+            )
+            self.add_csr("analyzer")
+
+
     # optionally export analyzer CSV
     # def do_exit(self, vns, **kwargs):
     #     self.analyzer.export_csv(vns, "analyzer.csv")
@@ -858,32 +1081,39 @@ def main():
         help="Instantiate ADC - DSP - DAC Path (no CPU)")
     parser.add_argument("--with-adc-cordic-dsp-dac", action="store_true",
         help="Instantiate ADC - CORDIC -DSP - DAC Path (no CPU)")
+    parser.add_argument("--with-uberclock", action="store_true",
+        help="Instantiate Uberclock")
+    parser.add_argument("--with-cordic-dsp-dac", action="store_true",
+        help="Instantiate Uberclock")
+
 
     args = parser.parse_args()
 
     soc = BaseSoC(
-        toolchain              = args.toolchain,
-        sys_clk_freq           = args.sys_clk_freq,
-        with_ethernet          = args.with_ethernet,
-        with_etherbone         = args.with_etherbone,
-        with_spi_flash         = args.with_spi_flash,
-        with_sdcard            = args.with_sdcard,
-        with_spi_sdcard        = args.with_spi_sdcard,
-        with_pcie              = args.with_pcie,
-        with_hdmi              = args.with_hdmi,
-        with_led_chaser        = args.with_led_chaser,
-        with_video_terminal    = args.with_video_terminal,
-        with_video_framebuffer = args.with_video_framebuffer,
-        with_video_colorbars   = args.with_video_colorbars,
-        with_cordic            = args.with_cordic,
-        with_dac               = args.with_dac,
-        with_cordic_dac        = args.with_cordic_dac,
-        with_icd               = args.with_icd,
-        with_adc_dac           = args.with_adc_dac,
-        with_input_mux         = args.with_input_mux,
-        with_adc_dsp_dac       = args.with_adc_dsp_dac,
-        with_adc_dsp_dac_nocpu = args.with_adc_dsp_dac_nocpu,
-        with_adc_cordic_dsp_dac = args.with_adc_cordic_dsp_dac,
+        toolchain                = args.toolchain,
+        sys_clk_freq             = args.sys_clk_freq,
+        with_ethernet            = args.with_ethernet,
+        with_etherbone           = args.with_etherbone,
+        with_spi_flash           = args.with_spi_flash,
+        with_sdcard              = args.with_sdcard,
+        with_spi_sdcard          = args.with_spi_sdcard,
+        with_pcie                = args.with_pcie,
+        with_hdmi                = args.with_hdmi,
+        with_led_chaser          = args.with_led_chaser,
+        with_video_terminal      = args.with_video_terminal,
+        with_video_framebuffer   = args.with_video_framebuffer,
+        with_video_colorbars     = args.with_video_colorbars,
+        with_cordic              = args.with_cordic,
+        with_dac                 = args.with_dac,
+        with_cordic_dac          = args.with_cordic_dac,
+        with_icd                 = args.with_icd,
+        with_adc_dac             = args.with_adc_dac,
+        with_input_mux           = args.with_input_mux,
+        with_adc_dsp_dac         = args.with_adc_dsp_dac,
+        with_adc_dsp_dac_nocpu   = args.with_adc_dsp_dac_nocpu,
+        with_adc_cordic_dsp_dac  = args.with_adc_cordic_dsp_dac,
+        with_uberclock           = args.with_uberclock,
+        with_cordic_dsp_dac      = args.with_cordic_dsp_dac,
         **parser.soc_argdict
     )
 
