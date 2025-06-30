@@ -8,7 +8,7 @@ We explore two distinct methodologies: a Direct Method that involves real-time, 
 
 - Overview of the hardware setup
 <p align="center">
-    <img width=600 src="0.doc/setUp.jpgg">
+    <img width=600 src="0.doc/setUp.jpg">
 </p>
 
 ## Project overview
