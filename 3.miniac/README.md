@@ -12,18 +12,14 @@ We explore two distinct methodologies: a Direct Method that involves real-time, 
 
 - [AX7203 Artix7-200 FPGA Board](https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html)
 <p align="center">
-  <img width=600 src="0.doc/Alinx/FPGA-Board--Artix7-200--AX7203.jpg">
+  <img width=600 src="0.doc/FPGA-Board--Artix7-200--AX7203.jpg">
 </p>
   
 - [AN9238 2xADC,  65MSPS, 12bit](https://www.en.alinx.com/Product/Add-on-Modules/AN9238.html)
 <p align="center">
-    <img width=300 src="0.doc/Alinx/2xADC--65MSPS-12bit--AN9238.jpg">
+    <img width=300 src="0.doc/2xADC--65MSPS-12bit--AN9238.jpg">
 </p>
-    
-- [AN9767 2xDAC, 125MSPS, 14bit](https://www.en.alinx.com/Product/Add-on-Modules/AN9767.html)
-<p align="center">
-  <img width=300 src="0.doc/Alinx/2xDAC--125MSPS-14bit--AN9767.jpg">
-</p>
+
 
 ## Methodology
 
