@@ -38,7 +38,8 @@ module adc_cordic_dsp_dac(
     output wire debug_comp_ce_x,
     output wire debug_hb_ce_x,
     output wire signed [11:0] debug_cic_out_x,
-    output wire signed [15:0] debug_comp_out_x
+    output wire signed [15:0] debug_comp_out_x,
+    input  [1:0]              output_select
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -179,7 +180,10 @@ module adc_cordic_dsp_dac(
    );   
 
 
-    wire [13:0] dac1_input_14 = downsampledY[15:2];
+    wire [13:0] dac1_input_14 =   (output_select == 2'b00) ? downsampledY[15:2]
+                                : (output_select == 2'b01) ? upsampledY[15:2]
+                                : (output_select == 2'b10) ? yval_downconverted << 2
+                                : yval_upconverted[15:2];
     wire [13:0] dac2_input_14 = upsampledY[15:2];
     reg [13:0] dac1_input_14_reg, dac2_input_14_reg;
 

@@ -28,6 +28,19 @@
 #define WITH_UPSAMPLER_GAIN
 #endif
 
+
+#ifdef CSR_MAIN_MODE_SEL_ADDR
+#  define WITH_UBERCLOCK
+#endif
+
+#if defined(CSR_MAIN_PHASE_INC_NCO_ADDR) && defined(CSR_MAIN_PHASE_INC_DOWN_ADDR)
+#  define WITH_CORDIC_DSP_DAC
+#endif
+
+#ifdef CSR_MAIN_OUTPUT_SELECT_ADDR
+#  define WITH_OUTPUT_SELECT
+#endif
+
 static volatile int dsp_loop_running = 0;
 
 static char *readstr(void) {
@@ -107,6 +120,17 @@ static void help(void) {
 	#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
 	puts("  profile_dac           - Measure DAC CSR write speed");
 	#endif
+	#ifdef WITH_UBERCLOCK
+	puts("  mode <0–4>            - Select signal-path mode (see docs)");
+	#endif
+	#ifdef WITH_CORDIC_DSP_DAC
+	puts("  phase_nco <val>      - Set input CORDIC NCO phase increment (0–524287)");
+	puts("  phase_down <val>     - Set downconversion CORDIC phase increment (0–524287)");
+	#endif
+	#ifdef WITH_OUTPUT_SELECT
+	puts("  output_select <value> - Set main output select register");
+	#endif
+
 }
 
 static void reboot_cmd(void) {
@@ -183,6 +207,42 @@ static void dsp_stop_cmd(void) {
 }
 #endif
 
+
+#ifdef WITH_UBERCLOCK
+static void mode_cmd(char *args) {
+	    unsigned v = strtoul(args, NULL, 0) & 0x7;
+	    if (v > 4) {
+		        printf("Error: mode must be 0–4\n");
+		        return;
+		    }
+		    main_mode_sel_write(v);
+		    printf("uberClock mode set to %u\n", v);
+		}
+#endif
+
+
+#ifdef WITH_CORDIC_DSP_DAC
+static void phase_nco_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_nco_write(p);
+	printf("Input NCO phase increment set to %u\n", p);
+}
+
+static void phase_down_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_write(p);
+	printf("Downconversion phase increment set to %u\n", p);
+}
+#endif
+
 #ifdef WITH_UPSAMPLER_GAIN
 static void gain_cmd(char *args) {
 	int gain = atoi(args);
@@ -239,6 +299,14 @@ static void profile_dac(void) {
 }
 #endif
 
+#ifdef WITH_OUTPUT_SELECT
+static void output_select_cmd(char *args) {
+	unsigned v = strtoul(args, NULL, 0);
+	main_output_select_write(v);
+	printf("Main output select register set to %u\n", v);
+}
+#endif
+
 static void console_service(void) {
 	char *line = readstr();
 	if (!line) return;
@@ -279,13 +347,36 @@ static void console_service(void) {
 	#if defined(CSR_MAIN_DAC1_DATA_ADDR) && defined(CSR_MAIN_DAC1_WRT_EN_ADDR)
 	else if (!strcmp(token, "profile_dac")) profile_dac();
 	#endif
+
+	#ifdef WITH_UBERCLOCK
+	else if (!strcmp(token, "mode")) {
+		char *arg = get_token(&line);
+		mode_cmd(arg);
+	}
+	#endif
+
 	#ifdef WITH_UPSAMPLER_GAIN
 	else if (!strcmp(token, "gain")) {
 		char *arg = get_token(&line);
 		gain_cmd(arg);
 	}
 	#endif
-
+	#ifdef WITH_CORDIC_DSP_DAC
+	else if (!strcmp(token, "phase_nco")) {
+		char *arg = get_token(&line);
+		phase_nco_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_down")) {
+		char *arg = get_token(&line);
+		phase_down_cmd(arg);
+	}
+	#endif
+	#ifdef WITH_OUTPUT_SELECT
+	else if (!strcmp(token, "output_select")) {
+		char *arg = get_token(&line);
+		output_select_cmd(arg);
+	}
+	#endif
 	else {
 		printf("Unknown command: %s\n", token);
 	}
