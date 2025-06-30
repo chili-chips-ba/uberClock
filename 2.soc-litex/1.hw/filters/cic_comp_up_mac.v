@@ -17,7 +17,7 @@ module cic_comp_up_mac #(
 );
 
 
-  // ce_out strobe generation 
+  // ce_out strobe generation
   reg [1:0] cur_count;
   always @(posedge clk or posedge reset) begin
     if (reset)           cur_count <= 2'd0;
@@ -52,7 +52,8 @@ module cic_comp_up_mac #(
   // read pointer
   always @(posedge clk or posedge reset) begin
     if (reset)                    r_ptr <= 0;
-    else if (clk_enable)          r_ptr <= w_ptr - OFFSET;
+    else if (phase_1)             r_ptr <= w_ptr - OFFSET;
+    else if (clk_enable && ~phase_1) r_ptr <= w_ptr - OFFSET - 1;
     else if (state == PH1_RUN ||
              state == PH2_RUN)    r_ptr <= r_ptr + 1;
   end
@@ -64,27 +65,31 @@ module cic_comp_up_mac #(
       current_sample <= mem[r_ptr];
   end
 
-  // read coefficient 
-  reg [ADDR_C-1:0] coeff_addr;
-  always @(posedge clk) begin
-  if (reset) coeff_addr <= 0;
-    if      (state == PH2_RUN) coeff_addr <= OFFSET - mac_idx;
-    else if (state == PH1_RUN) coeff_addr <= 2*OFFSET + 1 - mac_idx;
-  end
+  // read coefficient
+//  reg [ADDR_C-1:0] coeff_addr;
+//  always @(posedge clk) begin
+//  if (reset) coeff_addr <= 0;
+//    if      (state == PH2_RUN) coeff_addr <= OFFSET - mac_idx;
+//    else if (state == PH1_RUN) coeff_addr <= 2*OFFSET + 1 - mac_idx;
+//  end
 
   reg signed [CW-1:0] current_coeff;
   always @(posedge clk) begin
   if (reset) current_coeff <= 0;
-    if (state == PH1_RUN || state == PH2_RUN)
-      current_coeff <= coeffs[coeff_addr];
+    if (state == PH1_RUN) current_coeff <= coeffs[OFFSET - mac_idx];
+    else if (state == PH2_RUN) current_coeff <= coeffs[2*OFFSET + 1 - mac_idx];
+
   end
 
   // multiply
-  reg signed [DW+CW-1:0] product;
-  always @(posedge clk) begin
-    if (state == PH1_RUN || state == PH2_RUN)
-      product <= current_sample * current_coeff;
-  end
+//  reg signed [DW+CW-1:0] product;
+//  always @(posedge clk) begin
+//    if (state == PH1_RUN || state == PH2_RUN)
+//      product <= current_sample * current_coeff;
+//  end
+
+  wire signed [DW+CW-1:0] product;
+  assign product = (state == PH1_RUN || state == PH2_RUN) ? current_sample * current_coeff: 0;
 
   // accumulator
   reg signed [36:0] acc;
@@ -120,7 +125,7 @@ module cic_comp_up_mac #(
       phase2_done <= 0;
 
       case (state)
-        IDLE: if (clk_enable) begin
+        IDLE: if (phase_1) begin
           clear_acc <= 1;
           mac_idx   <= 0;
           state     <= PH1_RUN;
@@ -162,7 +167,7 @@ module cic_comp_up_mac #(
 
   function automatic [DW-1:0] round_sat(input signed [36:0] x);
     begin
-      round_sat = (x[36] == 1'b0 & x[35:30] != 6'b000000) ? 16'b0111111111111111 : 
+      round_sat = (x[36] == 1'b0 & x[35:30] != 6'b000000) ? 16'b0111111111111111 :
       (x[36] == 1'b1 && x[35:30] != 6'b111111) ? 16'b1000000000000000 : $signed({1'b0, x[30:15]} + (x[36] & |x[14:0]));
     end
   endfunction
