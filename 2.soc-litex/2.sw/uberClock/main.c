@@ -28,7 +28,6 @@
 #define WITH_UPSAMPLER_GAIN
 #endif
 
-
 #ifdef CSR_MAIN_MODE_SEL_ADDR
 #  define WITH_UBERCLOCK
 #endif
@@ -43,6 +42,14 @@
 
 #ifdef CSR_MAIN_INPUT_SELECT_ADDR
 #  define WITH_INPUT_SELECT
+#endif
+
+#ifdef CSR_MAIN_GAIN1_ADDR
+#define WITH_GAIN1
+#endif
+
+#ifdef CSR_MAIN_GAIN2_ADDR
+#define WITH_GAIN2
 #endif
 
 static volatile int dsp_loop_running = 0;
@@ -140,6 +147,12 @@ static void help(void) {
 	#endif
 	#ifdef WITH_INPUT_SELECT
 	puts("  input_select <val>   - Set main input select register (0=ADC, 1=NCO)");
+	#endif
+	#ifdef WITH_GAIN1
+	puts("  gain1 <val>           - Set Gain1 register (Q format value)");
+	#endif
+	#ifdef WITH_GAIN2
+	puts("  gain2 <val>           - Set Gain2 register (Q format value)");
 	#endif
 }
 
@@ -325,6 +338,22 @@ static void input_select_cmd(char *args) {
 }
 #endif
 
+#ifdef WITH_GAIN1
+static void gain1_cmd(char *args) {
+	int32_t gain = strtol(args, NULL, 0);
+	main_gain1_write((uint32_t)gain);
+	printf("Gain1 register set to %d (0x%08X)\n", gain, (uint32_t)gain);
+}
+#endif
+
+#ifdef WITH_GAIN2
+static void gain2_cmd(char *args) {
+	int32_t gain = strtol(args, NULL, 0);
+	main_gain2_write((uint32_t)gain);
+	printf("Gain2 register set to %d (0x%08X)\n", gain, (uint32_t)gain);
+}
+#endif
+
 static void console_service(void) {
 	char *line = readstr();
 	if (!line) return;
@@ -399,6 +428,18 @@ static void console_service(void) {
 	else if (!strcmp(token, "input_select")) {
 		char *arg = get_token(&line);
 		input_select_cmd(arg);
+	}
+	#endif
+	#ifdef WITH_GAIN1
+	else if (!strcmp(token, "gain1")) {
+		char *arg = get_token(&line);
+		gain1_cmd(arg);
+	}
+	#endif
+	#ifdef WITH_GAIN2
+	else if (!strcmp(token, "gain2")) {
+		char *arg = get_token(&line);
+		gain2_cmd(arg);
 	}
 	#endif
 	else {

@@ -30,6 +30,8 @@ module cordic_dsp_dac#(
     input                     input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              output_select,
 
+    input  [31:0]             gain1,
+    input  [31:0]             gain2,
 
     // Debug outputs
     output [IW-1:0]           dbg_nco_cos,
@@ -177,13 +179,24 @@ module cordic_dsp_dac#(
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
+
+    wire signed [48:0] y_gained , x_gained ;
+    wire signed [32:0] gain_signed_1 = {1'b0, gain1};
+    wire signed [32:0] gain_signed_2 = {1'b0, gain2};
+
+    assign y_gained = downsampled_y * gain_signed_1;
+    assign x_gained = downsampled_x * gain_signed_1;
+
     wire signed [15:0] upsampled_x, upsampled_y;
+    wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
+    assign upsampled_gain_y = y_gained >>> 30;
+    assign upsampled_gain_x = x_gained >>> 30;
 
     upsamplerFilter up_x (
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (downsampled_x),
+        .filter_in  (upsampled_gain_x),
         .filter_out (upsampled_x),
         .ce_out     (ce_out_up_x)
     );
@@ -192,7 +205,7 @@ module cordic_dsp_dac#(
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (downsampled_y),
+        .filter_in  (upsampled_gain_y),
         .filter_out (upsampled_y),
         .ce_out     (ce_out_up_y)
     );
@@ -232,7 +245,7 @@ module cordic_dsp_dac#(
                                 : (output_select == 2'b01) ? upsampled_y[15:2]
                                 : (output_select == 2'b10) ? y_downconverted << 2
                                 : y_upconverted[15:2];
-    wire [13:0] dac2_data_in = upsampled_y[15:2];
+    wire [13:0] dac2_data_in = upsampled_gain_y[15:2];
     reg  [13:0] dac1_data_reg, dac2_data_reg;
 
     always @(posedge sys_clk) begin
