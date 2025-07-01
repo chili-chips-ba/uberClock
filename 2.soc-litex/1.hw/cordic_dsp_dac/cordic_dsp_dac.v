@@ -9,6 +9,12 @@ module cordic_dsp_dac#(
     input                     sys_clk,
     input                     rst,
 
+    // ADC (12-bit inputs; AD9238 on J11)
+    output                    adc_clk_ch0,  // AD channel 0 sampling clock
+    output                    adc_clk_ch1,  // AD channel 1 sampling clock
+    input  [11:0]             adc_data_ch0, // AD channel 0 data
+    input  [11:0]             adc_data_ch1, // AD channel 1 data
+
     // DDR‐output DAC (14-bit output; AN9767 on J13)
     output                    da1_clk,         // DA1 clock (DDR‐output)
     output                    da1_wrt,         // DA1 write strobe (DDR‐output)
@@ -20,6 +26,10 @@ module cordic_dsp_dac#(
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
     input  [PW-1:0]           phase_inc_down,
+
+    input                     input_select,  // 0=use ADC, 1=use internal NCO
+    input  [1:0]              output_select,
+
 
     // Debug outputs
     output [IW-1:0]           dbg_nco_cos,
@@ -41,6 +51,25 @@ module cordic_dsp_dac#(
     output                    dbg_hb_ce_x,
     output signed [11:0]      dbg_cic_out_x,
     output signed [15:0]      dbg_comp_out_x
+    );
+
+    //======================================================================
+    // Instantiate the “adc” module
+    //======================================================================
+    wire [11:0] ad_data_ch0_12;
+    wire [11:0] ad_data_ch1_12;
+    adc u_adc (
+        .sys_clk      (sys_clk),
+        .rst_n        (rst),
+        // Raw DDR-pinned inputs from the board
+        .adc_data_ch0 (adc_data_ch0),
+        .adc_data_ch1 (adc_data_ch1),
+        // DDR clocks to drive each AD9238 chip
+        .adc_clk_ch0  (adc_clk_ch0),
+        .adc_clk_ch1  (adc_clk_ch1),
+        // 12-bit, single-clock-domain outputs (rising-edge captures)
+        .ad_data_ch0  (ad_data_ch0_12),
+        .ad_data_ch1  (ad_data_ch1_12)
     );
 
     // ----------------------------------------------------------------------
@@ -75,6 +104,11 @@ module cordic_dsp_dac#(
         .o_aux   (nco_aux)
     );
 
+    reg signed [11:0] filter_in;
+    always @(posedge sys_clk) begin
+        filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
+    end
+
     // ----------------------------------------------------------------------
     // Phase accumulator for downconversion
     // ----------------------------------------------------------------------
@@ -87,6 +121,8 @@ module cordic_dsp_dac#(
     end
     wire signed [IW-1:0] x_downconverted, y_downconverted;
     wire                 down_aux;
+    wire signed [IW-1:0] selected_input;
+    assign selected_input = input_select ? nco_cos : filter_in;
 
    cordic #(
        .IW(IW),
@@ -99,7 +135,7 @@ module cordic_dsp_dac#(
        .i_reset(rst),
        .i_ce   (1'b1),
        .i_xval (0),
-       .i_yval (nco_cos),
+       .i_yval (selected_input),
        .i_phase(phase_acc_down_reg),
        .i_aux  (1'b1),
        .o_xval (x_downconverted),
@@ -191,7 +227,11 @@ module cordic_dsp_dac#(
     // ----------------------------------------------------------------------
     // DAC data preparation
     // ----------------------------------------------------------------------
-    wire [13:0] dac1_data_in = downsampled_y[15:2];
+
+    wire [13:0] dac1_data_in =   (output_select == 2'b00) ? downsampled_y[15:2]
+                                : (output_select == 2'b01) ? upsampled_y[15:2]
+                                : (output_select == 2'b10) ? y_downconverted << 2
+                                : y_upconverted[15:2];
     wire [13:0] dac2_data_in = upsampled_y[15:2];
     reg  [13:0] dac1_data_reg, dac2_data_reg;
 
