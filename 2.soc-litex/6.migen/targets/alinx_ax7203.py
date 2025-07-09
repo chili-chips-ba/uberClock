@@ -921,11 +921,23 @@ class BaseSoC(SoCCore):
                 self.platform.add_source(f"{verilog_dir}/{filename}")
 
 
+            self._input_select = CSRStorage(1, description="Select ADC (0) or NCO tone (1) as pipeline input")
+            input_select = self._input_select.storage
+
+            self._output_select= CSRStorage(2, description="Output select for DACs")
+            output_select = self._output_select.storage
+
             self._phase_inc_nco = CSRStorage(19, description="CORDIC_DAC NCO phase increment")
             phase_inc_nco = self._phase_inc_nco.storage
 
             self._phase_inc_down = CSRStorage(19, description="CORDIC_DAC DOWN phase increment")
             phase_inc_down = self._phase_inc_down.storage
+
+            self._gain1 = CSRStorage(32, description="32--bit Gain1 value")
+            gain1 = self._gain1.storage
+
+            self._gain2 = CSRStorage(32, description="32--bit Gain2 value")
+            gain2 = self._gain2.storage
 
             dbg_nco_cos         = Signal(12)
             dbg_nco_sin         = Signal(12)
@@ -953,6 +965,12 @@ class BaseSoC(SoCCore):
                 i_sys_clk      = ClockSignal("sys"),
                 i_rst          = ResetSignal("sys"),
 
+                # ADC ports
+                o_adc_clk_ch0  = platform.request("adc_clk_ch0"),
+                o_adc_clk_ch1  = platform.request("adc_clk_ch1"),
+                i_adc_data_ch0 = platform.request("adc_data_ch0"),
+                i_adc_data_ch1 = platform.request("adc_data_ch1"),
+
                 # DAC ports
                 o_da1_clk       = platform.request("da1_clk",  0),
                 o_da1_wrt       = platform.request("da1_wrt",  0),
@@ -964,6 +982,12 @@ class BaseSoC(SoCCore):
                 # CPU Inputs
                 i_phase_inc_nco  = phase_inc_nco,
                 i_phase_inc_down = phase_inc_down,
+
+                i_input_select      = input_select,
+                i_output_select     = output_select,
+
+                i_gain1             = gain1,
+                i_gain2             = gain2,
 
                 # Debug outputs
                 o_dbg_nco_cos         = dbg_nco_cos,
@@ -1009,7 +1033,11 @@ class BaseSoC(SoCCore):
                     dbg_cic_out_x,
                     dbg_comp_out_x,
                     phase_inc_nco,
-                    phase_inc_down
+                    phase_inc_down,
+                    input_select,
+                    output_select,
+                    gain1,
+                    gain2
                 ],
                 depth        = 16384,
                 clock_domain = "sys",
