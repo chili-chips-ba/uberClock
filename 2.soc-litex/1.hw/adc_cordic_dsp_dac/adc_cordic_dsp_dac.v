@@ -184,7 +184,7 @@ module adc_cordic_dsp_dac(
                                 : (output_select == 2'b01) ? upsampledY[15:2]
                                 : (output_select == 2'b10) ? yval_downconverted << 2
                                 : yval_upconverted[15:2];
-    wire [13:0] dac2_input_14 = upsampledY[15:2];
+    wire [13:0] dac2_input_14 = yval_downconverted << 2;
     reg [13:0] dac1_input_14_reg, dac2_input_14_reg;
 
     always @(posedge sys_clk) begin

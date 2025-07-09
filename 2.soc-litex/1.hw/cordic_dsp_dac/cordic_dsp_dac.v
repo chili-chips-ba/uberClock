@@ -1,4 +1,5 @@
 `timescale 1ns / 1ps
+`default_nettype none
 module cordic_dsp_dac#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
