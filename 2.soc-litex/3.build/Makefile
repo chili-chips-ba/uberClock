@@ -11,7 +11,7 @@ SW_DIR        := $(PROJECT_ROOT)/2.sw
 BUILD_DIR     := $(PROJECT_ROOT)/3.build
 SIM_DIR       := $(PROJECT_ROOT)/4.sim
 ETH_IFACE     ?= enp0s13f0u3u1
-STATIC_IP     ?= 192.168.1.100/24
+STATIC_IP     ?= 192.168.1.1/24
 CSV_FILE      ?= analyzer.csv
 CSR_CSV_FILE  ?= $(BUILD_DIR)/$(BOARD)/csr.csv
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
@@ -34,12 +34,14 @@ EDITOR       := code
 # ------------------------------------------------------------------
 #  Defaults (override on CLI)
 # ------------------------------------------------------------------
-FREQ         ?= 50e6
-OPTIONS      ?=
+FREQ         ?= 65e6
+OPTIONS      ?= --with-etherbone --with-uberclock
 PORT         ?= /dev/ttyUSB0
 DEMO_FLAGS   ?= --with-cxx
 
-# simulation settings
+# ------------------------------------------------------------------
+#  Simulation settings
+# ------------------------------------------------------------------
 SIM_FREQ      ?= $(FREQ)
 SIM_RAM_BYTES ?= 0x20000
 SIM_JSON      := $(SIM_DIR)/soc.json
@@ -47,8 +49,13 @@ SIM_CSV       := $(SIM_DIR)/csr.csv
 SIM_BIOS      ?= $(EXAMPLE_DIR)/cordic/demo.bin
 
 .PHONY: help open-target open-example build-board load term \
-        build-sw sim view-sim clean-sim
+        build-sw sim view-sim clean-sim \
+        setup-ethernet start-server stop-server litescope \
+        clean
 
+# ——————————————————————————————————————————————————————————————
+#  Help Message
+# ——————————————————————————————————————————————————————————————
 help:
 	@echo "Usage:"
 	@echo "  make open-target    file=<name>"
@@ -60,6 +67,13 @@ help:
 	@echo "  make sim"
 	@echo "  make view-sim"
 	@echo "  make clean-sim"
+	@echo "  make setup-ethernet      [ETH_IFACE=..] [STATIC_IP=..]"
+	@echo "  make start-server"
+	@echo "  make stop-server"
+	@echo "  make litescope"
+	@echo "  make clean"
+	@echo "  make copy-migen"
+
 
 # ——————————————————————————————————————————————————————————————
 #  Open the target or example in your editor
@@ -151,3 +165,45 @@ view-sim:
 clean-sim:
 	@echo "[clean-sim] removing sim artifacts"
 	rm -rf $(SIM_DIR)/*.{json,csv,vcd,fst}
+
+
+# ——————————————————————————————————————————————————————————————
+#  Ethernet setup and LiteScope support
+# ——————————————————————————————————————————————————————————————
+setup-ethernet:
+	@echo "[setup-ethernet] configuring $(ETH_IFACE) with static IP $(STATIC_IP)"
+	sudo ip addr flush dev $(ETH_IFACE)
+	sudo ip addr add $(STATIC_IP) dev $(ETH_IFACE)
+	sudo ip link set $(ETH_IFACE) up
+
+start-server:
+	@echo "[start-server] starting litex_server with UDP @ $(STATIC_IP)"
+	source $(LITEX_VENV)/bin/activate && \
+	nohup litex_server --udp --udp-ip=$(STATIC_IP) > $(BUILD_DIR)/litex_server.log 2>&1 & \
+	echo $$! > $(SERVER_PID)
+	@echo "  PID saved to $(SERVER_PID)"
+
+stop-server:
+	@if [ -f $(SERVER_PID) ]; then \
+	  PID=$$(cat $(SERVER_PID)); \
+	  echo "[stop-server] killing PID $$PID"; \
+	  kill $$PID && rm -f $(SERVER_PID); \
+	else \
+	  echo "[stop-server] No server PID file found."; \
+	fi
+
+litescope:
+	@echo "[litescope] dumping VCD from $(CSV_FILE) using $(CSR_CSV_FILE)"
+	source $(LITEX_VENV)/bin/activate && \
+	litescope_cli --csv=$(CSV_FILE) --csr-csv=$(CSR_CSV_FILE)
+
+# ——————————————————————————————————————————————————————————————
+#  Clean
+# ——————————————————————————————————————————————————————————————
+clean:
+	@echo "[clean] removing build, sim, logs, and temporary files"
+	rm -rf $(BUILD_DIR)/build
+	rm -rf $(SIM_DIR)/*
+	find $(SW_DIR) -type f -name "*.bin" -delete
+	rm -f $(SERVER_PID)
+	rm -f $(BUILD_DIR)/litex_server.log
