@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`default_nettype none
+//`default_nettype none
 module cordic_dsp_dac#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -27,12 +27,15 @@ module cordic_dsp_dac#(
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
     input  [PW-1:0]           phase_inc_down,
-
     input                     input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              output_select,
-
     input  [31:0]             gain1,
     input  [31:0]             gain2,
+
+    // CPU signals
+    output signed [15:0]      downsampled_data,
+    output                    ce_down,
+    input signed  [15:0]      upsampler_input,
 
     // Debug outputs
     output [IW-1:0]           dbg_nco_cos,
@@ -48,6 +51,7 @@ module cordic_dsp_dac#(
     output [15:0]             dbg_x_upconverted,
     output [15:0]             dbg_y_upconverted,
     output                    dbg_ce_down_x,
+    output                    dbg_ce_down_y,
     output                    dbg_ce_up_x,
     output                    dbg_cic_ce_x,
     output                    dbg_comp_ce_x,
@@ -55,7 +59,6 @@ module cordic_dsp_dac#(
     output signed [11:0]      dbg_cic_out_x,
     output signed [15:0]      dbg_comp_out_x
     );
-
     //======================================================================
     // Instantiate the “adc” module
     //======================================================================
@@ -74,7 +77,6 @@ module cordic_dsp_dac#(
         .ad_data_ch0  (ad_data_ch0_12),
         .ad_data_ch1  (ad_data_ch1_12)
     );
-
     // ----------------------------------------------------------------------
     // Phase accumulator for NCO
     // ----------------------------------------------------------------------
@@ -85,7 +87,6 @@ module cordic_dsp_dac#(
        else
            phase_acc_nco_reg <= phase_acc_nco_reg + phase_inc_nco;
     end
-
     wire signed [IW-1:0] nco_cos, nco_sin;
     wire                 nco_aux;
     cordic #(
@@ -106,12 +107,10 @@ module cordic_dsp_dac#(
         .o_yval  (nco_sin),
         .o_aux   (nco_aux)
     );
-
     reg signed [11:0] filter_in;
     always @(posedge sys_clk) begin
         filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
     end
-
     // ----------------------------------------------------------------------
     // Phase accumulator for downconversion
     // ----------------------------------------------------------------------
@@ -126,7 +125,6 @@ module cordic_dsp_dac#(
     wire                 down_aux;
     wire signed [IW-1:0] selected_input;
     assign selected_input = input_select ? nco_cos : filter_in;
-
    cordic #(
        .IW(IW),
        .OW(OW),
@@ -154,6 +152,11 @@ module cordic_dsp_dac#(
     wire signed [15:0]  comp_out_x;
     wire signed [15:0]  downsampled_x, downsampled_y;
 
+    wire ce_out_down_x;
+    wire ce_out_down_y;
+    wire ce_out_up_x;
+    wire ce_out_up_y;
+
     downsamplerFilter down_x (
         .clk           (sys_clk),
         .clk_enable    (1'b1),
@@ -167,7 +170,6 @@ module cordic_dsp_dac#(
         .debug_cic_out (cic_out_x),
         .debug_comp_out(comp_out_x)
     );
-
     downsamplerFilter down_y (
         .clk        (sys_clk),
         .clk_enable (1'b1),
@@ -177,48 +179,43 @@ module cordic_dsp_dac#(
         .ce_out     (ce_out_down_y)
     );
 
+    assign downsampled_data = downsampled_y;
+    assign ce_down          = ce_out_down_y;
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
-
-    wire signed [48:0] y_gained , x_gained ;
-    wire signed [32:0] gain_signed_1 = {1'b0, gain1};
-    wire signed [32:0] gain_signed_2 = {1'b0, gain2};
-
-    assign y_gained = downsampled_y * gain_signed_1;
-    assign x_gained = downsampled_x * gain_signed_1;
-
+    //wire signed [48:0] y_gained , x_gained ;
+    //wire signed [32:0] gain_signed_1 = {1'b0, gain1};
+    //wire signed [32:0] gain_signed_2 = {1'b0, gain2};
+    //assign y_gained = downsampled_y * gain_signed_1;
+    //assign x_gained = downsampled_x * gain_signed_1;
     wire signed [15:0] upsampled_x, upsampled_y;
-    wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
-    assign upsampled_gain_y = y_gained >>> 30;
-    assign upsampled_gain_x = x_gained >>> 30;
-
+    //wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
+    //assign upsampled_gain_y = y_gained >>> 30;
+    //assign upsampled_gain_x = x_gained >>> 30;
     upsamplerFilter up_x (
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (upsampled_gain_x),
+        .filter_in  (upsampled_x),
         .filter_out (upsampled_x),
         .ce_out     (ce_out_up_x)
     );
-
     upsamplerFilter up_y (
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (upsampled_gain_y),
+        .filter_in  (upsampler_input),
+        //.filter_in  (downsampled_y),
         .filter_out (upsampled_y),
         .ce_out     (ce_out_up_y)
     );
-
-
     // ----------------------------------------------------------------------
     // Upconversion CORDIC
     // ----------------------------------------------------------------------
     wire [22:0] phase_inv = (1 << 23) - (phase_acc_down_reg << 4);
     wire signed [15:0] x_upconverted, y_upconverted;
     wire up_aux;
-
     cordic16 #(
         .IW(16),
         .OW(16),
@@ -237,24 +234,20 @@ module cordic_dsp_dac#(
         .o_yval  (y_upconverted),
         .o_aux   (up_aux)
     );
-
     // ----------------------------------------------------------------------
     // DAC data preparation
     // ----------------------------------------------------------------------
-
     wire [13:0] dac1_data_in =   (output_select == 2'b00) ? downsampled_y[15:2]
                                 : (output_select == 2'b01) ? upsampled_y[15:2]
                                 : (output_select == 2'b10) ? y_downconverted << 2
                                 : y_upconverted[15:2];
-    wire [13:0] dac2_data_in = upsampled_gain_y[15:2];
+    wire [13:0] dac2_data_in = (output_select == 2'b00) ? upsampled_y[15:2] :
+                               (output_select == 2'b01) ? filter_in << 2 : nco_cos << 2 ;
     reg  [13:0] dac1_data_reg, dac2_data_reg;
-
     always @(posedge sys_clk) begin
         dac1_data_reg <= dac1_data_in + 14'd8192;
         dac2_data_reg <= dac2_data_in + 14'd8192;
     end
-
-
      // ----------------------------------------------------------------------
     // DDR-output DAC module
     // ----------------------------------------------------------------------
@@ -270,7 +263,6 @@ module cordic_dsp_dac#(
         .da2_wrt  (da2_wrt),
         .da2_data (da2_data)
     );
-
     // ----------------------------------------------------------------------
     // Debug signal assignments
     // ----------------------------------------------------------------------
@@ -287,6 +279,7 @@ module cordic_dsp_dac#(
     assign dbg_x_upconverted   = x_upconverted;
     assign dbg_y_upconverted   = y_upconverted;
     assign dbg_ce_down_x       = ce_out_down_x;
+    assign dbg_ce_down_y       = ce_out_down_y;
     assign dbg_ce_up_x         = ce_out_up_x;
     assign dbg_cic_ce_x        = cic_ce_x;
     assign dbg_comp_ce_x       = comp_ce_x;
