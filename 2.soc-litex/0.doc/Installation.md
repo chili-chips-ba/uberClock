@@ -66,3 +66,7 @@ Until the Pull Request is approved you will need to manually copy the target and
 ### Use a script that automates all of this
 
 If you'd like to use a bash script that does all of the steps above you can simply use the [install_litex.sh](https://github.com/chili-chips-ba/uberClock/blob/main/2.soc-litex/install_litex.sh) script located in the [2.soc-litex](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex) folder.
+
+## Vivado Installation
+
+For a detailed Vivado installation guide please consult [this](https://github.com/chili-chips-ba/wireguard-fpga/wiki/1.-Setting-Up-Vivado) document that can be found on the Wiki of our Wireguard project.
