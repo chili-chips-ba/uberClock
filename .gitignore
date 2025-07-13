@@ -12,6 +12,8 @@
 2.soc-litex/2.sw/uberClock
 2.soc-litex/3.build/analyzer.csv
 2.soc-litex/3.build/dump.vcd
+2.soc-litex/3.build/vivado.jou
+2.soc-litex/3.build/vivado_*.str
 #*impl*
 *temp*
 
