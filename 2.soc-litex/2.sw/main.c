@@ -65,29 +65,36 @@ static void prompt(void) {
 static void help(void) {
 	puts("\nuberClock built " __DATE__ " " __TIME__ "\n");
 	puts("Available commands:");
-	puts("  help                  - Show this command");
-	puts("  reboot                - Reboot CPU");
-	puts("  phase_nco <val>      - Set input CORDIC NCO phase increment (0–524287)");
-	puts("  phase_down <val>     - Set downconversion CORDIC phase increment (0–524287)");
-	puts("  output_select_ch1 <val>  - Choose DAC1 (channel 1) output source:");
-	puts("                           0 = downsampledY");
-	puts("                           1 = upsampledX");
-	puts("                           2 = y_downconverted");
-	puts("                           3 = y_upconverted");
-	puts("  output_select_ch2 <val>  - Choose DAC2 (channel 2) output source:");
-	puts("                           0 = upsampledY");
-	puts("                           1 = filter_in");
-	puts("                           2 = nco_cos");
-	puts("                           3 = upsampledY");
-	puts("  input_select <val>   - Set main input select register (0=ADC, 1=NCO)");
-	puts("  gain1 <val>           - Set Gain1 register (Q format value)");
-	puts("  gain2 <val>           - Set Gain2 register (Q format value)");
+	puts("  help                      - Show this command");
+	puts("  reboot                    - Reboot CPU");
+	puts("  phase_nco  <val>          - Set input CORDIC NCO phase increment (0–524287)");
+	puts("  phase_down <val>          - Set downconversion CORDIC phase increment (0–524287)");
+	puts("  phase_cpu  <val>          - Set CORDIC CPU phase increment (0–524287)");
+	puts("  output_select_ch1 <val>   - Choose DAC1 (channel 1) output source:");
+	puts("                                 0 = downsampled_y");
+	puts("                                 1 = x_cpu_nco");
+	puts("                                 2 = y_downconverted");
+	puts("                                 3 = y_upconverted");
+	puts("  output_select_ch2 <val>   - Choose DAC2 (channel 2) output source:");
+	puts("                                 0 = upsampled_y");
+	puts("                                 1 = filter_in");
+	puts("                                 2 = nco_cos");
+	puts("                                 3 = upsampled_input_y(from CPU)");
+	puts("  input_select <val>        - Set input select register");
+	puts("                                 0 = ADC");
+	puts("                                 1 = NCO");
+	puts("                                 2 = CPU");
+	puts("  upsampler input mux <val> - Set upsampler input register register")
+	puts("                                 0 = Gain");
+	puts("                                 1 = CPU");
+	puts("                                 2 = CPU NCO");
+	puts("  gain1 <val>               - Set gain1 register");
+	puts("  gain2 <val>               - Set gain2 register");
 }
 
 static void reboot_cmd(void) {
 	ctrl_reset_write(1);
 }
-
 
 static void phase_nco_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
@@ -109,6 +116,16 @@ static void phase_down_cmd(char *args) {
 	printf("Downconversion phase increment set to %u\n", p);
 }
 
+static void phase_cpu_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_cpu must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_cpu_write(p);
+	printf("CPU phase increment set to %u\n", p);
+}
+
 static void output_select_ch1_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0) & 0x3;
 	main_output_select_ch1_write(v);
@@ -125,6 +142,12 @@ static void input_select_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0);
 	main_input_select_write(v);
 	printf("Main input select register set to %u\n", v);
+}
+
+static void upsampler_input_mux_cmd(char *args) {
+	unsigned v = strtoul(args, NULL, 0);
+	main_upsampler_input_mux_write(v);
+	printf("Upsampler input mux register set to %u\n", v);
 }
 
 static void gain1_cmd(char *args) {
@@ -154,6 +177,10 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		phase_down_cmd(arg);
 	}
+	else if (!strcmp(token, "phase_cpu")) {
+		char *arg = get_token(&line);
+		phase_cpu_cmd(arg);
+	}
 	else if (!strcmp(token, "output_select_ch1")) {
 		char *arg = get_token(&line);
 		output_select_ch1_cmd(arg);
@@ -165,6 +192,10 @@ static void console_service(void) {
 	else if (!strcmp(token, "input_select")) {
 		char *arg = get_token(&line);
 		input_select_cmd(arg);
+	}
+	else if (!strcmp(token, "upsampler_input_mux")) {
+		char *arg = get_token(&line);
+		upsampler_input_mux_cmd(arg);
 	}
 	else if (!strcmp(token, "gain1")) {
 		char *arg = get_token(&line);
@@ -196,7 +227,9 @@ int main(void) {
 
 	main_phase_inc_nco_write(80652);
 	main_phase_inc_down_write(80660);
+	main_phase_inc_cpu_write(52429);
 	main_input_select_write(1);
+	main_upsampler_input_mux_write(0);
 
 	uart_init();
 

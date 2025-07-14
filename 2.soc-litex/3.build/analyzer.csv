@@ -1,5 +1,5 @@
 config,None,data_width,390
-config,None,depth,32768
+config,None,depth,16384
 config,None,samplerate,65000000
 signal,0,main_basesoc0,12
 signal,0,main_basesoc1,12

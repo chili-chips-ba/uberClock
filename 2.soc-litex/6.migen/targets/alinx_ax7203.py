@@ -33,7 +33,7 @@ from liteeth.phy.s7rgmii import LiteEthPHYRGMII
 from litescope import LiteScopeAnalyzer
 
 # NOTE: Change this accordingly!
-repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/" # Absolute path to the root of your cloned repo
+repository_dir = "/home/ahmed/ws/uberClock/" # Absolute path to the root of your cloned repo
 verilog_dir = repository_dir + "/2.soc-litex/1.hw"
 
 # -------------------------------------------------------------------------
@@ -333,7 +333,7 @@ class BaseSoC(SoCCore):
 
         self.submodules.analyzer = LiteScopeAnalyzer(
             probes,
-            depth        = 32768,
+            depth        = 16384,
             clock_domain = "sys",
             samplerate   = sys_clk_freq
         )

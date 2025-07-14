@@ -27,7 +27,10 @@ module uberclock#(
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
     input  [PW-1:0]           phase_inc_down,
-    input                     input_select,  // 0=use ADC, 1=use internal NCO
+    input  [PW-1:0]           phase_inc_cpu,
+
+    input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
+    input  [1:0]              upsampler_input_mux,
     input  [1:0]              output_select_ch1,
     input  [1:0]              output_select_ch2,
     input  [31:0]             gain1,
@@ -84,7 +87,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Phase accumulator for NCO
     // ----------------------------------------------------------------------
-    reg [PW-1:0] phase_acc_nco_reg;
+    reg [PW-1:0] phase_acc_nco_reg = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
            phase_acc_nco_reg <= 0;
@@ -118,7 +121,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Phase accumulator for downconversion
     // ----------------------------------------------------------------------
-    reg [PW-1:0] phase_acc_down_reg;
+    reg [PW-1:0] phase_acc_down_reg = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
         if (rst)
             phase_acc_down_reg <= 0;
@@ -128,7 +131,8 @@ module uberclock#(
     wire signed [IW-1:0] x_downconverted, y_downconverted;
     wire                 down_aux;
     wire signed [IW-1:0] selected_input;
-    assign selected_input = input_select ? nco_cos : filter_in;
+    assign selected_input = (input_select == 2'b00) ? nco_cos : 
+                            (input_select == 2'b01) ? filter_in : y_upconverted[13:2];
    cordic #(
        .IW(IW),
        .OW(OW),
@@ -189,20 +193,28 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
-    //wire signed [48:0] y_gained , x_gained ;
-    //wire signed [32:0] gain_signed_1 = {1'b0, gain1};
-    //wire signed [32:0] gain_signed_2 = {1'b0, gain2};
-    //assign y_gained = downsampled_y * gain_signed_1;
-    //assign x_gained = downsampled_x * gain_signed_1;
+    wire signed [48:0] y_gained , x_gained ;
+    wire signed [32:0] gain_signed_1 = {1'b0, gain1};
+    wire signed [32:0] gain_signed_2 = {1'b0, gain2};
+    assign y_gained = downsampled_y * gain_signed_1;
+    assign x_gained = downsampled_x * gain_signed_1;
     wire signed [15:0] upsampled_x, upsampled_y;
-    //wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
-    //assign upsampled_gain_y = y_gained >>> 30;
-    //assign upsampled_gain_x = x_gained >>> 30;
+    wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
+    assign upsampled_gain_y = y_gained >>> 30;
+    assign upsampled_gain_x = x_gained >>> 30;
+
+    wire signed [15:0] upsampler_in_x, upsampler_in_y;
+
+    assign upsampler_in_x = (upsampler_input_mux == 2'b00) ? upsampled_gain_x :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco;
+
+    assign upsampler_in_y = (upsampler_input_mux == 2'b00) ? upsampled_gain_y :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco;
     upsamplerFilter up_x (
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (upsampler_input_x),
+        .filter_in  (upsampler_in_x),
         .filter_out (upsampled_x),
         .ce_out     (ce_out_up_x)
     );
@@ -210,7 +222,7 @@ module uberclock#(
         .clk        (sys_clk),
         .clk_enable (1'b1),
         .reset      (rst),
-        .filter_in  (upsampler_input_y),
+        .filter_in  (upsampler_in_y),
         //.filter_in  (downsampled_y),
         .filter_out (upsampled_y),
         .ce_out     (ce_out_up_y)
@@ -239,11 +251,50 @@ module uberclock#(
         .o_yval  (y_upconverted),
         .o_aux   (up_aux)
     );
+
+
+    // ----------------------------------------------------------------------
+    // CPU CORDIC NCO
+    // ----------------------------------------------------------------------
+    wire signed [IW-1:0] x_cpu_nco, y_cpu_nco;
+    wire                 down_aux_cpu;
+   
+   cordic #(
+       .IW(IW),
+       .OW(OW),
+       .NSTAGES(NSTAGES),
+       .WW(WW),
+       .PW(PW)
+   ) cordic_cpu(
+       .i_clk  (sys_clk),
+       .i_reset(rst),
+       .i_ce   (1'b1),
+       .i_xval (12'sd1000),
+       .i_yval (12'sd0),
+       .i_phase(phase_acc_cpu_reg),
+       .i_aux  (1'b1),
+       .o_xval (x_cpu_nco),
+       .o_yval (y_cpu_nco),
+       .o_aux  (down_aux_cpu)
+   );
+
+    reg [PW-1:0] phase_acc_cpu_reg = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg <= phase_acc_cpu_reg + phase_inc_cpu; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
+
+
     // ----------------------------------------------------------------------
     // DAC data preparation
     // ----------------------------------------------------------------------
     wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y[15:2] :
-                                 (output_select_ch1 == 2'b01) ? upsampler_input_x[15:2]:
+                                 (output_select_ch1 == 2'b01) ? x_cpu_nco << 2:
                                  (output_select_ch1 == 2'b10) ? y_downconverted << 2 :
                                                                 y_upconverted[15:2];
 
@@ -271,6 +322,7 @@ module uberclock#(
         .da2_wrt  (da2_wrt),
         .da2_data (da2_data)
     );
+
     // ----------------------------------------------------------------------
     // Debug signal assignments
     // ----------------------------------------------------------------------
