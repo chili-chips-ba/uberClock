@@ -19,3 +19,8 @@
 
 *\#*\#
 *\#*
+# ignore VSCode workspace folder
+.vscode/
+
+# ignore Vivado backup journals
+*.jou
