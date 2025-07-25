@@ -87,20 +87,27 @@ open-example:
 # ——————————————————————————————————————————————————————————————
 #  Board build & load
 # ——————————————————————————————————————————————————————————————
+# build-board:
+	# @echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
+	# source $(LITEX_VENV)/bin/activate && \
+	# $(PYTHON) -m $(BOARDS_PKG) \
+	#   --build \
+	#   --sys-clk-freq=$(FREQ) \
+	#   $(OPTIONS)
+BASE_TARGET := $(LITEX_PATH)/litex-boards/litex_boards/targets/$(BOARD).py
 build-board:
-	@echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
 	source $(LITEX_VENV)/bin/activate && \
-	$(PYTHON) -m $(BOARDS_PKG) \
-	  --build \
-	  --sys-clk-freq=$(FREQ) \
-	  $(OPTIONS)
+	python3 $(BASE_TARGET) --build --sys-clk-freq=$(FREQ) $(OPTIONS)
 
 load:
-	@echo "[litex load]"
 	source $(LITEX_VENV)/bin/activate && \
-	$(PYTHON) -m $(BOARDS_PKG) \
-	  --load \
-	  $(OPTIONS)
+	python3 $(BASE_TARGET) --load  --sys-clk-freq=$(FREQ) $(OPTIONS)
+# load:
+# 	@echo "[litex load]"
+# 	source $(LITEX_VENV)/bin/activate && \
+# 	$(PYTHON) -m $(BOARDS_PKG) \
+# 	  --load \
+# 	  $(OPTIONS)
 
 # ——————————————————————————————————————————————————————————————
 #  Serial terminal into built example

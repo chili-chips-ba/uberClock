@@ -146,7 +146,7 @@ static void input_select_cmd(char *args) {
 
 static void upsampler_input_mux_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0);
-	main_upsample_input_mux_write(v);
+	main_upsampler_input_mux_write(v);
 	printf("Upsampler input mux register set to %u\n", v);
 }
 
