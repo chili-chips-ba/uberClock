@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-//`default_nettype none
+`default_nettype none
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -41,30 +41,30 @@ module uberclock#(
     output signed [15:0]      downsampled_data_y,
     output                    ce_down,
     input signed  [15:0]      upsampler_input_x,
-    input signed  [15:0]      upsampler_input_y,
+    input signed  [15:0]      upsampler_input_y
 
 
     // Debug outputs
-    output [IW-1:0]           dbg_nco_cos,
-    output [IW-1:0]           dbg_nco_sin,
-    output [PW-1:0]           dbg_phase_acc_down,
-    output [11:0]             dbg_x_downconverted,
-    output [11:0]             dbg_y_downconverted,
-    output [15:0]             dbg_downsampled_x,
-    output [15:0]             dbg_downsampled_y,
-    output [15:0]             dbg_upsampled_x,
-    output [15:0]             dbg_upsampled_y,
-    output [22:0]             dbg_phase_inv,
-    output [15:0]             dbg_x_upconverted,
-    output [15:0]             dbg_y_upconverted,
-    output                    dbg_ce_down_x,
-    output                    dbg_ce_down_y,
-    output                    dbg_ce_up_x,
-    output                    dbg_cic_ce_x,
-    output                    dbg_comp_ce_x,
-    output                    dbg_hb_ce_x,
-    output signed [11:0]      dbg_cic_out_x,
-    output signed [15:0]      dbg_comp_out_x
+    // output [IW-1:0]           dbg_nco_cos,
+    // output [IW-1:0]           dbg_nco_sin,
+    // output [PW-1:0]           dbg_phase_acc_down,
+    // output [11:0]             dbg_x_downconverted,
+    // output [11:0]             dbg_y_downconverted,
+    // output [15:0]             dbg_downsampled_x,
+    // output [15:0]             dbg_downsampled_y,
+    // output [15:0]             dbg_upsampled_x,
+    // output [15:0]             dbg_upsampled_y,
+    // output [22:0]             dbg_phase_inv,
+    // output [15:0]             dbg_x_upconverted,
+    // output [15:0]             dbg_y_upconverted,
+    // output                    dbg_ce_down_x,
+    // output                    dbg_ce_down_y,
+    // output                    dbg_ce_up_x,
+    // output                    dbg_cic_ce_x,
+    // output                    dbg_comp_ce_x,
+    // output                    dbg_hb_ce_x,
+    // output signed [11:0]      dbg_cic_out_x,
+    // output signed [15:0]      dbg_comp_out_x
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -118,78 +118,41 @@ module uberclock#(
     always @(posedge sys_clk) begin
         filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
     end
-    // ----------------------------------------------------------------------
-    // Phase accumulator for downconversion
-    // ----------------------------------------------------------------------
-    reg [PW-1:0] phase_acc_down_reg = {PW{1'b0}};
-    always @(posedge sys_clk or posedge rst) begin
-        if (rst)
-            phase_acc_down_reg <= 0;
-        else
-            phase_acc_down_reg <= phase_acc_down_reg + phase_inc_down;
-    end
-    wire signed [IW-1:0] x_downconverted, y_downconverted;
-    wire                 down_aux;
+
     wire signed [IW-1:0] selected_input;
     assign selected_input = (input_select == 2'b00) ? nco_cos : 
-                            (input_select == 2'b01) ? filter_in : y_upconverted[13:2];
-   cordic #(
-       .IW(IW),
-       .OW(OW),
-       .NSTAGES(NSTAGES),
-       .WW(WW),
-       .PW(PW)
-   ) cordic_down (
-       .i_clk  (sys_clk),
-       .i_reset(rst),
-       .i_ce   (1'b1),
-       .i_xval (0),
-       .i_yval (selected_input),
-       .i_phase(phase_acc_down_reg),
-       .i_aux  (1'b1),
-       .o_xval (x_downconverted),
-       .o_yval (y_downconverted),
-       .o_aux  (down_aux)
-   );
-
-    // ----------------------------------------------------------------------
-    // Downsampling filters
-    // ----------------------------------------------------------------------
-    wire                cic_ce_x, comp_ce_x, hb_ce_x;
-    wire signed [11:0]  cic_out_x;
-    wire signed [15:0]  comp_out_x;
-    wire signed [15:0]  downsampled_x, downsampled_y;
-
-    wire ce_out_down_x;
-    wire ce_out_down_y;
-    wire ce_out_up_x;
-    wire ce_out_up_y;
-
-    downsamplerFilter down_x (
-        .clk           (sys_clk),
-        .clk_enable    (1'b1),
-        .reset         (rst),
-        .filter_in     (x_downconverted),
-        .filter_out    (downsampled_x),
-        .ce_out        (ce_out_down_x),
-        .debug_cic_ce  (cic_ce_x),
-        .debug_comp_ce (comp_ce_x),
-        .debug_hb_ce   (hb_ce_x),
-        .debug_cic_out (cic_out_x),
-        .debug_comp_out(comp_out_x)
-    );
-    downsamplerFilter down_y (
-        .clk        (sys_clk),
-        .clk_enable (1'b1),
-        .reset      (rst),
-        .filter_in  (y_downconverted),
-        .filter_out (downsampled_y),
-        .ce_out     (ce_out_down_y)
+                            (input_select == 2'b01) ? filter_in :tx_channel_output[15:4] ;
+    //------------------------------------------------------------------------
+    // rx channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x, downsampled_y;
+    wire [PW-1:0] phase_acc_down_reg;
+    wire signed [IW-1:0] x_downconverted, y_downconverted;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (19)
+    ) rx_0 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down),
+        .rx_channel_input (selected_input),
+        .rx_channel_output_x (downsampled_x),
+        .rx_channel_output_y (downsampled_y),
+        .downconversion_phase (phase_acc_down_reg),
+        .rx_downconverted_x (x_downconverted),
+        .rx_downconverted_y (y_downconverted),
+        .ce_down (ce_down)
     );
 
-    assign downsampled_data_x = downsampled_x;
-    assign downsampled_data_y = downsampled_y;
-    assign ce_down          = ce_out_down_y;
+    // ----------------------------------------------------------------------
+    // output to CPU
+    // ----------------------------------------------------------------------
+    assign  downsampled_data_x = downsampled_x;
+    assign  downsampled_data_y = downsampled_y;
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
@@ -198,7 +161,6 @@ module uberclock#(
     wire signed [32:0] gain_signed_2 = {1'b0, gain2};
     assign y_gained = downsampled_y * gain_signed_1;
     assign x_gained = downsampled_x * gain_signed_1;
-    wire signed [15:0] upsampled_x, upsampled_y;
     wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
     assign upsampled_gain_y = y_gained >>> 30;
     assign upsampled_gain_x = x_gained >>> 30;
@@ -206,52 +168,35 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x, upsampler_in_y;
 
     assign upsampler_in_x = (upsampler_input_mux == 2'b00) ? upsampled_gain_x :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
 
     assign upsampler_in_y = (upsampler_input_mux == 2'b00) ? upsampled_gain_y :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco;
-    upsamplerFilter up_x (
-        .clk        (sys_clk),
-        .clk_enable (1'b1),
-        .reset      (rst),
-        .filter_in  (upsampler_in_x),
-        .filter_out (upsampled_x),
-        .ce_out     (ce_out_up_x)
-    );
-    upsamplerFilter up_y (
-        .clk        (sys_clk),
-        .clk_enable (1'b1),
-        .reset      (rst),
-        .filter_in  (upsampler_in_y),
-        //.filter_in  (downsampled_y),
-        .filter_out (upsampled_y),
-        .ce_out     (ce_out_up_y)
-    );
-    // ----------------------------------------------------------------------
-    // Upconversion CORDIC
-    // ----------------------------------------------------------------------
-    wire [22:0] phase_inv = (1 << 23) - (phase_acc_down_reg << 4);
-    wire signed [15:0] x_upconverted, y_upconverted;
-    wire up_aux;
-    cordic16 #(
-        .IW(16),
-        .OW(16),
-        .NSTAGES(19),
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+    //--------------------------------------------------------
+    // tx channel
+    //--------------------------------------------------------
+    wire ce_up;
+    wire signed [15:0] tx_channel_output;
+    wire signed [15:0] upsampled_x, upsampled_y;
+    tx_channel # (
+        .IW(16), 
+        .OW(16), 
+        .TX_OW(16),
+        .NSTAGES(19), 
         .WW(19),
+        .PW_I(19), 
         .PW(23)
-    ) cordic_up (
-        .i_clk   (sys_clk),
-        .i_reset (rst),
-        .i_ce    (1'b1),
-        .i_xval  (upsampled_y),
-        .i_yval  (upsampled_x),
-        .i_phase (phase_inv),
-        .i_aux   (ce_out_up_x),
-        .o_xval  (x_upconverted),
-        .o_yval  (y_upconverted),
-        .o_aux   (up_aux)
+    ) tx_0 (
+        sys_clk (sys_clk),
+        rst(rst),
+        phase_input(phase_acc_down_reg),
+        tx_channel_input_x (upsampler_in_x),
+        tx_channel_input_y (upsampler_in_y),
+        tx_channel_output (tx_channel_output),
+        tx_channel_upsampled_x (upsampled_x),
+        tx_channel_upsampled_y (upsampled_y),
+        ce_up(ce_up)
     );
-
 
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO
@@ -296,12 +241,12 @@ module uberclock#(
     wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y[15:2] :
                                  (output_select_ch1 == 2'b01) ? x_cpu_nco << 2:
                                  (output_select_ch1 == 2'b10) ? y_downconverted << 2 :
-                                                                y_upconverted[15:2];
+                                                                tx_channel_output[15:2];
 
     wire [13:0] dac2_data_in =   (output_select_ch2 == 2'b00) ? upsampled_y[15:2] :
                                  (output_select_ch2 == 2'b01) ? filter_in << 2 :
                                  (output_select_ch2 == 2'b10) ? nco_cos << 2 :
-                                                               upsampler_input_y[15:2];
+                                                               upsampler_in_y[15:2];
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin
         dac1_data_reg <= dac1_data_in + 14'd8192;
@@ -326,24 +271,24 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Debug signal assignments
     // ----------------------------------------------------------------------
-    assign dbg_nco_cos         = nco_cos;
-    assign dbg_nco_sin         = nco_sin;
-    assign dbg_phase_acc_down  = phase_acc_down_reg;
-    assign dbg_x_downconverted = x_downconverted;
-    assign dbg_y_downconverted = y_downconverted;
-    assign dbg_downsampled_x   = downsampled_x;
-    assign dbg_downsampled_y   = downsampled_y;
-    assign dbg_upsampled_x     = upsampled_x;
-    assign dbg_upsampled_y     = upsampled_y;
-    assign dbg_phase_inv       = phase_inv;
-    assign dbg_x_upconverted   = x_upconverted;
-    assign dbg_y_upconverted   = y_upconverted;
-    assign dbg_ce_down_x       = ce_out_down_x;
-    assign dbg_ce_down_y       = ce_out_down_y;
-    assign dbg_ce_up_x         = ce_out_up_x;
-    assign dbg_cic_ce_x        = cic_ce_x;
-    assign dbg_comp_ce_x       = comp_ce_x;
-    assign dbg_hb_ce_x         = hb_ce_x;
-    assign dbg_cic_out_x       = cic_out_x;
-    assign dbg_comp_out_x      = comp_out_x;
+    // assign dbg_nco_cos         = nco_cos;
+    // assign dbg_nco_sin         = nco_sin;
+    // assign dbg_phase_acc_down  = phase_acc_down_reg;
+    // assign dbg_x_downconverted = x_downconverted;
+    // assign dbg_y_downconverted = y_downconverted;
+    // assign dbg_downsampled_x   = downsampled_x;
+    // assign dbg_downsampled_y   = downsampled_y;
+    // assign dbg_upsampled_x     = upsampled_x;
+    // assign dbg_upsampled_y     = upsampled_y;
+    // assign dbg_phase_inv       = phase_inv;
+    // assign dbg_x_upconverted   = x_upconverted;
+    // assign dbg_y_upconverted   = y_upconverted;
+    // assign dbg_ce_down_x       = ce_out_down_x;
+    // assign dbg_ce_down_y       = ce_out_down_y;
+    // assign dbg_ce_up_x         = ce_out_up_x;
+    // assign dbg_cic_ce_x        = cic_ce_x;
+    // assign dbg_comp_ce_x       = comp_ce_x;
+    // assign dbg_hb_ce_x         = hb_ce_x;
+    // assign dbg_cic_out_x       = cic_out_x;
+    // assign dbg_comp_out_x      = comp_out_x;
 endmodule
