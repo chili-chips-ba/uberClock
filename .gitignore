@@ -24,3 +24,14 @@
 
 # ignore Vivado backup journals
 *.jou
+# Ignore all build artifacts
+*.o
+*.d
+*.elf
+*.bin
+*.fbi
+*.map
+
+# ignore generated binaries
+/2.soc-litex/2.sw/demo.bin
+/2.soc-litex/2.sw/demo.fbi

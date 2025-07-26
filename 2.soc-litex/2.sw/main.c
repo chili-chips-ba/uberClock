@@ -84,7 +84,7 @@ static void help(void) {
 	puts("                                 0 = ADC");
 	puts("                                 1 = NCO");
 	puts("                                 2 = CPU");
-	puts("  upsampler input mux <val> - Set upsampler input register register")
+	puts("  upsampler_input_mux <val> - Set upsampler input register register");
 	puts("                                 0 = Gain");
 	puts("                                 1 = CPU");
 	puts("                                 2 = CPU NCO");
@@ -153,13 +153,13 @@ static void upsampler_input_mux_cmd(char *args) {
 static void gain1_cmd(char *args) {
 	int32_t gain = strtol(args, NULL, 0);
 	main_gain1_write((uint32_t)gain);
-	printf("Gain1 register set to %d (0x%08X)\n", gain, (uint32_t)gain);
+	printf("Gain1 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
 }
 
 static void gain2_cmd(char *args) {
 	int32_t gain = strtol(args, NULL, 0);
 	main_gain2_write((uint32_t)gain);
-	printf("Gain2 register set to %d (0x%08X)\n", gain, (uint32_t)gain);
+	printf("Gain2 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
 }
 
 static void console_service(void) {
