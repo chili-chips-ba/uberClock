@@ -64,7 +64,7 @@ module rx_channel # (
         .reset         (rst),
         .filter_in     (x_downconverted),
         .filter_out    (downsampled_x),
-        .ce_out        (ce_out_down_x),
+        .ce_out        (ce_out_down_x)
    );
     downsamplerFilter down_y (
         .clk        (sys_clk),

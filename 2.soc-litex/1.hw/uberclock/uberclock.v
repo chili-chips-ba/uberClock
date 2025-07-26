@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-`default_nettype none
+// `default_nettype none
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -41,19 +41,19 @@ module uberclock#(
     output signed [15:0]      downsampled_data_y,
     output                    ce_down,
     input signed  [15:0]      upsampler_input_x,
-    input signed  [15:0]      upsampler_input_y
+    input signed  [15:0]      upsampler_input_y,
 
 
     // Debug outputs
-    // output [IW-1:0]           dbg_nco_cos,
-    // output [IW-1:0]           dbg_nco_sin,
-    // output [PW-1:0]           dbg_phase_acc_down,
-    // output [11:0]             dbg_x_downconverted,
-    // output [11:0]             dbg_y_downconverted,
-    // output [15:0]             dbg_downsampled_x,
-    // output [15:0]             dbg_downsampled_y,
-    // output [15:0]             dbg_upsampled_x,
-    // output [15:0]             dbg_upsampled_y,
+    output [IW-1:0]           dbg_nco_cos,
+    output [IW-1:0]           dbg_nco_sin,
+    output [PW-1:0]           dbg_phase_acc_down,
+    output [11:0]             dbg_x_downconverted,
+    output [11:0]             dbg_y_downconverted,
+    output [15:0]             dbg_downsampled_x,
+    output [15:0]             dbg_downsampled_y,
+    output [15:0]             dbg_upsampled_x,
+    output [15:0]             dbg_upsampled_y
     // output [22:0]             dbg_phase_inv,
     // output [15:0]             dbg_x_upconverted,
     // output [15:0]             dbg_y_upconverted,
@@ -187,15 +187,15 @@ module uberclock#(
         .PW_I(19), 
         .PW(23)
     ) tx_0 (
-        sys_clk (sys_clk),
-        rst(rst),
-        phase_input(phase_acc_down_reg),
-        tx_channel_input_x (upsampler_in_x),
-        tx_channel_input_y (upsampler_in_y),
-        tx_channel_output (tx_channel_output),
-        tx_channel_upsampled_x (upsampled_x),
-        tx_channel_upsampled_y (upsampled_y),
-        ce_up(ce_up)
+       .sys_clk (sys_clk),
+        .rst(rst),
+        .phase_input(phase_acc_down_reg),
+        .tx_channel_input_x (upsampler_in_x),
+        .tx_channel_input_y (upsampler_in_y),
+        .tx_channel_output (tx_channel_output),
+        .tx_channel_upsampled_x (upsampled_x),
+        .tx_channel_upsampled_y (upsampled_y),
+        .ce_up(ce_up)
     );
 
     // ----------------------------------------------------------------------
@@ -271,18 +271,18 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Debug signal assignments
     // ----------------------------------------------------------------------
-    // assign dbg_nco_cos         = nco_cos;
-    // assign dbg_nco_sin         = nco_sin;
-    // assign dbg_phase_acc_down  = phase_acc_down_reg;
-    // assign dbg_x_downconverted = x_downconverted;
-    // assign dbg_y_downconverted = y_downconverted;
-    // assign dbg_downsampled_x   = downsampled_x;
-    // assign dbg_downsampled_y   = downsampled_y;
-    // assign dbg_upsampled_x     = upsampled_x;
-    // assign dbg_upsampled_y     = upsampled_y;
+    assign dbg_nco_cos         = nco_cos;
+    assign dbg_nco_sin         = nco_sin;
+    assign dbg_phase_acc_down  = phase_acc_down_reg;
+    assign dbg_x_downconverted = x_downconverted;
+    assign dbg_y_downconverted = y_downconverted;
+    assign dbg_downsampled_x   = downsampled_x;
+    assign dbg_downsampled_y   = downsampled_y;
+    assign dbg_upsampled_x     = upsampled_x;
+    assign dbg_upsampled_y     = upsampled_y;
     // assign dbg_phase_inv       = phase_inv;
     // assign dbg_x_upconverted   = x_upconverted;
-    // assign dbg_y_upconverted   = y_upconverted;
+    // assign dbg_y_upconverted   = tx_channel_output ;
     // assign dbg_ce_down_x       = ce_out_down_x;
     // assign dbg_ce_down_y       = ce_out_down_y;
     // assign dbg_ce_up_x         = ce_out_up_x;
