@@ -90,6 +90,8 @@ static void help(void) {
 	puts("                                 2 = CPU NCO");
 	puts("  gain1 <val>               - Set gain1 register");
 	puts("  gain2 <val>               - Set gain2 register");
+	puts("  phase                     - Print current CORDIC phase");
+	puts("  magnitude                 - Print current CORDIC magnitude");
 }
 
 static void reboot_cmd(void) {
@@ -162,6 +164,15 @@ static void gain2_cmd(char *args) {
 	printf("Gain2 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
 }
 
+int16_t mag;
+int32_t phase_val;
+
+static void print_phase(void) {
+	printf("Phase %ld \n", (long)phase_val);
+}
+static void magnitude(void) {
+	printf("Magnitude %d \n", mag);
+}
 static void console_service(void) {
 	char *line = readstr();
 	if (!line) return;
@@ -204,6 +215,12 @@ static void console_service(void) {
 	else if (!strcmp(token, "gain2")) {
 		char *arg = get_token(&line);
 		gain2_cmd(arg);
+	}
+	else if (!strcmp(token, "phase")) {
+		print_phase();
+	}
+	else if (!strcmp(token, "magnitude")) {
+		magnitude();
 	}
 	else {
 		printf("Unknown command: %s\n", token);
@@ -264,6 +281,9 @@ int main(void) {
 			uint16_t ds_y = main_downsampled_data_y_read();
 			uint32_t doubled_y = (uint32_t)ds_y * 2;
 			main_upsampler_input_y_write(doubled_y);
+
+			mag = main_magnitude_read();
+			phase_val = main_phase_read();
 			ce_event = false;
 			// re-arm the next CE_DOWN
 			evm_pending_write(1);

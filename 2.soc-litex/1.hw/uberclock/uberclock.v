@@ -43,6 +43,8 @@ module uberclock#(
     input signed  [15:0]      upsampler_input_x,
     input signed  [15:0]      upsampler_input_y,
 
+    output signed [15:0]      magnitude,
+    output signed [24:0]      phase,
 
     // Debug outputs
     output [IW-1:0]           dbg_nco_cos,
@@ -128,6 +130,8 @@ module uberclock#(
     wire signed [15:0] downsampled_x, downsampled_y;
     wire [PW-1:0] phase_acc_down_reg;
     wire signed [IW-1:0] x_downconverted, y_downconverted;
+    wire signed [15:0] rx0_magnitude;
+    wire signed [24:0] rx0_phase;
     rx_channel # (
         .IW (12), 
         .OW (12),
@@ -145,7 +149,9 @@ module uberclock#(
         .downconversion_phase (phase_acc_down_reg),
         .rx_downconverted_x (x_downconverted),
         .rx_downconverted_y (y_downconverted),
-        .ce_down (ce_down)
+        .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude),
+        .rx_phase (rx0_phase)
     );
 
     // ----------------------------------------------------------------------
@@ -153,6 +159,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     assign  downsampled_data_x = downsampled_x;
     assign  downsampled_data_y = downsampled_y;
+    assign  magnitude = rx0_magnitude;
+    assign  phase = rx0_phase;
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
@@ -240,12 +248,12 @@ module uberclock#(
     // ----------------------------------------------------------------------
     wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y[15:2] :
                                  (output_select_ch1 == 2'b01) ? x_cpu_nco << 2:
-                                 (output_select_ch1 == 2'b10) ? y_downconverted << 2 :
+                                 (output_select_ch1 == 2'b10) ? nco_cos << 2 :
                                                                 tx_channel_output[15:2];
 
     wire [13:0] dac2_data_in =   (output_select_ch2 == 2'b00) ? upsampled_y[15:2] :
-                                 (output_select_ch2 == 2'b01) ? filter_in << 2 :
-                                 (output_select_ch2 == 2'b10) ? nco_cos << 2 :
+                                 (output_select_ch2 == 2'b01) ? y_downconverted << 2 :
+                                 (output_select_ch2 == 2'b10) ? rx0_phase[24:11] :
                                                                upsampler_in_y[15:2];
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin

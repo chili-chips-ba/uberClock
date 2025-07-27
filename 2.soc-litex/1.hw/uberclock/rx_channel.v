@@ -15,8 +15,9 @@ module rx_channel # (
     output wire        [PW-1:0]   downconversion_phase,
     output wire signed [IW -1:0]  rx_downconverted_x,
     output wire signed [IW -1:0]  rx_downconverted_y,
-    output wire                   ce_down
-
+    output wire                   ce_down,
+    output wire signed [RX_OW-1:0]  rx_magnitude,
+    output wire signed [24:0]  rx_phase
 );
    // ----------------------------------------------------------------------
    // Phase accumulator for downconversion
@@ -74,10 +75,35 @@ module rx_channel # (
         .filter_out (downsampled_y),
         .ce_out     (ce_out_down_y)
     );
+
+    wire signed [15:0] magnitude;
+    wire [PW-1:0] phase;
+    wire aux;
+    to_polar #(
+       .IW      (16),  // input width
+       .OW      (16),  // output magnitude width
+       .WW      (26),  // internal working width
+       .PW      (25),  // phase accumulator width
+       .NSTAGES (22)   // number of CORDIC iterations
+    ) arctan (
+        .clk(sys_clk),
+        .rst(rst),
+        .i_ce(ce_out_down_y),      // clock-enable for pipeline
+        .i_xval(downsampled_x),
+        .i_yval(downsampled_y),
+        .i_aux(1'b1),
+        .o_mag(magnitude),
+        .o_phase(phase),
+        .o_aux(aux)
+    );
+
+
     assign rx_channel_output_x = downsampled_x;
     assign rx_channel_output_y = downsampled_y;
     assign ce_down  = ce_out_down_y;
     assign downconversion_phase = phase_acc_down_reg;
     assign rx_downconverted_x = x_downconverted;
     assign rx_downconverted_y = y_downconverted;
+    assign rx_magnitude = magnitude;
+    assign rx_phase = phase; 
 endmodule
