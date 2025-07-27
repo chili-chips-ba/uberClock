@@ -242,8 +242,8 @@ static void ce_down_isr(void) {
 int main(void) {
 
 
-	main_phase_inc_nco_write(80652);
-	main_phase_inc_down_write(80660);
+	main_phase_inc_nco_write(80660);
+	main_phase_inc_down_write(80652);
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(1);
 	main_upsampler_input_mux_write(0);
