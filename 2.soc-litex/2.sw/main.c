@@ -247,7 +247,10 @@ int main(void) {
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(1);
 	main_upsampler_input_mux_write(0);
-
+	main_gain1_write (0x40000000);
+	main_gain2_write (0x40000000);
+	main_output_select_ch1_write(0);
+	main_output_select_ch2_write(0);
 	uart_init();
 
 	evm_pending_write(1);
