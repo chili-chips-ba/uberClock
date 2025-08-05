@@ -68,7 +68,11 @@ static void help(void) {
 	puts("  help                      - Show this command");
 	puts("  reboot                    - Reboot CPU");
 	puts("  phase_nco  <val>          - Set input CORDIC NCO phase increment (0–524287)");
-	puts("  phase_down <val>          - Set downconversion CORDIC phase increment (0–524287)");
+	puts("  phase_down_1 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 1");
+	puts("  phase_down_2 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 2");
+	puts("  phase_down_3 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 3");
+	puts("  phase_down_4 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 4");
+	puts("  phase_down_5 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 5");
 	puts("  phase_cpu  <val>          - Set CORDIC CPU phase increment (0–524287)");
 	puts("  output_select_ch1 <val>   - Choose DAC1 (channel 1) output source:");
 	puts("                                 0 = downsampled_y");
@@ -90,6 +94,9 @@ static void help(void) {
 	puts("                                 2 = CPU NCO");
 	puts("  gain1 <val>               - Set gain1 register");
 	puts("  gain2 <val>               - Set gain2 register");
+	puts("  gain3 <val>               - Set gain3 register");
+	puts("  gain4 <val>               - Set gain4 register");
+	puts("  gain5 <val>               - Set gain5 register");
 	puts("  phase                     - Print current CORDIC phase");
 	puts("  magnitude                 - Print current CORDIC magnitude");
 }
@@ -108,16 +115,56 @@ static void phase_nco_cmd(char *args) {
 	printf("Input NCO phase increment set to %u\n", p);
 }
 
-static void phase_down_cmd(char *args) {
+static void phase_down_1_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
 	if (p >= (1u << 19)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
-	main_phase_inc_down_write(p);
-	printf("Downconversion phase increment set to %u\n", p);
+	main_phase_inc_down_1_write(p);
+	printf("Downconversion phase ch1 increment set to %u\n", p);
 }
 
+static void phase_down_2_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_2_write(p);
+	printf("Downconversion phase ch2 increment set to %u\n", p);
+}
+
+static void phase_down_3_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_3_write(p);
+	printf("Downconversion phase ch3 increment set to %u\n", p);
+}
+
+
+static void phase_down_4_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_4_write(p);
+	printf("Downconversion phase ch4 increment set to %u\n", p);
+}
+
+static void phase_down_5_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 19)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_5_write(p);
+	printf("Downconversion phase ch5 increment set to %u\n", p);
+}
 static void phase_cpu_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
 	if (p >= (1u << 19)) {
@@ -164,6 +211,24 @@ static void gain2_cmd(char *args) {
 	printf("Gain2 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
 }
 
+static void gain3_cmd(char *args) {
+	int32_t gain = strtol(args, NULL, 0);
+	main_gain3_write((uint32_t)gain);
+	printf("Gain3 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
+}
+
+static void gain4_cmd(char *args) {
+	int32_t gain = strtol(args, NULL, 0);
+	main_gain4_write((uint32_t)gain);
+	printf("Gain4 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
+}
+
+static void gain5_cmd(char *args) {
+	int32_t gain = strtol(args, NULL, 0);
+	main_gain5_write((uint32_t)gain);
+	printf("Gain5 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
+}
+
 int16_t mag;
 int32_t phase_val;
 
@@ -184,9 +249,25 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		phase_nco_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down")) {
+	else if (!strcmp(token, "phase_down_1")) {
 		char *arg = get_token(&line);
-		phase_down_cmd(arg);
+		phase_down_1_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_down_2")) {
+		char *arg = get_token(&line);
+		phase_down_2_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_down_3")) {
+		char *arg = get_token(&line);
+		phase_down_3_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_down_4")) {
+		char *arg = get_token(&line);
+		phase_down_4_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_down_5")) {
+		char *arg = get_token(&line);
+		phase_down_5_cmd(arg);
 	}
 	else if (!strcmp(token, "phase_cpu")) {
 		char *arg = get_token(&line);
@@ -216,6 +297,18 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		gain2_cmd(arg);
 	}
+	else if (!strcmp(token, "gain3")) {
+		char *arg = get_token(&line);
+		gain3_cmd(arg);
+	}
+	else if (!strcmp(token, "gain4")) {
+		char *arg = get_token(&line);
+		gain4_cmd(arg);
+	}
+	else if (!strcmp(token, "gain5")) {
+		char *arg = get_token(&line);
+		gain5_cmd(arg);
+	}
 	else if (!strcmp(token, "phase")) {
 		print_phase();
 	}
@@ -243,12 +336,19 @@ int main(void) {
 
 
 	main_phase_inc_nco_write(80660);
-	main_phase_inc_down_write(80652);
+	main_phase_inc_down_1_write(80652);
+	main_phase_inc_down_2_write(80656);
+	main_phase_inc_down_3_write(80647);
+	main_phase_inc_down_4_write(80643);
+	main_phase_inc_down_5_write(80639);
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(1);
 	main_upsampler_input_mux_write(0);
 	main_gain1_write (0x40000000);
 	main_gain2_write (0x40000000);
+	main_gain3_write (0x40000000);
+	main_gain4_write (0x40000000);
+	main_gain5_write (0x40000000);
 	main_output_select_ch1_write(0);
 	main_output_select_ch2_write(0);
 	uart_init();

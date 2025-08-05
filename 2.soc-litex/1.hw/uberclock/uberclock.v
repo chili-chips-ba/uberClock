@@ -26,7 +26,11 @@ module uberclock#(
 
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
-    input  [PW-1:0]           phase_inc_down,
+    input  [PW-1:0]           phase_inc_down_1,
+    input  [PW-1:0]           phase_inc_down_2,
+    input  [PW-1:0]           phase_inc_down_3,
+    input  [PW-1:0]           phase_inc_down_4,
+    input  [PW-1:0]           phase_inc_down_5,
     input  [PW-1:0]           phase_inc_cpu,
 
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
@@ -35,6 +39,9 @@ module uberclock#(
     input  [1:0]              output_select_ch2,
     input  [31:0]             gain1,
     input  [31:0]             gain2,
+    input  [31:0]             gain3,
+    input  [31:0]             gain4,
+    input  [31:0]             gain5,
 
     // CPU signals
     output signed [15:0]      downsampled_data_x,
@@ -123,15 +130,15 @@ module uberclock#(
 
     wire signed [IW-1:0] selected_input;
     assign selected_input = (input_select == 2'b00) ? nco_cos : 
-                            (input_select == 2'b01) ? filter_in :tx_channel_output[15:4] ;
+                            (input_select == 2'b01) ? filter_in :system_output[13:2] ;
     //------------------------------------------------------------------------
-    // rx channel
+    // rx1 channel
     //------------------------------------------------------------------------
-    wire signed [15:0] downsampled_x, downsampled_y;
-    wire [PW-1:0] phase_acc_down_reg;
-    wire signed [IW-1:0] x_downconverted, y_downconverted;
-    wire signed [15:0] rx0_magnitude;
-    wire signed [24:0] rx0_phase;
+    wire signed [15:0] downsampled_x1, downsampled_y1;
+    wire [PW-1:0] phase_acc_down_reg1;
+    wire signed [IW-1:0] x_downconverted1, y_downconverted1;
+    wire signed [15:0] rx0_magnitude1;
+    wire signed [24:0] rx0_phase1;
     rx_channel # (
         .IW (12), 
         .OW (12),
@@ -139,53 +146,52 @@ module uberclock#(
         .NSTAGES (15), 
         .WW (15),
         .PW (19)
-    ) rx_0 (
+    ) rx_1 (
         .sys_clk (sys_clk),
         .rst(rst),
-        .downconversion_phase_inc (phase_inc_down),
+        .downconversion_phase_inc (phase_inc_down_1),
         .rx_channel_input (selected_input),
-        .rx_channel_output_x (downsampled_x),
-        .rx_channel_output_y (downsampled_y),
-        .downconversion_phase (phase_acc_down_reg),
-        .rx_downconverted_x (x_downconverted),
-        .rx_downconverted_y (y_downconverted),
+        .rx_channel_output_x (downsampled_x1),
+        .rx_channel_output_y (downsampled_y1),
+        .downconversion_phase (phase_acc_down_reg1),
+        .rx_downconverted_x (x_downconverted1),
+        .rx_downconverted_y (y_downconverted1),
         .ce_down (ce_down),
-        .rx_magnitude (rx0_magnitude),
-        .rx_phase (rx0_phase)
+        .rx_magnitude (rx0_magnitude1),
+        .rx_phase (rx0_phase1)
     );
 
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    assign  downsampled_data_x = downsampled_x;
-    assign  downsampled_data_y = downsampled_y;
-    assign  magnitude = rx0_magnitude;
-    assign  phase = rx0_phase;
+    assign  downsampled_data_x = downsampled_x1;
+    assign  downsampled_data_y = downsampled_y1;
+    assign  magnitude = rx0_magnitude1;
+    assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
     // Upsampling filters
     // ----------------------------------------------------------------------
-    wire signed [48:0] y_gained , x_gained ;
+    wire signed [48:0] y_gained1 , x_gained1 ;
     wire signed [32:0] gain_signed_1 = {1'b0, gain1};
-    wire signed [32:0] gain_signed_2 = {1'b0, gain2};
-    assign y_gained = downsampled_y * gain_signed_1;
-    assign x_gained = downsampled_x * gain_signed_1;
-    wire signed [15:0] upsampled_gain_x, upsampled_gain_y;
-    assign upsampled_gain_y = y_gained >>> 30;
-    assign upsampled_gain_x = x_gained >>> 30;
+    assign y_gained1 = downsampled_y1 * gain_signed_1;
+    assign x_gained1 = downsampled_x1 * gain_signed_1;
+    wire signed [15:0] upsampled_gain_x1, upsampled_gain_y1;
+    assign upsampled_gain_y1 = y_gained1 >>> 30;
+    assign upsampled_gain_x1 = x_gained1 >>> 30;
 
-    wire signed [15:0] upsampler_in_x, upsampler_in_y;
+    wire signed [15:0] upsampler_in_x1, upsampler_in_y1;
 
-    assign upsampler_in_x = (upsampler_input_mux == 2'b00) ? upsampled_gain_x :
+    assign upsampler_in_x1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x1 :
                             (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
 
-    assign upsampler_in_y = (upsampler_input_mux == 2'b00) ? upsampled_gain_y :
+    assign upsampler_in_y1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y1 :
                             (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
     //--------------------------------------------------------
-    // tx channel
+    // tx1 channel
     //--------------------------------------------------------
     wire ce_up;
-    wire signed [15:0] tx_channel_output;
-    wire signed [15:0] upsampled_x, upsampled_y;
+    wire signed [15:0] tx_channel_output1;
+    wire signed [15:0] upsampled_x1, upsampled_y1;
     tx_channel # (
         .IW(16), 
         .OW(16), 
@@ -194,17 +200,370 @@ module uberclock#(
         .WW(19),
         .PW_I(19), 
         .PW(23)
-    ) tx_0 (
+    ) tx_1 (
        .sys_clk (sys_clk),
         .rst(rst),
-        .phase_input(phase_acc_down_reg),
-        .tx_channel_input_x (upsampler_in_x),
-        .tx_channel_input_y (upsampler_in_y),
-        .tx_channel_output (tx_channel_output),
-        .tx_channel_upsampled_x (upsampled_x),
-        .tx_channel_upsampled_y (upsampled_y),
+        .phase_input(phase_acc_down_reg1),
+        .tx_channel_input_x (upsampler_in_x1),
+        .tx_channel_input_y (upsampler_in_y1),
+        .tx_channel_output (tx_channel_output1),
+        .tx_channel_upsampled_x (upsampled_x1),
+        .tx_channel_upsampled_y (upsampled_y1),
         .ce_up(ce_up)
     );
+
+
+
+    //------------------------------------------------------------------------
+    // rx2 channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x2, downsampled_y2;
+    wire [PW-1:0] phase_acc_down_reg2;
+    wire signed [IW-1:0] x_downconverted2, y_downconverted2;
+    wire signed [15:0] rx0_magnitude2;
+    wire signed [24:0] rx0_phase2;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (19)
+    ) rx_2 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down_2),
+        .rx_channel_input (selected_input),
+        .rx_channel_output_x (downsampled_x2),
+        .rx_channel_output_y (downsampled_y2),
+        .downconversion_phase (phase_acc_down_reg2),
+        .rx_downconverted_x (x_downconverted2),
+        .rx_downconverted_y (y_downconverted2),
+        // .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude2),
+        .rx_phase (rx0_phase2)
+    );
+
+    // ----------------------------------------------------------------------
+    // output to CPU
+    // ----------------------------------------------------------------------
+    // assign  downsampled_data_x = downsampled_x1;
+    // assign  downsampled_data_y = downsampled_y1;
+    // assign  magnitude = rx0_magnitude1;
+    // assign  phase = rx0_phase1;
+    // ----------------------------------------------------------------------
+    // Upsampling filters
+    // ----------------------------------------------------------------------
+    wire signed [48:0] y_gained2 , x_gained2 ;
+    wire signed [32:0] gain_signed_2 = {1'b0, gain2};
+    assign y_gained2 = downsampled_y2 * gain_signed_2;
+    assign x_gained2 = downsampled_x2 * gain_signed_2;
+    wire signed [15:0] upsampled_gain_x2, upsampled_gain_y2;
+    assign upsampled_gain_y2 = y_gained2 >>> 30;
+    assign upsampled_gain_x2 = x_gained2 >>> 30;
+
+    wire signed [15:0] upsampler_in_x2, upsampler_in_y2;
+
+    assign upsampler_in_x2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x2 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+
+    assign upsampler_in_y2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y2 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+    //--------------------------------------------------------
+    // tx2 channel
+    //--------------------------------------------------------
+    wire signed [15:0] tx_channel_output2;
+    wire signed [15:0] upsampled_x2, upsampled_y2;
+    tx_channel # (
+        .IW(16), 
+        .OW(16), 
+        .TX_OW(16),
+        .NSTAGES(19), 
+        .WW(19),
+        .PW_I(19), 
+        .PW(23)
+    ) tx_2 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .phase_input(phase_acc_down_reg2),
+        .tx_channel_input_x (upsampler_in_x2),
+        .tx_channel_input_y (upsampler_in_y2),
+        .tx_channel_output (tx_channel_output2),
+        .tx_channel_upsampled_x (upsampled_x2),
+        .tx_channel_upsampled_y (upsampled_y2)
+    );
+
+
+
+    //------------------------------------------------------------------------
+    // rx3 channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x3, downsampled_y3;
+    wire [PW-1:0] phase_acc_down_reg3;
+    wire signed [IW-1:0] x_downconverted3, y_downconverted3;
+    wire signed [15:0] rx0_magnitude3;
+    wire signed [24:0] rx0_phase3;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (19)
+    ) rx_3 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down_3),
+        .rx_channel_input (selected_input),
+        .rx_channel_output_x (downsampled_x3),
+        .rx_channel_output_y (downsampled_y3),
+        .downconversion_phase (phase_acc_down_reg3),
+        .rx_downconverted_x (x_downconverted3),
+        .rx_downconverted_y (y_downconverted3),
+        // .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude3),
+        .rx_phase (rx0_phase3)
+    );
+
+    // ----------------------------------------------------------------------
+    // output to CPU
+    // ----------------------------------------------------------------------
+    // assign  downsampled_data_x = downsampled_x1;
+    // assign  downsampled_data_y = downsampled_y1;
+    // assign  magnitude = rx0_magnitude1;
+    // assign  phase = rx0_phase1;
+    // ----------------------------------------------------------------------
+    // Upsampling filters
+    // ----------------------------------------------------------------------
+    wire signed [48:0] y_gained3 , x_gained3 ;
+    wire signed [32:0] gain_signed_3 = {1'b0, gain3};
+    assign y_gained3 = downsampled_y3 * gain_signed_3;
+    assign x_gained3 = downsampled_x3 * gain_signed_3;
+    wire signed [15:0] upsampled_gain_x3, upsampled_gain_y3;
+    assign upsampled_gain_y3 = y_gained3 >>> 30;
+    assign upsampled_gain_x3 = x_gained3 >>> 30;
+
+    wire signed [15:0] upsampler_in_x3, upsampler_in_y3;
+
+    assign upsampler_in_x3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x3 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+
+    assign upsampler_in_y3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y3 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+    //--------------------------------------------------------
+    // tx3 channel
+    //--------------------------------------------------------
+    wire signed [15:0] tx_channel_output3;
+    wire signed [15:0] upsampled_x3, upsampled_y3;
+    tx_channel # (
+        .IW(16), 
+        .OW(16), 
+        .TX_OW(16),
+        .NSTAGES(19), 
+        .WW(19),
+        .PW_I(19), 
+        .PW(23)
+    ) tx_3 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .phase_input(phase_acc_down_reg3),
+        .tx_channel_input_x (upsampler_in_x3),
+        .tx_channel_input_y (upsampler_in_y3),
+        .tx_channel_output (tx_channel_output3),
+        .tx_channel_upsampled_x (upsampled_x3),
+        .tx_channel_upsampled_y (upsampled_y3)
+    );
+
+
+    //------------------------------------------------------------------------
+    // rx4 channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x4, downsampled_y4;
+    wire [PW-1:0] phase_acc_down_reg4;
+    wire signed [IW-1:0] x_downconverted4, y_downconverted4;
+    wire signed [15:0] rx0_magnitude4;
+    wire signed [24:0] rx0_phase4;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (19)
+    ) rx_4 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down_4),
+        .rx_channel_input (selected_input),
+        .rx_channel_output_x (downsampled_x4),
+        .rx_channel_output_y (downsampled_y4),
+        .downconversion_phase (phase_acc_down_reg4),
+        .rx_downconverted_x (x_downconverted4),
+        .rx_downconverted_y (y_downconverted4),
+        // .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude4),
+        .rx_phase (rx0_phase4)
+    );
+
+    // ----------------------------------------------------------------------
+    // output to CPU
+    // ----------------------------------------------------------------------
+    // assign  downsampled_data_x = downsampled_x1;
+    // assign  downsampled_data_y = downsampled_y1;
+    // assign  magnitude = rx0_magnitude1;
+    // assign  phase = rx0_phase1;
+    // ----------------------------------------------------------------------
+    // Upsampling filters
+    // ----------------------------------------------------------------------
+    wire signed [48:0] y_gained4 , x_gained4 ;
+    wire signed [32:0] gain_signed_4 = {1'b0, gain4};
+    assign y_gained2 = downsampled_y4 * gain_signed_4;
+    assign x_gained2 = downsampled_x4 * gain_signed_4;
+    wire signed [15:0] upsampled_gain_x4, upsampled_gain_y4;
+    assign upsampled_gain_y4 = y_gained4 >>> 30;
+    assign upsampled_gain_x4 = x_gained4 >>> 30;
+
+    wire signed [15:0] upsampler_in_x4, upsampler_in_y4;
+
+    assign upsampler_in_x4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x4 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+
+    assign upsampler_in_y4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y4 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+    //--------------------------------------------------------
+    // tx4 channel
+    //--------------------------------------------------------
+    wire signed [15:0] tx_channel_output4;
+    wire signed [15:0] upsampled_x4, upsampled_y4;
+    tx_channel # (
+        .IW(16), 
+        .OW(16), 
+        .TX_OW(16),
+        .NSTAGES(19), 
+        .WW(19),
+        .PW_I(19), 
+        .PW(23)
+    ) tx_4 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .phase_input(phase_acc_down_reg4),
+        .tx_channel_input_x (upsampler_in_x4),
+        .tx_channel_input_y (upsampler_in_y4),
+        .tx_channel_output (tx_channel_output4),
+        .tx_channel_upsampled_x (upsampled_x4),
+        .tx_channel_upsampled_y (upsampled_y4)
+    );
+
+
+    //------------------------------------------------------------------------
+    // rx5 channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x5, downsampled_y5;
+    wire [PW-1:0] phase_acc_down_reg5;
+    wire signed [IW-1:0] x_downconverted5, y_downconverted5;
+    wire signed [15:0] rx0_magnitude5;
+    wire signed [24:0] rx0_phase5;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (19)
+    ) rx_5 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down_5),
+        .rx_channel_input (selected_input),
+        .rx_channel_output_x (downsampled_x5),
+        .rx_channel_output_y (downsampled_y5),
+        .downconversion_phase (phase_acc_down_reg5),
+        .rx_downconverted_x (x_downconverted5),
+        .rx_downconverted_y (y_downconverted5),
+        // .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude5),
+        .rx_phase (rx0_phase5)
+    );
+
+    // ----------------------------------------------------------------------
+    // output to CPU
+    // ----------------------------------------------------------------------
+    // assign  downsampled_data_x = downsampled_x1;
+    // assign  downsampled_data_y = downsampled_y1;
+    // assign  magnitude = rx0_magnitude1;
+    // assign  phase = rx0_phase1;
+    // ----------------------------------------------------------------------
+    // Upsampling filters
+    // ----------------------------------------------------------------------
+    wire signed [48:0] y_gained5 , x_gained5 ;
+    wire signed [32:0] gain_signed_5 = {1'b0, gain5};
+    assign y_gained5 = downsampled_y5 * gain_signed_5;
+    assign x_gained5 = downsampled_x5 * gain_signed_5;
+    wire signed [15:0] upsampled_gain_x5, upsampled_gain_y5;
+    assign upsampled_gain_y5 = y_gained5 >>> 30;
+    assign upsampled_gain_x5 = x_gained5 >>> 30;
+
+    wire signed [15:0] upsampler_in_x5, upsampler_in_y5;
+
+    assign upsampler_in_x5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x5 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+
+    assign upsampler_in_y5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y5 :
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+    //--------------------------------------------------------
+    // tx5 channel
+    //--------------------------------------------------------
+    wire signed [15:0] tx_channel_output5;
+    wire signed [15:0] upsampled_x5, upsampled_y5;
+    tx_channel # (
+        .IW(16), 
+        .OW(16), 
+        .TX_OW(16),
+        .NSTAGES(19), 
+        .WW(19),
+        .PW_I(19), 
+        .PW(23)
+    ) tx_5 (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .phase_input(phase_acc_down_reg5),
+        .tx_channel_input_x (upsampler_in_x5),
+        .tx_channel_input_y (upsampler_in_y5),
+        .tx_channel_output (tx_channel_output5),
+        .tx_channel_upsampled_x (upsampled_x5),
+        .tx_channel_upsampled_y (upsampled_y5)
+    );
+
+
+    // ----------------------------------------------------------------------
+    // Sum tree
+    // ----------------------------------------------------------------------
+    reg signed [16:0] sum_1, sum_2;
+    reg signed [15:0] sum_3;
+    always @(posedge sys_clk) begin
+        sum_1 <= tx_channel_output1 + tx_channel_output2;
+        sum_2 <= tx_channel_output3 + tx_channel_output4;
+        sum_3 <= tx_channel_output5;
+    end
+    
+    reg signed sum_4, sum_5;
+    always @(posedge sys_clk) begin
+        sum_4 <= sum_1 + sum_2;
+        sum_5 <= sum_3;
+    end
+
+    reg signed [17:0] sum_final;
+    always @(posedge sys_clk) begin
+        sum_final <= sum_4 + sum_5;
+    end
+    
+    wire signed [15:0] system_output;
+    assign system_output = sum_final[17:4]; // 16-bit output
+    
+
+
+
+
 
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO
@@ -246,15 +605,15 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // DAC data preparation
     // ----------------------------------------------------------------------
-    wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y[15:2] :
+    wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y1[15:2] :
                                  (output_select_ch1 == 2'b01) ? x_cpu_nco << 2:
                                  (output_select_ch1 == 2'b10) ? nco_cos << 2 :
-                                                                tx_channel_output[15:2];
+                                                               system_output; 
 
-    wire [13:0] dac2_data_in =   (output_select_ch2 == 2'b00) ? upsampled_y[15:2] :
-                                 (output_select_ch2 == 2'b01) ? y_downconverted << 2 :
-                                 (output_select_ch2 == 2'b10) ? rx0_phase[24:11] :
-                                                               upsampler_in_y[15:2];
+    wire [13:0] dac2_data_in =   (output_select_ch2 == 2'b00) ? upsampled_y1[15:2] :
+                                 (output_select_ch2 == 2'b01) ? y_downconverted1 << 2 :
+                                 (output_select_ch2 == 2'b10) ? rx0_phase1[24:11] :
+                                                               upsampler_in_y1[15:2];
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin
         dac1_data_reg <= dac1_data_in + 14'd8192;
@@ -281,13 +640,13 @@ module uberclock#(
     // ----------------------------------------------------------------------
     assign dbg_nco_cos         = nco_cos;
     assign dbg_nco_sin         = nco_sin;
-    assign dbg_phase_acc_down  = phase_acc_down_reg;
-    assign dbg_x_downconverted = x_downconverted;
-    assign dbg_y_downconverted = y_downconverted;
-    assign dbg_downsampled_x   = downsampled_x;
-    assign dbg_downsampled_y   = downsampled_y;
-    assign dbg_upsampled_x     = upsampled_x;
-    assign dbg_upsampled_y     = upsampled_y;
+    assign dbg_phase_acc_down  = phase_acc_down_reg1;
+    assign dbg_x_downconverted = x_downconverted1;
+    assign dbg_y_downconverted = y_downconverted1;
+    assign dbg_downsampled_x   = downsampled_x1;
+    assign dbg_downsampled_y   = downsampled_y1;
+    assign dbg_upsampled_x     = upsampled_x1;
+    assign dbg_upsampled_y     = upsampled_y1;
     // assign dbg_phase_inv       = phase_inv;
     // assign dbg_x_upconverted   = x_upconverted;
     // assign dbg_y_upconverted   = tx_channel_output ;
