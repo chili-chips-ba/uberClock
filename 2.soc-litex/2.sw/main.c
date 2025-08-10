@@ -229,6 +229,11 @@ static void gain5_cmd(char *args) {
 	printf("Gain5 register set to %ld (0x%08lX)\n", (long)gain, (unsigned long)gain);
 }
 
+static void final_shift_cmd(char *args) {
+	int32_t fs= strtol(args, NULL, 0);
+	main_final_shift_write((uint32_t)fs);
+	printf("S register set to %ld (0x%08lX)\n", (long)fs, (unsigned long)fs);
+}
 int16_t mag;
 int32_t phase_val;
 
@@ -315,6 +320,10 @@ static void console_service(void) {
 	else if (!strcmp(token, "magnitude")) {
 		magnitude();
 	}
+	else if (!strcmp(token, "final_shift")) {
+		char *arg = get_token(&line);
+		final_shift_cmd(arg);
+	}
 	else {
 		printf("Unknown command: %s\n", token);
 	}
@@ -334,23 +343,23 @@ static void ce_down_isr(void) {
 
 int main(void) {
 
-
 	main_phase_inc_nco_write(80660);
-	main_phase_inc_down_1_write(80652);
-	main_phase_inc_down_2_write(80656);
-	main_phase_inc_down_3_write(80647);
-	main_phase_inc_down_4_write(80643);
-	main_phase_inc_down_5_write(80639);
+	main_phase_inc_down_1_write(80656);
+	main_phase_inc_down_2_write(80652);
+	main_phase_inc_down_3_write(80648);
+	main_phase_inc_down_4_write(80644);
+	main_phase_inc_down_5_write(80640);
 	main_phase_inc_cpu_write(52429);
-	main_input_select_write(1);
+	main_input_select_write(0);
 	main_upsampler_input_mux_write(0);
 	main_gain1_write (0x40000000);
 	main_gain2_write (0x40000000);
 	main_gain3_write (0x40000000);
 	main_gain4_write (0x40000000);
 	main_gain5_write (0x40000000);
-	main_output_select_ch1_write(0);
-	main_output_select_ch2_write(0);
+	main_output_select_ch1_write(3);
+	main_output_select_ch2_write(3);
+	main_final_shift_write(2);
 	uart_init();
 
 	evm_pending_write(1);

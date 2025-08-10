@@ -39,29 +39,51 @@ verilog_dir = repository_dir + "/2.soc-litex/1.hw"
 # -------------------------------------------------------------------------
 #  Clock Reset Generator
 # -------------------------------------------------------------------------
+
 class _CRG(LiteXModule):
-    def __init__(self, platform, sys_clk_freq, with_dram=True):
+    def __init__(self, platform, sys_clk_freq=65e6, with_dram=True):
         self.rst    = Signal()
         self.cd_sys = ClockDomain()
+
         if with_dram:
             self.cd_sys4x     = ClockDomain()
             self.cd_sys4x_dqs = ClockDomain()
             self.cd_idelay    = ClockDomain()
 
-        # use a 2% tolerance on generated clocks
-        margin = 2e-2
-        self.pll = pll = S7PLL(speedgrade=-2)
+        clk200 = platform.request("clk200")
+        clk200_se = Signal()
+
+        self.specials += Instance("IBUFDS",
+            i_I = clk200.p,
+            i_IB= clk200.n,
+            o_O = clk200_se
+        )
+
+        margin = 1e-2
+
+        # ---------------------------------------------------------------------
+        # Main MMCM: Generate sysclk and DDR clocks
+        # ---------------------------------------------------------------------
+        self.pll = pll = S7MMCM(speedgrade=-2)
         self.comb += pll.reset.eq(self.rst)
-        pll.register_clkin(platform.request("clk200"), 200e6)
+        pll.register_clkin(clk200_se, 200e6)
+
         pll.create_clkout(self.cd_sys, sys_clk_freq, margin=margin)
-        platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin)
 
         if with_dram:
-            pll.create_clkout(self.cd_sys4x,     4*sys_clk_freq, margin=margin)
-            pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90, margin=margin)
-            pll.create_clkout(self.cd_idelay,    200e6, margin=margin)
+            pll.create_clkout(self.cd_sys4x,     4 * sys_clk_freq, margin=margin)
+            pll.create_clkout(self.cd_sys4x_dqs, 4 * sys_clk_freq, phase=90, margin=margin)
+
+        # ---------------------------------------------------------------------
+        # IDELAYCTRL: Use 200 MHz after BUFG
+        # ---------------------------------------------------------------------
+        if with_dram:
+            clk200_bufg = Signal()
+            self.specials += Instance("BUFG", i_I=clk200_se, o_O=clk200_bufg)
+            self.comb += self.cd_idelay.clk.eq(clk200_bufg)
             self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
+        platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin)
 
 # -------------------------------------------------------------------------
 #  BaseSoC with optional CORDIC, DAC & ICD wiring
@@ -211,6 +233,9 @@ class BaseSoC(SoCCore):
             "filters/coeffs.mem","filters/cic_comp_up_mac.v",
             "filters/coeffs_comp.mem","filters/cic_int.v",
             "uberclock/uberclock.v",
+            "uberclock/rx_channel.v",
+            "uberclock/tx_channel.v",
+            "to_polar/to_polar.v",
             "cordic/cordic_pre_rotate.v","cordic/cordic_pipeline_stage.v",
             "cordic/cordic_round.v","cordic/cordic.v",
             "cordic/cordic_logic.v","cordic/gain_and_saturate.v",
@@ -219,28 +244,48 @@ class BaseSoC(SoCCore):
         for fn in files:
             self.platform.add_source(f"{verilog_dir}/{fn}")
 
-        self._input_select     = CSRStorage(1,  description="0=ADC,1=NCO")
-        self._output_select_ch1    = CSRStorage(2,  description="DAC CH1 output selector")
-        self._output_select_ch2    = CSRStorage(2,  description="DAC CH1 output selector")
-        self._phase_inc_nco    = CSRStorage(19, description="NCO phase increment")
-        self._phase_inc_down   = CSRStorage(19, description="Downconversion phase inc")
-        self._gain1            = CSRStorage(32, description="Gain1 (Q format)")
-        self._gain2            = CSRStorage(32, description="Gain2 (Q format)")
-        self._upsampler_input_x  = CSRStorage(16, description="Upsampler input x")
-        self._upsampler_input_y  = CSRStorage(16, description="Upsampler input y")
+        self._input_select        = CSRStorage(2,  description="0=ADC, 1=NCO, 2=CPU")
+        self._output_select_ch1   = CSRStorage(2,  description="DAC CH1 output selector")
+        self._output_select_ch2   = CSRStorage(2,  description="DAC CH1 output selector")
+        self._upsampler_input_mux = CSRStorage(2,  description="0=Gain, 1=CPU, 2=CPU NCO")
+        self._phase_inc_nco       = CSRStorage(32, description="NCO phase increment")
+        self._phase_inc_down_1      = CSRStorage(19, description="Downconversion phase inc ch1")
+        self._phase_inc_down_2      = CSRStorage(19, description="Downconversion phase inc ch2")
+        self._phase_inc_down_3      = CSRStorage(19, description="Downconversion phase inc ch3")
+        self._phase_inc_down_4      = CSRStorage(19, description="Downconversion phase inc ch4")
+        self._phase_inc_down_5      = CSRStorage(19, description="Downconversion phase inc ch5")
+        self._phase_inc_cpu       = CSRStorage(19, description="CPU phase increment")
+        self._gain1               = CSRStorage(32, description="Gain1 (Q format)")
+        self._gain2               = CSRStorage(32, description="Gain2 (Q format)")
+        self._gain3               = CSRStorage(32, description="Gain3 (Q format)")
+        self._gain4               = CSRStorage(32, description="Gain4 (Q format)")
+        self._gain5               = CSRStorage(32, description="Gain5 (Q format)")
+        self._upsampler_input_x   = CSRStorage(16, description="Upsampler input x")
+        self._upsampler_input_y   = CSRStorage(16, description="Upsampler input y")
 
-        self._downsampled_data_x = CSRStatus(16, description="Downsampled data x")
-        self._downsampled_data_y = CSRStatus(16, description="Downsampled data y")
-
-        input_select    = self._input_select.storage
-        output_select_ch1   = self._output_select_ch1.storage
-        output_select_ch2   = self._output_select_ch2.storage
-        phase_inc_nco   = self._phase_inc_nco.storage
-        phase_inc_down  = self._phase_inc_down.storage
-        gain1, gain2    = self._gain1.storage, self._gain2.storage
-        upsampler_input_x = self._upsampler_input_x.storage
-        upsampler_input_y = self._upsampler_input_y.storage
-
+        self._downsampled_data_x  = CSRStatus(16, description="Downsampled data x")
+        self._downsampled_data_y  = CSRStatus(16, description="Downsampled data y")
+        self._magnitude           = CSRStatus(16, description="Downsampled magnitude")
+        self._phase               = CSRStatus(25, description="Downsampled phase")
+        self._final_shift         = CSRStorage(3, description="Final output shift S (divide by 2^S)")
+        
+        input_select              = self._input_select.storage
+        output_select_ch1         = self._output_select_ch1.storage
+        output_select_ch2         = self._output_select_ch2.storage
+        upsampler_input_mux       = self._upsampler_input_mux.storage
+        phase_inc_nco             = self._phase_inc_nco.storage
+        phase_inc_down_1            = self._phase_inc_down_1.storage
+        phase_inc_down_2            = self._phase_inc_down_2.storage
+        phase_inc_down_3            = self._phase_inc_down_3.storage
+        phase_inc_down_4            = self._phase_inc_down_4.storage
+        phase_inc_down_5            = self._phase_inc_down_5.storage
+        phase_inc_cpu             = self._phase_inc_cpu.storage
+        gain1, gain2              = self._gain1.storage, self._gain2.storage
+        gain3, gain4              = self._gain3.storage, self._gain4.storage
+        gain5                     = self._gain5.storage
+        upsampler_input_x         = self._upsampler_input_x.storage
+        upsampler_input_y         = self._upsampler_input_y.storage
+        final_shift = self._final_shift.storage
         ce_down = Signal(name="ce_down")
         self.submodules.evm     = EventManager()
         self.evm.ce_down = EventSourcePulse(description="Downsample ready")
@@ -259,17 +304,17 @@ class BaseSoC(SoCCore):
             "downsampled_y":  Signal(16),
             "upsampled_x":    Signal(16),
             "upsampled_y":    Signal(16),
-            "phase_inv":      Signal(23),
-            "x_upconverted":  Signal(16),
-            "y_upconverted":  Signal(16),
-            "ce_down_x":      Signal(),
-            "ce_down_y":      Signal(),
-            "ce_up_x":        Signal(),
-            "cic_ce_x":       Signal(),
-            "comp_ce_x":      Signal(),
-            "hb_ce_x":        Signal(),
-            "cic_out_x":      Signal(12),
-            "comp_out_x":     Signal(16),
+            # "phase_inv":      Signal(23),
+            # "x_upconverted":  Signal(16),
+            # "y_upconverted":  Signal(16),
+            # "ce_down_x":      Signal(),
+            # "ce_down_y":      Signal(),
+            # "ce_up_x":        Signal(),
+            # "cic_ce_x":       Signal(),
+            # "comp_ce_x":      Signal(),
+            # "hb_ce_x":        Signal(),
+            # "cic_out_x":      Signal(12),
+            # "comp_out_x":     Signal(16),
         }
 
         self.specials += Instance(
@@ -292,20 +337,32 @@ class BaseSoC(SoCCore):
             o_da2_data = self.platform.request("da2_data",0),
 
             # CSR inputs
-            i_input_select    = input_select,
+            i_input_select        = input_select,
             i_output_select_ch1   = output_select_ch1,
             i_output_select_ch2   = output_select_ch2,
-            i_phase_inc_nco   = phase_inc_nco,
-            i_phase_inc_down  = phase_inc_down,
-            i_gain1           = gain1,
-            i_gain2           = gain2,
-            i_upsampler_input_x = upsampler_input_x,
-            i_upsampler_input_y = upsampler_input_y,
+            i_upsampler_input_mux = upsampler_input_mux,
+            i_phase_inc_nco       = phase_inc_nco,
+            i_phase_inc_down_1    = phase_inc_down_1,
+            i_phase_inc_down_2    = phase_inc_down_2,
+            i_phase_inc_down_3    = phase_inc_down_3,
+            i_phase_inc_down_4    = phase_inc_down_4,
+            i_phase_inc_down_5    = phase_inc_down_5,
+            i_phase_inc_cpu       = phase_inc_cpu,
+            i_gain1               = gain1,
+            i_gain2               = gain2,
+            i_gain3               = gain3,
+            i_gain4               = gain4,
+            i_gain5               = gain5,
+            i_upsampler_input_x   = upsampler_input_x,
+            i_upsampler_input_y   = upsampler_input_y,
+
+            i_final_shift         = final_shift,
+            o_magnitude           = self._magnitude.status,
+            o_phase               = self._phase.status,
 
             # CSR outputs + event
             o_downsampled_data_x = self._downsampled_data_x.status,
             o_downsampled_data_y = self._downsampled_data_y.status,
-
             o_ce_down          = ce_down,
 
             # debug outputs (unpack the dict)
@@ -317,11 +374,10 @@ class BaseSoC(SoCCore):
         self.comb += self._downsampled_data_y.status.eq(dbg["downsampled_y"])
 
 
-
         probes = (
-            list(dbg.values()) +                              # all the internal debug nets
-            [phase_inc_nco, phase_inc_down,                   # CSR knobs
-             input_select, output_select_ch1, output_select_ch1,
+            list(dbg.values()) +
+            [phase_inc_nco, phase_inc_down_1, phase_inc_cpu,
+             input_select, output_select_ch1, output_select_ch1, upsampler_input_mux,
              gain1, gain2,
              ce_down,
              upsampler_input_x,
@@ -333,7 +389,7 @@ class BaseSoC(SoCCore):
 
         self.submodules.analyzer = LiteScopeAnalyzer(
             probes,
-            depth        = 16384,
+            depth        = 2048, #32768
             clock_domain = "sys",
             samplerate   = sys_clk_freq
         )

@@ -40,8 +40,10 @@ module tx_channel # (
     // ----------------------------------------------------------------------
     // Upconversion CORDIC
     // ----------------------------------------------------------------------
-    wire [PW-1:0] phase = (1 << PW) - (phase_input << (PW - PW_I));
-    wire signed [TX_OW:0] x_upconverted, y_upconverted;
+    //wire [PW-1:0] phase = (1 << PW) - (phase_input << (PW - PW_I));
+    // wire [PW-1:0] phase = -({phase_input, {PW-PW_I{1'b0}}}); // -(phase_input << (PW-PW_I))
+    wire [PW-1:0] phase = {(phase_input), 4'b0000}; // 19 -> 23 after negate
+    wire signed [TX_OW-1:0] x_upconverted, y_upconverted;
     wire up_aux;
     cordic16 #(
         .IW(IW),
@@ -56,7 +58,7 @@ module tx_channel # (
         .i_xval  (upsampled_y),
         .i_yval  (upsampled_x),
         .i_phase (phase),
-        .i_aux   (ce_out_up_x),
+        .i_aux   (1'b1),
         .o_xval  (x_upconverted),
         .o_yval  (y_upconverted),
         .o_aux   (up_aux)
