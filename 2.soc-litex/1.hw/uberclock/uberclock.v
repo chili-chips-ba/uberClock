@@ -1,5 +1,5 @@
 `timescale 1ns / 1ps
-//`default_nettype none
+//default_nettype none
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -85,11 +85,12 @@ module uberclock#(
     // Phase accumulator for NCO
     // ----------------------------------------------------------------------
     reg [PW-1:0] phase_acc_nco_reg;
+    reg [PW-1:0] PHASE_INC_NCO = 19'd80660;
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
            phase_acc_nco_reg <= 0;
        else
-           phase_acc_nco_reg <= phase_acc_nco_reg + phase_inc_nco;
+           phase_acc_nco_reg <= phase_acc_nco_reg + PHASE_INC_NCO;
     end
     wire signed [IW-1:0] nco_cos, nco_sin;
     wire                 nco_aux;
