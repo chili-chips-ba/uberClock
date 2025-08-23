@@ -1,3 +1,5 @@
+# uberClock
+
 Clocks can be extracted from GPS satellite signals, or locally generated with MEMS oscillators, SAW resonators, quartz crystal (XTAL, XO) or piezo resonators, often set in “ovens” (TCXO, OCXO), derived from atomic properties (like Cesium Beam, Hydrogen Maser, Rubidium, Strontium or Ytterbium), or obtained in another way.
 
 <p align="center">
@@ -64,9 +66,9 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
     - Write RTL to test their operation
     - Perform this testing. Debug and fix the problems as they arise
  - [x] Create CPU hardware subsystem based on an open-source RISC-V core, memories, UART and debug port. 
- - [ ] Create a bare-metal software skeleton, as the foundation for writing future DSP applications. Create and test software build flow.
- - [ ] Test operation of CPU subsystem. Profile its performance. 
- - [ ] Map ADCs and DACs into CPU memory space and test SW communication with them. 
+ - [x] Create a bare-metal software skeleton, as the foundation for writing future DSP applications. Create and test software build flow.
+ - [x] Test operation of CPU subsystem. Profile its performance. 
+ - [x] Map ADCs and DACs into CPU memory space and test SW communication with them. 
  
 #### 3. DSP Model and Documentation
  - [ ] Model quartz crystal and DSP datapath in C or Python.
