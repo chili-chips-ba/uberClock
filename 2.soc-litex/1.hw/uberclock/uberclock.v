@@ -9,7 +9,7 @@ module uberclock#(
 )(
     input                     sys_clk,
     input                     rst,
-    input  [2:0]  final_shift, // 0..7 is plenty; use 2 or 3 typically
+    input  [2:0]  final_shift, 
     // ADC (12-bit inputs; AD9238 on J11)
     output                    adc_clk_ch0,  // AD channel 0 sampling clock
     output                    adc_clk_ch1,  // AD channel 1 sampling clock
@@ -539,46 +539,41 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // Sum tree
     // ----------------------------------------------------------------------
-    // ----------------------------------------------------------------------
-// Sum tree (consistent widths + signed)
-// ----------------------------------------------------------------------
-reg  signed [16:0] sum_1, sum_2;   // 16+16 -> 17
-reg  signed [16:0] sum_3;          // align to 17
+    reg  signed [16:0] sum_1, sum_2;   // 16+16 = 17
+    reg  signed [16:0] sum_3;          
 
-always @(posedge sys_clk) begin
-    sum_1 <= $signed(tx_channel_output1) + $signed(tx_channel_output2);
-    sum_2 <= $signed(tx_channel_output3) + $signed(tx_channel_output4);
-    sum_3 <= $signed(tx_channel_output5);
-end
+    always @(posedge sys_clk) begin
+        sum_1 <= $signed(tx_channel_output1) + $signed(tx_channel_output2);
+        sum_2 <= $signed(tx_channel_output3) + $signed(tx_channel_output4);
+        sum_3 <= $signed(tx_channel_output5);
+    end
 
-reg  signed [17:0] sum_4, sum_5;   // 17+17 -> 18
+    reg  signed [17:0] sum_4, sum_5;   // 17+17 = 18
 
-always @(posedge sys_clk) begin
-    sum_4 <= $signed(sum_1) + $signed(sum_2);
-    sum_5 <= $signed(sum_3);       // widen to 18
-end
+    always @(posedge sys_clk) begin
+        sum_4 <= $signed(sum_1) + $signed(sum_2);
+        sum_5 <= $signed(sum_3);       // to 18 ?
+    end
 
-reg  signed [18:0] sum_final;      // 18+18 -> 19
-always @(posedge sys_clk) begin
-    sum_final <= $signed(sum_4) + $signed(sum_5);
-end
+    reg  signed [18:0] sum_final;      // 18+18 = 19
+    always @(posedge sys_clk) begin
+        sum_final <= $signed(sum_4) + $signed(sum_5);
+    end
 
-// Choose scaling S (3 for /8, 4 for /16, etc.)
-// -------- Final scale/round/saturate to 14-bit signed for DAC/feedback --------
-wire [2:0] S = final_shift;  // make it runtime-adjustable
+    // Scaling S (3 for /8)
+    wire [2:0] S = final_shift;  
 
-// round-to-nearest before shift
-wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1)); // safe when S!=0; see guard below
-wire signed [18:0] sum_shf = (S == 3'd0) ? sum_final : (sum_rnd >>> S);
+    // round-to-nearest before shift
+    wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1)); 
+    wire signed [18:0] sum_shf = (S == 3'd0) ? sum_final : (sum_rnd >>> S);
 
-// 14-bit signed saturation: -8192..+8191
-function automatic [13:0] sat14(input signed [18:0] x);
-    if      (x >  19'sd8191)  sat14 = 14'sd8191;
-    else if (x < -19'sd8192)  sat14 = -14'sd8192;
-    else                      sat14 = x[13:0];
-endfunction
+    function automatic [13:0] sat14(input signed [18:0] x);
+        if      (x >  19'sd8191)  sat14 = 14'sd8191;
+        else if (x < -19'sd8192)  sat14 = -14'sd8192;
+        else                      sat14 = x[13:0];
+    endfunction
 
-wire signed [13:0] system_output_14 = sat14(sum_shf);
+    wire signed [13:0] system_output_14 = sat14(sum_shf);
 
 
 

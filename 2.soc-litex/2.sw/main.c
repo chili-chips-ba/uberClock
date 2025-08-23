@@ -333,22 +333,19 @@ static void console_service(void) {
 
 static volatile bool ce_event = false;
 static void ce_down_isr(void) {
-	// clear the pending bit
 	evm_pending_write(1);
-	// immediately disarm further CE_DOWN IRQs
 	evm_enable_write(0);
-	// flag for the main loop
 	ce_event = true;
 }
 
 int main(void) {
 
 	main_phase_inc_nco_write(80660);
-	main_phase_inc_down_1_write(80656);
-	main_phase_inc_down_2_write(80652);
-	main_phase_inc_down_3_write(80648);
-	main_phase_inc_down_4_write(80644);
-	main_phase_inc_down_5_write(80640);
+	main_phase_inc_down_1_write(80656); //500Hz
+	main_phase_inc_down_2_write(80652); //1000Hz
+	main_phase_inc_down_3_write(80648); //1500Hz
+	main_phase_inc_down_4_write(80644); //2000Hz
+	main_phase_inc_down_5_write(80640); //2500Hz
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(0);
 	main_upsampler_input_mux_write(0);
