@@ -19,3 +19,7 @@
 
 *\#*\#
 *\#*
+../.vscode/
+.vscode/
+# Ignore Vivado backup journals
+*.backup.jou
