@@ -9,7 +9,7 @@ module uberclock#(
 )(
     input                     sys_clk,
     input                     rst,
-    input  [2:0]  final_shift, 
+    input  [2:0]              final_shift, 
     // ADC (12-bit inputs; AD9238 on J11)
     output                    adc_clk_ch0,  // AD channel 0 sampling clock
     output                    adc_clk_ch1,  // AD channel 1 sampling clock
@@ -26,6 +26,7 @@ module uberclock#(
 
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
+    input signed [11:0]       nco_mag, // NCO magnitude from CPU
     input  [PW-1:0]           phase_inc_down_1,
     input  [PW-1:0]           phase_inc_down_2,
     input  [PW-1:0]           phase_inc_down_3,
@@ -35,8 +36,8 @@ module uberclock#(
 
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              upsampler_input_mux,
-    input  [1:0]              output_select_ch1,
-    input  [1:0]              output_select_ch2,
+    input  [2:0]              output_select_ch1,
+    input  [2:0]              output_select_ch2,
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -115,7 +116,7 @@ module uberclock#(
         .i_clk   (sys_clk),
         .i_reset (rst),
         .i_ce    (1'b1),
-        .i_xval  (12'sd1000),
+        .i_xval  (nco_mag),
         .i_yval  (12'sd0),
         .i_phase (phase_acc_nco_reg),
         .i_aux   (1'b1),
@@ -123,15 +124,16 @@ module uberclock#(
         .o_yval  (nco_sin),
         .o_aux   (nco_aux)
     );
-    reg signed [11:0] filter_in;
+    reg signed [11:0] filter_in, filter_in_1;
     always @(posedge sys_clk) begin
         filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
+        filter_in_1 <= {~ad_data_ch1_12[11], ad_data_ch1_12[10:0]};
     end
 
     wire signed [IW-1:0] selected_input =
                         (input_select == 2'b00) ? $signed(filter_in) :
                         (input_select == 2'b01) ? $signed(nco_cos)   :
-                              $signed(system_output_14[13:2]); // 14->12, sign keep
+                              $signed(sum[13:2]); // 14->12, sign keep
     //------------------------------------------------------------------------
     // rx1 channel
     //------------------------------------------------------------------------
@@ -561,21 +563,39 @@ module uberclock#(
     end
 
     // Scaling S (3 for /8)
+    // wire [2:0] S = final_shift;  
+
+    // // round-to-nearest before shift
+    // wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1)); 
+    // wire signed [18:0] sum_shf = (S == 3'd0) ? sum_final : (sum_rnd >>> S);
+
+    // function automatic [13:0] sat14(input signed [18:0] x);
+    //     if      (x >  19'sd8191)  sat14 = 14'sd8191;
+    //     else if (x < -19'sd8192)  sat14 = -14'sd8192;
+    //     else                      sat14 = x[13:0];
+    // endfunction
+
+    // wire signed [13:0] system_output_14 = sat14(sum_shf);
+    wire signed [18:0] pre_sum_val, sum_pre_round;
+
+    assign sum_pre_round = sum_final;
+
+    reg signed  [13:0] system_output_14;
+
+    assign pre_sum_val = sum_pre_round + $signed({ {(14){1'b0}},
+                                        sum_pre_round[5],
+                                        {(4){~sum_pre_round[5]}}});
+                                        
+    always @(posedge sys_clk) begin
+    if (rst) begin
+        system_output_14 <= 0;
+
+    end else begin
+        system_output_14 <= sum_pre_round [18:5]; 
+    end
+    end
     wire [2:0] S = final_shift;  
-
-    // round-to-nearest before shift
-    wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1)); 
-    wire signed [18:0] sum_shf = (S == 3'd0) ? sum_final : (sum_rnd >>> S);
-
-    function automatic [13:0] sat14(input signed [18:0] x);
-        if      (x >  19'sd8191)  sat14 = 14'sd8191;
-        else if (x < -19'sd8192)  sat14 = -14'sd8192;
-        else                      sat14 = x[13:0];
-    endfunction
-
-    wire signed [13:0] system_output_14 = sat14(sum_shf);
-
-
+    wire signed[13:0] sum = (S == 3'd0) ? system_output_14: (system_output_14 << S);
 
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO
@@ -593,7 +613,7 @@ module uberclock#(
        .i_clk  (sys_clk),
        .i_reset(rst),
        .i_ce   (1'b1),
-       .i_xval (12'sd1000),
+       .i_xval (12'sd200),
        .i_yval (12'sd0),
        .i_phase(phase_acc_cpu_reg),
        .i_aux  (1'b1),
@@ -616,16 +636,25 @@ module uberclock#(
 
     // ----------------------------------------------------------------------
     // DAC data preparation
-    // ----------------------------------------------------------------------
-    wire [13:0] dac1_data_in =   (output_select_ch1 == 2'b00) ? downsampled_y1[15:2]:
-                                 (output_select_ch1 == 2'b01) ? downsampled_y5[15:2]:
-                                 (output_select_ch1 == 2'b10) ? nco_cos << 2:
-                                                                system_output_14; 
+// ----------------------------------------------------------------------
+    wire [13:0] dac1_data_in =  (output_select_ch1 == 3'b000) ? downsampled_y1[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b001) ? downsampled_y2[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b010) ? downsampled_y3[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b011) ? downsampled_y4[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b100) ? downsampled_y5[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b101) ? tx_channel_output1[15:2]: // 19->14:
+                                (output_select_ch1 == 3'b110) ? tx_channel_output2[15:2]: // 19->14:
+                                                                tx_channel_output3[15:2]; // 19->14:
 
-    wire [13:0] dac2_data_in =   (output_select_ch2 == 2'b00) ? downsampled_y2[15:2]:
-                                 (output_select_ch2 == 2'b01) ? downsampled_y3[15:2]:
-                                 (output_select_ch2 == 2'b10) ? downsampled_y4[15:2]:
-                                                                tx_channel_output1[15:2];
+    wire [13:0] dac2_data_in =  (output_select_ch2 == 3'b000) ? tx_channel_output4[15:2]:
+                                (output_select_ch2 == 3'b001) ? tx_channel_output5[15:2]:
+                                (output_select_ch2 == 3'b010) ? filter_in << 2:
+                                (output_select_ch2 == 3'b011) ? nco_cos << 2:
+                                (output_select_ch2 == 3'b100) ? sum : 
+                                (output_select_ch2 == 3'b101) ? filter_in_1 << 2:
+                                (output_select_ch2 == 3'b110) ? nco_sin << 2:
+                                                                sum_final[18:5]; // 19->14:
+
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin
         dac1_data_reg <= dac1_data_in + 14'd8192;
