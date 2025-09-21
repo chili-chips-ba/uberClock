@@ -135,6 +135,7 @@ We are grateful to NLnet Foundation for their sponsorship of this development ac
 </p>
 
 ### Public posts:
+- [2025-09-21](https://lnkd.in/p/gMNfu-y3)
 - [2025-05-25](https://www.linkedin.com/posts/chili-chips_adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
 - [2025-02-10](https://www.linkedin.com/posts/chili-chips_dsp-adc-cordic-activity-7294943218167689216-ZzOs?utm_source=share&utm_medium=member_desktop)
 
