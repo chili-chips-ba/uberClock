@@ -3,9 +3,9 @@
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
-    parameter NSTAGES  = 15,   // pipeline stages
-    parameter WW       = 15,   // working width
-    parameter PW       = 19    // phase accumulator width
+    parameter NSTAGES  = 20,   // pipeline stages
+    parameter WW       = 20,   // working width
+    parameter PW       = 24    // phase accumulator width
 )(
     input                     sys_clk,
     input                     rst,
@@ -36,8 +36,8 @@ module uberclock#(
 
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              upsampler_input_mux,
-    input  [2:0]              output_select_ch1,
-    input  [2:0]              output_select_ch2,
+    input  [3:0]              output_select_ch1,
+    input  [3:0]              output_select_ch2,
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -637,23 +637,37 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // DAC data preparation
 // ----------------------------------------------------------------------
-    wire [13:0] dac1_data_in =  (output_select_ch1 == 3'b000) ? downsampled_y1[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b001) ? downsampled_y2[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b010) ? downsampled_y3[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b011) ? downsampled_y4[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b100) ? downsampled_y5[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b101) ? tx_channel_output1[15:2]: // 19->14:
-                                (output_select_ch1 == 3'b110) ? tx_channel_output2[15:2]: // 19->14:
-                                                                tx_channel_output3[15:2]; // 19->14:
+    wire [13:0] dac1_data_in =  (output_select_ch1 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0001) ? upsampled_gain_y2[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0010) ? upsampled_gain_y3[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0011) ? upsampled_gain_y4[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0100) ? upsampled_gain_y5[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0101) ? tx_channel_output1[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0110) ? tx_channel_output2[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b0111) ? tx_channel_output3[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b1000) ? tx_channel_output4[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b1001) ? tx_channel_output5[15:2]: // 19->14:
+                                (output_select_ch1 == 4'b1010) ? nco_cos << 2:
 
-    wire [13:0] dac2_data_in =  (output_select_ch2 == 3'b000) ? tx_channel_output4[15:2]:
-                                (output_select_ch2 == 3'b001) ? tx_channel_output5[15:2]:
-                                (output_select_ch2 == 3'b010) ? filter_in << 2:
-                                (output_select_ch2 == 3'b011) ? nco_cos << 2:
-                                (output_select_ch2 == 3'b100) ? sum : 
-                                (output_select_ch2 == 3'b101) ? filter_in_1 << 2:
-                                (output_select_ch2 == 3'b110) ? nco_sin << 2:
-                                                                sum_final[18:5]; // 19->14:
+                                (output_select_ch1 == 4'b1011) ? filter_in << 2:
+                                (output_select_ch1 == 4'b1100) ? filter_in_1 << 2:
+                                                                 sum_final[18:5]; // 19->14:
+
+    wire [13:0] dac2_data_in =  (output_select_ch2 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0001) ? upsampled_gain_y2[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0010) ? upsampled_gain_y3[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0011) ? upsampled_gain_y4[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0100) ? upsampled_gain_y5[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0101) ? tx_channel_output1[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0110) ? tx_channel_output2[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b0111) ? tx_channel_output3[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b1000) ? tx_channel_output4[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b1001) ? tx_channel_output5[15:2]: // 19->14:
+                                (output_select_ch2 == 4'b1010) ? nco_cos << 2:
+
+                                (output_select_ch2 == 4'b1011) ? filter_in << 2:
+                                (output_select_ch2 == 4'b1100) ? filter_in_1 << 2:
+                                                                 sum_final[18:5]; // 19->14:                             
 
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin

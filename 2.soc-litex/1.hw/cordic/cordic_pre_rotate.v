@@ -34,17 +34,17 @@ module cordic_pre_rotate #(
         3'b001, 3'b010: begin
           o_xval  <= -e_yval;
           o_yval  <=  e_xval;
-          o_phase <= i_phase - 19'h20000;
+          o_phase <= i_phase - 24'h400000;
         end
         3'b011, 3'b100: begin
           o_xval  <= -e_xval;
           o_yval  <= -e_yval;
-          o_phase <= i_phase - 19'h40000;
+          o_phase <= i_phase - 24'h800000;
         end
         3'b101, 3'b110: begin
           o_xval  <=  e_yval;
           o_yval  <= -e_xval;
-          o_phase <= i_phase - 19'h60000;
+          o_phase <= i_phase - 24'hc00000; 
         end
         default: begin
           o_xval  <= e_xval;

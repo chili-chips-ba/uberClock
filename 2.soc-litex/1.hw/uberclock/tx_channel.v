@@ -5,7 +5,7 @@ module tx_channel # (
     parameter TX_OW = 16,
     parameter NSTAGES = 19, 
     parameter WW = 19,
-    parameter PW_I = 19, 
+    parameter PW_I = 24, 
     parameter PW = 23
 ) (
     input  wire                   sys_clk,
@@ -42,7 +42,7 @@ module tx_channel # (
     // ----------------------------------------------------------------------
     //wire [PW-1:0] phase = (1 << PW) - (phase_input << (PW - PW_I));
     // wire [PW-1:0] phase = -({phase_input, {PW-PW_I{1'b0}}}); // -(phase_input << (PW-PW_I))
-    wire [PW-1:0] phase = {(phase_input), 4'b0000}; // 19 -> 23 after negate
+    wire [PW-1:0] phase = phase_input[PW_I-1:1];// 24 -> 23 after negate
     wire signed [TX_OW-1:0] x_upconverted, y_upconverted;
     wire up_aux;
     cordic16 #(

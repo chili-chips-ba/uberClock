@@ -1,4 +1,4 @@
-config,None,data_width,337
+config,None,data_width,348
 config,None,depth,2048
 config,None,samplerate,65000000
 signal,0,main_basesoc0,12
@@ -11,10 +11,10 @@ signal,0,main_basesoc6,16
 signal,0,main_basesoc7,16
 signal,0,main_basesoc8,16
 signal,0,main_basesoc_phase_inc_nco_storage,32
-signal,0,main_basesoc_phase_inc_down_1_storage,19
-signal,0,main_basesoc_phase_inc_cpu_storage,19
+signal,0,main_basesoc_phase_inc_down_1_storage,24
+signal,0,main_basesoc_phase_inc_cpu_storage,24
 signal,0,main_basesoc_input_select_storage,2
-signal,0,main_basesoc_output_select_ch1_storage,3
+signal,0,main_basesoc_output_select_ch1_storage,4
 signal,0,main_basesoc_upsampler_input_mux_storage,2
 signal,0,main_basesoc_gain1_storage,32
 signal,0,main_basesoc_gain2_storage,32

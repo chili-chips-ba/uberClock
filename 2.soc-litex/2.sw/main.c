@@ -107,7 +107,7 @@ static void reboot_cmd(void) {
 
 static void phase_nco_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_nco must be 0–524287\n");
 		return;
 	}
@@ -126,7 +126,7 @@ static void nco_mag_cmd(char *args) {
 }
 static void phase_down_1_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -136,7 +136,7 @@ static void phase_down_1_cmd(char *args) {
 
 static void phase_down_2_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -146,7 +146,7 @@ static void phase_down_2_cmd(char *args) {
 
 static void phase_down_3_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -157,7 +157,7 @@ static void phase_down_3_cmd(char *args) {
 
 static void phase_down_4_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -167,7 +167,7 @@ static void phase_down_4_cmd(char *args) {
 
 static void phase_down_5_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -176,7 +176,7 @@ static void phase_down_5_cmd(char *args) {
 }
 static void phase_cpu_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 19)) {
+	if (p >= (1u << 24)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -185,13 +185,13 @@ static void phase_cpu_cmd(char *args) {
 }
 
 static void output_select_ch1_cmd(char *args) {
-	unsigned v = strtoul(args, NULL, 0) & 0x7;
+	unsigned v = strtoul(args, NULL, 0) & 0xf;
 	main_output_select_ch1_write(v);
 	printf("output_select_ch1 set to %u\n", v);
 }
 
 static void output_select_ch2_cmd(char *args) {
-	unsigned v = strtoul(args, NULL, 0) & 0x7;
+	unsigned v = strtoul(args, NULL, 0) & 0xf;
 	main_output_select_ch2_write(v);
 	printf("output_select_ch2 set to %u\n", v);
 }
@@ -354,23 +354,22 @@ static void ce_down_isr(void) {
 
 int main(void) {
 
-	main_phase_inc_nco_write(80691);
-	main_nco_mag_write(50); // NCO magnitude
-	main_phase_inc_down_1_write(80656); //1000Hz
-	main_phase_inc_down_2_write(80652); //1000Hz
-	main_phase_inc_down_3_write(80648); //1500Hz
-	main_phase_inc_down_4_write(80644); //2000Hz
-	main_phase_inc_down_5_write(80640); //2500Hz
+	main_phase_inc_nco_write(2581836);	
+	main_nco_mag_write(30); // NCO magnitude
+	main_phase_inc_down_1_write(2581110);  //10MHz
+	main_phase_inc_down_3_write(80648); 
+	main_phase_inc_down_4_write(80644); 
+	main_phase_inc_down_5_write(80640); 
 	main_phase_inc_cpu_write(52429);
-	main_input_select_write(1);
+	main_input_select_write(0);
 	main_upsampler_input_mux_write(0);
 	main_gain1_write (0x40000000);
 	main_gain2_write (0x40000000);
 	main_gain3_write (0x40000000);
 	main_gain4_write (0x40000000);
 	main_gain5_write (0x40000000);
-	main_output_select_ch1_write(0);
-	main_output_select_ch2_write(3);
+	main_output_select_ch1_write(10);
+	main_output_select_ch2_write(10);
 	main_final_shift_write(0);
 	uart_init();
 

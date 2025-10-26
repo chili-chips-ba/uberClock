@@ -75,22 +75,29 @@ module cordic #(
   //--------------------------------------------------------------------------
   // Pipeline Stages: Each stage rotates the vector by a predetermined angle.
   //--------------------------------------------------------------------------
-  wire [18:0]	cordic_angle [0:(NSTAGES-1)];
-	assign	cordic_angle[ 0] = 19'h0_9720; //  26.565051 deg
-	assign	cordic_angle[ 1] = 19'h0_4fd9; //  14.036243 deg
-	assign	cordic_angle[ 2] = 19'h0_2888; //   7.125016 deg
-	assign	cordic_angle[ 3] = 19'h0_1458; //   3.576334 deg
-	assign	cordic_angle[ 4] = 19'h0_0a2e; //   1.789911 deg
-	assign	cordic_angle[ 5] = 19'h0_0517; //   0.895174 deg
-	assign	cordic_angle[ 6] = 19'h0_028b; //   0.447614 deg
-	assign	cordic_angle[ 7] = 19'h0_0145; //   0.223811 deg
-	assign	cordic_angle[ 8] = 19'h0_00a2; //   0.111906 deg
-	assign	cordic_angle[ 9] = 19'h0_0051; //   0.055953 deg
-	assign	cordic_angle[10] = 19'h0_0028; //   0.027976 deg
-	assign	cordic_angle[11] = 19'h0_0014; //   0.013988 deg
-	assign	cordic_angle[12] = 19'h0_000a; //   0.006994 deg
-	assign	cordic_angle[13] = 19'h0_0005; //   0.003497 deg
-	assign	cordic_angle[14] = 19'h0_0002; //   0.001749 deg
+
+  wire	[23:0]	cordic_angle [0:(NSTAGES-1)];
+
+	assign	cordic_angle[ 0] = 24'h12_e405; //  26.565051 deg
+	assign	cordic_angle[ 1] = 24'h09_fb38; //  14.036243 deg
+	assign	cordic_angle[ 2] = 24'h05_1111; //   7.125016 deg
+	assign	cordic_angle[ 3] = 24'h02_8b0d; //   3.576334 deg
+	assign	cordic_angle[ 4] = 24'h01_45d7; //   1.789911 deg
+	assign	cordic_angle[ 5] = 24'h00_a2f6; //   0.895174 deg
+	assign	cordic_angle[ 6] = 24'h00_517c; //   0.447614 deg
+	assign	cordic_angle[ 7] = 24'h00_28be; //   0.223811 deg
+	assign	cordic_angle[ 8] = 24'h00_145f; //   0.111906 deg
+	assign	cordic_angle[ 9] = 24'h00_0a2f; //   0.055953 deg
+	assign	cordic_angle[10] = 24'h00_0517; //   0.027976 deg
+	assign	cordic_angle[11] = 24'h00_028b; //   0.013988 deg
+	assign	cordic_angle[12] = 24'h00_0145; //   0.006994 deg
+	assign	cordic_angle[13] = 24'h00_00a2; //   0.003497 deg
+	assign	cordic_angle[14] = 24'h00_0051; //   0.001749 deg
+	assign	cordic_angle[15] = 24'h00_0028; //   0.000874 deg
+	assign	cordic_angle[16] = 24'h00_0014; //   0.000437 deg
+	assign	cordic_angle[17] = 24'h00_000a; //   0.000219 deg
+	assign	cordic_angle[18] = 24'h00_0005; //   0.000109 deg
+	assign	cordic_angle[19] = 24'h00_0002; //   0.000055 deg
 	// {{{
 	// Std-Dev    : 0.00 (Units)
 	// Phase Quantization: 0.000030 (Radians)
