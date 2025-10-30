@@ -245,16 +245,17 @@ class BaseSoC(SoCCore):
             self.platform.add_source(f"{verilog_dir}/{fn}")
 
         self._input_select        = CSRStorage(2,  description="0=ADC, 1=NCO, 2=CPU")
-        self._output_select_ch1   = CSRStorage(2,  description="DAC CH1 output selector")
-        self._output_select_ch2   = CSRStorage(2,  description="DAC CH1 output selector")
+        self._output_select_ch1   = CSRStorage(4,  description="DAC CH1 output selector")
+        self._output_select_ch2   = CSRStorage(4,  description="DAC CH1 output selector")
         self._upsampler_input_mux = CSRStorage(2,  description="0=Gain, 1=CPU, 2=CPU NCO")
         self._phase_inc_nco       = CSRStorage(32, description="NCO phase increment")
-        self._phase_inc_down_1      = CSRStorage(19, description="Downconversion phase inc ch1")
-        self._phase_inc_down_2      = CSRStorage(19, description="Downconversion phase inc ch2")
-        self._phase_inc_down_3      = CSRStorage(19, description="Downconversion phase inc ch3")
-        self._phase_inc_down_4      = CSRStorage(19, description="Downconversion phase inc ch4")
-        self._phase_inc_down_5      = CSRStorage(19, description="Downconversion phase inc ch5")
-        self._phase_inc_cpu       = CSRStorage(19, description="CPU phase increment")
+        self._nco_mag             = CSRStorage(12, description="NCO magnitude")
+        self._phase_inc_down_1      = CSRStorage(24, description="Downconversion phase inc ch1")
+        self._phase_inc_down_2      = CSRStorage(24, description="Downconversion phase inc ch2")
+        self._phase_inc_down_3      = CSRStorage(24, description="Downconversion phase inc ch3")
+        self._phase_inc_down_4      = CSRStorage(24, description="Downconversion phase inc ch4")
+        self._phase_inc_down_5      = CSRStorage(24, description="Downconversion phase inc ch5")
+        self._phase_inc_cpu       = CSRStorage(24, description="CPU phase increment")
         self._gain1               = CSRStorage(32, description="Gain1 (Q format)")
         self._gain2               = CSRStorage(32, description="Gain2 (Q format)")
         self._gain3               = CSRStorage(32, description="Gain3 (Q format)")
@@ -274,6 +275,7 @@ class BaseSoC(SoCCore):
         output_select_ch2         = self._output_select_ch2.storage
         upsampler_input_mux       = self._upsampler_input_mux.storage
         phase_inc_nco             = self._phase_inc_nco.storage
+        nco_mag                   = self._nco_mag.storage
         phase_inc_down_1            = self._phase_inc_down_1.storage
         phase_inc_down_2            = self._phase_inc_down_2.storage
         phase_inc_down_3            = self._phase_inc_down_3.storage
@@ -342,6 +344,7 @@ class BaseSoC(SoCCore):
             i_output_select_ch2   = output_select_ch2,
             i_upsampler_input_mux = upsampler_input_mux,
             i_phase_inc_nco       = phase_inc_nco,
+            i_nco_mag             = nco_mag,
             i_phase_inc_down_1    = phase_inc_down_1,
             i_phase_inc_down_2    = phase_inc_down_2,
             i_phase_inc_down_3    = phase_inc_down_3,
