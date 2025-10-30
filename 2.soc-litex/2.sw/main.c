@@ -355,7 +355,7 @@ static void ce_down_isr(void) {
 int main(void) {
 
 	main_phase_inc_nco_write(2581836);	
-	main_nco_mag_write(30); // NCO magnitude
+	main_nco_mag_write(22); // NCO magnitude
 	main_phase_inc_down_1_write(2581110);  //10MHz
 	main_phase_inc_down_3_write(80648); 
 	main_phase_inc_down_4_write(80644); 
@@ -369,7 +369,7 @@ int main(void) {
 	main_gain4_write (0x40000000);
 	main_gain5_write (0x40000000);
 	main_output_select_ch1_write(10);
-	main_output_select_ch2_write(10);
+	main_output_select_ch2_write(11);
 	main_final_shift_write(0);
 	uart_init();
 
