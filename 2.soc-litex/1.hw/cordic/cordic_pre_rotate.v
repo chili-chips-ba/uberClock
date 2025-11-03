@@ -1,7 +1,7 @@
 module cordic_pre_rotate #(
     parameter IW = 12,
     parameter WW = 15,
-    parameter PW = 19
+    parameter PW = 24
 ) (
     input  wire                   i_clk,
     input  wire                   i_reset,

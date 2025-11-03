@@ -38,6 +38,7 @@ module uberclock#(
     input  [1:0]              upsampler_input_mux,
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
+    input  [2:0]              lowspeed_dbg_select,
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -53,28 +54,11 @@ module uberclock#(
 
     output signed [15:0]      magnitude,
     output signed [24:0]      phase,
-
-    // Debug outputs
-    output [IW-1:0]           dbg_nco_cos,
-    output [IW-1:0]           dbg_nco_sin,
-    output [PW-1:0]           dbg_phase_acc_down,
-    output [11:0]             dbg_x_downconverted,
-    output [11:0]             dbg_y_downconverted,
-    output [15:0]             dbg_downsampled_x,
-    output [15:0]             dbg_downsampled_y,
-    output [15:0]             dbg_upsampled_x,
-    output [15:0]             dbg_upsampled_y
-    // output [22:0]             dbg_phase_inv,
-    // output [15:0]             dbg_x_upconverted,
-    // output [15:0]             dbg_y_upconverted,
-    // output                    dbg_ce_down_x,
-    // output                    dbg_ce_down_y,
-    // output                    dbg_ce_up_x,
-    // output                    dbg_cic_ce_x,
-    // output                    dbg_comp_ce_x,
-    // output                    dbg_hb_ce_x,
-    // output signed [11:0]      dbg_cic_out_x,
-    // output signed [15:0]      dbg_comp_out_x
+    // Capture control (CSR-driven)
+    input              cap_arm,        // write 1 to arm/start a capture
+    input      [15:0]  cap_idx,        // index to read back (0..511)
+    output reg         cap_done,       // 1 when 512 samples captured
+    output     [15:0]  cap_data        // sign-extended read data
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -148,7 +132,7 @@ module uberclock#(
         .RX_OW (16),
         .NSTAGES (15), 
         .WW (15),
-        .PW (19)
+        .PW (24)
     ) rx_1 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -201,7 +185,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19), 
         .WW(19),
-        .PW_I(19), 
+        .PW_I(24), 
         .PW(23)
     ) tx_1 (
        .sys_clk (sys_clk),
@@ -231,7 +215,7 @@ module uberclock#(
         .RX_OW (16),
         .NSTAGES (15), 
         .WW (15),
-        .PW (19)
+        .PW (24)
     ) rx_2 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -283,7 +267,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19), 
         .WW(19),
-        .PW_I(19), 
+        .PW_I(24), 
         .PW(23)
     ) tx_2 (
         .sys_clk (sys_clk),
@@ -312,7 +296,7 @@ module uberclock#(
         .RX_OW (16),
         .NSTAGES (15), 
         .WW (15),
-        .PW (19)
+        .PW (24)
     ) rx_3 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -364,7 +348,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19), 
         .WW(19),
-        .PW_I(19), 
+        .PW_I(24), 
         .PW(23)
     ) tx_3 (
         .sys_clk (sys_clk),
@@ -392,7 +376,7 @@ module uberclock#(
         .RX_OW (16),
         .NSTAGES (15), 
         .WW (15),
-        .PW (19)
+        .PW (24)
     ) rx_4 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -444,7 +428,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19), 
         .WW(19),
-        .PW_I(19), 
+        .PW_I(24), 
         .PW(23)
     ) tx_4 (
         .sys_clk (sys_clk),
@@ -472,7 +456,7 @@ module uberclock#(
         .RX_OW (16),
         .NSTAGES (15), 
         .WW (15),
-        .PW (19)
+        .PW (24)
     ) rx_5 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -524,7 +508,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19), 
         .WW(19),
-        .PW_I(19), 
+        .PW_I(24), 
         .PW(23)
     ) tx_5 (
         .sys_clk (sys_clk),
@@ -689,28 +673,54 @@ module uberclock#(
         .da2_wrt  (da2_wrt),
         .da2_data (da2_data)
     );
+    // ----------------------------------------------------------------------
+    // Capture 512 samples of full 16-bit upsampled_gain_y1 on ce_down
+    // ----------------------------------------------------------------------
+    wire signed [15:0] lowspeed_debug_signal;
 
-    // ----------------------------------------------------------------------
-    // Debug signal assignments
-    // ----------------------------------------------------------------------
-    assign dbg_nco_cos         = nco_cos;
-    assign dbg_nco_sin         = nco_sin;
-    assign dbg_phase_acc_down  = phase_acc_down_reg1;
-    assign dbg_x_downconverted = x_downconverted1;
-    assign dbg_y_downconverted = y_downconverted1;
-    assign dbg_downsampled_x   = downsampled_x1;
-    assign dbg_downsampled_y   = downsampled_y1;
-    assign dbg_upsampled_x     = upsampled_x1;
-    assign dbg_upsampled_y     = upsampled_y1;
-    // assign dbg_phase_inv       = phase_inv;
-    // assign dbg_x_upconverted   = x_upconverted;
-    // assign dbg_y_upconverted   = tx_channel_output ;
-    // assign dbg_ce_down_x       = ce_out_down_x;
-    // assign dbg_ce_down_y       = ce_out_down_y;
-    // assign dbg_ce_up_x         = ce_out_up_x;
-    // assign dbg_cic_ce_x        = cic_ce_x;
-    // assign dbg_comp_ce_x       = comp_ce_x;
-    // assign dbg_hb_ce_x         = hb_ce_x;
-    // assign dbg_cic_out_x       = cic_out_x;
-    // assign dbg_comp_out_x      = comp_out_x;
+    assign lowspeed_debug_signal =
+        (lowspeed_dbg_select == 3'b000) ? upsampled_gain_y1 :
+        (lowspeed_dbg_select == 3'b001) ? upsampled_gain_y2 :
+        (lowspeed_dbg_select == 3'b010) ? upsampled_gain_y3 :
+        (lowspeed_dbg_select == 3'b011) ? upsampled_gain_y4 :
+        (lowspeed_dbg_select == 3'b100) ? upsampled_gain_y5 : 16'sd0;
+
+    reg cap_arm_q;
+    wire cap_arm_pulse = cap_arm & ~cap_arm_q;
+    always @(posedge sys_clk) cap_arm_q <= cap_arm;
+
+    reg         capturing;
+    reg  [10:0]  wr_ptr;                 // 0..511
+    reg  [15:0] cap_mem [0:2047];        // 512 x 16-bit
+
+    always @(posedge sys_clk or posedge rst) begin
+        if (rst) begin
+            capturing <= 1'b0;
+            cap_done  <= 1'b0;
+            wr_ptr    <= 11'd0;
+        end else begin
+            // Arm/start on rising edge
+            if (cap_arm_pulse) begin
+                capturing <= 1'b1;
+                cap_done  <= 1'b0;
+                wr_ptr    <= 11'd0;
+            end
+
+            // Capture on ce_down
+            if (capturing && ce_down) begin
+                cap_mem[wr_ptr] <= lowspeed_debug_signal;  // FULL 16-bit sample
+                if (wr_ptr == 11'd2047) begin
+                    capturing <= 1'b0;
+                    cap_done  <= 1'b1;
+                end else begin
+                    wr_ptr <= wr_ptr + 11'd1;
+                end
+            end
+        end
+    end
+
+    input [15:0] cap_idx;
+    wire [10:0] rd_idx = cap_idx[10:0];
+    assign cap_data = cap_mem[rd_idx];
+
 endmodule

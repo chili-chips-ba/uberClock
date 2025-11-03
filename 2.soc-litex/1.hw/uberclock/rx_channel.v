@@ -4,7 +4,7 @@ module rx_channel # (
     parameter RX_OW = 16,
     parameter NSTAGES = 15, 
     parameter WW = 15,
-    parameter PW = 19
+    parameter PW = 24
 ) (
     input  wire                   sys_clk,
     input  wire                   rst,

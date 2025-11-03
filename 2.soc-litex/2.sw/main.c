@@ -99,6 +99,31 @@ static void help(void) {
 	puts("  gain5 <val>               - Set gain5 register");
 	puts("  phase                     - Print current CORDIC phase");
 	puts("  magnitude                 - Print current CORDIC magnitude");
+	puts("  cap_start                 - Arm/start 512-sample capture");
+    puts("  cap_status                - Show capture status");
+    puts("  cap_dump                  - Dump captured samples as CSV");
+}
+static void cap_start_cmd(void) {
+    main_cap_arm_write(1);           // rising edge -> start
+    puts("Capture started (512 samples at ce_down).");
+}
+
+static void cap_status_cmd(void) {
+    unsigned d = main_cap_done_read();
+    printf("Capture %s\n", d ? "DONE" : "IN-PROGRESS");
+}
+
+static void cap_dump_cmd(void) {
+    if (!main_cap_done_read()) {
+        puts("Capture not done yet. Use 'cap_status' or wait.");
+        return;
+    }
+    puts("#idx,value");
+    for (unsigned i = 0; i < 2047; ++i) {
+        main_cap_idx_write(i);
+        int16_t v = (int16_t)main_cap_data_read();   // full 16-bit sample
+        printf("%u,%d\n", i, v);
+    }
 }
 
 static void reboot_cmd(void) {
@@ -196,6 +221,11 @@ static void output_select_ch2_cmd(char *args) {
 	printf("output_select_ch2 set to %u\n", v);
 }
 
+static void lowspeed_dbg_select_cmd(char *args) {
+	unsigned v = strtoul(args, NULL, 0) & 0xf;
+	main_lowspeed_dbg_select_write(v);
+	printf("lowspeed dbg set to %u\n", v);
+}
 static void input_select_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0);
 	main_input_select_write(v);
@@ -300,6 +330,10 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		output_select_ch2_cmd(arg);
 	}
+	else if (!strcmp(token, "lowspeed_select")) {
+		char *arg = get_token(&line);
+		lowspeed_dbg_select_cmd(arg);
+	}
 	else if (!strcmp(token, "input_select")) {
 		char *arg = get_token(&line);
 		input_select_cmd(arg);
@@ -337,7 +371,9 @@ static void console_service(void) {
 	else if (!strcmp(token, "final_shift")) {
 		char *arg = get_token(&line);
 		final_shift_cmd(arg);
-	}
+	} else if (!strcmp(token, "cap_start"))  cap_start_cmd();
+    else if (!strcmp(token, "cap_status")) cap_status_cmd();
+    else if (!strcmp(token, "cap_dump"))   cap_dump_cmd();
 	else {
 		printf("Unknown command: %s\n", token);
 	}
@@ -362,6 +398,7 @@ int main(void) {
 	main_phase_inc_down_5_write(80640); 
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(0);
+	main_lowspeed_dbg_select_write(0);
 	main_upsampler_input_mux_write(0);
 	main_gain1_write (0x40000000);
 	main_gain2_write (0x40000000);

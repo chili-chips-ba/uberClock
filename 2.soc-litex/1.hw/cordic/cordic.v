@@ -21,7 +21,7 @@ module cordic #(
     parameter OW       = 12,  // Output width
     parameter NSTAGES  = 15,  // Number of CORDIC stages
     parameter WW       = 15,  // Working width for internal computations
-    parameter PW       = 19   // Phase accumulator width
+    parameter PW       = 24   // Phase accumulator width
 ) (
     input  wire                   i_clk,
     input  wire                   i_reset,
