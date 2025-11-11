@@ -104,8 +104,10 @@ static void help(void) {
     puts("  cap_dump                  - Dump captured samples as CSV");
 }
 static void cap_start_cmd(void) {
-    main_cap_arm_write(1);           // rising edge -> start
-    puts("Capture started (512 samples at ce_down).");
+    main_cap_arm_write(0);        // ensure low
+    main_cap_arm_write(1);        // rising edge -> start
+    main_cap_arm_write(0);        // return low so future starts work
+    puts("Capture started.");
 }
 
 static void cap_status_cmd(void) {
@@ -119,7 +121,7 @@ static void cap_dump_cmd(void) {
         return;
     }
     puts("#idx,value");
-    for (unsigned i = 0; i < 2047; ++i) {
+    for (unsigned i = 0; i < 2048; ++i) {
         main_cap_idx_write(i);
         int16_t v = (int16_t)main_cap_data_read();   // full 16-bit sample
         printf("%u,%d\n", i, v);
@@ -390,12 +392,13 @@ static void ce_down_isr(void) {
 
 int main(void) {
 
-	main_phase_inc_nco_write(2581836);	
+	main_phase_inc_nco_write(2581110);	
 	main_nco_mag_write(22); // NCO magnitude
-	main_phase_inc_down_1_write(2581110);  //10MHz
-	main_phase_inc_down_3_write(80648); 
-	main_phase_inc_down_4_write(80644); 
-	main_phase_inc_down_5_write(80640); 
+	main_phase_inc_down_1_write(2581884);  // 10 003 000
+	main_phase_inc_down_2_write(2580852);  // 9 999 000
+	main_phase_inc_down_3_write(2580722);    // 9 998 500
+	main_phase_inc_down_4_write(2580593);    // 9 998 000
+	main_phase_inc_down_5_write(2580465);    // 9 997 500
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(0);
 	main_lowspeed_dbg_select_write(0);

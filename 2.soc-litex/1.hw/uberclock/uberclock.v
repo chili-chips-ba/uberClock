@@ -1,5 +1,4 @@
 `timescale 1ns / 1ps
-// `default_nettype none
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -719,7 +718,6 @@ module uberclock#(
         end
     end
 
-    input [15:0] cap_idx;
     wire [10:0] rd_idx = cap_idx[10:0];
     assign cap_data = cap_mem[rd_idx];
 

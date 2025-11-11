@@ -5,9 +5,14 @@ import matplotlib.pyplot as plt
 
 FS = 10_000.0  # sampling rate (Hz)
 
+# ----- labeling knobs -----
+MIN_HEIGHT_FRAC = 0.01   # label peaks >= 1% of max amplitude
+MIN_SPACING_HZ  = 0.0    # set >0 to prevent labeling peaks too close
+MAX_LABELS      = None   # e.g. 50 to cap labels, or None for unlimited
+# --------------------------
+
 def load_csv(path):
-    idx = []
-    val = []
+    idx, val = [], []
     with open(path, "r") as f:
         for ln in f:
             ln = ln.strip()
@@ -17,19 +22,47 @@ def load_csv(path):
             if len(parts) != 2:
                 continue
             try:
-                i = int(parts[0].strip())
-                v = float(parts[1].strip())
+                i = int(parts[0].strip()); v = float(parts[1].strip())
             except ValueError:
                 continue
-            idx.append(i)
-            val.append(v)
+            idx.append(i); val.append(v)
     if not val:
         raise RuntimeError("No data parsed. Expect lines like: 0,123")
     return np.asarray(idx, dtype=np.int64), np.asarray(val, dtype=np.float64)
 
+def find_peaks_by_threshold(freqs, mag, min_height_frac=0.01, min_spacing_hz=0.0,
+                            exclude_dc=True, max_labels=None):
+    """Return indices of all local maxima with height >= min_height_frac * max(mag)."""
+    # local maxima
+    locs = np.where((mag[1:-1] > mag[:-2]) & (mag[1:-1] > mag[2:]))[0] + 1
+    if exclude_dc:
+        locs = locs[freqs[locs] > 0.0]
+
+    # threshold by height
+    thresh = np.max(mag) * float(min_height_frac)
+    locs = locs[mag[locs] >= thresh]
+
+    # sort by frequency (for deterministic labeling order)
+    locs = np.sort(locs)
+
+    # enforce spacing if requested
+    if min_spacing_hz > 0.0 and locs.size:
+        selected = [locs[0]]
+        for k in locs[1:]:
+            if all(abs(freqs[k] - freqs[j]) >= min_spacing_hz for j in selected):
+                selected.append(k)
+        locs = np.array(selected, dtype=int)
+
+    # optionally cap label count by amplitude (keep strongest)
+    if (max_labels is not None) and (locs.size > max_labels):
+        order = np.argsort(mag[locs])[::-1]   # by amplitude desc
+        locs = locs[order[:max_labels]]
+        locs = np.sort(locs)                  # plot left→right
+    return locs
+
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python3 plot_signal_fft.py samples.csv")
+        print("Usage: python3 plot_signal_fft_linear_label_all.py samples.csv")
         sys.exit(1)
 
     path = sys.argv[1]
@@ -37,40 +70,54 @@ def main():
     N = len(x)
     t = np.arange(N) / FS
 
-    # --- Time-domain plot ---
+    # --- Time domain ---
     plt.figure()
-    plt.plot(t, x)
+    plt.step(t, x)
     plt.title("Signal vs Time")
-    plt.xlabel("Time [s]")
-    plt.ylabel("Amplitude")
+    plt.xlabel("Time [s]"); plt.ylabel("Amplitude")
     plt.grid(True)
 
-    # --- FFT (single-sided) ---
-    # Windowing to reduce leakage
-    win = np.hanning(N)
-    xw = x * win
-
-    # Use rfft for real input; get frequency bins up to Nyquist
+    # --- FFT (Hann window, single-sided, linear amplitude) ---
+    win = np.hanning(N); xw = x * win
     X = np.fft.rfft(xw)
     freqs = np.fft.rfftfreq(N, d=1.0/FS)
 
-    # Amplitude scaling for Hann window to approximate true amplitude
-    # Coherent gain (CG) of Hann is 0.5
-    CG = 0.5
-    # Convert to magnitude spectrum (per-bin), normalized by N and CG
-    mag = np.abs(X) * (2.0 / (N * CG))  # factor 2 for single-sided spectrum (except DC/Nyquist)
-    # Avoid log(0)
-    mag_db = 20.0 * np.log10(np.maximum(mag, 1e-12))
+    CG = 0.5  # Hann coherent gain
+    mag = np.abs(X) * (2.0 / (N * CG))
+    if N % 2 == 0:
+        mag[0] *= 0.5; mag[-1] *= 0.5
+    else:
+        mag[0] *= 0.5
 
+    # --- Peaks: label ALL above threshold ---
+    peak_idx = find_peaks_by_threshold(
+        freqs, mag,
+        min_height_frac=MIN_HEIGHT_FRAC,
+        min_spacing_hz=MIN_SPACING_HZ,
+        exclude_dc=True,
+        max_labels=MAX_LABELS
+    )
+
+    # --- Stem plot ---
     plt.figure()
-    plt.plot(freqs, mag)
-    plt.title("Single-Sided FFT Magnitude (Hann, dB)")
-    plt.xlabel("Frequency [Hz]")
-    plt.ylabel("Magnitude [dB]")
-    plt.grid(True)
-    plt.xlim(0, FS/2)
+    markerline, stemlines, baseline = plt.stem(freqs, mag)
+    try: baseline.set_linewidth(0.8)
+    except Exception: pass
 
-    plt.show()
+    # emphasize + annotate peaks
+    if peak_idx.size:
+        plt.stem(freqs[peak_idx], mag[peak_idx])
+        for k in peak_idx:
+            plt.annotate(f"{mag[k]:.2f}",
+                         xy=(freqs[k], mag[k]),
+                         xytext=(0, 6),
+                         textcoords="offset points",
+                         ha="center", va="bottom", fontsize=8)
+
+    plt.title("Single-Sided FFT Magnitude (Linear Scale)")
+    plt.xlabel("Frequency [Hz]"); plt.ylabel("Amplitude")
+    plt.grid(True, alpha=0.3); plt.xlim(0, FS/2)
+    plt.tight_layout(); plt.show()
 
 if __name__ == "__main__":
     main()
