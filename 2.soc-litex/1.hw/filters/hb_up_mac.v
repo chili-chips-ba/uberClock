@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module hb_up_mac #(
   //------------------------------------------------------------------------
   // Data widths & depths

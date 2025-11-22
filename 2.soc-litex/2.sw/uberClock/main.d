@@ -17,14 +17,6 @@ main.o: main.c /usr/riscv64-linux-gnu/usr/include/stdc-predef.h \
  /usr/lib/gcc/riscv64-linux-gnu/15.1.0/include/stdarg.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_types.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_types.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/stdlib.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/cdefs.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/stdlib.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/alloca.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/string.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/strings.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/string.h \
- /usr/lib/gcc/riscv64-linux-gnu/15.1.0/include/stdbool.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/include/irq.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/cores/cpu/vexriscv/irq.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/cores/cpu/vexriscv/system.h \
@@ -33,8 +25,7 @@ main.o: main.c /usr/riscv64-linux-gnu/usr/include/stdc-predef.h \
  /home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/generated/csr.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/include/hw/common.h \
  /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libbase/uart.h \
- /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libbase/console.h \
- /home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/generated/mem.h
+ console.h uberclock.h ubddr3.h
 /usr/riscv64-linux-gnu/usr/include/stdc-predef.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/tinystdio/stdio.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/inttypes.h:
@@ -54,14 +45,6 @@ main.o: main.c /usr/riscv64-linux-gnu/usr/include/stdc-predef.h \
 /usr/lib/gcc/riscv64-linux-gnu/15.1.0/include/stdarg.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/_types.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/_types.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/stdlib.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/cdefs.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/machine/stdlib.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/alloca.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/string.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/strings.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-software-picolibc/pythondata_software_picolibc/data/newlib/libc/include/sys/string.h:
-/usr/lib/gcc/riscv64-linux-gnu/15.1.0/include/stdbool.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/include/irq.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/cores/cpu/vexriscv/irq.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/cores/cpu/vexriscv/system.h:
@@ -70,5 +53,6 @@ main.o: main.c /usr/riscv64-linux-gnu/usr/include/stdc-predef.h \
 /home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/generated/csr.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/include/hw/common.h:
 /home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libbase/uart.h:
-/home/hamed/FPGA/Tools/litex-hub/litex/litex/litex/soc/software/libbase/console.h:
-/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc-litex/3.build/build/alinx_ax7203/software/include/generated/mem.h:
+console.h:
+uberclock.h:
+ubddr3.h:

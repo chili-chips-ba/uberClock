@@ -88,6 +88,8 @@ else
     python3 -m venv "$VENV_DIR"
 fi
 
+# Activate venv in this script context
+# shellcheck source=/dev/null
 source "${VENV_DIR}/bin/activate"
 
 echo "   Upgrading pip inside venv..."
@@ -112,7 +114,7 @@ echo "   This may take several minutes..."
 python3 litex_setup.py --init --install --gcc=riscv --config=full
 
 echo
-echo "Copying target/platform files from local 2.soc-litex/6.migen to LiteX boards..."
+echo "5) Copying target/platform files from local 2.soc-litex/6.migen to LiteX boards..."
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &>/dev/null && pwd )"
 SOURCE_MIGEN_DIR="${SCRIPT_DIR}/6.migen"
 LITEX_BOARDS_DIR="${LITEX_DIR}/litex-boards/litex_boards"
@@ -134,8 +136,10 @@ cp -r "${SOURCE_MIGEN_DIR}/." "$LITEX_BOARDS_DIR/"
 
 echo
 echo "=== Installation Complete ==="
-echo "To use LiteX commands, do:"
+echo "To use LiteX, do:"
 echo "  source \"$VENV_DIR/bin/activate\""
+echo "  cd \"$LITEX_DIR\""
+echo "  # Now you can 'litex_boards' or any LiteX commands"
 echo
 echo "The new target/platform files from '2.soc-litex/6.migen' are available under:"
 echo "  $LITEX_BOARDS_DIR"

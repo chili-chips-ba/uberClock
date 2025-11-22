@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic_round #(
    parameter WW = 15,
    parameter OW = 12

@@ -1,7 +1,8 @@
 // ============================================================================
 //  adc_dac.v
 // ============================================================================
-`timescale 1ns / 1ps
+`timescale 1 ns / 1 ns
+`default_nettype none
 
 module adc_dac(
     input                     sys_clk,
@@ -82,3 +83,5 @@ module adc_dac(
     assign debug_dac2_input  = dac2_input_14;
 
 endmodule
+
+`default_nettype wire

@@ -15,7 +15,8 @@
 // MERCHANTIBILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser
 // General Public License for more details.
 ////////////////////////////////////////////////////////////////////////////////
-
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic #(
     parameter IW       = 12,  // Input width
     parameter OW       = 12,  // Output width

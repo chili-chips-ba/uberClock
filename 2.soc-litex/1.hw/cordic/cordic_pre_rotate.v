@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic_pre_rotate #(
     parameter IW = 12,
     parameter WW = 15,

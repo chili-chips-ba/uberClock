@@ -1,24 +1,22 @@
 # Installation Guide
 
-## LiteX Installation
-
 Follow these steps to get a clean Python environment and install LiteX (with Migen, LiteDRAM, LiteSPI, etc.) on Linux or WSL.
 Afterwards an explanation will be given on how to incorporate the design correctly.
 
-### 1. Install system prerequisites
-#### Arch Linux
+## 1. Install system prerequisites
+### Arch Linux
 
 ```
 sudo pacman -Syu python git base-devel
 ```
 
-#### Debian/Ubuntu
+### Debian/Ubuntu
 ```
 sudo apt update
 sudo apt install python3 python3-venv python3-pip git build-essential
 ```
 
-### 2. Create & activate a virtual environment
+## 2. Create & activate a virtual environment
 
 1. Create a venv (e.g. ~/litex-venv):
 ```
@@ -31,7 +29,7 @@ python3 -m venv ~/litex-venv
 source ~/litex-venv/bin/activate
 ```
 
-### 3. Install LiteX & its cores
+## 3. Install LiteX & its cores
 
 A more detailed explanation of the installation can be found on the [official Litex github](https://github.com/enjoy-digital/litex/wiki/Installation).
 
@@ -63,10 +61,5 @@ If you're building a CPU-based SoC and need a RISC-V GCC add the `--gcc=riscv` f
 
 Until the Pull Request is approved you will need to manually copy the target and platform file for the specific board we are using. In this case it is the `alinx_ax7203` board and the files are located in the `6.migen` folder of the repository. 
 
-### Use a script that automates all of this
 
-If you'd like to use a bash script that does all of the steps above you can simply use the [install_litex.sh](https://github.com/chili-chips-ba/uberClock/blob/main/2.soc-litex/install_litex.sh) script located in the [2.soc-litex](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex) folder.
-
-## Vivado Installation
-
-For a detailed Vivado installation guide please consult [this](https://github.com/chili-chips-ba/wireguard-fpga/wiki/1.-Setting-Up-Vivado) document that can be found on the Wiki of our Wireguard project.
+TODO: Maybe write a script that does all of this?

@@ -5,7 +5,8 @@
 //    PHASE_INC.  That accumulator is fed into cordic.i_phase, and the CORDIC
 //    rotates a fixed “unit” vector by that phase each cycle.
 // ============================================================================
-
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic_top #(
     //------------------------------------------------------------------------
     //  Match these to your `cordic` instance.  If you change IW/OW/NSTAGES/WW/PW

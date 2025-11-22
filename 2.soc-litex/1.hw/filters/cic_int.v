@@ -3,6 +3,9 @@
 /*
  * Cascaded integrator-comb (CIC) Interpolator
  */
+`timescale 1 ns / 1 ns
+`default_nettype none
+
 module cic_int #(
     parameter I_WIDTH    = 16,
     parameter O_WIDTH    = 14,

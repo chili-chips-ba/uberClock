@@ -1,208 +1,628 @@
 #!/usr/bin/env python3
-
-#
-# This file is part of LiteX-Boards.
-#
-# Copyright (c) 2022 Yonggang Liu <ggang.liu@gmail.com>
-# SPDX-License-Identifier: BSD-2-Clause
-#
+# -*- coding: utf-8 -*-
 
 from migen import *
 from litex.gen import *
 
 from litex_boards.platforms import alinx_ax7203
 
-from litex.soc.interconnect import axi, wishbone
-from litex.soc.interconnect.axi import AXILiteInterface
+from litex.soc.interconnect import wishbone, stream
 from litex.soc.interconnect.csr import CSRStorage, CSRStatus
 from litex.soc.interconnect.csr_eventmanager import EventManager, EventSourcePulse
-
 from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
+from litex.soc.integration.soc import SoCRegion
 
 from litex.soc.cores.clock import *
 from litex.soc.cores.led import LedChaser
+from litex.soc.cores.timer import Timer
 from litex.soc.cores.video import VideoS7HDMIPHY
+from litex.soc.cores.dma import WishboneDMAWriter
 
 from litedram.modules import MT41J256M16
 from litedram.phy import s7ddrphy
 from litedram.core.controller import ControllerSettings
 
 from liteeth.phy.s7rgmii import LiteEthPHYRGMII
-
 from litescope import LiteScopeAnalyzer
 
-# NOTE: Change this accordingly!
-repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/" # Absolute path to the root of your cloned repo
-verilog_dir = repository_dir + "/2.soc-litex/1.hw"
+from migen.genlib.cdc import PulseSynchronizer, ClockDomainsRenamer, MultiReg
+from migen.genlib.fifo import AsyncFIFO
 
-# -------------------------------------------------------------------------
-#  Clock Reset Generator
-# -------------------------------------------------------------------------
+import math
+
+# --- set your repo paths ---
+repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/"
+verilog_dir    = repository_dir + "/2.soc-litex/1.hw"
+
+# =============================================================================
+# CRG
+# =============================================================================
 class _CRG(LiteXModule):
-    def __init__(self, platform, sys_clk_freq, with_dram=True):
-        self.rst    = Signal()
-        self.cd_sys = ClockDomain()
-        if with_dram:
-            self.cd_sys4x     = ClockDomain()
-            self.cd_sys4x_dqs = ClockDomain()
-            self.cd_idelay    = ClockDomain()
+    def __init__(self, platform, need_ddr_clks=True):
+        self.rst          = Signal()
+        self.cd_sys       = ClockDomain()
+        self.cd_uc        = ClockDomain()
+        self.cd_ub_4x     = ClockDomain()
+        self.cd_ub_4x_dqs = ClockDomain()
+        self.cd_idelay    = ClockDomain()
 
-        # use a 2% tolerance on generated clocks
-        margin = 2e-2
-        self.pll = pll = S7PLL(speedgrade=-2)
-        self.comb += pll.reset.eq(self.rst)
-        pll.register_clkin(platform.request("clk200"), 200e6)
-        pll.create_clkout(self.cd_sys, sys_clk_freq, margin=margin)
-        platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin)
+        clk200    = platform.request("clk200")
+        clk200_se = Signal()
+        self.specials += Instance("IBUFDS", i_I=clk200.p, i_IB=clk200.n, o_O=clk200_se)
 
-        if with_dram:
-            pll.create_clkout(self.cd_sys4x,     4*sys_clk_freq, margin=margin)
-            pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90, margin=margin)
-            pll.create_clkout(self.cd_idelay,    200e6, margin=margin)
-            self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
+        self.pll0 = S7MMCM(speedgrade=-2)
+        self.comb += self.pll0.reset.eq(self.rst)
+        self.pll0.register_clkin(clk200_se, 200e6)
+        margin = 1e-2
+        self.pll0.create_clkout(self.cd_sys, 100e6, margin=margin)
+        if need_ddr_clks:
+            self.pll0.create_clkout(self.cd_ub_4x,     400e6,           margin=margin)
+            self.pll0.create_clkout(self.cd_ub_4x_dqs, 400e6, phase=90, margin=margin)
 
+        self.pll1 = S7MMCM(speedgrade=-2)
+        self.comb += self.pll1.reset.eq(self.rst)
+        self.pll1.register_clkin(clk200_se, 200e6)
+        self.pll1.create_clkout(self.cd_uc, 65e6, margin=margin)
 
-# -------------------------------------------------------------------------
-#  BaseSoC with optional CORDIC, DAC & ICD wiring
-# -------------------------------------------------------------------------
-class BaseSoC(SoCCore):
-    def __init__(self, toolchain="vivado", sys_clk_freq=200e6,
-                 with_hdmi                = False,
-                 with_ethernet            = False,
-                 with_etherbone           = False,
-                 with_spi_flash           = False,
-                 with_led_chaser          = False,
-                 with_sdcard              = False,
-                 with_spi_sdcard          = False,
-                 with_pcie                = False,
-                 with_video_terminal      = False,
-                 with_video_framebuffer   = False,
-                 with_video_colorbars     = False,
-                 with_ledmem              = False,
-                 with_uberclock           = False,
-                 **kwargs):
-        platform = alinx_ax7203.Platform(toolchain=toolchain)
+        clk200_bufg = Signal()
+        self.specials += Instance("BUFG", i_I=clk200_se, o_O=clk200_bufg)
+        self.comb += self.cd_idelay.clk.eq(clk200_bufg)
+        self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
-        # CRG
-        with_dram = (kwargs.get("integrated_main_ram_size", 0) == 0)
-        self.crg = _CRG(platform, sys_clk_freq, with_dram)
+        platform.add_false_path_constraints(self.cd_sys.clk,       self.pll0.clkin)
+        platform.add_false_path_constraints(self.cd_uc.clk,        self.pll1.clkin)
+        platform.add_false_path_constraints(self.cd_ub_4x.clk,     self.pll0.clkin)
+        platform.add_false_path_constraints(self.cd_ub_4x_dqs.clk, self.pll0.clkin)
 
-        # SoCCore init
-        kwargs["uart_name"] = "serial"
-        SoCCore.__init__(self, platform, sys_clk_freq,
-                         ident="LiteX SoC on Alinx AX7203",
-                         **kwargs)
+# =============================================================================
+# Classic -> Pipelined Wishbone bridge
+# =============================================================================
+class WBC2PipelineBridge(LiteXModule):
+    def __init__(self, data_width=128, adr_width=27, clock_domain="sys"):
+        self.s = wishbone.Interface(data_width=data_width, adr_width=adr_width)
+        self.m_cyc   = Signal()
+        self.m_stb   = Signal()
+        self.m_we    = Signal()
+        self.m_adr   = Signal(adr_width)
+        self.m_dat_w = Signal(data_width)
+        self.m_sel   = Signal(data_width//8)
+        self.m_stall = Signal()
+        self.m_ack   = Signal()
+        self.m_dat_r = Signal(data_width)
+        self.m_err   = Signal()
 
+        try:
+            s_cti, s_bte = self.s.cti, self.s.bte
+        except AttributeError:
+            s_cti, s_bte = Signal(3, reset=0), Signal(2, reset=0)
 
-        self._heartbeat = Signal(24)
-        self.sync += self._heartbeat.eq(self._heartbeat + 1)
-        leds = Cat(*platform.request_all("user_led"))
-        self.comb += leds[0].eq(self._heartbeat[23])
+        self.specials += Instance("wbc2pipeline",
+            p_AW = len(self.s.adr),
+            p_DW = len(self.s.dat_w),
 
+            i_i_clk   = ClockSignal(clock_domain),
+            i_i_reset = ResetSignal(clock_domain),
 
-        # DDR3 SDRAM
-        if not self.integrated_main_ram_size:
-            self.ddrphy = s7ddrphy.A7DDRPHY(
-                platform.request("ddram"),
-                memtype="DDR3", nphases=4,
-                sys_clk_freq=sys_clk_freq
+            # Upstream classic WB
+            i_i_scyc  = self.s.cyc,
+            i_i_sstb  = self.s.stb,
+            i_i_swe   = self.s.we,
+            i_i_saddr = self.s.adr,
+            i_i_sdata = self.s.dat_w,
+            i_i_ssel  = self.s.sel,
+            i_i_scti  = s_cti,
+            i_i_sbte  = s_bte,
+            o_o_sack  = self.s.ack,
+            o_o_sdata = self.s.dat_r,
+            o_o_serr  = self.s.err,
+
+            # Downstream pipelined WB
+            o_o_mcyc   = self.m_cyc,
+            o_o_mstb   = self.m_stb,
+            o_o_mwe    = self.m_we,
+            o_o_maddr  = self.m_adr,
+            o_o_mdata  = self.m_dat_w,
+            o_o_msel   = self.m_sel,
+            i_i_mstall = self.m_stall,
+            i_i_mack   = self.m_ack,
+            i_i_mdata  = self.m_dat_r,
+            i_i_merr   = self.m_err
+        )
+
+# =============================================================================
+# CSR snapshot/commit (sys->uc)
+# =============================================================================
+class CSRConfigAFIFO(LiteXModule):
+    def __init__(self, fields, cd_from="sys", cd_to="uc", fifo_depth=4):
+        self.commit   = CSRStorage(1, description="Write 1 to snapshot & enqueue config frame.")
+        self.overflow = CSRStatus(1, description="Sticky: commit attempted while FIFO full.")
+        self.level    = CSRStatus(8, description="FIFO flags: bit0=readable, bit1=writable.")
+
+        total_w = sum(len(sig) for sig in fields.values())
+        flat_sys = Signal(total_w)
+        flat_uc  = Signal(total_w)
+
+        offs = 0
+        for _, sig in fields.items():
+            w = len(sig)
+            self.comb += flat_sys[offs:offs+w].eq(sig)
+            offs += w
+
+        fifo = AsyncFIFO(width=total_w, depth=fifo_depth)
+        self.submodules.fifo = ClockDomainsRenamer({"write": cd_from, "read": cd_to})(fifo)
+
+        commit_q = Signal()
+        commit_rise = Signal()
+        self.sync += commit_q.eq(self.commit.storage[0])
+        self.comb += commit_rise.eq(self.commit.storage[0] & ~commit_q)
+
+        self.comb += [
+            fifo.din.eq(flat_sys),
+            fifo.we.eq(commit_rise & fifo.writable)
+        ]
+        self.sync += If(commit_rise & ~fifo.writable, self.overflow.status.eq(1))
+
+        self.comb += self.level.status.eq(Cat(fifo.readable, fifo.writable, C(0,6)))
+
+        self.cfg_update_uc = Signal()
+        self.comb += fifo.re.eq(fifo.readable)
+        self.sync += If(fifo.readable, flat_uc.eq(fifo.dout))
+        self.sync += self.cfg_update_uc.eq(fifo.readable)
+
+        offs = 0
+        for name, sig in fields.items():
+            w = len(sig)
+            out = Signal(w, name=f"out_{name}_uc")
+            setattr(self, f"out_{name}_uc", out)
+            self.sync += If(fifo.readable, out.eq(flat_uc[offs:offs+w]))
+            offs += w
+
+# =============================================================================
+# Minimal 2×1 Wishbone crossbar wrapper (wbxbar)
+# =============================================================================
+class SimpleWbXbar2x1(LiteXModule):
+    """NM=2, NS=1 wbxbar wrapper (pipelined Wishbone)."""
+    def __init__(self, AW, DW, clock_domain="sys"):
+        assert DW % 8 == 0
+        # -------- Master[0] (CPU path via c2p) --------
+        self.m0_cyc   = Signal()
+        self.m0_stb   = Signal()
+        self.m0_we    = Signal()
+        self.m0_adr   = Signal(AW)
+        self.m0_dat_w = Signal(DW)
+        self.m0_sel   = Signal(DW//8)
+        self.m0_stall = Signal()
+        self.m0_ack   = Signal()
+        self.m0_dat_r = Signal(DW)
+        self.m0_err   = Signal()
+        # -------- Master[1] (zipdma_s2mm) -------------
+        self.m1_cyc   = Signal()
+        self.m1_stb   = Signal()
+        self.m1_we    = Signal()
+        self.m1_adr   = Signal(AW)
+        self.m1_dat_w = Signal(DW)
+        self.m1_sel   = Signal(DW//8)
+        self.m1_stall = Signal()
+        self.m1_ack   = Signal()
+        self.m1_dat_r = Signal(DW)
+        self.m1_err   = Signal()
+        # -------- Single slave[0] (DDR) ---------------
+        self.s_cyc    = Signal()
+        self.s_stb    = Signal()
+        self.s_we     = Signal()
+        self.s_adr    = Signal(AW)
+        self.s_dat_w  = Signal(DW)
+        self.s_sel    = Signal(DW//8)
+        self.s_stall  = Signal()
+        self.s_ack    = Signal()
+        self.s_dat_r  = Signal(DW)
+        self.s_err    = Signal()
+
+        # Instance of the Verilog crossbar
+        self.specials += Instance("wbxbar",
+            p_NM=2, p_NS=1, p_AW=AW, p_DW=DW,
+            p_SLAVE_MASK=0,                    # NS=1: accept all addresses
+            p_LGMAXBURST=6,
+            p_OPT_TIMEOUT=0, p_OPT_STARVATION_TIMEOUT=0,
+            p_OPT_DBLBUFFER=0, p_OPT_LOWPOWER=1,
+
+            i_i_clk   = ClockSignal(clock_domain),
+            i_i_reset = ResetSignal(clock_domain),
+
+            i_i_mcyc  = Cat(self.m0_cyc, self.m1_cyc),
+            i_i_mstb  = Cat(self.m0_stb, self.m1_stb),
+            i_i_mwe   = Cat(self.m0_we,  self.m1_we),
+            i_i_maddr = Cat(self.m0_adr, self.m1_adr),
+            i_i_mdata = Cat(self.m0_dat_w, self.m1_dat_w),
+            i_i_msel  = Cat(self.m0_sel,   self.m1_sel),
+
+            o_o_mstall = Cat(self.m0_stall, self.m1_stall),
+            o_o_mack   = Cat(self.m0_ack,   self.m1_ack),
+            o_o_mdata  = Cat(self.m0_dat_r, self.m1_dat_r),
+            o_o_merr   = Cat(self.m0_err,   self.m1_err),
+
+            o_o_scyc  = Cat(self.s_cyc),
+            o_o_sstb  = Cat(self.s_stb),
+            o_o_swe   = Cat(self.s_we),
+            o_o_saddr = self.s_adr,
+            o_o_sdata = self.s_dat_w,
+            o_o_ssel  = self.s_sel,
+
+            i_i_sstall= Cat(self.s_stall),
+            i_i_sack  = Cat(self.s_ack),
+            i_i_sdata = self.s_dat_r,
+            i_i_serr  = Cat(self.s_err),
+        )
+
+# =============================================================================
+# UberDDR3 wrapper (w/ S2MM ramp generator)
+# =============================================================================
+class UberDDR3(LiteXModule):
+    def __init__(self, platform, pads, locked,
+                 sys_clk_hz=100e6, ddr_ck_hz=400e6,
+                 row_bits=15, col_bits=10, ba_bits=3,
+                 byte_lanes=4, dual_rank=0, speed_bin=3,
+                 sdram_capacity=5, dll_off=0, odelay_supported=0, bist_mode=0):
+        from litex.soc.interconnect import wishbone as wb
+
+        ctrl_ps = int(round(1e12/float(sys_clk_hz)))
+        ddr_ps  = int(round(1e12/float(ddr_ck_hz)))
+
+        ub_dw = 64 * byte_lanes
+        serdes_ratio = 4
+        wb_addr_bits = row_bits + col_bits + ba_bits - int(math.log2(serdes_ratio*2)) + dual_rank
+
+        # Up-convert CPU 32-bit WB to ub_dw
+        self.wb = wb.Interface(data_width=32)
+        wb_wide = wb.Interface(data_width=ub_dw)
+        try:
+            self.submodules.wb_up = wb.Converter(self.wb, wb_wide)
+        except TypeError:
+            self.submodules.wb_up = wb.Converter(master=self.wb, slave=wb_wide)
+
+        # Classic -> Pipelined bridge
+        self.submodules.c2p = WBC2PipelineBridge(
+            data_width=ub_dw, adr_width=len(wb_wide.adr), clock_domain="sys"
+        )
+        self.comb += wb_wide.connect(self.c2p.s)
+
+        AW = len(self.c2p.m_adr)
+        DW = ub_dw
+        self.submodules.xbar = SimpleWbXbar2x1(AW=AW, DW=DW, clock_domain="sys")
+
+        # M0 = CPU path
+        self.comb += [
+            self.xbar.m0_cyc   .eq(self.c2p.m_cyc),
+            self.xbar.m0_stb   .eq(self.c2p.m_stb),
+            self.xbar.m0_we    .eq(self.c2p.m_we),
+            self.xbar.m0_adr   .eq(self.c2p.m_adr),
+            self.xbar.m0_dat_w .eq(self.c2p.m_dat_w),
+            self.xbar.m0_sel   .eq(self.c2p.m_sel),
+
+            self.c2p.m_stall   .eq(self.xbar.m0_stall),
+            self.c2p.m_ack     .eq(self.xbar.m0_ack),
+            self.c2p.m_dat_r   .eq(self.xbar.m0_dat_r),
+            self.c2p.m_err     .eq(self.xbar.m0_err),
+        ]
+
+        # ---- zipdma_s2mm on Master[1] ----
+        WBLSB = int(math.log2(DW//8))
+        ADDR_WIDTH_FOR_DMA = AW + WBLSB
+
+        # ---------------- Ramp generator stream ----------------
+        s_valid = Signal(reset=0)
+        s_ready = Signal()
+        s_data  = Signal(DW, reset=0)
+        s_bytes = Signal(max=DW//8+1)
+        s_last  = Signal(reset=0)
+
+        self.ramp_len  = CSRStorage(32, description="Number of DW-wide beats to emit")
+        self.ramp_seed = CSRStorage(8,  description="Starting byte value (increments per byte)")
+
+        beat_cnt = Signal(32)
+        byte_val = Signal(8)
+        active   = Signal(reset=0)
+
+        word_next = Signal(DW)
+        for i in range(DW//8):
+            self.comb += word_next[8*i:8*(i+1)].eq(byte_val + i)
+
+        self.dma_req   = CSRStorage(1, description="Write 1 when idle to start S2MM (uses addr/size/inc).")
+        self.dma_busy  = CSRStatus(1)
+        self.dma_err   = CSRStatus(1)
+        self.dma_inc   = CSRStorage(1, reset=1)
+        self.dma_size  = CSRStorage(2, reset=0, description="00=bus,01=32b,10=16b,11=byte")
+        self.dma_addr0 = CSRStorage(32)
+        self.dma_addr1 = CSRStorage(32)
+
+        self.sync += [
+            If(~active,
+                s_valid.eq(0),
+                s_last.eq(0),
+                s_bytes.eq(0)
+            ),
+            If(~active & self.dma_busy.status,
+                active.eq(1),
+                beat_cnt.eq(self.ramp_len.storage),
+                byte_val.eq(self.ramp_seed.storage)
+            ),
+            If(active & ~self.dma_busy.status,
+                active.eq(0),
+                s_valid.eq(0),
+                s_last.eq(0),
+                s_bytes.eq(0)
+            ),
+            If(active,
+                s_valid.eq(1),
+                s_data.eq(word_next),
+                s_bytes.eq((DW//8) - 1),
+                s_last.eq(beat_cnt == 1),
+
+                If(s_valid & s_ready,
+                    beat_cnt.eq(beat_cnt - 1),
+                    byte_val.eq(byte_val + (DW//8)),
+                    If(beat_cnt == 1,
+                        active.eq(0),
+                        s_valid.eq(0),
+                        s_last.eq(0),
+                        s_bytes.eq(0)
+                    )
+                )
             )
-            cs = ControllerSettings()
-            cs.auto_precharge = False
+        ]
+
+        dma_req_pulse = Signal()
+        dma_req_q = Signal()
+        self.sync += dma_req_q.eq(self.dma_req.storage[0])
+        self.comb += dma_req_pulse.eq(self.dma_req.storage[0] & ~dma_req_q)
+
+        dma_addr = Signal(ADDR_WIDTH_FOR_DMA)
+        self.comb += dma_addr.eq(Cat(self.dma_addr0.storage, self.dma_addr1.storage)[:ADDR_WIDTH_FOR_DMA])
+
+        self.specials += Instance("zipdma_s2mm",
+            p_ADDRESS_WIDTH = ADDR_WIDTH_FOR_DMA,
+            p_BUS_WIDTH     = DW,
+            p_OPT_LITTLE_ENDIAN = 1,
+            p_LGPIPE        = 10,
+
+            i_i_clk   = ClockSignal("sys"),
+            i_i_reset = ResetSignal("sys"),
+
+            i_i_request = dma_req_pulse,
+            o_o_busy    = self.dma_busy.status,
+            o_o_err     = self.dma_err.status,
+            i_i_inc     = self.dma_inc.storage[0],
+            i_i_size    = self.dma_size.storage,
+            i_i_addr    = dma_addr,
+
+            i_S_VALID = s_valid,
+            o_S_READY = s_ready,
+            i_S_DATA  = s_data,
+            i_S_BYTES = s_bytes,
+            i_S_LAST  = s_last,
+
+            o_o_wr_cyc   = self.xbar.m1_cyc,
+            o_o_wr_stb   = self.xbar.m1_stb,
+            o_o_wr_we    = self.xbar.m1_we,
+            o_o_wr_addr  = self.xbar.m1_adr,
+            o_o_wr_data  = self.xbar.m1_dat_w,
+            o_o_wr_sel   = self.xbar.m1_sel,
+            i_i_wr_stall = self.xbar.m1_stall,
+            i_i_wr_ack   = self.xbar.m1_ack,
+            i_i_wr_data  = self.xbar.m1_dat_r,
+            i_i_wr_err   = self.xbar.m1_err
+        )
+
+        # ---- DDR3 top stays the single slave on the xbar ----
+        self.calib_done = CSRStatus()
+        self.specials += Instance("ddr3_top",
+            p_CONTROLLER_CLK_PERIOD = int(round(1e12/float(sys_clk_hz))),
+            p_DDR3_CLK_PERIOD       = int(round(1e12/float(ddr_ck_hz))),
+            p_ROW_BITS              = row_bits,
+            p_COL_BITS              = col_bits,
+            p_BA_BITS               = ba_bits,
+            p_BYTE_LANES            = byte_lanes,
+            p_DUAL_RANK_DIMM        = dual_rank,
+            p_SPEED_BIN             = speed_bin,
+            p_SDRAM_CAPACITY        = sdram_capacity,
+            p_DLL_OFF               = dll_off,
+            p_ODELAY_SUPPORTED      = odelay_supported,
+            p_BIST_MODE             = bist_mode,
+            p_DIC                   = 0b01,
+            p_RTT_NOM               = 0b001,
+            p_AUX_WIDTH             = 4,
+
+            i_i_controller_clk = ClockSignal("sys"),
+            i_i_ddr3_clk       = ClockSignal("ub_4x"),
+            i_i_ddr3_clk_90    = ClockSignal("ub_4x_dqs"),
+            i_i_ref_clk        = ClockSignal("idelay"),
+            i_i_rst_n          = locked & ~ResetSignal("sys"),
+
+            i_i_wb_cyc   = self.xbar.s_cyc,
+            i_i_wb_stb   = self.xbar.s_stb,
+            i_i_wb_we    = self.xbar.s_we,
+            i_i_wb_addr  = self.xbar.s_adr[:wb_addr_bits],
+            i_i_wb_data  = self.xbar.s_dat_w,
+            i_i_wb_sel   = self.xbar.s_sel,
+            o_o_wb_stall = self.xbar.s_stall,
+            o_o_wb_ack   = self.xbar.s_ack,
+            o_o_wb_err   = self.xbar.s_err,
+            o_o_wb_data  = self.xbar.s_dat_r,
+
+            i_i_aux       = Cat(self.xbar.s_we, C(0, 3)),
+            o_o_aux       = Open(4),
+            i_i_wb2_cyc   = 0, i_i_wb2_stb = 0, i_i_wb2_we = 0,
+            i_i_wb2_addr  = 0, i_i_wb2_data= 0, i_i_wb2_sel= 0,
+            o_o_wb2_stall = Open(), o_o_wb2_ack = Open(), o_o_wb2_data = Open(),
+
+            o_o_ddr3_clk_p   = pads.clk_p,
+            o_o_ddr3_clk_n   = pads.clk_n,
+            o_o_ddr3_reset_n = pads.reset_n,
+            o_o_ddr3_cke     = pads.cke,
+            o_o_ddr3_cs_n    = pads.cs_n,
+            o_o_ddr3_ras_n   = pads.ras_n,
+            o_o_ddr3_cas_n   = pads.cas_n,
+            o_o_ddr3_we_n    = pads.we_n,
+            o_o_ddr3_addr    = pads.a,
+            o_o_ddr3_ba_addr = pads.ba,
+            io_io_ddr3_dq    = pads.dq,
+            io_io_ddr3_dqs   = pads.dqs_p,
+            io_io_ddr3_dqs_n = pads.dqs_n,
+            o_o_ddr3_dm      = pads.dm,
+            o_o_ddr3_odt     = pads.odt,
+
+            o_o_calib_complete = self.calib_done.status,
+            o_o_debug1         = Open(),
+            i_i_user_self_refresh = 0,
+            o_uart_tx          = Open()
+        )
+
+        # Verilog sources required
+        platform.add_source(f"{verilog_dir}/memory/ddr3_top.v")
+        platform.add_source(f"{verilog_dir}/memory/ddr3_controller.v")
+        platform.add_source(f"{verilog_dir}/memory/ddr3_phy.v")
+        platform.add_source(f"{verilog_dir}/memory/wbc2pipeline.v")
+        platform.add_source(f"{verilog_dir}/memory/wbxbar.v")
+        platform.add_source(f"{verilog_dir}/memory/skidbuffer.v")
+        platform.add_source(f"{verilog_dir}/memory/addrdecode.v")
+        platform.add_source(f"{verilog_dir}/memory/zipdma_s2mm.v")
+
+        platform.add_platform_command(
+            "set_property INTERNAL_VREF 0.75 "
+            "[get_iobanks -of_objects [get_ports {{ddram_dq[*] ddram_dqs_p[*] ddram_dqs_n[*]}}]]"
+        )
+        platform.add_platform_command(
+            "set_property BITSTREAM.STARTUP.MATCH_CYCLE 6 [current_design]"
+        )
+
+# =============================================================================
+# Main CSRs
+# =============================================================================
+class MainCSRs(LiteXModule):
+    def __init__(self):
+        self.phase_inc_nco       = CSRStorage(19)
+        self.phase_inc_down_1    = CSRStorage(19)
+        self.phase_inc_down_2    = CSRStorage(19)
+        self.phase_inc_down_3    = CSRStorage(19)
+        self.phase_inc_down_4    = CSRStorage(19)
+        self.phase_inc_down_5    = CSRStorage(19)
+        self.phase_inc_cpu       = CSRStorage(19)
+        self.input_select        = CSRStorage(2)
+        self.output_select_ch1   = CSRStorage(2)
+        self.output_select_ch2   = CSRStorage(2)
+        self.upsampler_input_mux = CSRStorage(2)
+        self.gain1               = CSRStorage(32)
+        self.gain2               = CSRStorage(32)
+        self.gain3               = CSRStorage(32)
+        self.gain4               = CSRStorage(32)
+        self.gain5               = CSRStorage(32)
+        self.upsampler_input_x   = CSRStorage(16)
+        self.upsampler_input_y   = CSRStorage(16)
+        self.final_shift         = CSRStorage(3)
+        self.cap_enable          = CSRStorage(1, description="1=enable full-rate capture (65 MS/s).")
+
+# =============================================================================
+# SoC
+# =============================================================================
+class BaseSoC(SoCCore):
+    def __init__(self, toolchain="vivado",
+                 with_hdmi=False, with_ethernet=False, with_etherbone=False,
+                 with_spi_flash=False, with_led_chaser=False,
+                 with_sdcard=False, with_spi_sdcard=False, with_pcie=False,
+                 with_video_terminal=False, with_video_framebuffer=False, with_video_colorbars=False,
+                 with_ledmem=False, with_uberclock=False, with_uberddr3=False,
+                 **kwargs):
+
+        kwargs.setdefault("integrated_main_ram_size", 64*1024)
+        kwargs["uart_name"] = "serial"
+
+        platform = alinx_ax7203.Platform(toolchain=toolchain)
+        need_ddr_clks = with_uberddr3 or (kwargs.get("integrated_main_ram_size", 0) == 0)
+        self.crg = _CRG(platform, need_ddr_clks=need_ddr_clks)
+
+        SoCCore.__init__(self, platform, 100e6,
+            ident="AX7203 UberClock65 UberDDR3 with S2MM via wbxbar",
+            **kwargs)
+
+        # Heartbeat
+        hb = Signal(24)
+        self.sync += hb.eq(hb + 1)
+        leds = Cat(*platform.request_all("user_led"))
+        self.comb += leds[0].eq(hb[23])
+
+        self.submodules.timer1 = Timer()
+        self.add_csr("timer1")
+
+        # ---------------- LiteDRAM path ----------------
+        if (not self.integrated_main_ram_size) and (not with_uberddr3):
+            self.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"),
+                                            memtype="DDR3", nphases=4, sys_clk_freq=100e6)
+            cs = ControllerSettings(); cs.auto_precharge = False
             self.add_sdram("sdram",
                 phy=self.ddrphy,
-                module=MT41J256M16(sys_clk_freq, "1:4"),
+                module=MT41J256M16(100e6, "1:4"),
                 size=0x40000000,
                 controller_settings=cs,
                 origin=self.mem_map["main_ram"],
                 l2_cache_size=kwargs.get("l2_size", 8192)
             )
 
-        # Ethernet / Etherbone
-        if with_ethernet or with_etherbone:
-            self.ethphy = LiteEthPHYRGMII(
-                clock_pads=platform.request("eth_clocks"),
-                pads      =platform.request("eth")
+        # ---------------- UberDDR3 side-memory ----------------
+        if with_uberddr3:
+            pads = platform.request("ddram")
+            self.submodules.ubddr3 = UberDDR3(
+                platform = platform, pads = pads, locked = self.crg.pll0.locked,
+                sys_clk_hz=100e6, ddr_ck_hz=400e6,
+                row_bits=15, col_bits=10, ba_bits=3, byte_lanes=4,
+                dual_rank=0, speed_bin=3, sdram_capacity=5, dll_off=0,
+                odelay_supported=0, bist_mode=0
             )
+            ub_base = 0xA000_0000
+            ub_size = 0x1000_0000  # 256 MiB
+            region  = SoCRegion(origin=ub_base, size=ub_size, cached=False, linker=False)
+            self.bus.add_slave("ub_ram", self.ubddr3.wb, region)
+            self.add_constant("UBDDR3_MEM_BASE", ub_base)
+            self.add_csr("ubddr3")
+            self.comb += leds[1].eq(self.ubddr3.calib_done.status)
+
+        # ---------------- Ethernet / Etherbone ----------------
+        if with_ethernet or with_etherbone:
+            self.ethphy = LiteEthPHYRGMII(clock_pads=platform.request("eth_clocks"),
+                                          pads=platform.request("eth"))
             if with_ethernet:
                 self.add_ethernet(phy=self.ethphy)
             if with_etherbone:
-                self.add_etherbone(phy=self.ethphy,
-                    ip_address = "192.168.1.123",
-                    mac_address=0x0200000000AB
-                )
+                self.add_etherbone(phy=self.ethphy, ip_address="192.168.1.123",
+                                   mac_address=0x0200000000AB)
 
-        # SPI Flash
+        # ---------------- SPI Flash ----------------
         if with_spi_flash:
             from litespi.modules import N25Q128
             from litespi.opcodes import SpiNorFlashOpCodes as Codes
-            self.add_spi_flash(
-                mode="4x",
-                module=N25Q128(Codes.READ_1_1_1),
-                rate="1:2",
-                with_master=True
-            )
+            self.add_spi_flash(mode="4x", module=N25Q128(Codes.READ_1_1_1), rate="1:2", with_master=True)
 
-        # HDMI (video terminal, framebuffer, colorbars)
-        if with_hdmi and (with_video_colorbars
-                          or with_video_framebuffer
-                          or with_video_terminal):
-            self.videophy = VideoS7HDMIPHY(
-                platform.request("hdmi_out"),
-                clock_domain="hdmi"
-            )
+        # ---------------- HDMI ----------------
+        if with_hdmi and (with_video_colorbars or with_video_framebuffer or with_video_terminal):
+            self.videophy = VideoS7HDMIPHY(platform.request("hdmi_out"), clock_domain="hdmi")
             if with_video_colorbars:
-                self.add_video_colorbars(
-                    phy=self.videophy,
-                    timings="640x480@60Hz",
-                    clock_domain="hdmi"
-                )
+                self.add_video_colorbars(self.videophy, timings="640x480@60Hz", clock_domain="hdmi")
             if with_video_terminal:
-                self.add_video_terminal(
-                    phy=self.videophy,
-                    timings="640x480@60Hz",
-                    clock_domain="hdmi"
-                )
+                self.add_video_terminal(self.videophy, timings="640x480@60Hz", clock_domain="hdmi")
             if with_video_framebuffer:
-                self.add_video_framebuffer(
-                    phy=self.videophy,
-                    timings="640x480@60Hz",
-                    clock_domain="hdmi"
-                )
+                self.add_video_framebuffer(self.videophy, timings="640x480@60Hz", clock_domain="hdmi")
 
-        # PCIe
-        if with_pcie:
-            self.pcie_phy = S7PCIEPHY(
-                platform,
-                platform.request("pcie_x4"),
-                data_width=128,
-                bar0_size=0x20000
-            )
-            self.add_pcie(phy=self.pcie_phy, ndmas=1)
-
-        # SDCard
-        if with_sdcard:
-            self.add_sdcard()
-        if with_spi_sdcard:
-            self.add_spi_sdcard()
-
-        # LED Chaser
         if with_led_chaser:
-            self.leds = LedChaser(
-                pads         = platform.request_all("user_led"),
-                sys_clk_freq = sys_clk_freq
-            )
+            self.leds = LedChaser(pads=platform.request_all("user_led"), sys_clk_freq=100e6)
 
-        # ---------------------------------------------------------------------
-        #  Uberclock
-        # ---------------------------------------------------------------------
+        # ---------------- UberClock  ----------------
         if with_uberclock:
-            self._add_uberclock(verilog_dir, sys_clk_freq)
+            self._add_uberclock_fullrate(verilog_dir, leds)
 
-    def _add_uberclock(self, verilog_dir, sys_clk_freq):
-        files = [
-            "adc/adc.v",     "dac/dac.v",
+    # === UberClock ===
+    def _add_uberclock_fullrate(self, verilog_dir, leds):
+        for fn in [
+            "adc/adc.v", "dac/dac.v",
             "filters/cic.v", "filters/cic_comp_down_mac.v",
             "filters/comp_down_coeffs.mem",
             "filters/hb_down_mac.v","filters/hb_down_coeffs.mem",
@@ -211,79 +631,74 @@ class BaseSoC(SoCCore):
             "filters/coeffs.mem","filters/cic_comp_up_mac.v",
             "filters/coeffs_comp.mem","filters/cic_int.v",
             "uberclock/uberclock.v",
+            "uberclock/rx_channel.v",
+            "uberclock/tx_channel.v",
+            "to_polar/to_polar.v",
             "cordic/cordic_pre_rotate.v","cordic/cordic_pipeline_stage.v",
             "cordic/cordic_round.v","cordic/cordic.v",
             "cordic/cordic_logic.v","cordic/gain_and_saturate.v",
             "cordic16/cordic16.v","cordic16/cordic_pre_rotate_16.v",
-        ]
-        for fn in files:
+        ]:
             self.platform.add_source(f"{verilog_dir}/{fn}")
 
-        self._input_select     = CSRStorage(1,  description="0=ADC,1=NCO")
-        self._output_select_ch1    = CSRStorage(2,  description="DAC CH1 output selector")
-        self._output_select_ch2    = CSRStorage(2,  description="DAC CH1 output selector")
-        self._phase_inc_nco    = CSRStorage(19, description="NCO phase increment")
-        self._phase_inc_down   = CSRStorage(19, description="Downconversion phase inc")
-        self._gain1            = CSRStorage(32, description="Gain1 (Q format)")
-        self._gain2            = CSRStorage(32, description="Gain2 (Q format)")
-        self._upsampler_input_x  = CSRStorage(16, description="Upsampler input x")
-        self._upsampler_input_y  = CSRStorage(16, description="Upsampler input y")
+        self.submodules.main = MainCSRs()
+        self.add_csr("main")
 
-        self._downsampled_data_x = CSRStatus(16, description="Downsampled data x")
-        self._downsampled_data_y = CSRStatus(16, description="Downsampled data y")
-
-        input_select    = self._input_select.storage
-        output_select_ch1   = self._output_select_ch1.storage
-        output_select_ch2   = self._output_select_ch2.storage
-        phase_inc_nco   = self._phase_inc_nco.storage
-        phase_inc_down  = self._phase_inc_down.storage
-        gain1, gain2    = self._gain1.storage, self._gain2.storage
-        upsampler_input_x = self._upsampler_input_x.storage
-        upsampler_input_y = self._upsampler_input_y.storage
-
-        ce_down = Signal(name="ce_down")
-        self.submodules.evm     = EventManager()
+        self.submodules.evm = EventManager()
         self.evm.ce_down = EventSourcePulse(description="Downsample ready")
         self.evm.finalize()
-
-        #self.add_csr("evm")
         self.irq.add("evm")
+        self.add_csr("evm")
 
-        dbg = {
-            "nco_cos":        Signal(12),
-            "nco_sin":        Signal(12),
-            "phase_acc_down": Signal(19),
-            "x_downconverted":Signal(12),
-            "y_downconverted":Signal(12),
-            "downsampled_x":  Signal(16),
-            "downsampled_y":  Signal(16),
-            "upsampled_x":    Signal(16),
-            "upsampled_y":    Signal(16),
-            "phase_inv":      Signal(23),
-            "x_upconverted":  Signal(16),
-            "y_upconverted":  Signal(16),
-            "ce_down_x":      Signal(),
-            "ce_down_y":      Signal(),
-            "ce_up_x":        Signal(),
-            "cic_ce_x":       Signal(),
-            "comp_ce_x":      Signal(),
-            "hb_ce_x":        Signal(),
-            "cic_out_x":      Signal(12),
-            "comp_out_x":     Signal(16),
+        m = self.main
+        cfg_sys = {
+            "input_select":        m.input_select.storage,
+            "output_sel_ch1":      m.output_select_ch1.storage,
+            "output_sel_ch2":      m.output_select_ch2.storage,
+            "upsampler_input_mux": m.upsampler_input_mux.storage,
+            "phase_inc_nco":       m.phase_inc_nco.storage,
+            "phase_inc_down_1":    m.phase_inc_down_1.storage,
+            "phase_inc_down_2":    m.phase_inc_down_2.storage,
+            "phase_inc_down_3":    m.phase_inc_down_3.storage,
+            "phase_inc_down_4":    m.phase_inc_down_4.storage,
+            "phase_inc_down_5":    m.phase_inc_down_5.storage,
+            "phase_inc_cpu":       m.phase_inc_cpu.storage,
+            "gain1":               m.gain1.storage,
+            "gain2":               m.gain2.storage,
+            "gain3":               m.gain3.storage,
+            "gain4":               m.gain4.storage,
+            "gain5":               m.gain5.storage,
+            "ups_in_x":            m.upsampler_input_x.storage,
+            "ups_in_y":            m.upsampler_input_y.storage,
+            "final_shift":         m.final_shift.storage,
+            "cap_enable":          m.cap_enable.storage,
         }
+        self.submodules.cfg_link = CSRConfigAFIFO(cfg_sys, cd_from="sys", cd_to="uc", fifo_depth=4)
+        self.add_csr("cfg_link")
 
+        ce_down_uc  = Signal()
+        ce_down_sys = Signal()
+        self.submodules.ps_down = PulseSynchronizer("uc", "sys")
+        self.comb += [
+            self.ps_down.i.eq(ce_down_uc),
+            ce_down_sys.eq(self.ps_down.o),
+            self.evm.ce_down.trigger.eq(ce_down_sys),
+        ]
+
+        ds_x_uc   = Signal(16)
+        ds_y_uc   = Signal(16)
+
+        uc = self.cfg_link
         self.specials += Instance(
             "uberclock",
-            i_sys_clk  = ClockSignal("sys"),
-            i_rst      = ResetSignal("sys"),
+            i_sys_clk  = ClockSignal("uc"),
+            i_rst      = ResetSignal("uc"),
 
-            # ADC
             o_adc_clk_ch0  = self.platform.request("adc_clk_ch0"),
             o_adc_clk_ch1  = self.platform.request("adc_clk_ch1"),
             i_adc_data_ch0 = self.platform.request("adc_data_ch0"),
             i_adc_data_ch1 = self.platform.request("adc_data_ch1"),
 
-            # DAC
             o_da1_clk  = self.platform.request("da1_clk", 0),
             o_da1_wrt  = self.platform.request("da1_wrt", 0),
             o_da1_data = self.platform.request("da1_data",0),
@@ -291,101 +706,70 @@ class BaseSoC(SoCCore):
             o_da2_wrt  = self.platform.request("da2_wrt", 0),
             o_da2_data = self.platform.request("da2_data",0),
 
-            # CSR inputs
-            i_input_select    = input_select,
-            i_output_select_ch1   = output_select_ch1,
-            i_output_select_ch2   = output_select_ch2,
-            i_phase_inc_nco   = phase_inc_nco,
-            i_phase_inc_down  = phase_inc_down,
-            i_gain1           = gain1,
-            i_gain2           = gain2,
-            i_upsampler_input_x = upsampler_input_x,
-            i_upsampler_input_y = upsampler_input_y,
+            i_input_select        = getattr(uc, "out_input_select_uc"),
+            i_output_select_ch1   = getattr(uc, "out_output_sel_ch1_uc"),
+            i_output_select_ch2   = getattr(uc, "out_output_sel_ch2_uc"),
+            i_upsampler_input_mux = getattr(uc, "out_upsampler_input_mux_uc"),
+            i_phase_inc_nco       = getattr(uc, "out_phase_inc_nco_uc"),
+            i_phase_inc_down_1    = getattr(uc, "out_phase_inc_down_1_uc"),
+            i_phase_inc_down_2    = getattr(uc, "out_phase_inc_down_2_uc"),
+            i_phase_inc_down_3    = getattr(uc, "out_phase_inc_down_3_uc"),
+            i_phase_inc_down_4    = getattr(uc, "out_phase_inc_down_4_uc"),
+            i_phase_inc_down_5    = getattr(uc, "out_phase_inc_down_5_uc"),
+            i_phase_inc_cpu       = getattr(uc, "out_phase_inc_cpu_uc"),
+            i_gain1               = getattr(uc, "out_gain1_uc"),
+            i_gain2               = getattr(uc, "out_gain2_uc"),
+            i_gain3               = getattr(uc, "out_gain3_uc"),
+            i_gain4               = getattr(uc, "out_gain4_uc"),
+            i_gain5               = getattr(uc, "out_gain5_uc"),
+            i_upsampler_input_x   = getattr(uc, "out_ups_in_x_uc"),
+            i_upsampler_input_y   = getattr(uc, "out_ups_in_y_uc"),
+            i_final_shift         = getattr(uc, "out_final_shift_uc"),
 
-            # CSR outputs + event
-            o_downsampled_data_x = self._downsampled_data_x.status,
-            o_downsampled_data_y = self._downsampled_data_y.status,
+            o_ce_down             = ce_down_uc,
+            o_downsampled_data_x  = ds_x_uc,
+            o_downsampled_data_y  = ds_y_uc,
 
-            o_ce_down          = ce_down,
-
-            # debug outputs (unpack the dict)
-            **{f"o_dbg_{name}": sig for name, sig in dbg.items()}
+            o_magnitude           = Open(16),
+            o_phase               = Open(25),
         )
 
-        self.sync += If(ce_down, self.evm.ce_down.trigger.eq(1))
-        self.comb += self._downsampled_data_x.status.eq(dbg["downsampled_x"])
-        self.comb += self._downsampled_data_y.status.eq(dbg["downsampled_y"])
-
-
-
-        probes = (
-            list(dbg.values()) +                              # all the internal debug nets
-            [phase_inc_nco, phase_inc_down,                   # CSR knobs
-             input_select, output_select_ch1, output_select_ch1,
-             gain1, gain2,
-             ce_down,
-             upsampler_input_x,
-             upsampler_input_y,
-             self._downsampled_data_x.status,
-             self._downsampled_data_y.status,
-            ]
-        )
-
-        self.submodules.analyzer = LiteScopeAnalyzer(
-            probes,
-            depth        = 32768,
-            clock_domain = "sys",
-            samplerate   = sys_clk_freq
-        )
-        self.add_csr("analyzer")
-
-# Build --------------------------------------------------------------------------------------------
+# =============================================================================
+# Build
+# =============================================================================
 def main():
     from litex.build.parser import LiteXArgumentParser
 
     parser = LiteXArgumentParser(
         platform=alinx_ax7203.Platform,
-        description="LiteX SoC on Alinx AX7203."
+        description="AX7203: CPU/CSR@100MHz, UberClock@65MHz, UberDDR3 with S2MM via wbxbar"
     )
 
-    # standard targets
-    parser.add_target_argument("--cable",        default="ft232",
-        help="JTAG interface.")
-    parser.add_target_argument("--sys-clk-freq", default=200e6, type=float,
-        help="System clock frequency.")
+    parser.add_target_argument("--cable",        default="ft232")
+    parser.add_target_argument("--sys-clk-freq", default=100e6, type=float)
+
     ethopts = parser.target_group.add_mutually_exclusive_group()
-    ethopts.add_argument("--with-ethernet",  action="store_true",
-        help="Enable Ethernet support.")
-    ethopts.add_argument("--with-etherbone", action="store_true",
-        help="Enable Etherbone support.")
+    ethopts.add_argument("--with-ethernet",  action="store_true")
+    ethopts.add_argument("--with-etherbone", action="store_true")
     sdopts = parser.target_group.add_mutually_exclusive_group()
-    sdopts.add_argument("--with-spi-sdcard", action="store_true",
-        help="Enable SPI-mode SDCard support.")
-    sdopts.add_argument("--with-sdcard",     action="store_true",
-        help="Enable SDCard support.")
-    parser.add_argument("--with-pcie",       action="store_true",
-        help="Enable PCIe")
-    parser.add_argument("--with-hdmi",       action="store_true",
-        help="Enable HDMI")
-    parser.add_argument("--with-led-chaser", action="store_true",
-        help="Enable LED chaser")
+    sdopts.add_argument("--with-spi-sdcard", action="store_true")
+    sdopts.add_argument("--with-sdcard",     action="store_true")
+
+    parser.add_argument("--with-pcie",       action="store_true")
+    parser.add_argument("--with-hdmi",       action="store_true")
+    parser.add_argument("--with-led-chaser", action="store_true")
     viopts = parser.target_group.add_mutually_exclusive_group()
-    viopts.add_argument("--with-video-terminal",    action="store_true",
-        help="Enable Video Terminal (HDMI).")
-    viopts.add_argument("--with-video-framebuffer", action="store_true",
-        help="Enable Video Framebuffer (HDMI).")
-    viopts.add_argument("--with-video-colorbars",   action="store_true",
-        help="Enable Video Colorbars (HDMI).")
-    parser.add_target_argument("--with-spi-flash", action="store_true",
-        help="Enable SPI Flash (MMAPed).")
-    parser.add_argument("--with-uberclock", action="store_true",
-        help="Instantiate Uberclock")
+    viopts.add_argument("--with-video-terminal",    action="store_true")
+    viopts.add_argument("--with-video-framebuffer", action="store_true")
+    viopts.add_argument("--with-video-colorbars",   action="store_true")
+    parser.add_target_argument("--with-spi-flash",  action="store_true")
+    parser.add_argument("--with-uberclock", action="store_true")
+    parser.add_argument("--with-uberddr3",  action="store_true")
 
     args = parser.parse_args()
 
     soc = BaseSoC(
         toolchain                = args.toolchain,
-        sys_clk_freq             = args.sys_clk_freq,
         with_ethernet            = args.with_ethernet,
         with_etherbone           = args.with_etherbone,
         with_spi_flash           = args.with_spi_flash,
@@ -398,6 +782,7 @@ def main():
         with_video_framebuffer   = args.with_video_framebuffer,
         with_video_colorbars     = args.with_video_colorbars,
         with_uberclock           = args.with_uberclock,
+        with_uberddr3            = args.with_uberddr3,
         **parser.soc_argdict
     )
 
@@ -406,10 +791,7 @@ def main():
         builder.build(**parser.toolchain_argdict)
     if args.load:
         prog = soc.platform.create_programmer(args.cable)
-        prog.load_bitstream(
-            builder.get_bitstream_filename(mode="sram")
-        )
-
+        prog.load_bitstream(builder.get_bitstream_filename(mode="sram"))
 
 if __name__ == "__main__":
     main()

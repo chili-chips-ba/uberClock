@@ -1,5 +1,7 @@
 // cordic_logic.v
 // Encapsulates phase accumulator, CORDIC pipeline, and scaling (no mux)
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic_logic #(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width

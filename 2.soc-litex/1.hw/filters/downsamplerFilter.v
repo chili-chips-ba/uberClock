@@ -1,3 +1,4 @@
+`default_nettype none
 module downsamplerFilter (
     input  wire        clk,
     input  wire        clk_enable,
@@ -16,8 +17,8 @@ module downsamplerFilter (
     assign debug_cic_ce  = cic_ce_out;
     assign debug_comp_ce = comp_ce_out;
     assign debug_hb_ce   = ce_out;
-assign debug_cic_out  = cic_out;
-assign debug_comp_out = comp_out;
+    assign debug_cic_out  = cic_out;
+    assign debug_comp_out = comp_out;
     // Intermediate wires
     wire signed [11:0] cic_out;
     wire               cic_ce_out;

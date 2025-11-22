@@ -1,5 +1,5 @@
 `timescale 1 ns / 1 ns
-
+`default_nettype none
 module cic_comp_down_opt
                (
                 clk,

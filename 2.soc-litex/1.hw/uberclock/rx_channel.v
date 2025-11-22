@@ -1,8 +1,9 @@
+`default_nettype none
 module rx_channel # (
-    parameter IW = 12,
+    parameter IW = 12, 
     parameter OW = 12,
     parameter RX_OW = 16,
-    parameter NSTAGES = 15,
+    parameter NSTAGES = 15, 
     parameter WW = 15,
     parameter PW = 19
 ) (
@@ -105,5 +106,5 @@ module rx_channel # (
     assign rx_downconverted_x = x_downconverted;
     assign rx_downconverted_y = y_downconverted;
     assign rx_magnitude = magnitude;
-    assign rx_phase = phase;
+    assign rx_phase = phase; 
 endmodule

@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cic_comp_down_mac #(
     parameter DW_IN           = 12,
     parameter DW_ACC          = 32,

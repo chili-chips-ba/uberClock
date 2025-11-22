@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cic #(
     parameter  DATA_WIDTH_I       = 12,
     parameter DATA_WIDTH_O      = 16,

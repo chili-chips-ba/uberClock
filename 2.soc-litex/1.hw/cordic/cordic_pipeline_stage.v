@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module cordic_pipeline_stage #(
     parameter STAGE        = 0,
     parameter WW           = 16,

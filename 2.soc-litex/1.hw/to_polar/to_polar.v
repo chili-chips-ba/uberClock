@@ -1,4 +1,5 @@
-
+`timescale 1 ns / 1 ns
+`default_nettype none
 module to_polar #(
     parameter IW      = 16,   // input width
     parameter OW      = 16,   // output magnitude width
@@ -134,3 +135,5 @@ module to_polar #(
     end
 
 endmodule
+
+`default_nettype wire

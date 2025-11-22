@@ -15,6 +15,7 @@ STATIC_IP     ?= 192.168.1.1/24
 CSV_FILE      ?= analyzer.csv
 CSR_CSV_FILE  ?= $(BUILD_DIR)/$(BOARD)/csr.csv
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
+BAUD ?= 115200
 
 # ------------------------------------------------------------------
 #  LiteX / Python virtual‐env settings (override via environment)
@@ -35,7 +36,8 @@ EDITOR       := code
 #  Defaults (override on CLI)
 # ------------------------------------------------------------------
 FREQ         ?= 65e6
-OPTIONS      ?= --with-etherbone --with-uberclock
+#OPTIONS      ?= --with-etherbone --with-uberclock
+OPTIONS      ?= --with-uberddr3 --with-uberclock
 PORT         ?= /dev/ttyUSB0
 DEMO_FLAGS   ?= --with-cxx
 
@@ -87,21 +89,39 @@ open-example:
 # ——————————————————————————————————————————————————————————————
 #  Board build & load
 # ——————————————————————————————————————————————————————————————
+# build-board:
+	# @echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
+	# source $(LITEX_VENV)/bin/activate && \
+	# $(PYTHON) -m $(BOARDS_PKG) \
+	#   --build \
+	#   --sys-clk-freq=$(FREQ) \
+	#   $(OPTIONS)
+BASE_TARGET := $(LITEX_PATH)/litex-boards/litex_boards/targets/$(BOARD).py
 build-board:
-	@echo "[litex build] freq=$(FREQ) opts='$(OPTIONS)'"
 	source $(LITEX_VENV)/bin/activate && \
-	$(PYTHON) -m $(BOARDS_PKG) \
-	  --build \
-	  --sys-clk-freq=$(FREQ) \
-	  $(OPTIONS)
+	python3 $(BASE_TARGET) --build --sys-clk-freq=$(FREQ) $(OPTIONS)
 
 load:
-	@echo "[litex load]"
 	source $(LITEX_VENV)/bin/activate && \
-	$(PYTHON) -m $(BOARDS_PKG) \
-	  --load \
-	  $(OPTIONS)
+	python3 $(BASE_TARGET) --load  --sys-clk-freq=$(FREQ) $(OPTIONS)
+# load:
+# 	@echo "[litex load]"
+# 	source $(LITEX_VENV)/bin/activate && \
+# 	$(PYTHON) -m $(BOARDS_PKG) \
+# 	  --load \
+# 	  $(OPTIONS)
 
+
+serialboot:
+	@echo "[serialboot] port=$(PORT) baud=$(BAUD)"
+	source $(LITEX_VENV)/bin/activate && \
+	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
+	if [ -z "$${KERNEL_PATH}" ]; then \
+	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
+	  exit 1; \
+	fi; \
+	echo "Tip: Ctrl-] quits litex_term"; \
+	litex_term $(PORT) --speed $(BAUD) --kernel "$${KERNEL_PATH}" --serial-boot
 # ——————————————————————————————————————————————————————————————
 #  Serial terminal into built example
 # ——————————————————————————————————————————————————————————————

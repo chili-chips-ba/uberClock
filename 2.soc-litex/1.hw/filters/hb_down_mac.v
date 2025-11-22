@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module hb_down_mac #(
     parameter DW_IN           = 16,
     parameter DW_ACC          = 41,

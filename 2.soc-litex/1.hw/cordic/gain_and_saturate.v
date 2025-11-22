@@ -1,3 +1,5 @@
+`timescale 1 ns / 1 ns
+`default_nettype none
 module gain_and_saturate #(
   parameter integer OW = 12
 ) (
