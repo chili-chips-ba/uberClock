@@ -365,6 +365,7 @@ class WbXbar2x1(LiteXModule):
             i_i_serr  = Cat(self.s_err),
         )
 
+
 class RampSource(LiteXModule):
     def __init__(self, dw=256, length=256):
         assert dw % 16 == 0
@@ -500,7 +501,7 @@ class UberDDR3(LiteXModule):
         # zipdma_s2mm's ADDRESS_WIDTH counts bytes, not bus words
         ADDR_WIDTH_FOR_DMA = AW + WBLSB
 
-        # Exposed source stream into DMA
+        # Exposed source stream into DMA (sys domain side of CDC bridge)
         self.s_valid = Signal()
         self.s_ready = Signal()
         self.s_data  = Signal(DW)
@@ -516,7 +517,7 @@ class UberDDR3(LiteXModule):
         self.dma_addr0 = CSRStorage(32)  # lower part of DMA address
         self.dma_addr1 = CSRStorage(32)  # upper part of DMA address
 
-        # Edge-detect dma_req (treat as "start" pulse)
+        # Edge-detect dma_req (treat as "start" pulse) in sys domain
         dma_req_pulse = Signal()
         dma_req_q     = Signal()
         self.sync += dma_req_q.eq(self.dma_req.storage[0])
@@ -545,7 +546,7 @@ class UberDDR3(LiteXModule):
             i_i_size             = self.dma_size.storage,
             i_i_addr             = dma_addr,
 
-            # External stream (connect to your producer)
+            # External stream (connect to CDC consumer)
             i_S_VALID            = self.s_valid,
             o_S_READY            = self.s_ready,
             i_S_DATA             = self.s_data,
@@ -564,22 +565,52 @@ class UberDDR3(LiteXModule):
             i_i_wr_data          = self.xbar.m1_dat_r,
             i_i_wr_err           = self.xbar.m1_err
         )
-        # ------------------------------------------------------------------
-        # Internal ramp source for S2MM sanity check
-        # ------------------------------------------------------------------
-        self.submodules.ramp = RampSource(dw=DW, length=256)
 
-        # Start ramp when DMA request pulse occurs
-        self.comb += self.ramp.start.eq(dma_req_pulse)
+        # ------------------------------------------------------------------
+        # Internal ramp source (uc domain) + CDC into S2MM (sys domain)
+        # ------------------------------------------------------------------
 
-        # Connect ramp stream into S2MM stream inputs
+        # Ramp lives in uc clock domain
+        self.submodules.ramp = ClockDomainsRenamer("uc")(RampSource(dw=DW, length=256))
+
+        # sys -> uc pulse: start ramp when DMA request occurs
+        self.submodules.ps_ramp_start = PulseSynchronizer("sys", "uc")
+        self.comb += self.ps_ramp_start.i.eq(dma_req_pulse)
+        self.comb += self.ramp.start.eq(self.ps_ramp_start.o)
+
+        # Async FIFO: write@uc, read@sys, carries {data, bytes, last}
+        bytes_width = len(self.s_bytes)
+        fifo_width  = DW + bytes_width + 1  # data + bytes + last
+
+        fifo = AsyncFIFO(width=fifo_width, depth=4)
+        self.submodules.s2mm_fifo = ClockDomainsRenamer(
+            {"write": "uc", "read": "sys"}
+        )(fifo)
+
+        # uc side (producer): ramp -> FIFO
         self.comb += [
-            self.ramp.ready.eq(self.s_ready),
+            fifo.din.eq(Cat(self.ramp.data, self.ramp.bytes, self.ramp.last)),
+            fifo.we.eq(self.ramp.valid & fifo.writable),
+            # backpressure towards ramp
+            self.ramp.ready.eq(fifo.writable),
+        ]
 
-            self.s_valid.eq(self.ramp.valid),
-            self.s_data.eq(self.ramp.data),
-            self.s_bytes.eq(self.ramp.bytes),
-            self.s_last.eq(self.ramp.last),
+        # sys side (consumer): FIFO -> S2MM stream
+        data_sys   = Signal(DW)
+        bytes_sys  = Signal(bytes_width)
+        last_sys   = Signal()
+
+        self.comb += [
+            Cat(data_sys, bytes_sys, last_sys).eq(fifo.dout),
+
+            # Drive DMA stream from FIFO
+            self.s_valid.eq(fifo.readable),
+            self.s_data.eq(data_sys),
+            self.s_bytes.eq(bytes_sys),
+            self.s_last.eq(last_sys),
+
+            # Pop FIFO when S2MM can accept data
+            fifo.re.eq(self.s_ready & fifo.readable),
         ]
 
         # ------------------------------------------------------------------
