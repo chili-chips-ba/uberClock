@@ -18,6 +18,7 @@
 #   * Simple EventManager for downsample strobe (ce_down)
 # -----------------------------------------------------------------------------
 
+
 from migen import *
 from litex.gen import *
 
@@ -49,6 +50,7 @@ from migen.genlib.cdc import PulseSynchronizer, ClockDomainsRenamer, MultiReg
 from migen.genlib.fifo import AsyncFIFO
 
 import math
+
 
 # --- set your repo paths ---
 #   repository_dir:  root of your uberClock repo
@@ -366,7 +368,19 @@ class WbXbar2x1(LiteXModule):
         )
 
 
+# =============================================================================
+# RampSource: internal test ramp in uc domain
+# =============================================================================
 class RampSource(LiteXModule):
+    """
+    Internal test ramp generator in the uc domain.
+
+    Produces a DW-bit beat (e.g. 256-bit) where each lane is a 16-bit
+    ramp value; lanes are consecutive values within the beat.
+
+    - length: number of beats
+    - dw:     bus width in bits (multiple of 16)
+    """
     def __init__(self, dw=256, length=256):
         assert dw % 16 == 0
 
@@ -378,8 +392,11 @@ class RampSource(LiteXModule):
         self.last  = Signal()
 
         running   = Signal()
-        base_step = Signal(16)           # base ramp value for this 256-bit beat
-        idx       = Signal(max=length)   # how many beats emitted so far
+        base_step = Signal(16)           # base ramp value for this beat
+        idx       = Signal(max=length)   # beats emitted so far
+
+        # Simple ramp: base_step += lanes each accepted beat
+        lanes = dw // 16
 
         self.sync += [
             If(self.start,
@@ -387,8 +404,7 @@ class RampSource(LiteXModule):
                 idx.eq(0),
                 base_step.eq(0),
             ).Elif(running & self.ready,
-                # next beat: advance by 16 values
-                base_step.eq(base_step + (dw // 16)),
+                base_step.eq(base_step + lanes),
                 If(idx == (length - 1),
                     running.eq(0)
                 ).Else(
@@ -399,14 +415,151 @@ class RampSource(LiteXModule):
 
         self.comb += [
             self.valid.eq(running),
-            self.bytes.eq(dw // 8),              # full beat
+            self.bytes.eq(dw // 8),
             self.last.eq(running & (idx == (length - 1))),
         ]
 
-        # pack 16 consecutive values into the 256-bit bus
-        lanes = dw // 16
+        # pack consecutive values into the DW-bit bus
         for i in range(lanes):
             self.comb += self.data[16*i:16*(i+1)].eq(base_step + i)
+
+
+# =============================================================================
+# SampleStream: external design samples -> bus stream
+# =============================================================================
+
+class SampleStream(LiteXModule):
+    """
+    - Captures one sample per uc clock into a small buffer.
+    - Once `lanes = dw//16` samples are collected, packs them into one DW beat.
+    - Streams `beats` such beats and then asserts `last` on the final one.
+    """
+
+    def __init__(self, sample_width=12, dw=256, beats=256):
+        assert dw % 16 == 0
+
+        # External sample input (uc domain)
+        self.sample_in = Signal(sample_width)
+
+        # Stream out (uc domain)
+        self.start = Signal()
+        self.valid = Signal()
+        self.ready = Signal()
+        self.data  = Signal(dw)
+        self.bytes = Signal(max=dw//8 + 1)
+        self.last  = Signal()
+
+        lanes      = dw // 16
+        sample16   = Signal(16)
+        buffer     = Array(Signal(16) for _ in range(lanes))
+        wr_idx     = Signal(max=lanes)
+        beat_cnt   = Signal(max=beats)
+        running    = Signal()
+        have_word  = Signal()
+
+        # Sign-extend to 16 bits
+        self.comb += sample16.eq(
+            Cat(self.sample_in,
+                Replicate(self.sample_in[sample_width-1], 16 - sample_width))
+        )
+
+        # Byte count: full bus
+        self.comb += self.bytes.eq(dw // 8)
+
+        # Pack buffer[] into data when we "have_word"
+        for i in range(lanes):
+            self.comb += self.data[16*i:16*(i+1)].eq(buffer[i])
+
+        # FSM
+        self.sync += [
+            If(self.start,
+                running.eq(1),
+                wr_idx.eq(0),
+                beat_cnt.eq(0),
+                have_word.eq(0),
+            ).Elif(running,
+                # Capture phase: fill buffer until we have a full word
+                If(~have_word & self.ready,
+                    buffer[wr_idx].eq(sample16),
+                    If(wr_idx == (lanes - 1),
+                        wr_idx.eq(0),
+                        have_word.eq(1)
+                    ).Else(
+                        wr_idx.eq(wr_idx + 1)
+                    )
+                ),
+
+                # Send phase: once we have a word, wait for consumer to take it
+                If(have_word & self.valid & self.ready,
+                    have_word.eq(0),
+                    If(beat_cnt == (beats - 1),
+                        running.eq(0),
+                        beat_cnt.eq(0),
+                    ).Else(
+                        beat_cnt.eq(beat_cnt + 1),
+                    )
+                )
+            )
+        ]
+
+        # valid = we have a packed word ready for transfer
+        self.comb += [
+            self.valid.eq(have_word),
+            # IMPORTANT: last is combinational on current beat
+            self.last.eq(running & have_word & (beat_cnt == (beats - 1))),
+        ]
+
+
+# =============================================================================
+# UCStreamSource: mux between ramp and external stream
+# =============================================================================
+class UCStreamSource(LiteXModule):
+    """
+    General UC-domain stream source that can output:
+      - an internal ramp (RampSource), or
+      - an external stream (SampleStream or something else)
+
+    Selected by 'use_external':
+      use_external = 0 -> internal ramp
+      use_external = 1 -> external stream
+    """
+    def __init__(self, dw=256, length=256):
+        self.start        = Signal()
+        self.use_external = Signal()
+
+        # unified output stream (UC domain)
+        self.valid = Signal()
+        self.ready = Signal()
+        self.data  = Signal(dw)
+        self.bytes = Signal(max=dw//8 + 1)
+        self.last  = Signal()
+
+        # external stream interface (UC domain)
+        self.ext_valid = Signal()
+        self.ext_ready = Signal()
+        self.ext_data  = Signal(dw)
+        self.ext_bytes = Signal(max=dw//8 + 1)
+        self.ext_last  = Signal()
+
+        # internal ramp source
+        self.submodules.ramp = RampSource(dw=dw, length=length)
+
+        # Start only the ramp when use_external == 0
+        self.comb += self.ramp.start.eq(self.start & ~self.use_external)
+
+        # Mux between ramp and external stream
+        self.comb += [
+            self.valid.eq(Mux(self.use_external, self.ext_valid, self.ramp.valid)),
+            self.data.eq(Mux(self.use_external, self.ext_data, self.ramp.data)),
+            self.bytes.eq(Mux(self.use_external, self.ext_bytes, self.ramp.bytes)),
+            self.last.eq(Mux(self.use_external, self.ext_last, self.ramp.last)),
+        ]
+
+        # Backpressure into the chosen source
+        self.comb += [
+            self.ext_ready.eq(self.ready & self.use_external),
+            self.ramp.ready.eq(self.ready & ~self.use_external),
+        ]
 
 
 # =============================================================================
@@ -426,9 +579,14 @@ class UberDDR3(LiteXModule):
       - zipdma_s2mm instance is master 1 on the same crossbar.
       - It writes a streaming source (s_valid/s_data/etc.) into DDR3.
 
+    UC-domain capture side:
+      - UCStreamSource selects either:
+          * internal test ramp, or
+          * external design samples (e.g. cap_selected_input from uberclock)
+        based on cap_enable_uc.
+
     DDR side:
       - ddr3_top Verilog module is the single slave on the crossbar.
-      - Exposes DDR3 pins and calibration done CSR.
     """
     def __init__(self, platform, pads, locked,
                  sys_clk_hz=100e6, ddr_ck_hz=400e6,
@@ -495,13 +653,14 @@ class UberDDR3(LiteXModule):
         # ------------------------------------------------------------------
         # zipdma_s2mm on Master[1]
         # ------------------------------------------------------------------
-        # WBLSB: # of address bits that correspond to byte lane selection
         WBLSB = int(math.log2(DW//8))
+        ADDR_WIDTH_FOR_DMA = AW + WBLSB   # counts bytes, not bus words
 
-        # zipdma_s2mm's ADDRESS_WIDTH counts bytes, not bus words
-        ADDR_WIDTH_FOR_DMA = AW + WBLSB
+        # UC-domain capture interface from uberclock
+        self.cap_sample    = Signal(12)  # 12-bit selected_input (uc domain)
+        self.cap_enable_uc = Signal()    # 1 = capture design, 0 = ramp
 
-        # Exposed source stream into DMA (sys domain side of CDC bridge)
+        # Exposed stream into DMA (sys domain side of CDC bridge)
         self.s_valid = Signal()
         self.s_ready = Signal()
         self.s_data  = Signal(DW)
@@ -567,16 +726,49 @@ class UberDDR3(LiteXModule):
         )
 
         # ------------------------------------------------------------------
-        # Internal ramp source (uc domain) + CDC into S2MM (sys domain)
+        # UC-domain stream source + CDC into S2MM (sys domain)
         # ------------------------------------------------------------------
 
-        # Ramp lives in uc clock domain
-        self.submodules.ramp = ClockDomainsRenamer("uc")(RampSource(dw=DW, length=256))
+        # UCStreamSource: mux between internal ramp and external design stream
+        self.submodules.uc_src = ClockDomainsRenamer("uc")(
+            UCStreamSource(dw=DW, length=256)
+        )
 
-        # sys -> uc pulse: start ramp when DMA request occurs
+        # External design samples: from cap_sample (uc domain)
+        self.submodules.cap_stream = ClockDomainsRenamer("uc")(
+            SampleStream(sample_width=12, dw=DW, beats=256)
+        )
+
+        # sys -> uc pulse: start capture when DMA request occurs
         self.submodules.ps_ramp_start = PulseSynchronizer("sys", "uc")
         self.comb += self.ps_ramp_start.i.eq(dma_req_pulse)
-        self.comb += self.ramp.start.eq(self.ps_ramp_start.o)
+
+        # Select source:
+        #   cap_enable_uc = 0 -> internal ramp (old behaviour)
+        #   cap_enable_uc = 1 -> external captured NCO/selected_input
+        self.comb += [
+            self.uc_src.use_external.eq(self.cap_enable_uc),
+
+            # start ramp when request and not capturing external
+            self.uc_src.start.eq(self.ps_ramp_start.o & ~self.cap_enable_uc),
+
+            # start external capture stream when request and cap_enable_uc=1
+            self.cap_stream.start.eq(self.ps_ramp_start.o & self.cap_enable_uc),
+        ]
+
+        # Feed cap_sample into cap_stream
+        # (ClockDomainsRenamer("uc") puts cap_stream in uc domain, same as cap_sample)
+        self.comb += self.cap_stream.sample_in.eq(self.cap_sample)
+
+        # Connect external stream into UCStreamSource
+        self.comb += [
+            self.uc_src.ext_valid.eq(self.cap_stream.valid),
+            self.uc_src.ext_data.eq(self.cap_stream.data),
+            self.uc_src.ext_bytes.eq(self.cap_stream.bytes),
+            self.uc_src.ext_last.eq(self.cap_stream.last),
+
+            self.cap_stream.ready.eq(self.uc_src.ext_ready),
+        ]
 
         # Async FIFO: write@uc, read@sys, carries {data, bytes, last}
         bytes_width = len(self.s_bytes)
@@ -587,12 +779,12 @@ class UberDDR3(LiteXModule):
             {"write": "uc", "read": "sys"}
         )(fifo)
 
-        # uc side (producer): ramp -> FIFO
+        # uc side (producer): uc_src -> FIFO
         self.comb += [
-            fifo.din.eq(Cat(self.ramp.data, self.ramp.bytes, self.ramp.last)),
-            fifo.we.eq(self.ramp.valid & fifo.writable),
-            # backpressure towards ramp
-            self.ramp.ready.eq(fifo.writable),
+            fifo.din.eq(Cat(self.uc_src.data, self.uc_src.bytes, self.uc_src.last)),
+            fifo.we.eq(self.uc_src.valid & fifo.writable),
+            # backpressure towards uc_src
+            self.uc_src.ready.eq(fifo.writable),
         ]
 
         # sys side (consumer): FIFO -> S2MM stream
@@ -728,7 +920,7 @@ class MainCSRs(LiteXModule):
       - gains: 32-bit fixed-point gains for 5 stages
       - upsampler_input_x/y: direct complex input into upsampler
       - final_shift: output scaling (shift)
-      - cap_enable: full-rate (65 MS/s) capture enable flag
+      - cap_enable: full-rate (65 MS/s) capture enable flag for UberDDR3
     """
     def __init__(self):
         self.phase_inc_nco       = CSRStorage(19)
@@ -750,7 +942,7 @@ class MainCSRs(LiteXModule):
         self.upsampler_input_x   = CSRStorage(16)
         self.upsampler_input_y   = CSRStorage(16)
         self.final_shift         = CSRStorage(3)
-        self.cap_enable          = CSRStorage(1, description="1=enable full-rate capture (65 MS/s).")
+        self.cap_enable          = CSRStorage(1, description="1=DDR capture from design, 0=internal ramp.")
 
 
 # =============================================================================
@@ -939,6 +1131,7 @@ class BaseSoC(SoCCore):
           - Uses CSRConfigAFIFO to push configs from sys -> uc domain.
           - Connects ADC/DAC pins from platform.
           - Exposes downsampled data via CSR event (ce_down).
+          - Feeds cap_selected_input into UberDDR3 capture when cap_enable=1.
         """
 
         # Add all required Verilog sources for UberClock pipeline
@@ -1023,6 +1216,9 @@ class BaseSoC(SoCCore):
         ds_x_uc   = Signal(16)
         ds_y_uc   = Signal(16)
 
+        # Capture/stream signal from uberclock (uc domain)
+        cap_sel_uc = Signal(12)
+
         # Short alias for cfg_link module
         uc = self.cfg_link
 
@@ -1078,7 +1274,32 @@ class BaseSoC(SoCCore):
             # Magnitude/phase outputs (currently unused here)
             o_magnitude           = Open(16),
             o_phase               = Open(25),
+
+            # Capture/debug output: selected_input_q (NCO when input_select=1)
+            o_cap_selected_input  = cap_sel_uc,
         )
+
+        # If UberDDR3 is present, hook capture signal and cap_enable into it
+        if hasattr(self, "ubddr3"):
+            # Connect selected_input (uc domain) into UberDDR3 capture sample
+            self.comb += self.ubddr3.cap_sample.eq(cap_sel_uc)
+
+            # Use cap_enable CSR (uc copy) to switch from ramp -> design capture
+            self.comb += self.ubddr3.cap_enable_uc.eq(
+                getattr(self.cfg_link, "out_cap_enable_uc")
+            )
+
+        # Optional: use a LED as simple debug for ce_down event
+        # e.g., blink LED2 briefly on ce_down pulses (stretched)
+        ce_stretch = Signal(8)
+        self.sync.sys += [
+            If(ce_down_sys,
+                ce_stretch.eq(0xff)
+            ).Elif(ce_stretch != 0,
+                ce_stretch.eq(ce_stretch - 1)
+            )
+        ]
+        self.comb += leds[2].eq(ce_stretch != 0)
 
 
 # =============================================================================
