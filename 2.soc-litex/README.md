@@ -9,8 +9,6 @@
 
 <img width="1500" height="600" alt="try1" src="https://github.com/user-attachments/assets/910a435e-bfb2-4fce-8741-27b30802a760" />
 
-<img width="1500" height="600" alt="try0" src="https://github.com/user-attachments/assets/41a864ae-e3f8-40a6-91a0-6ee4cd0de494" />
-
 ## Parameters
 
 ### Clocking
