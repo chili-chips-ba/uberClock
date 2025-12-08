@@ -1,3 +1,7 @@
+Archive member included to satisfy reference by file (symbol)
+
+/opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+                              /tmp/ccPMAM24.ltrans0.ltrans.o (__udivsi3)
 
 There are no discarded input sections
 
@@ -14,59 +18,68 @@ Linker script and memory map
                 0x00000200                        _STACK_SIZE = 0x200
                 0x00000000                        . = ORIGIN (IMEM)
 
-.text           0x00000000      0x2b0
+.text           0x00000000      0x718
                 0x00000000                        _text_start = .
  *(.text .text.*)
- .text          0x00000000       0x74 /tmp/cc6tNPqV.o
+ .text          0x00000000       0x74 /tmp/ccjUB371.o
                 0x00000000                _boot_crt
- .text          0x00000074       0x74 /tmp/ccz7THgE.ltrans0.ltrans.o
-                0x000000a8                memset
-                0x000000c4                memcpy
- .text.startup  0x000000e8      0x1b8 /tmp/ccz7THgE.ltrans0.ltrans.o
-                0x000000e8                main
+ .text          0x00000074       0xd4 /tmp/ccPMAM24.ltrans0.ltrans.o
+                0x00000108                memset
+                0x00000124                memcpy
+ .text.startup  0x00000148      0x36c /tmp/ccPMAM24.ltrans0.ltrans.o
+                0x00000148                main
+ .text          0x000004b4       0xb4 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+                0x000004b4                __divsi3
+                0x000004bc                __hidden___udivsi3
+                0x000004bc                __udivsi3
+                0x00000504                __umodsi3
+                0x00000538                __modsi3
  *(.rodata .rodata.*)
  .rodata.str1.4
-                0x000002a0        0xf /tmp/ccz7THgE.ltrans0.ltrans.o
+                0x00000568      0x1ad /tmp/ccPMAM24.ltrans0.ltrans.o
+                                0x1b1 (size before relaxing)
  *(.srodata .srodata.*)
-                0x000002b0                        . = ALIGN (0x4)
- *fill*         0x000002af        0x1 
-                0x000002b0                        _text_end = .
-                0x000002b0                        _idata_start = _text_end
+                0x00000718                        . = ALIGN (0x4)
+ *fill*         0x00000715        0x3 
+                0x00000718                        _text_end = .
+                0x00000718                        _idata_start = _text_end
 
 .rela.dyn       0x00000000        0x0
- .rela.text     0x00000000        0x0 /tmp/cc6tNPqV.o
+ .rela.text     0x00000000        0x0 /tmp/ccjUB371.o
 
-.data           0x10000000        0x0 load address 0x000002b0
+.data           0x10000000        0x0 load address 0x00000718
                 0x10000000                        _data_start = .
  *(.data .data.*)
- .data          0x10000000        0x0 /tmp/cc6tNPqV.o
- .data          0x10000000        0x0 /tmp/ccz7THgE.ltrans0.ltrans.o
+ .data          0x10000000        0x0 /tmp/ccjUB371.o
+ .data          0x10000000        0x0 /tmp/ccPMAM24.ltrans0.ltrans.o
+ .data          0x10000000        0x0 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
                 0x10000000                        . = ALIGN (0x8)
                 0x10000800                        PROVIDE (__global_pointer$ = (. + 0x800))
  *(.sdata .sdata.*)
                 0x10000000                        . = ALIGN (0x4)
                 0x10000000                        _data_end = .
 
-.bss            0x10000000     0x1804 load address 0x000002b0
+.bss            0x10000000      0x804 load address 0x00000718
                 0x10000000                        _bss_start = .
  *(.bss .bss.*)
- .bss           0x10000000        0x0 /tmp/cc6tNPqV.o
- .bss           0x10000000     0x1800 /tmp/ccz7THgE.ltrans0.ltrans.o
+ .bss           0x10000000        0x0 /tmp/ccjUB371.o
+ .bss           0x10000000      0x800 /tmp/ccPMAM24.ltrans0.ltrans.o
+ .bss           0x10000800        0x0 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
  *(.sbss .sbss.*)
- .sbss          0x10001800        0x4 /tmp/ccz7THgE.ltrans0.ltrans.o
+ .sbss          0x10000800        0x4 /tmp/ccPMAM24.ltrans0.ltrans.o
  *(COMMON)
-                0x10001804                        . = ALIGN (0x4)
-                0x10001804                        _bss_end = .
-                0x10001810                        . = ALIGN (0x10)
+                0x10000804                        . = ALIGN (0x4)
+                0x10000804                        _bss_end = .
+                0x10000810                        . = ALIGN (0x10)
 
-.heap           0x10001804      0x40c load address 0x00001ab4
-                0x10001804                        _heap_start = .
-                0x10001c04                        . = (. + _HEAP_SIZE)
- *fill*         0x10001804      0x400 
-                0x10001c10                        . = ALIGN (0x10)
- *fill*         0x10001c04        0xc 
-                0x10001c10                        _heap_end = .
-                0x10001c10                        . = ALIGN (0x8)
+.heap           0x10000804      0x40c load address 0x00000f1c
+                0x10000804                        _heap_start = .
+                0x10000c04                        . = (. + _HEAP_SIZE)
+ *fill*         0x10000804      0x400 
+                0x10000c10                        . = ALIGN (0x10)
+ *fill*         0x10000c04        0xc 
+                0x10000c10                        _heap_end = .
+                0x10000c10                        . = ALIGN (0x8)
                 [!provide]                        PROVIDE (_end = .)
                 [!provide]                        PROVIDE (end = .)
                 0x10008000                        PROVIDE (_stack_start = (ORIGIN (DMEM) + LENGTH (DMEM)))
@@ -75,27 +88,51 @@ Linker script and memory map
                 0x10008000                        . = (. + _STACK_SIZE)
  *fill*         0x10007e00      0x200 
                 0x10007e00                        _stack_end = (_stack_start - SIZEOF (.stack))
-LOAD /tmp/cc6tNPqV.o
-LOAD /tmp/ccf1L5gt.o
-LOAD /tmp/ccz7THgE.ltrans0.ltrans.o
-LOAD /tmp/ccOQlSEq.o
-LOAD /tmp/ccqLaQll.o
-LOAD /tmp/ccTop5SG.o
+LOAD /tmp/ccjUB371.o
+LOAD /tmp/ccjV9APh.o
+LOAD /tmp/ccPMAM24.ltrans0.ltrans.o
+LOAD /tmp/ccW71MdX.o
+LOAD /tmp/cceYpHzH.o
+LOAD /tmp/ccoFzEit.o
 LOAD /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a
 OUTPUT(/home/minela/Projects/Work/uberClock/3.miniac/3.build/sw_build/main.elf elf32-littleriscv)
 
 .riscv.attributes
                 0x00000000       0x1c
  .riscv.attributes
-                0x00000000       0x1a /tmp/cc6tNPqV.o
+                0x00000000       0x1a /tmp/ccjUB371.o
  .riscv.attributes
-                0x0000001a       0x1c /tmp/ccz7THgE.ltrans0.ltrans.o
+                0x0000001a       0x1c /tmp/ccPMAM24.ltrans0.ltrans.o
+ .riscv.attributes
+                0x00000036       0x1a /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
 
 .comment        0x00000000        0xf
- .comment       0x00000000        0xf /tmp/ccz7THgE.ltrans0.ltrans.o
+ .comment       0x00000000        0xf /tmp/ccPMAM24.ltrans0.ltrans.o
                                  0x10 (size before relaxing)
 
 .note.GNU-stack
                 0x00000000        0x0
  .note.GNU-stack
-                0x00000000        0x0 /tmp/ccz7THgE.ltrans0.ltrans.o
+                0x00000000        0x0 /tmp/ccPMAM24.ltrans0.ltrans.o
+
+.debug_line     0x00000000      0x153
+ .debug_line    0x00000000      0x153 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+
+.debug_line_str
+                0x00000000       0x95
+ .debug_line_str
+                0x00000000       0x95 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+
+.debug_info     0x00000000       0x5f
+ .debug_info    0x00000000       0x5f /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+
+.debug_abbrev   0x00000000       0x28
+ .debug_abbrev  0x00000000       0x28 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+
+.debug_aranges  0x00000000       0x20
+ .debug_aranges
+                0x00000000       0x20 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+
+.debug_str      0x00000000       0xd0
+ .debug_str     0x00000000       0xd0 /opt/riscv/lib/gcc/riscv64-unknown-elf/15.1.0/rv32i/ilp32/libgcc.a(div.o)
+                                 0xda (size before relaxing)

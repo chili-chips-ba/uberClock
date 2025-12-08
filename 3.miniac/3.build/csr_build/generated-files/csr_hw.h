@@ -195,6 +195,10 @@ public:
     inline uint32_t ch2()                    {return reg->f.ch2;};
     inline void     ch1(const uint32_t data) {reg->f.ch1 = data;};
     inline uint32_t ch1()                    {return reg->f.ch1;};
+    inline void     done(const uint32_t data) {reg->f.done = data;};
+    inline uint32_t done()                    {return reg->f.done;};
+    inline void     start(const uint32_t data) {reg->f.start = data;};
+    inline uint32_t start()                    {return reg->f.start;};
 
     inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
 

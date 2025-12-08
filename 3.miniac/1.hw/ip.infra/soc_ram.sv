@@ -15,16 +15,25 @@
 //   compatible with our infrastructure
 //==========================================================================
 
-module soc_ram #(
-   parameter NUM_WORDS = 1024 // RAM depth in SOC bus words, typically 32-bit
+module soc_ram 
+import soc_pkg::*;
+#(
+   parameter NUM_WORDS = 8192 // RAM depth in SOC bus words, typically 32-bit
+   
 )(
-   soc_if.SLV bus
+   soc_if.SLV bus,
+   
+   input logic			        adc_clk,
+   input logic			        adc_we,
+   input logic [31:0]        		adc_data,
+   input logic [12:0]     adc_addr // Adresa za 8192 riječi (13 bita)
 );
 
-   import soc_pkg::*;
+   
 
    localparam ADDR_MSB = $clog2(NUM_WORDS) + 1;
 
+	
 //------------------------------------------------------------
 // combo decode logic
 //------------------------------------------------------------
@@ -50,6 +59,10 @@ module soc_ram #(
   //soc_data_t mem [NUM_WORDS] /* synthesis syn_ramstyle = "distributed_ram" */;
 `endif
 
+//------------------------------------------------------------
+// PORT 1 (CPU) - Read/Write
+//------------------------------------------------------------
+
    always_ff @(posedge bus.clk) begin
       bus.rdat <= mem[addr];
 
@@ -57,6 +70,17 @@ module soc_ram #(
          if (we[i] == HI) mem[addr][i*8 +: 8] <= bus.wdat[i*8 +: 8];
       end
    end
+
+//------------------------------------------------------------
+// PORT 2 (ADC) - Write
+//------------------------------------------------------------
+
+   always_ff @(posedge adc_clk) begin
+        if (adc_we == 1'b1) begin
+            mem[adc_addr] <= adc_data;
+        end
+    end
+
 
 //------------------------------------------------------------
 // handshake:

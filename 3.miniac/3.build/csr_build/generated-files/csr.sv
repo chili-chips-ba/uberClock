@@ -138,6 +138,12 @@ module csr (
         } gpio;
         struct {
             struct {
+                logic next;
+                logic load_next;
+            } start;
+        } adc;
+        struct {
+            struct {
                 logic [13:0] next;
                 logic load_next;
             } ch2;
@@ -175,6 +181,11 @@ module csr (
                 logic value;
             } led2;
         } gpio;
+        struct {
+            struct {
+                logic value;
+            } start;
+        } adc;
         struct {
             struct {
                 logic [13:0] value;
@@ -311,6 +322,29 @@ module csr (
     assign hwif_out.gpio.led2.value = field_storage.gpio.led2.value;
     assign hwif_out.hw_id.PRODUCT.value = 16'hc10c;
     assign hwif_out.hw_id.VENDOR.value = 16'hccae;
+    // Field: csr.adc.start
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.adc.start.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.adc && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.adc.start.value & ~decoded_wr_biten[31:31]) | (decoded_wr_data[31:31] & decoded_wr_biten[31:31]);
+            load_next_c = '1;
+        end
+        field_combo.adc.start.next = next_c;
+        field_combo.adc.start.load_next = load_next_c;
+    end
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            field_storage.adc.start.value <= 1'h0;
+        end else begin
+            if(field_combo.adc.start.load_next) begin
+                field_storage.adc.start.value <= field_combo.adc.start.next;
+            end
+        end
+    end
+    assign hwif_out.adc.start.value = field_storage.adc.start.value;
     // Field: csr.dac.ch2
     always_comb begin
         automatic logic [13:0] next_c;
@@ -400,7 +434,9 @@ module csr (
     assign readback_array[6][11:0] = (decoded_reg_strb.adc && !decoded_req_is_wr) ? hwif_in.adc.ch2.next : '0;
     assign readback_array[6][15:12] = '0;
     assign readback_array[6][27:16] = (decoded_reg_strb.adc && !decoded_req_is_wr) ? hwif_in.adc.ch1.next : '0;
-    assign readback_array[6][31:28] = '0;
+    assign readback_array[6][29:28] = '0;
+    assign readback_array[6][30:30] = (decoded_reg_strb.adc && !decoded_req_is_wr) ? hwif_in.adc.done.next : '0;
+    assign readback_array[6][31:31] = '0;
     assign readback_array[7][13:0] = (decoded_reg_strb.dac && !decoded_req_is_wr) ? field_storage.dac.ch2.value : '0;
     assign readback_array[7][15:14] = '0;
     assign readback_array[7][29:16] = (decoded_reg_strb.dac && !decoded_req_is_wr) ? field_storage.dac.ch1.value : '0;

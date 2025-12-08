@@ -8,7 +8,7 @@ module adc(
    output                           adc_clk_ch1,          //AD channel 1 sampling clock
    input  [11:0]                    adc_data_ch0,         //AD channel 0 data
    input  [11:0]                    adc_data_ch1,         //AD channel 1 data
-   output [11:0]             ad_data_ch0,
+   output [11:0]                    ad_data_ch0,
    output [11:0]                    ad_data_ch1
 );
 

@@ -62,8 +62,13 @@ package csr_pkg;
     } csr__adc__ch1__in_t;
 
     typedef struct {
+        logic next;
+    } csr__adc__done__in_t;
+
+    typedef struct {
         csr__adc__ch2__in_t ch2;
         csr__adc__ch1__in_t ch1;
+        csr__adc__done__in_t done;
     } csr__adc__in_t;
 
     typedef struct {
@@ -139,6 +144,14 @@ package csr_pkg;
     } csr__hw_id__out_t;
 
     typedef struct {
+        logic value;
+    } csr__adc__start__out_t;
+
+    typedef struct {
+        csr__adc__start__out_t start;
+    } csr__adc__out_t;
+
+    typedef struct {
         logic [13:0] value;
     } csr__dac__ch2__out_t;
 
@@ -173,6 +186,7 @@ package csr_pkg;
         csr__uart__out_t uart;
         csr__gpio__out_t gpio;
         csr__hw_id__out_t hw_id;
+        csr__adc__out_t adc;
         csr__dac__out_t dac;
         csr__hw_version__out_t hw_version;
     } csr__out_t;

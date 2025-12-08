@@ -151,12 +151,22 @@ typedef union {
 #define CSR__ADC__CH1_bp 16
 #define CSR__ADC__CH1_bw 12
 #define CSR__ADC__CH1_reset 0x0
+#define CSR__ADC__DONE_bm 0x40000000
+#define CSR__ADC__DONE_bp 30
+#define CSR__ADC__DONE_bw 1
+#define CSR__ADC__DONE_reset 0x0
+#define CSR__ADC__START_bm 0x80000000
+#define CSR__ADC__START_bp 31
+#define CSR__ADC__START_bw 1
+#define CSR__ADC__START_reset 0x0
 typedef union {
     struct __attribute__ ((__packed__)) {
         uint32_t ch2 :12;
         uint32_t :4;
         uint32_t ch1 :12;
-        uint32_t :4;
+        uint32_t :2;
+        uint32_t done :1;
+        uint32_t start :1;
     } f;
     uint32_t w;
 } csr__adc_t;
