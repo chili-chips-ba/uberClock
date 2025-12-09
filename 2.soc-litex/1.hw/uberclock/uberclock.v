@@ -26,20 +26,35 @@ module uberclock#(
     //Phase Increment
     input  [PW-1:0]           phase_inc_nco,
     input signed [11:0]       nco_mag, // NCO magnitude from CPU
+
     input  [PW-1:0]           phase_inc_down_1,
     input  [PW-1:0]           phase_inc_down_2,
     input  [PW-1:0]           phase_inc_down_3,
     input  [PW-1:0]           phase_inc_down_4,
     input  [PW-1:0]           phase_inc_down_5,
+    
     input  [PW-1:0]           phase_inc_down_ref,
-    input  [PW-1:0]           phase_inc_cpu,
 
+    input  [PW-1:0]           phase_inc_cpu1,
+    input  [PW-1:0]           phase_inc_cpu2,
+    input  [PW-1:0]           phase_inc_cpu3,
+    input  [PW-1:0]           phase_inc_cpu4,
+    input  [PW-1:0]           phase_inc_cpu5,
+    input signed [11:0]       mag_cpu1,
+    input signed [11:0]       mag_cpu2,
+    input signed [11:0]       mag_cpu3,
+    input signed [11:0]       mag_cpu4,
+    input signed [11:0]       mag_cpu5,
+    
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              upsampler_input_mux,
+    
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
+    
     input  [2:0]              lowspeed_dbg_select,
     input  [2:0]              highspeed_dbg_select,
+    
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -176,10 +191,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x1, upsampler_in_y1;
 
     assign upsampler_in_x1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x1 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x1_cpu_nco << 4;
 
     assign upsampler_in_y1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y1 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y1_cpu_nco << 4;
     //--------------------------------------------------------
     // tx1 channel
     //--------------------------------------------------------
@@ -259,10 +274,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x2, upsampler_in_y2;
 
     assign upsampler_in_x2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x2 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x2_cpu_nco << 4;
 
     assign upsampler_in_y2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y2 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y2_cpu_nco << 4;
     //--------------------------------------------------------
     // tx2 channel
     //--------------------------------------------------------
@@ -340,10 +355,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x3, upsampler_in_y3;
 
     assign upsampler_in_x3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x3 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x3_cpu_nco << 4;
 
     assign upsampler_in_y3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y3 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y3_cpu_nco << 4;
     //--------------------------------------------------------
     // tx3 channel
     //--------------------------------------------------------
@@ -420,10 +435,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x4, upsampler_in_y4;
 
     assign upsampler_in_x4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x4 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x4_cpu_nco << 4;
 
     assign upsampler_in_y4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y4 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y4_cpu_nco << 4;
     //--------------------------------------------------------
     // tx4 channel
     //--------------------------------------------------------
@@ -500,10 +515,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x5, upsampler_in_y5;
 
     assign upsampler_in_x5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x5 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x5_cpu_nco << 4;
 
     assign upsampler_in_y5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y5 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y5_cpu_nco << 4;
     //--------------------------------------------------------
     // tx5 channel
     //--------------------------------------------------------
@@ -620,43 +635,183 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO TX1
     // ----------------------------------------------------------------------
-    wire signed [IW-1:0] x_cpu_nco, y_cpu_nco;
-    wire                 down_aux_cpu;
+    wire signed [IW-1:0] x1_cpu_nco, y1_cpu_nco;
+    wire                 down_aux_cpu1;
    
+    reg [PW-1:0] phase_acc_cpu_reg1 = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg1 <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg1 <= phase_acc_cpu_reg1 + phase_inc_cpu1; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
    cordic #(
        .IW(IW),
        .OW(OW),
        .NSTAGES(NSTAGES),
        .WW(WW),
        .PW(PW)
-   ) cordic_cpu(
+   ) cordic_cpu1(
        .i_clk  (sys_clk),
        .i_reset(rst),
        .i_ce   (1'b1),
-       .i_xval (12'sd200),
+       .i_xval (mag_cpu1),
        .i_yval (12'sd0),
-       .i_phase(phase_acc_cpu_reg),
+       .i_phase(phase_acc_cpu_reg1),
        .i_aux  (1'b1),
-       .o_xval (x_cpu_nco),
-       .o_yval (y_cpu_nco),
-       .o_aux  (down_aux_cpu)
+       .o_xval (x1_cpu_nco),
+       .o_yval (y1_cpu_nco),
+       .o_aux  (down_aux_cpu1)
    );
-
-    reg [PW-1:0] phase_acc_cpu_reg = {PW{1'b0}};
-    always @(posedge sys_clk or posedge rst) begin
-       if (rst)
-           phase_acc_cpu_reg <= 0;
-       else begin
-            if (ce_down)
-                phase_acc_cpu_reg <= phase_acc_cpu_reg + phase_inc_cpu; //52429 for 1kz at 10kHz rate
-       end
-        
-    end
 
 
     // ----------------------------------------------------------------------
+    // CPU CORDIC NCO TX2
+    // ----------------------------------------------------------------------
+    wire signed [IW-1:0] x2_cpu_nco, y2_cpu_nco;
+    wire                 down_aux_cpu2;
+   
+    reg [PW-1:0] phase_acc_cpu_reg2 = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg2 <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg2 <= phase_acc_cpu_reg2 + phase_inc_cpu2; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
+   cordic #(
+       .IW(IW),
+       .OW(OW),
+       .NSTAGES(NSTAGES),
+       .WW(WW),
+       .PW(PW)
+   ) cordic_cpu2(
+       .i_clk  (sys_clk),
+       .i_reset(rst),
+       .i_ce   (1'b1),
+       .i_xval (mag_cpu2),
+       .i_yval (12'sd0),
+       .i_phase(phase_acc_cpu_reg2),
+       .i_aux  (1'b1),
+       .o_xval (x2_cpu_nco),
+       .o_yval (y2_cpu_nco),
+       .o_aux  (down_aux_cpu2)
+   );
+
+    // ----------------------------------------------------------------------
+    // CPU CORDIC NCO TX3
+    // ----------------------------------------------------------------------
+    wire signed [IW-1:0] x3_cpu_nco, y3_cpu_nco;
+    wire                 down_aux_cpu3;
+   
+    reg [PW-1:0] phase_acc_cpu_reg3 = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg3 <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg3 <= phase_acc_cpu_reg3 + phase_inc_cpu3; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
+   cordic #(
+       .IW(IW),
+       .OW(OW),
+       .NSTAGES(NSTAGES),
+       .WW(WW),
+       .PW(PW)
+   ) cordic_cpu3(
+       .i_clk  (sys_clk),
+       .i_reset(rst),
+       .i_ce   (1'b1),
+       .i_xval (mag_cpu3),
+       .i_yval (12'sd0),
+       .i_phase(phase_acc_cpu_reg3),
+       .i_aux  (1'b1),
+       .o_xval (x3_cpu_nco),
+       .o_yval (y3_cpu_nco),
+       .o_aux  (down_aux_cpu3)
+   );
+
+    // ----------------------------------------------------------------------
+    // CPU CORDIC NCO TX4
+    // ----------------------------------------------------------------------
+    wire signed [IW-1:0] x4_cpu_nco, y4_cpu_nco;
+    wire                 down_aux_cpu4;
+   
+    reg [PW-1:0] phase_acc_cpu_reg4 = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg4 <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg4 <= phase_acc_cpu_reg4 + phase_inc_cpu4; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
+   cordic #(
+       .IW(IW),
+       .OW(OW),
+       .NSTAGES(NSTAGES),
+       .WW(WW),
+       .PW(PW)
+   ) cordic_cpu4(
+       .i_clk  (sys_clk),
+       .i_reset(rst),
+       .i_ce   (1'b1),
+       .i_xval (mag_cpu4),
+       .i_yval (12'sd0),
+       .i_phase(phase_acc_cpu_reg4),
+       .i_aux  (1'b1),
+       .o_xval (x4_cpu_nco),
+       .o_yval (y4_cpu_nco),
+       .o_aux  (down_aux_cpu4)
+   );
+   
+
+    // ----------------------------------------------------------------------
+    // CPU CORDIC NCO TX4
+    // ----------------------------------------------------------------------
+    wire signed [IW-1:0] x5_cpu_nco, y5_cpu_nco;
+    wire                 down_aux_cpu5;
+   
+    reg [PW-1:0] phase_acc_cpu_reg5 = {PW{1'b0}};
+    always @(posedge sys_clk or posedge rst) begin
+       if (rst)
+           phase_acc_cpu_reg5 <= 0;
+       else begin
+            if (ce_down)
+                phase_acc_cpu_reg5 <= phase_acc_cpu_reg5 + phase_inc_cpu5; //52429 for 1kz at 10kHz rate
+       end
+        
+    end
+   cordic #(
+       .IW(IW),
+       .OW(OW),
+       .NSTAGES(NSTAGES),
+       .WW(WW),
+       .PW(PW)
+   ) cordic_cpu5(
+       .i_clk  (sys_clk),
+       .i_reset(rst),
+       .i_ce   (1'b1),
+       .i_xval (mag_cpu5),
+       .i_yval (12'sd0),
+       .i_phase(phase_acc_cpu_reg5),
+       .i_aux  (1'b1),
+       .o_xval (x5_cpu_nco),
+       .o_yval (y5_cpu_nco),
+       .o_aux  (down_aux_cpu5)
+   );
+
+    // ----------------------------------------------------------------------
     // DAC data preparation
-// ----------------------------------------------------------------------
+    // ----------------------------------------------------------------------
     wire [13:0] dac1_data_in =  (output_select_ch1 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
                                 (output_select_ch1 == 4'b0001) ? upsampled_gain_y2[15:2]: // 19->14:
                                 (output_select_ch1 == 4'b0010) ? upsampled_gain_y3[15:2]: // 19->14:

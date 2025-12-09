@@ -238,16 +238,101 @@ static void phase_down_ref_cmd(char *args) {
 	main_phase_inc_down_ref_write(p);
 	printf("Downconversion ref phase increment set to %u\n", p);
 }
-static void phase_cpu_cmd(char *args) {
+
+static void mag_cpu1_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 12)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_mag_cpu1_write(p);
+	printf("CPU Mag CH1 set to %u\n", p);
+}
+static void mag_cpu2_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 12)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_mag_cpu2_write(p);
+	printf("CPU Mag CH2 set to %u\n", p);
+}
+static void mag_cpu3_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 12)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_mag_cpu3_write(p);
+	printf("CPU Mag CH3 set to %u\n", p);
+}
+static void mag_cpu4_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 12)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_mag_cpu4_write(p);
+	printf("CPU Mag CH4 set to %u\n", p);
+}
+static void mag_cpu5_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 12)) {
+		printf("Error: phase_nco must be 0–524287\n");
+		return;
+	}
+	main_mag_cpu5_write(p);
+	printf("CPU Mag CH5 set to %u\n", p);
+}
+static void phase_cpu1_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
 	if (p >= (1u << 24)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
-	main_phase_inc_cpu_write(p);
-	printf("CPU phase increment set to %u\n", p);
+	main_phase_inc_cpu1_write(p);
+	printf("CH1 CPU phase increment set to %u\n", p);
 }
 
+static void phase_cpu2_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 24)) {
+		printf("Error: phase_cpu must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_cpu2_write(p);
+	printf("CH2 CPU phase increment set to %u\n", p);
+}
+
+static void phase_cpu3_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 24)) {
+		printf("Error: phase_cpu must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_cpu3_write(p);
+	printf("CH3 CPU phase increment set to %u\n", p);
+}
+
+static void phase_cpu4_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 24)) {
+		printf("Error: phase_cpu must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_cpu4_write(p);
+	printf("CH4 CPU phase increment set to %u\n", p);
+}
+
+static void phase_cpu5_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 24)) {
+		printf("Error: phase_cpu must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_cpu5_write(p);
+	printf("CH5 CPU phase increment set to %u\n", p);
+}
 static void output_select_ch1_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0) & 0xf;
 	main_output_select_ch1_write(v);
@@ -366,9 +451,45 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		phase_down_ref_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_cpu")) {
+	else if (!strcmp(token, "mag_cpu1")) {
 		char *arg = get_token(&line);
-		phase_cpu_cmd(arg);
+		mag_cpu1_cmd(arg);
+	}
+	else if (!strcmp(token, "mag_cpu2")) {
+		char *arg = get_token(&line);
+		mag_cpu2_cmd(arg);
+	}
+	else if (!strcmp(token, "mag_cpu3")) {
+		char *arg = get_token(&line);
+		mag_cpu3_cmd(arg);
+	}
+	else if (!strcmp(token, "mag_cpu4")) {
+		char *arg = get_token(&line);
+		mag_cpu4_cmd(arg);
+	}
+	else if (!strcmp(token, "mag_cpu5")) {
+		char *arg = get_token(&line);
+		mag_cpu5_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_cpu1")) {
+		char *arg = get_token(&line);
+		phase_cpu1_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_cpu2")) {
+		char *arg = get_token(&line);
+		phase_cpu2_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_cpu3")) {
+		char *arg = get_token(&line);
+		phase_cpu3_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_cpu4")) {
+		char *arg = get_token(&line);
+		phase_cpu4_cmd(arg);
+	}
+	else if (!strcmp(token, "phase_cpu5")) {
+		char *arg = get_token(&line);
+		phase_cpu5_cmd(arg);
 	}
 	else if (!strcmp(token, "output_select_ch1")) {
 		char *arg = get_token(&line);
@@ -453,7 +574,6 @@ int main(void) {
 	main_phase_inc_down_4_write(2580593);    // 9 998 000
 	main_phase_inc_down_5_write(2580465);    // 9 997 500
 	main_phase_inc_down_ref_write(2581884);    // 9 997 500
-	main_phase_inc_cpu_write(52429);
 	main_input_select_write(0);
 	main_lowspeed_dbg_select_write(0);
 	main_highspeed_dbg_select_write(0);
@@ -465,6 +585,19 @@ int main(void) {
 	main_gain5_write (0x40000000);
 	main_output_select_ch1_write(11);
 	main_output_select_ch2_write(10);
+
+
+	main_mag_cpu1_write(50);
+	main_mag_cpu2_write(50);
+	main_mag_cpu3_write(50);
+	main_mag_cpu4_write(50);
+	main_mag_cpu5_write(50);
+	main_phase_inc_cpu1_write(0);
+	main_phase_inc_cpu2_write(0);
+	main_phase_inc_cpu3_write(0);
+	main_phase_inc_cpu4_write(0);
+	main_phase_inc_cpu5_write(0);
+
 	main_final_shift_write(0);
 	uart_init();
 
