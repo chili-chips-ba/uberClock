@@ -102,6 +102,34 @@ static void help(void) {
 	puts("  cap_start                 - Arm/start 512-sample capture");
     puts("  cap_status                - Show capture status");
     puts("  cap_dump                  - Dump captured samples as CSV");
+    puts("  hs_start                 - Arm/start 8192-sample HS capture (65MHz)");
+    puts("  hs_status                - Show HS capture status");
+    puts("  hs_dump                  - Dump HS samples as CSV");
+}
+
+static void hs_cap_start_cmd(void) {
+    // Generate a clean 0->1->0 pulse for the edge-detect
+    main_hs_cap_arm_write(0);
+    main_hs_cap_arm_write(1);
+    main_hs_cap_arm_write(0);
+    puts("HS capture started (8192 samples @ 65 MHz).");
+}
+
+static void hs_cap_status_cmd(void) {
+    printf("HS capture %s\n", main_hs_cap_done_read() ? "DONE" : "IN-PROGRESS");
+}
+
+static void hs_cap_dump_cmd(void) {
+    if (!main_hs_cap_done_read()) {
+        puts("HS capture not done yet. Use 'hs_status' first.");
+        return;
+    }
+    puts("#idx,value");
+    for (unsigned i = 0; i < 8192; ++i) {
+        main_hs_cap_idx_write(i);
+        int16_t v = (int16_t)main_hs_cap_data_read();
+        printf("%u,%d\n", i, v);
+    }
 }
 static void cap_start_cmd(void) {
     main_cap_arm_write(0);        // ensure low
@@ -201,6 +229,15 @@ static void phase_down_5_cmd(char *args) {
 	main_phase_inc_down_5_write(p);
 	printf("Downconversion phase ch5 increment set to %u\n", p);
 }
+static void phase_down_ref_cmd(char *args) {
+	unsigned p = strtoul(args, NULL, 0);
+	if (p >= (1u << 24)) {
+		printf("Error: phase_down must be 0–524287\n");
+		return;
+	}
+	main_phase_inc_down_ref_write(p);
+	printf("Downconversion ref phase increment set to %u\n", p);
+}
 static void phase_cpu_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
 	if (p >= (1u << 24)) {
@@ -223,6 +260,11 @@ static void output_select_ch2_cmd(char *args) {
 	printf("output_select_ch2 set to %u\n", v);
 }
 
+static void highspeed_dbg_select_cmd(char *args) {
+	unsigned v = strtoul(args, NULL, 0) & 0xf;
+	main_highspeed_dbg_select_write(v);
+	printf("highspeed dbg set to %u\n", v);
+}
 static void lowspeed_dbg_select_cmd(char *args) {
 	unsigned v = strtoul(args, NULL, 0) & 0xf;
 	main_lowspeed_dbg_select_write(v);
@@ -320,6 +362,10 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		phase_down_5_cmd(arg);
 	}
+	else if (!strcmp(token, "phase_down_ref")) {
+		char *arg = get_token(&line);
+		phase_down_ref_cmd(arg);
+	}
 	else if (!strcmp(token, "phase_cpu")) {
 		char *arg = get_token(&line);
 		phase_cpu_cmd(arg);
@@ -331,6 +377,10 @@ static void console_service(void) {
 	else if (!strcmp(token, "output_select_ch2")) {
 		char *arg = get_token(&line);
 		output_select_ch2_cmd(arg);
+	}
+	else if (!strcmp(token, "highspeed_select")) {
+		char *arg = get_token(&line);
+		highspeed_dbg_select_cmd(arg);
 	}
 	else if (!strcmp(token, "lowspeed_select")) {
 		char *arg = get_token(&line);
@@ -376,6 +426,9 @@ static void console_service(void) {
 	} else if (!strcmp(token, "cap_start"))  cap_start_cmd();
     else if (!strcmp(token, "cap_status")) cap_status_cmd();
     else if (!strcmp(token, "cap_dump"))   cap_dump_cmd();
+    else if (!strcmp(token, "hs_start"))  hs_cap_start_cmd();
+    else if (!strcmp(token, "hs_status")) hs_cap_status_cmd();
+    else if (!strcmp(token, "hs_dump"))   hs_cap_dump_cmd();
 	else {
 		printf("Unknown command: %s\n", token);
 	}
@@ -399,17 +452,19 @@ int main(void) {
 	main_phase_inc_down_3_write(2580722);    // 9 998 500
 	main_phase_inc_down_4_write(2580593);    // 9 998 000
 	main_phase_inc_down_5_write(2580465);    // 9 997 500
+	main_phase_inc_down_ref_write(2581884);    // 9 997 500
 	main_phase_inc_cpu_write(52429);
 	main_input_select_write(0);
 	main_lowspeed_dbg_select_write(0);
+	main_highspeed_dbg_select_write(0);
 	main_upsampler_input_mux_write(0);
 	main_gain1_write (0x40000000);
 	main_gain2_write (0x40000000);
 	main_gain3_write (0x40000000);
 	main_gain4_write (0x40000000);
 	main_gain5_write (0x40000000);
-	main_output_select_ch1_write(10);
-	main_output_select_ch2_write(11);
+	main_output_select_ch1_write(11);
+	main_output_select_ch2_write(10);
 	main_final_shift_write(0);
 	uart_init();
 

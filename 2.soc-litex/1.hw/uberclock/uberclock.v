@@ -31,6 +31,7 @@ module uberclock#(
     input  [PW-1:0]           phase_inc_down_3,
     input  [PW-1:0]           phase_inc_down_4,
     input  [PW-1:0]           phase_inc_down_5,
+    input  [PW-1:0]           phase_inc_down_ref,
     input  [PW-1:0]           phase_inc_cpu,
 
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
@@ -38,6 +39,7 @@ module uberclock#(
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
     input  [2:0]              lowspeed_dbg_select,
+    input  [2:0]              highspeed_dbg_select,
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -57,7 +59,13 @@ module uberclock#(
     input              cap_arm,        // write 1 to arm/start a capture
     input      [15:0]  cap_idx,        // index to read back (0..511)
     output reg         cap_done,       // 1 when 512 samples captured
-    output     [15:0]  cap_data        // sign-extended read data
+    output     [15:0]  cap_data,         // sign-extended read data
+
+    // ---- High-speed capture (65 MHz) of filter_in ----
+    input              hs_cap_arm,       // 0->1 pulse = start
+    input      [15:0]  hs_cap_idx,       // readback index (0..8191)
+    output reg         hs_cap_done,      // 1 when 8192 samples captured
+    output     [15:0]  hs_cap_data       // sign-extended sample
     );
     //======================================================================
     // Instantiate the “adc” module
@@ -580,8 +588,37 @@ module uberclock#(
     wire [2:0] S = final_shift;  
     wire signed[13:0] sum = (S == 3'd0) ? system_output_14: (system_output_14 << S);
 
+    //------------------------------------------------------------------------
+    // rx5 REFERENT channel
+    //------------------------------------------------------------------------
+    wire signed [15:0] downsampled_x_ref, downsampled_y_ref;
+    wire [PW-1:0] phase_acc_down_ref;
+    wire signed [IW-1:0] x_downconverted_ref, y_downconverted_ref;
+    wire signed [15:0] rx0_magnitude_ref;
+    wire signed [24:0] rx0_phase_ref;
+    rx_channel # (
+        .IW (12), 
+        .OW (12),
+        .RX_OW (16),
+        .NSTAGES (15), 
+        .WW (15),
+        .PW (24)
+    ) rx_ref (
+        .sys_clk (sys_clk),
+        .rst(rst),
+        .downconversion_phase_inc (phase_inc_down_ref),
+        .rx_channel_input (filter_in_1),
+        .rx_channel_output_x (downsampled_x_ref),
+        .rx_channel_output_y (downsampled_y_ref),
+        .downconversion_phase (phase_acc_down_ref),
+        .rx_downconverted_x (x_downconverted_ref),
+        .rx_downconverted_y (y_downconverted_ref),
+        // .ce_down (ce_down),
+        .rx_magnitude (rx0_magnitude_ref),
+        .rx_phase (rx0_phase_ref)
+    );
     // ----------------------------------------------------------------------
-    // CPU CORDIC NCO
+    // CPU CORDIC NCO TX1
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x_cpu_nco, y_cpu_nco;
     wire                 down_aux_cpu;
@@ -721,4 +758,62 @@ module uberclock#(
     wire [10:0] rd_idx = cap_idx[10:0];
     assign cap_data = cap_mem[rd_idx];
 
+    // ============================================================
+    // High-speed capture @ sys_clk (65 MHz): grab filter_in
+    // Depth: 8192 x 16-bit -> ~16 KB (block RAM)
+    // ============================================================
+    // Use the already-registered 12-bit signed 'filter_in'
+    // Sign-extend it to 16 bits for storage.
+    wire signed [15:0]  highspeed_signal;// = 
+    assign highspeed_signal = (highspeed_dbg_select == 0) ? { {4{filter_in[11]}}, filter_in } :
+                              (highspeed_dbg_select == 1) ? { {4{filter_in[11]}}, filter_in_1 } :
+                                                            { {4{sum_final[18]}}, sum_final[18:5] };                   
+
+    // Edge-detect arm (expects a 0->1 pulse from CSR)
+    reg hs_arm_q;
+    wire hs_cap_start = hs_cap_arm & ~hs_arm_q;
+    always @(posedge sys_clk or posedge rst)
+        if (rst) hs_arm_q <= 1'b0;
+        else      hs_arm_q <= hs_cap_arm;
+
+    reg         hs_capturing;
+    reg  [12:0] hs_wr_ptr;     // 0..8191
+
+    // Tell Vivado we want block RAM
+    (* ram_style = "block" *) reg [15:0] hs_mem [0:8191];
+
+    // --- Control logic (with reset, no RAM writes here) ---
+    always @(posedge sys_clk or posedge rst) begin
+        if (rst) begin
+            hs_capturing <= 1'b0;
+            hs_cap_done  <= 1'b0;
+            hs_wr_ptr    <= 13'd0;
+        end else begin
+            if (hs_cap_start) begin
+                hs_capturing <= 1'b1;
+                hs_cap_done  <= 1'b0;
+                hs_wr_ptr    <= 13'd0;
+            end
+
+            if (hs_capturing) begin
+                if (hs_wr_ptr == 13'd8191) begin
+                    hs_capturing <= 1'b0;
+                    hs_cap_done  <= 1'b1;
+                end else begin
+                    hs_wr_ptr <= hs_wr_ptr + 13'd1;
+                end
+            end
+        end
+    end
+
+    // --- RAM write (no reset in sensitivity list!) ---
+    always @(posedge sys_clk) begin
+        if (hs_capturing) begin
+            hs_mem[hs_wr_ptr] <= highspeed_signal;
+        end
+    end
+
+    // --- Readback ---
+    wire [12:0] hs_rd_idx = hs_cap_idx[12:0];
+    assign hs_cap_data = hs_mem[hs_rd_idx];
 endmodule
