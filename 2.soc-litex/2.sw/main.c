@@ -67,7 +67,7 @@ static void help(void) {
 	puts("Available commands:");
 	puts("  help                      - Show this command");
 	puts("  reboot                    - Reboot CPU");
-	puts("  phase_nco  <val>          - Set input CORDIC NCO phase increment (0–524287)");
+	puts("  phaseinc  <val>          - Set input CORDIC NCO phase increment (0–524287)");
 	puts("  phase_down_1 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 1");
 	puts("  phase_down_2 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 2");
 	puts("  phase_down_3 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 3");
@@ -589,9 +589,9 @@ int main(void) {
 
 	main_mag_cpu1_write(50);
 	main_mag_cpu2_write(50);
-	main_mag_cpu3_write(50);
-	main_mag_cpu4_write(50);
-	main_mag_cpu5_write(50);
+	main_mag_cpu3_write(0);
+	main_mag_cpu4_write(0);
+	main_mag_cpu5_write(0);
 	main_phase_inc_cpu1_write(0);
 	main_phase_inc_cpu2_write(0);
 	main_phase_inc_cpu3_write(0);

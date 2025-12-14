@@ -5,7 +5,7 @@ import csv
 import re
 import argparse
 
-PORT = "/dev/ttyUSB3"   # adjust if needed
+PORT = "/dev/ttyUSB0"   # adjust if needed
 BAUD = 115200           # adjust if needed
 
 LINE_RE = re.compile(r"^\s*(\d+)\s*,\s*(-?\d+)\s*$")

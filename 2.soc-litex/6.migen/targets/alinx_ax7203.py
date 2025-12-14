@@ -247,6 +247,8 @@ class BaseSoC(SoCCore):
         self._input_select        = CSRStorage(2,  description="0=ADC, 1=NCO, 2=CPU")
         self._output_select_ch1   = CSRStorage(4,  description="DAC CH1 output selector")
         self._output_select_ch2   = CSRStorage(4,  description="DAC CH1 output selector")
+        self._lowspeed_dbg_select = CSRStorage(3,  description="Lowspeed dbg selector")
+        self._highspeed_dbg_select = CSRStorage(3,  description="Lowspeed dbg selector")
         self._upsampler_input_mux = CSRStorage(2,  description="0=Gain, 1=CPU, 2=CPU NCO")
         self._phase_inc_nco       = CSRStorage(32, description="NCO phase increment")
         self._nco_mag             = CSRStorage(12, description="NCO magnitude")
@@ -255,7 +257,19 @@ class BaseSoC(SoCCore):
         self._phase_inc_down_3      = CSRStorage(24, description="Downconversion phase inc ch3")
         self._phase_inc_down_4      = CSRStorage(24, description="Downconversion phase inc ch4")
         self._phase_inc_down_5      = CSRStorage(24, description="Downconversion phase inc ch5")
-        self._phase_inc_cpu       = CSRStorage(24, description="CPU phase increment")
+        self._phase_inc_down_ref      = CSRStorage(24, description="Downconversion phase inc ref")
+
+        self._phase_inc_cpu1       = CSRStorage(24, description="CPU phase increment CH1")
+        self._phase_inc_cpu2       = CSRStorage(24, description="CPU phase increment CH2")
+        self._phase_inc_cpu3       = CSRStorage(24, description="CPU phase increment CH3")
+        self._phase_inc_cpu4       = CSRStorage(24, description="CPU phase increment CH4")
+        self._phase_inc_cpu5       = CSRStorage(24, description="CPU phase increment CH5")
+        self._mag_cpu1             = CSRStorage(24, description="CPU magnitude CH1")
+        self._mag_cpu2             = CSRStorage(24, description="CPU magnitude CH2")
+        self._mag_cpu3             = CSRStorage(24, description="CPU magnitude CH3")
+        self._mag_cpu4             = CSRStorage(24, description="CPU magnitude CH4")
+        self._mag_cpu5             = CSRStorage(24, description="CPU magnitude CH5")
+        
         self._gain1               = CSRStorage(32, description="Gain1 (Q format)")
         self._gain2               = CSRStorage(32, description="Gain2 (Q format)")
         self._gain3               = CSRStorage(32, description="Gain3 (Q format)")
@@ -269,10 +283,23 @@ class BaseSoC(SoCCore):
         self._magnitude           = CSRStatus(16, description="Downsampled magnitude")
         self._phase               = CSRStatus(25, description="Downsampled phase")
         self._final_shift         = CSRStorage(3, description="Final output shift S (divide by 2^S)")
+                # --- Capture CSRs (512-sample single-shot) ---
+        self._cap_arm  = CSRStorage(1,  description="Write 1 to arm/start 512-sample capture")
+        self._cap_idx  = CSRStorage(16, description="Read index (0..511)")
+        self._cap_done = CSRStatus(1,   description="Capture done (1 when 512 samples stored)")
+        self._cap_data = CSRStatus(16,  description="Captured sample at cap_idx (sign-extended)")
+
+        # --- High-speed capture CSRs (8192 @ 65MHz) ---
+        self._hs_cap_arm  = CSRStorage(1,  description="HS capture arm (pulse 0->1)")
+        self._hs_cap_idx  = CSRStorage(16, description="HS capture read index (0..8191)")
+        self._hs_cap_done = CSRStatus(1,   description="HS capture done flag")
+        self._hs_cap_data = CSRStatus(16,  description="HS captured data (sign-extended 16-bit)")
         
         input_select              = self._input_select.storage
         output_select_ch1         = self._output_select_ch1.storage
         output_select_ch2         = self._output_select_ch2.storage
+        lowspeed_dbg_select       = self._lowspeed_dbg_select.storage
+        highspeed_dbg_select       = self._highspeed_dbg_select.storage
         upsampler_input_mux       = self._upsampler_input_mux.storage
         phase_inc_nco             = self._phase_inc_nco.storage
         nco_mag                   = self._nco_mag.storage
@@ -281,7 +308,17 @@ class BaseSoC(SoCCore):
         phase_inc_down_3            = self._phase_inc_down_3.storage
         phase_inc_down_4            = self._phase_inc_down_4.storage
         phase_inc_down_5            = self._phase_inc_down_5.storage
-        phase_inc_cpu             = self._phase_inc_cpu.storage
+        phase_inc_down_ref            = self._phase_inc_down_ref.storage
+        phase_inc_cpu1             = self._phase_inc_cpu1.storage
+        phase_inc_cpu2             = self._phase_inc_cpu2.storage
+        phase_inc_cpu3             = self._phase_inc_cpu3.storage
+        phase_inc_cpu4             = self._phase_inc_cpu4.storage
+        phase_inc_cpu5             = self._phase_inc_cpu5.storage
+        mag_cpu1                   = self._mag_cpu1.storage
+        mag_cpu2                   = self._mag_cpu2.storage
+        mag_cpu3                   = self._mag_cpu3.storage
+        mag_cpu4                   = self._mag_cpu4.storage
+        mag_cpu5                   = self._mag_cpu5.storage
         gain1, gain2              = self._gain1.storage, self._gain2.storage
         gain3, gain4              = self._gain3.storage, self._gain4.storage
         gain5                     = self._gain5.storage
@@ -296,28 +333,10 @@ class BaseSoC(SoCCore):
         #self.add_csr("evm")
         self.irq.add("evm")
 
-        dbg = {
-            "nco_cos":        Signal(12),
-            "nco_sin":        Signal(12),
-            "phase_acc_down": Signal(19),
-            "x_downconverted":Signal(12),
-            "y_downconverted":Signal(12),
-            "downsampled_x":  Signal(16),
-            "downsampled_y":  Signal(16),
-            "upsampled_x":    Signal(16),
-            "upsampled_y":    Signal(16),
-            # "phase_inv":      Signal(23),
-            # "x_upconverted":  Signal(16),
-            # "y_upconverted":  Signal(16),
-            # "ce_down_x":      Signal(),
-            # "ce_down_y":      Signal(),
-            # "ce_up_x":        Signal(),
-            # "cic_ce_x":       Signal(),
-            # "comp_ce_x":      Signal(),
-            # "hb_ce_x":        Signal(),
-            # "cic_out_x":      Signal(12),
-            # "comp_out_x":     Signal(16),
-        }
+        # dbg = {
+        #     "downsampled_x":  Signal(16),
+        #     "downsampled_y":  Signal(16),
+        # }
 
         self.specials += Instance(
             "uberclock",
@@ -342,6 +361,8 @@ class BaseSoC(SoCCore):
             i_input_select        = input_select,
             i_output_select_ch1   = output_select_ch1,
             i_output_select_ch2   = output_select_ch2,
+            i_lowspeed_dbg_select = lowspeed_dbg_select,
+            i_highspeed_dbg_select = highspeed_dbg_select,
             i_upsampler_input_mux = upsampler_input_mux,
             i_phase_inc_nco       = phase_inc_nco,
             i_nco_mag             = nco_mag,
@@ -350,7 +371,17 @@ class BaseSoC(SoCCore):
             i_phase_inc_down_3    = phase_inc_down_3,
             i_phase_inc_down_4    = phase_inc_down_4,
             i_phase_inc_down_5    = phase_inc_down_5,
-            i_phase_inc_cpu       = phase_inc_cpu,
+            i_phase_inc_down_ref    = phase_inc_down_ref,
+            i_phase_inc_cpu1       = phase_inc_cpu1,
+            i_phase_inc_cpu2       = phase_inc_cpu2,
+            i_phase_inc_cpu3       = phase_inc_cpu3,
+            i_phase_inc_cpu4       = phase_inc_cpu4,
+            i_phase_inc_cpu5       = phase_inc_cpu5,
+            i_mag_cpu1             = mag_cpu1,
+            i_mag_cpu2             = mag_cpu2,
+            i_mag_cpu3             = mag_cpu3,
+            i_mag_cpu4             = mag_cpu4,
+            i_mag_cpu5             = mag_cpu5,
             i_gain1               = gain1,
             i_gain2               = gain2,
             i_gain3               = gain3,
@@ -367,36 +398,46 @@ class BaseSoC(SoCCore):
             o_downsampled_data_x = self._downsampled_data_x.status,
             o_downsampled_data_y = self._downsampled_data_y.status,
             o_ce_down          = ce_down,
+            # Capture ports
+            i_cap_arm  = self._cap_arm.storage,
+            i_cap_idx  = self._cap_idx.storage,
+            o_cap_done = self._cap_done.status,
+            o_cap_data = self._cap_data.status,
 
+            # ---- High-speed capture ports ----
+            i_hs_cap_arm  = self._hs_cap_arm.storage,
+            i_hs_cap_idx  = self._hs_cap_idx.storage,
+            o_hs_cap_done = self._hs_cap_done.status,
+            o_hs_cap_data = self._hs_cap_data.status,
             # debug outputs (unpack the dict)
-            **{f"o_dbg_{name}": sig for name, sig in dbg.items()}
+            # **{f"o_dbg_{name}": sig for name, sig in dbg.items()}
         )
 
         self.sync += If(ce_down, self.evm.ce_down.trigger.eq(1))
-        self.comb += self._downsampled_data_x.status.eq(dbg["downsampled_x"])
-        self.comb += self._downsampled_data_y.status.eq(dbg["downsampled_y"])
+        # self.comb += self._downsampled_data_x.status.eq(dbg["downsampled_x"])
+        # self.comb += self._downsampled_data_y.status.eq(dbg["downsampled_y"])
 
 
-        probes = (
-            list(dbg.values()) +
-            [phase_inc_nco, phase_inc_down_1, phase_inc_cpu,
-             input_select, output_select_ch1, output_select_ch1, upsampler_input_mux,
-             gain1, gain2,
-             ce_down,
-             upsampler_input_x,
-             upsampler_input_y,
-             self._downsampled_data_x.status,
-             self._downsampled_data_y.status,
-            ]
-        )
+        # probes = (
+        #     list(dbg.values()) +
+        #     [phase_inc_nco, phase_inc_down_1, phase_inc_cpu,
+        #      input_select, output_select_ch1, output_select_ch1, upsampler_input_mux,
+        #      gain1, gain2,
+        #      ce_down,
+        #      upsampler_input_x,
+        #      upsampler_input_y,
+        #      self._downsampled_data_x.status,
+        #      self._downsampled_data_y.status,
+        #     ]
+        # )
 
-        self.submodules.analyzer = LiteScopeAnalyzer(
-            probes,
-            depth        = 2048, #32768
-            clock_domain = "sys",
-            samplerate   = sys_clk_freq
-        )
-        self.add_csr("analyzer")
+        # self.submodules.analyzer = LiteScopeAnalyzer(
+        #     probes,
+        #     depth        = 2048, #32768
+        #     clock_domain = "sys",
+        #     samplerate   = sys_clk_freq
+        # )
+        # self.add_csr("analyzer")
 
 # Build --------------------------------------------------------------------------------------------
 def main():
