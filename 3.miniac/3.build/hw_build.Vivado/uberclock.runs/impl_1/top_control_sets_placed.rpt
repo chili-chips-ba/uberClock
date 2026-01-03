@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Fri Jun 27 13:05:30 2025
-| Host         : minela-HP-ProBook running 64-bit Ubuntu 24.04.2 LTS
+| Date         : Wed Dec 24 15:26:02 2025
+| Host         : minela-HP-ProBook running 64-bit Ubuntu 24.04.3 LTS
 | Command      : report_control_sets -verbose -file top_control_sets_placed.rpt
 | Design       : top
 | Device       : xc7a200t
@@ -23,11 +23,11 @@ Table of Contents
 +----------------------------------------------------------+-------+
 |                          Status                          | Count |
 +----------------------------------------------------------+-------+
-| Total control sets                                       |    56 |
-|    Minimum number of control sets                        |    56 |
+| Total control sets                                       |    57 |
+|    Minimum number of control sets                        |    57 |
 |    Addition due to synthesis replication                 |     0 |
 |    Addition due to physical synthesis replication        |     0 |
-| Unused register locations in slices containing registers |   120 |
+| Unused register locations in slices containing registers |   116 |
 +----------------------------------------------------------+-------+
 * Control sets can be merged at opt_design using control_set_merge or merge_equivalent_drivers
 ** Run report_qor_suggestions for automated merging and remapping suggestions
@@ -39,13 +39,13 @@ Table of Contents
 +--------------------+-------+
 |       Fanout       | Count |
 +--------------------+-------+
-| Total control sets |    56 |
+| Total control sets |    57 |
 | >= 0 to < 4        |     1 |
 | >= 4 to < 6        |    14 |
 | >= 6 to < 8        |     7 |
 | >= 8 to < 10       |    14 |
 | >= 10 to < 12      |     0 |
-| >= 12 to < 14      |     2 |
+| >= 12 to < 14      |     3 |
 | >= 14 to < 16      |     0 |
 | >= 16              |    18 |
 +--------------------+-------+
@@ -58,77 +58,78 @@ Table of Contents
 +--------------+-----------------------+------------------------+-----------------+--------------+
 | Clock Enable | Synchronous Set/Reset | Asynchronous Set/Reset | Total Registers | Total Slices |
 +--------------+-----------------------+------------------------+-----------------+--------------+
-| No           | No                    | No                     |              68 |           34 |
-| No           | No                    | Yes                    |              21 |           14 |
-| No           | Yes                   | No                     |              43 |           29 |
-| Yes          | No                    | No                     |             199 |           87 |
-| Yes          | No                    | Yes                    |             259 |           90 |
-| Yes          | Yes                   | No                     |             154 |           57 |
+| No           | No                    | No                     |              69 |           32 |
+| No           | No                    | Yes                    |              21 |           15 |
+| No           | Yes                   | No                     |              49 |           30 |
+| Yes          | No                    | No                     |             199 |           88 |
+| Yes          | No                    | Yes                    |             259 |          120 |
+| Yes          | Yes                   | No                     |             167 |           56 |
 +--------------+-----------------------+------------------------+-----------------+--------------+
 
 
 4. Detailed Control Set Information
 -----------------------------------
 
-+--------------------------------------+-----------------------------------------------------+-------------------------------------+------------------+----------------+--------------+
-|             Clock Signal             |                    Enable Signal                    |           Set/Reset Signal          | Slice Load Count | Bel Load Count | Bels / Slice |
-+--------------------------------------+-----------------------------------------------------+-------------------------------------+------------------+----------------+--------------+
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/uart_tx_i_1_n_0                              | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              1 |         1.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/p_0_in[0]                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              4 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_cnt1us[3]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_state[3]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/tx_cnt1us                                    | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/tx_state                                     | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              4 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_we[3]_i_1_n_0                            | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_addr[31]_i_1_n_0                    | u_cpu/u_cpu/mem_wstrb[3]_i_1_n_0    |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/mem_reg_0_15_6_7_i_1_n_0           | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              4 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/p_0_in[0]                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              4 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              4 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_clk_rst_gen/sync_reg[3]_i_1_n_0   |                3 |              4 |         1.33 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/mem_reg_0_15_6_7_i_1_n_0           | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              4 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/latched_rdst[4]_i_1_n_0                 | u_cpu/resetn0                       |                1 |              5 |         5.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/u_cpu/instr_lhu_i_1_n_0       |                1 |              5 |         5.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/empty_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              6 |         3.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/empty_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              6 |         3.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                3 |              6 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/FSM_sequential_state[5]_i_1_n_0              | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                3 |              6 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_addr[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              6 |         3.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[14]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                4 |              7 |         1.75 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_addr[14]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                3 |              7 |         2.33 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/uart_tx_data[7]_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                4 |              8 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_shift[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                3 |              8 |         2.67 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[23]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              8 |         8.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_soc_csr/csr_inst/p_29_in                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                4 |              8 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[23]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                3 |              8 |         2.67 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/checksum[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_length[15]_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                2 |              8 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                4 |              8 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_length[7]_i_1_n_0                       | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                1 |              8 |         8.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/mem_reg_0_15_6_7_i_1_n_0           |                                     |                2 |             12 |         6.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/mem_reg_0_15_6_7_i_1_n_0           |                                     |                2 |             12 |         6.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_cnt[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                4 |             16 |         4.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |               11 |             17 |         1.55 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_addr[31]_i_1_n_0                    |                                     |               10 |             17 |         1.70 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/u_cpu/decoded_imm[31]_i_1_n_0 |               11 |             20 |         1.82 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     |                                     |               10 |             21 |         2.10 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/resetn0                       |                8 |             22 |         2.75 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_rdata_q[31]_i_1_n_0                 |                                     |                9 |             22 |         2.44 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/timeout[21]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                5 |             22 |         4.40 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_soc_csr/csr_inst/field_combo[dac][ch2][load_next] | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |                9 |             28 |         3.11 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_wdata[31]_i_1_n_0                   |                                     |               12 |             32 |         2.67 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_op1[31]_i_1_n_0                     |                                     |                9 |             32 |         3.56 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_op2[31]_i_1_n_0                     |                                     |               22 |             32 |         1.45 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_rdat_next                                | u_clk_rst_gen/sync_reg_reg_n_0_[3]  |               16 |             32 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/instr_lui0                              |                                     |               15 |             43 |         2.87 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_cpu/resetn0                       |               29 |             43 |         1.48 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_next_pc[31]_i_1_n_0                 | u_cpu/resetn0                       |               21 |             62 |         2.95 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     |                                     |               34 |             68 |         2.00 |
-|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/cpuregs_we                              |                                     |               11 |             88 |         8.00 |
-+--------------------------------------+-----------------------------------------------------+-------------------------------------+------------------+----------------+--------------+
++--------------------------------------+-----------------------------------------------------+-----------------------------------------+------------------+----------------+--------------+
+|             Clock Signal             |                    Enable Signal                    |             Set/Reset Signal            | Slice Load Count | Bel Load Count | Bels / Slice |
++--------------------------------------+-----------------------------------------------------+-----------------------------------------+------------------+----------------+--------------+
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/uart_tx_i_1_n_0                              | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              1 |         1.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_clk_rst_gen/sync_reg[3]_i_1_n_0       |                3 |              4 |         1.33 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_we[3]_i_1_n_0                            | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                3 |              4 |         1.33 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_addr[31]_i_1_n_0                    | u_cpu/u_cpu/mem_wstrb[3]_i_1_n_0        |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_cnt1us[3]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              4 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_state[3]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/p_0_in[0]                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/mem_reg_0_15_6_7_i_1_n_0           | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/p_0_in[0]                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/mem_reg_0_15_6_7_i_1_n_0           | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/tx_cnt1us                                    | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              4 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/tx_state                                     | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              4 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/u_cpu/instr_lhu_i_1_n_0           |                2 |              5 |         2.50 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/latched_rdst[4]_i_1_n_0                 | u_cpu/resetn0                           |                2 |              5 |         2.50 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                5 |              6 |         1.20 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/FSM_sequential_state[5]_i_1_n_0              | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                6 |              6 |         1.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_addr[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |              6 |         1.50 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/empty_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                3 |              6 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/empty_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              6 |         3.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_addr[14]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |              7 |         1.75 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_addr[14]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                6 |              7 |         1.17 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_length[15]_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                3 |              8 |         2.67 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_length[7]_i_1_n_0                       | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                1 |              8 |         8.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/checksum[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              8 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                5 |              8 |         1.60 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/uart_tx_data[7]_i_1_n_0                      | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                7 |              8 |         1.14 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                6 |              8 |         1.33 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[23]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              8 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                3 |              8 |         2.67 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/ram_data[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                6 |              8 |         1.33 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/rx_shift[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |              8 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[31]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |              8 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[23]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                5 |              8 |         1.60 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_soc_csr/csr_inst/p_39_in                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                2 |              8 |         4.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_wdat[7]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |              8 |         2.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_tx_fifo/mem_reg_0_15_6_7_i_1_n_0           |                                         |                2 |             12 |         6.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/u_rx_fifo/mem_reg_0_15_6_7_i_1_n_0           |                                         |                2 |             12 |         6.00 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_adc_mem_ctrl/write_addr_r                         | u_adc_mem_ctrl/write_addr_r[12]_i_1_n_0 |                4 |             13 |         3.25 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/data_cnt[15]_i_1_n_0                         | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                5 |             16 |         3.20 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_addr[31]_i_1_n_0                    |                                         |               12 |             17 |         1.42 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/u_cpu/decoded_imm[31]_i_1_n_0     |                8 |             20 |         2.50 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     |                                         |               13 |             21 |         1.62 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/is_lui_auipc_jal_jalr_addi_add_sub0     | u_cpu/resetn0                           |                9 |             22 |         2.44 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/timeout[21]_i_1_n_0                          | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                4 |             22 |         5.50 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_rdata_q[31]_i_1_n_0                 |                                         |                8 |             22 |         2.75 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |               17 |             23 |         1.35 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_soc_csr/csr_inst/field_combo[dac][ch2][load_next] | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |                9 |             28 |         3.11 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_uart/bus_rdat_next                                | u_clk_rst_gen/sync_reg_reg_n_0_[3]      |               14 |             32 |         2.29 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/mem_wdata[31]_i_1_n_0                   |                                         |                9 |             32 |         3.56 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_op1[31]_i_1_n_0                     |                                         |               12 |             32 |         2.67 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_op2[31]_i_1_n_0                     |                                         |               19 |             32 |         1.68 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/instr_lui0                              |                                         |               15 |             43 |         2.87 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     | u_cpu/resetn0                           |               25 |             43 |         1.72 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/reg_next_pc[31]_i_1_n_0                 | u_cpu/resetn0                           |               19 |             62 |         3.26 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk |                                                     |                                         |               32 |             69 |         2.16 |
+|  u_clk_rst_gen/u_sys_pll/sys_pll_clk | u_cpu/u_cpu/cpuregs_we                              |                                         |               11 |             88 |         8.00 |
++--------------------------------------+-----------------------------------------------------+-----------------------------------------+------------------+----------------+--------------+
 
 

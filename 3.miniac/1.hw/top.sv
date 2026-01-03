@@ -34,7 +34,7 @@ module top (
    output                           ad9238_clk_ch0,          //AD channel 0 sampling clock
    output                           ad9238_clk_ch1,          //AD channel 1 sampling clock
    input[11:0]                      ad9238_data_ch0,         //AD channel 0 data 
-   input[11:0]                      ad9238_data_ch1,         //AD channel 1 data 
+   input[11:0]                      ad9238_data_ch1,         //AD channel 1 data
     
    //DAC
    output                           da1_clk,                 //DA1 clock signal
@@ -111,8 +111,14 @@ module top (
    soc_ram #(
       .NUM_WORDS       (NUM_WORDS_DMEM)
    ) u_dmem (
-      .bus             (bus_dmem)       //SLV
+      .bus             (bus_dmem),       //SLV Port 1 (CPU/Bus)
+   // Port 2 (ADC/DMA)
+    .adc_clk        (sys_clk), 
+    .adc_we         (adc_we), //adc_we  //1'b0
+    .adc_data       (adc_data),
+    .adc_addr       (adc_addr) // 13'h800
    );
+//---------------------------------
 
 //---------------------------------
    soc_csr u_soc_csr (
@@ -142,8 +148,17 @@ module top (
    
 
 // We instantiate the ADC module
-    wire [11:0] ad_data_ch1_12;
-    wire [11:0] ad_data_ch2_12;
+    logic [11:0] ad_data_ch1_12;
+    logic [11:0] ad_data_ch2_12;
+
+    logic adc_we;
+    logic [31:0] adc_data;
+    logic [12:0] adc_addr;
+
+    logic csr_start_in;
+    logic csr_done_out;
+
+    logic [31:0] packed_adc_data;
 
 adc u_adc (
         .sys_clk      (sys_clk),
@@ -160,12 +175,29 @@ adc u_adc (
     );
     
   
- assign to_csr.adc.ch1.next = ad_data_ch1_12;
- assign to_csr.adc.ch2.next = ad_data_ch2_12;
- 
+ //assign to_csr.adc.ch1.next = ad_data_ch1_12;
+ //assign to_csr.adc.ch2.next = ad_data_ch2_12;
+ assign packed_adc_data = {4'b0, ad_data_ch1_12, 4'b0, ad_data_ch2_12};
+ assign csr_start_in = from_csr.adc.start.value;      // CPU write, ADC Controller read
+ assign to_csr.adc.done.next = csr_done_out;    // ADC Controller write, CPU read
    
    wire[13:0] da_data_ch1_14 = from_csr.dac.ch1.value;
    wire[13:0] da_data_ch2_14 = from_csr.dac.ch2.value;
+
+adc_mem_controller u_adc_mem_ctrl (
+    .sys_clk        (sys_clk),        
+    .sys_rst_n      (sys_rst_n),
+
+    .adc_sample_in  (packed_adc_data),
+    //.adc_sample_vld (1'b1), 
+
+    .csr_start_i    (csr_start_in),
+    .csr_done_o     (csr_done_out),
+
+    .adc_we_o       (adc_we),         
+    .adc_data_o     (adc_data),      
+    .adc_addr_o     (adc_addr)
+);
    
    
 //We instatiate the DAC module
@@ -176,6 +208,8 @@ adc u_adc (
             .data2     (da_data_ch2_14), //dac2_input_14_reg
             .da1_clk   (da1_clk),//da1_clk
             .da1_wrt   (da1_wrt),//da1_wrt
+            
+            
             .da1_data  (da1_data),
             .da2_clk   (da2_clk),//da2_clk
             .da2_wrt   (da2_wrt),//da2_wrt

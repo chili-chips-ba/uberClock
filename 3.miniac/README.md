@@ -34,9 +34,9 @@ The Miniac is a tool for data acquisition and visualizationation. As can be seen
   <img width=900 src="0.doc/miniac.png">
 </p> 
 
-In this section we will present the two implemented methods: Direct and Indirect snooping methods.
+In this section we will present the three implemented methods: 
 
-### Direct snooping method
+### 1. Direct snooping method
 
 This method uses the Python file "PlotDataADC.py" (https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/PlotDataADC.py). This Python script acts as a real-time signal monitoring tool, communicating with an FPGA over UART to continuously acquire ADC samples. It dynamically measures the actual sampling frequency and provides live visualizations, displaying both the reconstructed signal in the time domain and its frequency spectrum via FFT analysis, including automatic peak detection. The script demonstrates the direct, sample-by-sample data acquisition method. We expected the sampling frequency of this method to be about 1000[Hz], but the experiment showed that we could only sample and recreate a sine of about 100
 [Hz]. We demonstrate the functionality of our method on the pictures below.
@@ -57,7 +57,7 @@ This method uses the Python file "PlotDataADC.py" (https://github.com/chili-chip
 </p>
 
 
-### Indirect snooping method
+### 2. Indirect snooping method
 
 For this method we run "CPUSnooping.py" (https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/CPUSnooping.py). This Python script implements the Indirect (Batch Processing) Method for ADC data acquisition. It operates by periodically reading a complete buffer of 1024 pre-sampled 32-bit values from a specific memory address on the FPGA board via UART. After receiving and processing the entire data block, which includes extracting the 12-bit ADC values, performing signal reconstruction, and analyzing the frequency spectrum, the script pauses its communication. This pause allows the FPGA's internal CPU to autonomously refill the circular buffer at a high speed, before the PC re-establishes communication to fetch the next batch of data for continued visualization and analysis.
 
@@ -78,9 +78,45 @@ The fundamental difference between this script and the direct method lies in the
     <img width=600 src="0.doc/CPUSnooping_250kHz.png">
 </p>
 
+### 3. DMA-Based ADC Snapshot Method (Hardware Acceleration)
 
+The pinnacle of the Miniac's evolution is the transition from **Processor-In-the-Loop (PIO)** acquisition to a hardware-accelerated **DMA (Direct Memory Access)** approach using **Dual-Port BRAM**. This method shatters the previous 250 kHz limitation, enabling full-speed acquisition at the ADC's native sampling rate of **65 MSPS**.
 
+#### Architecture and Data Flow
+In the previous "Indirect Method," the RISC-V CPU was responsible for reading samples from the ADC CSR and writing them to memory. This created a bottleneck due to CPU instruction overhead.
 
+The new DMA ADC Snapshot architecture introduces a dedicated `adc_mem_controller`:
 
+* **Dual-Port RAM Isolation:** Port A is connected to the RISC-V CPU, while Port B is dedicated to the ADC Controller.
+* **Hardware Triggering:** When the CPU sets an enable bit, the hardware controller takes absolute control, streaming 12-bit samples at a constant **65 MHz** clock.
+* **Zero CPU Overhead:** The CPU is free to perform other tasks while the hardware fills the "snapshot" buffer.
+* **Post-Processing:** Once full, the CPU reads data via Port A and transmits it via UART. Since the data is already captured, UART speed no longer affects signal fidelity.
+
+#### System Block Diagram
+<p align="center">
+  <img width=600 src="0.doc/DMA_ADC_DPRAM.png">
+  <br><em>DMA-Based Architecture with Dual-Port BRAM</em>
+</p>
+The DMA-based architecture consists of three core components:
+
+* **ADC Controller:** Dedicated hardware logic that awaits a "trigger" signal from the CPU and then directly streams 12-bit data from the ADC into memory without processor intervention.
+* **Dual-Port BRAM:** A high-speed memory buffer acting as a bridge between clock domains. **Port B** is dedicated exclusively to the ADC (Write-only), while **Port A** is reserved for the CPU (Read-only).
+* **Control & Status Registers (CSR):** The command interface through which the CPU initiates acquisition (via the *start* bit) and monitors the status to check if the buffer is full (via the *done* bit).
+
+#### Performance & Results
+With this method, the theoretical Nyquist limit is **32.5 MHz**. Experimental results in the lab, using a high-frequency function generator, confirmed successful reconstruction of signals up to **25 MHz** (limited only by the available lab equipment).
+
+<p align="center">
+    <img width=600 src="0.doc/DPRAM_ADC_15_25MHz.png">
+    <br><em>Acquisition of 15 MHz and 25 MHz sine waves</em>
+</p>
+
+#### Key Advantages
+* **Max recordable signal:** Increased from 250 kHz to 32.5 MHz (**130x improvement**).
+* **Scalability:** Serve as a blueprint for upcoming DAC integration and continuous signal generation.
+
+### 4. DMA-Based DAC Continuous Generation
+- WIP
+
+---
 #### End of Document
-

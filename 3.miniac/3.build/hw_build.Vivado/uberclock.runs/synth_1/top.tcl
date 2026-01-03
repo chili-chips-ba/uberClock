@@ -92,6 +92,7 @@ read_verilog -library xil_defaultlib -sv {
   /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/soc_pkg.sv
   /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/clk_rst_gen.sv
   /home/minela/Projects/Work/uberClock/3.miniac/1.hw/fpgatech_lib/XILINX/fpga_pll_80M.sv
+  /home/minela/Projects/Work/uberClock/3.miniac/1.hw/ip.infra/adc_mem_controller.sv
 }
 read_verilog -library xil_defaultlib {
   /home/minela/Projects/Work/uberClock/3.miniac/1.hw/dac/dac.v

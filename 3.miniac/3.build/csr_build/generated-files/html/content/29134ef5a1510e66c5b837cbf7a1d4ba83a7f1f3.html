@@ -10,7 +10,7 @@
     <dt>Base Offset:</dt><dd class="address">0x18</dd>
     <dt>Size:</dt><dd class="address">0x4</dd>
     
-    <dt>Source:</dt><dd><a href="https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/3.build/csr_build/csr.rdl#L140" target="_blank">csr.rdl</a></dd>
+    <dt>Source:</dt><dd><a href="https://github.com/chili-chips-ba/uberClock/blob/dev/adc-snapshot/3.miniac/3.build/csr_build/csr.rdl#L141" target="_blank">csr.rdl</a></dd>
     
 </dl>
 <h2>Description</h2>
@@ -29,8 +29,48 @@
         <th>Name</th>
         <th></th>
     </tr>
+    <tr id="start">
+        <td>[31]</td>
+        <td><a href="#start.desc">start</a></td>
+        <td>
+            <span title='Write-only'>w</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterstart" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="start" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>csr.adc.start</td>
+        <td>
+            <button type="button" id="_RadixButtonstart" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="start" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#start" title="Permalink to this row"></a>
+        </td>
+    </tr>
+    <tr id="done">
+        <td>[30]</td>
+        <td><a href="#done.desc">done</a></td>
+        <td>
+            <span title='Read-only'>r</span></td>
+        <td>0x0
+        </td>
+        <td>
+            <input id="_FieldValueTesterdone" class="field-value-tester"
+                type="text" autocomplete="off"
+                data-name="done" oninput="onDecodedFieldInput(this)"/>
+        </td>
+        <td>csr.adc.done</td>
+        <td>
+            <button type="button" id="_RadixButtondone" class="radix-button"
+                title="Switch radix" aria-label="Switch radix"
+                data-name="done" onclick="onRadixSwitch(this)">H</button>
+            <a class="headerlink" href="#done" title="Permalink to this row"></a>
+        </td>
+    </tr>
     <tr class="reserved-field">
-    <td>[31:28]</td>
+    <td>[29:28]</td>
     <td>-</td>
     <td>-</td>
     <td>-</td>
@@ -96,6 +136,20 @@
     </label>
 </p>
 <hr/><h2>Field Descriptions</h2>
+
+<h3 id="start.desc">start - csr.adc.start
+    <a class="headerlink" href="#start.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.start.desc">
+<p>Control: Start ADC data transfer to DMEM (SW writes 1, HW reads)</p>
+</div>
+
+<h3 id="done.desc">done - csr.adc.done
+    <a class="headerlink" href="#done.desc" title="Permalink to this headline"></a>
+</h3>
+<div id="_Content.done.desc">
+<p>Status: ADC data transfer finished (HW writes 1, SW reads)</p>
+</div>
 
 <h3 id="ch1.desc">ch1 - csr.adc.ch1
     <a class="headerlink" href="#ch1.desc" title="Permalink to this headline"></a>

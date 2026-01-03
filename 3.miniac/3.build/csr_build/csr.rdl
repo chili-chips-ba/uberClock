@@ -137,9 +137,26 @@ addrmap csr {
    } hw_id;
    
    
+   
    reg {
       name = "csr.adc";
       desc = "ADC Register";
+
+      // START flag: CPU piše (W), ADC Kontroler čita (R). CPU će napisati 1 kao puls.
+      field {
+         name = "csr.adc.start";
+         desc = "Control: Start ADC data transfer to DMEM (SW writes 1, HW reads)";
+         sw = w;	// Software Write Only
+         hw = r;	// Hardware Read Only
+      } start[31:31] = 0;
+
+      // DONE flag: ADC Kontroler piše (W), CPU čita (R). HW setuje 1 kada završi.
+      field {
+         name = "csr.adc.done";
+         desc = "Status: ADC data transfer finished (HW writes 1, SW reads)";
+         sw = r;	// Software Read Only
+         hw = w;	// Hardware Write Only
+      } done[30:30] = 0;
 
       field {
          name = "csr.adc.ch1";
@@ -200,6 +217,13 @@ addrmap csr {
          hw = r;
       } PATCH[15:0] = 0x0000;
    } hw_version;
+   
+   external mem dac_mem {
+      name = "dac_mem";
+      desc = "DAC Memory";
+      mementries = 2048;
+      memwidth = 32;
+   } dac_mem @ 0x2000;
 };
 
 addrmap uberclock {

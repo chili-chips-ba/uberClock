@@ -503,6 +503,44 @@ public:
                         return (((uint32_t)rdata << 0) & CSR__ADC__CH1_bm) >> CSR__ADC__CH1_bp;
                     };
 
+    inline void     done (const uint32_t data) {
+                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__ADC__DONE_bm;
+                                tmpdata |= ((data << CSR__ADC__DONE_bp) & CSR__ADC__DONE_bm) >> 0;
+                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
+
+                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                                VTick(rand() % 33, SOC_CPU_VPNODE);
+                      };
+
+    inline uint32_t done () {
+                        uint32_t rdata;
+
+                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+
+                        return (((uint32_t)rdata << 0) & CSR__ADC__DONE_bm) >> CSR__ADC__DONE_bp;
+                    };
+
+    inline void     start (const uint32_t data) {
+                                uint32_t rdata; VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                                uint32_t tmpdata = ((uint32_t)rdata << 0) & ~CSR__ADC__START_bm;
+                                tmpdata |= ((data << CSR__ADC__START_bp) & CSR__ADC__START_bm) >> 0;
+                                uint32_t wdata = (uint32_t)(tmpdata & 0xffffffff);
+
+                                VWriteBE(reg + 0, wdata, 0xf, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                                VTick(rand() % 33, SOC_CPU_VPNODE);
+                      };
+
+    inline uint32_t start () {
+                        uint32_t rdata;
+
+                        VRead(reg + 0, &rdata, NO_DELTA_UPDATE, SOC_CPU_VPNODE);
+                        VTick(rand() % 33, SOC_CPU_VPNODE);
+
+                        return (((uint32_t)rdata << 0) & CSR__ADC__START_bm) >> CSR__ADC__START_bp;
+                    };
+
 
     inline uint32_t* get_addr() {return (uint32_t*)((uint64_t)reg);}
 
@@ -641,6 +679,16 @@ private:
 };
 
 // -----------------------------------------------------
+class csr__dac_mem_vp_t {
+public:
+
+    csr__dac_mem_vp_t(uint32_t* base_addr)
+    {
+    };
+
+} ;
+
+// -----------------------------------------------------
 class csr_vp_t {
 public:
 
@@ -672,6 +720,14 @@ public:
                                                                                    sizeof(csr__adc_t)/4 + 
                                                                                    sizeof(csr__dac_t)/4
                                                                                     );
+        dac_mem = new csr__dac_mem_vp_t (base_addr +
+                                                                                   sizeof(csr__uart_t)/4 + 
+                                                                                   sizeof(csr__gpio_t)/4 + 
+                                                                                   sizeof(csr__hw_id_t)/4 + 
+                                                                                   sizeof(csr__adc_t)/4 + 
+                                                                                   sizeof(csr__dac_t)/4 + 
+                                                                                   sizeof(csr__hw_version_t)/4
+                                                                                    );
     };
 
     csr__uart_vp_t* uart;
@@ -680,6 +736,7 @@ public:
     csr__adc_vp_t* adc;
     csr__dac_vp_t* dac;
     csr__hw_version_vp_t* hw_version;
+    csr__dac_mem_vp_t* dac_mem;
 } ;
 
 

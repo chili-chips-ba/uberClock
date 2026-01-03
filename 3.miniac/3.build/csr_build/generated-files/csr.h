@@ -151,12 +151,22 @@ typedef union {
 #define CSR__ADC__CH1_bp 16
 #define CSR__ADC__CH1_bw 12
 #define CSR__ADC__CH1_reset 0x0
+#define CSR__ADC__DONE_bm 0x40000000
+#define CSR__ADC__DONE_bp 30
+#define CSR__ADC__DONE_bw 1
+#define CSR__ADC__DONE_reset 0x0
+#define CSR__ADC__START_bm 0x80000000
+#define CSR__ADC__START_bp 31
+#define CSR__ADC__START_bw 1
+#define CSR__ADC__START_reset 0x0
 typedef union {
     struct __attribute__ ((__packed__)) {
         uint32_t ch2 :12;
         uint32_t :4;
         uint32_t ch1 :12;
-        uint32_t :4;
+        uint32_t :2;
+        uint32_t done :1;
+        uint32_t start :1;
     } f;
     uint32_t w;
 } csr__adc_t;
@@ -202,6 +212,11 @@ typedef union {
     uint32_t w;
 } csr__hw_version_t;
 
+// Mem - csr::dac_mem
+typedef struct __attribute__ ((__packed__)) {
+    uint32_t mem[2048];
+} csr__dac_mem_t;
+
 // Addrmap - csr
 typedef struct __attribute__ ((__packed__)) {
     csr__uart_t uart;
@@ -210,6 +225,8 @@ typedef struct __attribute__ ((__packed__)) {
     csr__adc_t adc;
     csr__dac_t dac;
     csr__hw_version_t hw_version;
+    uint8_t RESERVED_24_1fff[0x1fdc];
+    csr__dac_mem_t dac_mem;
 } csr_t;
 
 // Addrmap - uberclock
@@ -222,7 +239,7 @@ typedef struct __attribute__ ((__packed__)) {
 } uberclock_t;
 
 
-static_assert(sizeof(uberclock_t) == 0x20000024, "Packing error");
+static_assert(sizeof(uberclock_t) == 0x20004000, "Packing error");
 
 #ifdef __cplusplus
 }

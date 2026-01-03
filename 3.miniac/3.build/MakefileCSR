@@ -37,8 +37,8 @@ rtl: $(RDLSRC)
 $(PKRDLHTML): $(RDLSRC)
 	@peakrdl html $^ -o $@ --top $(RDLWGTOP)
 
-$(PKRDLMD): $(RDLSRC)
-	@peakrdl markdown $^ -o $@ --top $(RDLWGTOP)
+#$(PKRDLMD): $(RDLSRC)
+#	@peakrdl markdown $^ -o $@ --top $(RDLWGTOP)
 
 clean:
 	@rm -rf $(COSIMRDL) $(COSIMHDR) $(HWHDR) $(PKRDLHDR) $(GENDIR)/*.sv $(PKRDLHTML) $(PKRDLMD)
