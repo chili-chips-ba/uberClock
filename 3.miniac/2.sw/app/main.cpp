@@ -5,7 +5,7 @@
 
 // --- HARDVERSKE KONSTANTE ---
 // Pocetna adresa
-#define ADC_BUFFER_START_ADDR (0x10000800)
+#define ADC_BUFFER_START_ADDR (0x10000400)
 // Velicina buffera u rijecima (32-bit/4 bajta)
 #define BUFFER_WORDS          (4096) 
 // Pokazivac na bafer u BRAM-u
@@ -41,7 +41,14 @@ void run_single_acquisition(volatile csr_vp_t* csr) {
         uint32_t data = adc_buffer[i];
         // Šalji 32-bitnu riječ kao 8 heksadecimalnih karaktera
         uart_send_hex(csr, data, 8);
-        uart_send(csr, "\r\n"); // Novi red
+        //uart_send(csr, "\r\n"); // Novi red
+        if (i < BUFFER_WORDS - 1) { // Šalji \r\n samo ako nije zadnji
+            uart_send(csr, "\r\n"); 
+        } else {
+            // Dodajte samo \n za zadnji uzorak ili čak nista
+            uart_send(csr, "\n"); 
+        }
+        for(volatile int j = 0; j < 2000; j++);
     }
     
     // --- KRAJ TRANSFERA - SIGNAL ZA PYTHON ---

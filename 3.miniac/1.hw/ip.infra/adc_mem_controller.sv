@@ -36,7 +36,7 @@ module adc_mem_controller (
 
     // Parametri Adresa
     localparam ADDR_BITS     = 13; // 8192 words (od 0 do 8191)
-    localparam ADDR_START    = 13'h800; // 2048 (Word address)
+    localparam ADDR_START    = 13'h400; // 2048 (Word address)
     localparam ADDR_SPAN     = 13'h1000; // 4096 words
     localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // 2048 + 4096 - 1 = 6143 (13'h17FF)
 

@@ -4,8 +4,8 @@
 package csr_pkg;
 
     localparam CSR_DATA_WIDTH = 32;
-    localparam CSR_MIN_ADDR_WIDTH = 6;
-    localparam CSR_SIZE = 'h24;
+    localparam CSR_MIN_ADDR_WIDTH = 14;
+    localparam CSR_SIZE = 'h4000;
 
     
 
@@ -72,9 +72,16 @@ package csr_pkg;
     } csr__adc__in_t;
 
     typedef struct {
+        logic rd_ack;
+        logic [31:0] rd_data;
+        logic wr_ack;
+    } csr__dac_mem__external__in_t;
+
+    typedef struct {
         csr__uart__in_t uart;
         csr__gpio__in_t gpio;
         csr__adc__in_t adc;
+        csr__dac_mem__external__in_t dac_mem;
     } csr__in_t;
 
     typedef struct {
@@ -183,11 +190,20 @@ package csr_pkg;
     } csr__hw_version__out_t;
 
     typedef struct {
+        logic req;
+        logic [12:0] addr;
+        logic req_is_wr;
+        logic [31:0] wr_data;
+        logic [31:0] wr_biten;
+    } csr__dac_mem__external__out_t;
+
+    typedef struct {
         csr__uart__out_t uart;
         csr__gpio__out_t gpio;
         csr__hw_id__out_t hw_id;
         csr__adc__out_t adc;
         csr__dac__out_t dac;
         csr__hw_version__out_t hw_version;
+        csr__dac_mem__external__out_t dac_mem;
     } csr__out_t;
 endpackage

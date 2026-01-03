@@ -3,22 +3,22 @@
 # SW Build 5239630 on Fri Nov 08 22:34:34 MST 2024
 # IP Build 5239520 on Sun Nov 10 16:12:51 MST 2024
 # SharedData Build 5239561 on Fri Nov 08 14:39:27 MST 2024
-# Start of session at: Fri Jun 27 13:04:24 2025
-# Process ID         : 35668
+# Start of session at: Wed Dec 24 15:24:42 2025
+# Process ID         : 84848
 # Current directory  : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1
 # Command line       : vivado -log top.vdi -applog -product Vivado -messageDb vivado.pb -mode batch -source top.tcl -notrace
 # Log file           : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1/top.vdi
 # Journal file       : /home/minela/Projects/Work/uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.runs/impl_1/vivado.jou
 # Running On         : minela-HP-ProBook
 # Platform           : Ubuntu
-# Operating System   : Ubuntu 24.04.2 LTS
+# Operating System   : Ubuntu 24.04.3 LTS
 # Processor Detail   : Intel(R) Core(TM) i7-10510U CPU @ 1.80GHz
-# CPU Frequency      : 2162.705 MHz
+# CPU Frequency      : 2099.400 MHz
 # CPU Physical cores : 4
 # CPU Logical cores  : 8
-# Host memory        : 16600 MB
+# Host memory        : 16601 MB
 # Swap memory        : 4294 MB
-# Total Virtual      : 20895 MB
-# Available Virtual  : 16472 MB
+# Total Virtual      : 20896 MB
+# Available Virtual  : 17463 MB
 #-----------------------------------------------------------
 source top.tcl -notrace

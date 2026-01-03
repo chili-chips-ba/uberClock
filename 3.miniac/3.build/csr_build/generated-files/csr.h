@@ -212,6 +212,11 @@ typedef union {
     uint32_t w;
 } csr__hw_version_t;
 
+// Mem - csr::dac_mem
+typedef struct __attribute__ ((__packed__)) {
+    uint32_t mem[2048];
+} csr__dac_mem_t;
+
 // Addrmap - csr
 typedef struct __attribute__ ((__packed__)) {
     csr__uart_t uart;
@@ -220,6 +225,8 @@ typedef struct __attribute__ ((__packed__)) {
     csr__adc_t adc;
     csr__dac_t dac;
     csr__hw_version_t hw_version;
+    uint8_t RESERVED_24_1fff[0x1fdc];
+    csr__dac_mem_t dac_mem;
 } csr_t;
 
 // Addrmap - uberclock
@@ -232,7 +239,7 @@ typedef struct __attribute__ ((__packed__)) {
 } uberclock_t;
 
 
-static_assert(sizeof(uberclock_t) == 0x20000024, "Packing error");
+static_assert(sizeof(uberclock_t) == 0x20004000, "Packing error");
 
 #ifdef __cplusplus
 }

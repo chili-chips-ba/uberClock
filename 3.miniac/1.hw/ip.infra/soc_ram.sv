@@ -26,7 +26,7 @@ import soc_pkg::*;
    input logic			        adc_clk,
    input logic			        adc_we,
    input logic [31:0]        		adc_data,
-   input logic [12:0]     adc_addr // Adresa za 8192 riječi (13 bita)
+   input logic [12:0]     		adc_addr // Adresa za 8192 riječi (13 bita)
 );
 
    

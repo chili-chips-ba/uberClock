@@ -249,6 +249,16 @@ private:
 };
 
 // -----------------------------------------------------
+class csr__dac_mem_vp_t {
+public:
+
+    csr__dac_mem_vp_t(uint32_t* base_addr)
+    {
+    };
+
+} ;
+
+// -----------------------------------------------------
 class csr_vp_t {
 public:
 
@@ -280,6 +290,14 @@ public:
                                                                                    sizeof(csr__adc_t)/4 + 
                                                                                    sizeof(csr__dac_t)/4
                                                                                     );
+        dac_mem = new csr__dac_mem_vp_t (base_addr +
+                                                                                   sizeof(csr__uart_t)/4 + 
+                                                                                   sizeof(csr__gpio_t)/4 + 
+                                                                                   sizeof(csr__hw_id_t)/4 + 
+                                                                                   sizeof(csr__adc_t)/4 + 
+                                                                                   sizeof(csr__dac_t)/4 + 
+                                                                                   sizeof(csr__hw_version_t)/4
+                                                                                    );
     };
 
     csr__uart_vp_t* uart;
@@ -288,6 +306,7 @@ public:
     csr__adc_vp_t* adc;
     csr__dac_vp_t* dac;
     csr__hw_version_vp_t* hw_version;
+    csr__dac_mem_vp_t* dac_mem;
 } ;
 
 

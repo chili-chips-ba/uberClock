@@ -78,9 +78,45 @@ The fundamental difference between this script and the direct method lies in the
     <img width=600 src="0.doc/CPUSnooping_250kHz.png">
 </p>
 
+### 3. DMA-Based ADC Snapshot Method (Hardware Acceleration)
 
+The pinnacle of the Miniac's evolution is the transition from **Processor-In-the-Loop (PIO)** acquisition to a hardware-accelerated **DMA (Direct Memory Access)** approach using **Dual-Port BRAM**. This method shatters the previous 250 kHz limitation, enabling full-speed acquisition at the ADC's native sampling rate of **65 MSPS**.
 
+#### Architecture and Data Flow
+In the previous "Indirect Method," the RISC-V CPU was responsible for reading samples from the ADC CSR and writing them to memory. This created a bottleneck due to CPU instruction overhead.
 
+The new DMA ADC Snapshot architecture introduces a dedicated `adc_mem_controller`:
 
+* **Dual-Port RAM Isolation:** Port A is connected to the RISC-V CPU, while Port B is dedicated to the ADC Controller.
+* **Hardware Triggering:** When the CPU sets an enable bit, the hardware controller takes absolute control, streaming 12-bit samples at a constant **65 MHz** clock.
+* **Zero CPU Overhead:** The CPU is free to perform other tasks while the hardware fills the "snapshot" buffer.
+* **Post-Processing:** Once full, the CPU reads data via Port A and transmits it via UART. Since the data is already captured, UART speed no longer affects signal fidelity.
+
+#### System Block Diagram
+<p align="center">
+  <img width=600 src="0.doc/DMA_ADC_DPRAM.png">
+  <br><em>DMA-Based Architecture with Dual-Port BRAM</em>
+</p>
+The DMA-based architecture consists of three core components:
+
+* **ADC Controller:** Dedicated hardware logic that awaits a "trigger" signal from the CPU and then directly streams 12-bit data from the ADC into memory without processor intervention.
+* **Dual-Port BRAM:** A high-speed memory buffer acting as a bridge between clock domains. **Port B** is dedicated exclusively to the ADC (Write-only), while **Port A** is reserved for the CPU (Read-only).
+* **Control & Status Registers (CSR):** The command interface through which the CPU initiates acquisition (via the *start* bit) and monitors the status to check if the buffer is full (via the *done* bit).
+
+#### Performance & Results
+With this method, the theoretical Nyquist limit is **32.5 MHz**. Experimental results in the lab, using a high-frequency function generator, confirmed successful reconstruction of signals up to **25 MHz** (limited only by the available lab equipment).
+
+<p align="center">
+    <img width=600 src="0.doc/DPRAM_ADC_15_25MHz.png">
+    <br><em>Acquisition of 15 MHz and 25 MHz sine waves</em>
+</p>
+
+#### Key Advantages
+* **Max recordable signal:** Increased from 250 kHz to 32.5 MHz (**130x improvement**).
+* **Scalability:** Serve as a blueprint for upcoming DAC integration and continuous signal generation.
+
+### 4. DMA-Based DAC Continuous Generation
+- WIP
+
+---
 #### End of Document
-

@@ -217,6 +217,13 @@ addrmap csr {
          hw = r;
       } PATCH[15:0] = 0x0000;
    } hw_version;
+   
+   external mem dac_mem {
+      name = "dac_mem";
+      desc = "DAC Memory";
+      mementries = 2048;
+      memwidth = 32;
+   } dac_mem @ 0x2000;
 };
 
 addrmap uberclock {
