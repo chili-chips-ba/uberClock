@@ -34,9 +34,9 @@ The Miniac is a tool for data acquisition and visualizationation. As can be seen
   <img width=900 src="0.doc/miniac.png">
 </p> 
 
-In this section we will present the two implemented methods: Direct and Indirect snooping methods.
+In this section we will present the three implemented methods: 
 
-### Direct snooping method
+### 1. Direct snooping method
 
 This method uses the Python file "PlotDataADC.py" (https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/PlotDataADC.py). This Python script acts as a real-time signal monitoring tool, communicating with an FPGA over UART to continuously acquire ADC samples. It dynamically measures the actual sampling frequency and provides live visualizations, displaying both the reconstructed signal in the time domain and its frequency spectrum via FFT analysis, including automatic peak detection. The script demonstrates the direct, sample-by-sample data acquisition method. We expected the sampling frequency of this method to be about 1000[Hz], but the experiment showed that we could only sample and recreate a sine of about 100
 [Hz]. We demonstrate the functionality of our method on the pictures below.
@@ -57,7 +57,7 @@ This method uses the Python file "PlotDataADC.py" (https://github.com/chili-chip
 </p>
 
 
-### Indirect snooping method
+### 2. Indirect snooping method
 
 For this method we run "CPUSnooping.py" (https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/CPUSnooping.py). This Python script implements the Indirect (Batch Processing) Method for ADC data acquisition. It operates by periodically reading a complete buffer of 1024 pre-sampled 32-bit values from a specific memory address on the FPGA board via UART. After receiving and processing the entire data block, which includes extracting the 12-bit ADC values, performing signal reconstruction, and analyzing the frequency spectrum, the script pauses its communication. This pause allows the FPGA's internal CPU to autonomously refill the circular buffer at a high speed, before the PC re-establishes communication to fetch the next batch of data for continued visualization and analysis.
 
