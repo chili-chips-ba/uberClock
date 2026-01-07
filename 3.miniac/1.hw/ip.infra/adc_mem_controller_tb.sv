@@ -1,18 +1,17 @@
 //==========================================================================
 // Testbench za adc_mem_controller
 // Fokus: Prikaz toka State Machine (FSM) i signala za RAM upis.
-// SVA verifikacija je uklonjena.
 //==========================================================================
 `timescale 1ns / 1ps
 
 module adc_mem_controller_tb;
 
-    // --- Parametri Testbencha ---
-    localparam CLK_PERIOD = 10; // 10 ns (100 MHz)
+    // Parametri Testbencha
+    localparam CLK_PERIOD = 15.385; // 65 MHz
     localparam NUM_SAMPLES = 4096; // 4K uzoraka
-    localparam ADDR_START = 13'h800; 
+    localparam ADDR_START = 13'h400; 
 
-    // --- Signali za UUT (Unit Under Test) ---
+    // Signali za UUT (Unit Under Test)
     logic         sys_clk;
     logic         sys_rst_n;
     logic [31:0]  adc_sample_in;
@@ -22,11 +21,10 @@ module adc_mem_controller_tb;
     wire [31:0]   adc_data_o;
     wire [12:0]   adc_addr_o;
     
-    // --- Brojac za simulaciju ---
+    // Brojac za simulaciju
     integer       sample_count;
     
-    // --- Instanciranje Modula pod Testom (UUT) ---
-    // (Paznja: Koristi se hijerarhijski pristup uut.acq_state_r za log)
+    // Instanciranje Modula pod Testom (UUT)
     adc_mem_controller uut (
         .sys_clk       (sys_clk),
         .sys_rst_n     (sys_rst_n),
@@ -38,7 +36,7 @@ module adc_mem_controller_tb;
         .adc_addr_o    (adc_addr_o)
     );
 
-    // --- Generisanje Sata ---
+    // Generisanje Sata
     always begin
         sys_clk = 1'b0;
         #(CLK_PERIOD / 2) sys_clk = 1'b1;
@@ -62,9 +60,8 @@ module adc_mem_controller_tb;
         $display("Pocetak simulacije ADC Memory Controller-a");
         $display("-------------------------------------------------------");
         
-        // --- Ispravka za generisanje Waveform datoteke: Koristi se $dumpvars umjesto $dumptvars ---
-        $dumpfile("adc_mem_controller.vcd"); // Ime VCD datoteke
-        $dumpvars(0, adc_mem_controller_tb); // ISPRAVKA: dumpvars (bez 't') da bi XSim prihvatio
+        $dumpfile("adc_mem_controller.vcd");
+        $dumpvars(0, adc_mem_controller_tb);
         
         // Inicijalne vrednosti
         sys_rst_n     = 1'b0; // Reset aktivan (Low)
@@ -92,7 +89,7 @@ module adc_mem_controller_tb;
         // Akvizicija je aktivna (RUNNING)
         while (sample_count < NUM_SAMPLES) begin
             
-            // Postavljamo ulazni podatak za SLEDECI ciklus
+            // Postavljamo ulazni podatak za sljedeci ciklus
             adc_sample_in = sample_count; 
             
             @(posedge sys_clk); // Sacekaj clock edge (Upis se dogadja ovdje)
@@ -100,9 +97,9 @@ module adc_mem_controller_tb;
             sample_count++;
         end
 
-        // 4. Provera DONE stanja (poslednji uzorak je pisan)
+        // 4. Provera DONE stanja (posljednji uzorak je pisan)
         
-        // Postavi poslednju vrednost (nece biti upisana u RAM jer je brojac pun)
+        // Postavi posljednju vrednost (nece biti upisana u RAM jer je brojac pun)
         adc_sample_in = NUM_SAMPLES; 
 
         @(posedge sys_clk); // Ciklus nakon poslednjeg upisa

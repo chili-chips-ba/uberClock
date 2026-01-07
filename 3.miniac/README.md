@@ -56,7 +56,7 @@ This method uses the Python file "PlotDataADC.py" (https://github.com/chili-chip
     <img width=600 src="0.doc/PlotDataADC_120Hz.png">
 </p>
 
-
+---
 ### 2. Indirect snooping method
 
 For this method we run "CPUSnooping.py" (https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/CPUSnooping.py). This Python script implements the Indirect (Batch Processing) Method for ADC data acquisition. It operates by periodically reading a complete buffer of 1024 pre-sampled 32-bit values from a specific memory address on the FPGA board via UART. After receiving and processing the entire data block, which includes extracting the 12-bit ADC values, performing signal reconstruction, and analyzing the frequency spectrum, the script pauses its communication. This pause allows the FPGA's internal CPU to autonomously refill the circular buffer at a high speed, before the PC re-establishes communication to fetch the next batch of data for continued visualization and analysis.
@@ -78,11 +78,15 @@ The fundamental difference between this script and the direct method lies in the
     <img width=600 src="0.doc/CPUSnooping_250kHz.png">
 </p>
 
+---
+
 ### 3. DMA-Based ADC Snapshot Method (Hardware Acceleration)
 
 The pinnacle of the Miniac's evolution is the transition from **Processor-In-the-Loop (PIO)** acquisition to a hardware-accelerated **DMA (Direct Memory Access)** approach using **Dual-Port BRAM**. This method shatters the previous 250 kHz limitation, enabling full-speed acquisition at the ADC's native sampling rate of **65 MSPS**.
 
-#### Architecture and Data Flow
+
+
+### Architecture and Data Flow
 In the previous "Indirect Method," the RISC-V CPU was responsible for reading samples from the ADC CSR and writing them to memory. This created a bottleneck due to CPU instruction overhead.
 
 The new DMA ADC Snapshot architecture introduces a dedicated `adc_mem_controller`:
@@ -92,7 +96,7 @@ The new DMA ADC Snapshot architecture introduces a dedicated `adc_mem_controller
 * **Zero CPU Overhead:** The CPU is free to perform other tasks while the hardware fills the "snapshot" buffer.
 * **Post-Processing:** Once full, the CPU reads data via Port A and transmits it via UART. Since the data is already captured, UART speed no longer affects signal fidelity.
 
-#### System Block Diagram
+### System Block Diagram
 <p align="center">
   <img width=600 src="0.doc/DMA_ADC_DPRAM.png">
   <br><em>DMA-Based Architecture with Dual-Port BRAM</em>
@@ -103,7 +107,47 @@ The DMA-based architecture consists of three core components:
 * **Dual-Port BRAM:** A high-speed memory buffer acting as a bridge between clock domains. **Port B** is dedicated exclusively to the ADC (Write-only), while **Port A** is reserved for the CPU (Read-only).
 * **Control & Status Registers (CSR):** The command interface through which the CPU initiates acquisition (via the *start* bit) and monitors the status to check if the buffer is full (via the *done* bit).
 
-#### Performance & Results
+---
+
+### Simulation & Verification
+
+This section documents the functional verification of the ADC Memory Controller within the FPGA SoC environment. The simulation was performed at a system clock frequency of **65 MHz**, matching the operational frequency of the CPU and ADC logic.
+
+### Functional Simulation Results
+
+The following analysis is based on the behavioral simulation of the `top_tb` module, which integrates the ADC Controller, CSR registers, and Dual-Port BRAM.
+
+### 1. Acquisition Initiation (IDLE -> RUNNING)
+The simulation confirms the FSM successfully transitions from the **IDLE** state to **RUNNING** upon receiving a trigger pulse.
+* **Trigger Mechanism**: The `csr_start_i` pulse initiates the capture sequence.
+* **Write Enable**: The `adc_we_o` signal is asserted immediately following the trigger, enabling data storage into the Port B of the DPRAM.
+* **Addressing**: The address counter begins at the base address `0x0400`. Due to the registered nature of the address bus, the first effective data write is captured at address `0x0401`.
+
+### 2. Data Integrity and Pipeline Latency
+The system demonstrates reliable data throughput with expected hardware latencies.
+* **Pipeline Latency**: A fixed latency of **2 clock cycles** is observed from the moment data appears on the ADC input pins until it is stabilized in the 32-bit `adc_data_o` register.
+* **Data Packing**: The controller correctly packs 12-bit samples from Channel 0 and Channel 1 into a single 32-bit word for efficient memory utilization.
+* **Memory Verification**: Verification of the BRAM contents shows sequential data storage (e.g., `0aaa0555` at index 1025), confirming the correct operation of the address generator.
+
+<p align="center">
+    <img width=600 src="0.doc/top_tb_behav1.png">
+    <br><em>Acquisition Start Sequence</em>
+</p>
+
+### 3. Automatic Completion (RUNNING -> DONE -> IDLE)
+The controller features an automated stop mechanism to prevent memory overflow.
+* **End-of-Buffer Logic**: When the address counter reaches the terminal address `0x13FF`, the `end_of_buffer_write` signal is triggered.
+* **State Reset**: The FSM transitions from the **RUNNING** state to **DONE** and then automatically returns to the **IDLE** state and de-asserts `adc_we_o`.
+* **Done Flag**: The `csr_done_o` flag is raised, notifying the CPU that the acquisition buffer is ready for processing via Port A.
+
+<p align="center">
+    <img width=600 src="0.doc/top_tb_behav2.png">
+    <br><em>Buffer Completion and State Reset</em>
+</p>
+
+---
+
+### Performance & Results
 With this method, the theoretical Nyquist limit is **32.5 MHz**. Experimental results in the lab, using a high-frequency function generator, confirmed successful reconstruction of signals up to **25 MHz** (limited only by the available lab equipment).
 
 <p align="center">
