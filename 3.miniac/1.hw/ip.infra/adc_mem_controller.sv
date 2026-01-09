@@ -1,7 +1,7 @@
 //==========================================================================
 // Copyright (C) 2023 Chili.CHIPS*ba
 //--------------------------------------------------------------------------
-//                      PROPRIETARY INFORMATION
+//                     PROPRIETARY INFORMATION
 //
 // The information contained in this file is the property of CHILI CHIPS LLC.
 // Except as specifically authorized in writing by CHILI CHIPS LLC, the holder
@@ -16,6 +16,8 @@
 // to the assigned memory space (Port 2). Initiated and reset via CPU CSR.
 //==========================================================================
 
+`timescale 1ns / 1ps
+
 module adc_mem_controller (
     // Clock & Reset
     input  logic         sys_clk,
@@ -24,42 +26,42 @@ module adc_mem_controller (
     // ADC Data Input
     input  logic [31:0]  adc_sample_in,
 
-    // CPU Control Register (CSR)
-    input  logic         csr_start_i, // Puls za pokretanje
-    output logic         csr_done_o,  // Signalizira da je bafer pun
+    // CPU Control Register (CSR) Interface
+    input  logic         csr_start_i, // Start trigger pulse
+    output logic         csr_done_o,  // Status flag: High when buffer is full
 
-    // DPRAM Interface (Write only)
-    output logic         adc_we_o,    
-    output logic [31:0]  adc_data_o,
-    output logic [12:0]  adc_addr_o
+    // DPRAM Interface (Write-only port)
+    output logic         adc_we_o,    // Memory Write Enable
+    output logic [31:0]  adc_data_o,  // Data to be stored
+    output logic [12:0]  adc_addr_o   // Target memory address
 );
 
-    // Parametri Adresa
-    localparam ADDR_BITS     = 13; // 8192 words (od 0 do 8191)
-    localparam ADDR_START    = 13'h400; // 2048 (Word address)
-    localparam ADDR_SPAN     = 13'h1000; // 4096 words
-    localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // 2048 + 4096 - 1 = 6143 (13'h17FF)
+    // --- Address Parameters ---
+    localparam ADDR_BITS     = 13;      // 8192 words (address range 0 to 8191)
+    localparam ADDR_START    = 13'h400; // Start offset (Word address 1024)
+    localparam ADDR_SPAN     = 13'h1000;// Buffer size (4096 words)
+    localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // End address (13'h13FF)
 
-    // State Machine
+    // --- State Machine Definition ---
     typedef enum logic [1:0] {
-        IDLE,       // Ceka na start signal (default)
-        RUNNING,    // Akvizicija u toku
-        DONE        // Akvizicija zavrsena, ceka reset
+        IDLE,       // Wait for start trigger (default)
+        RUNNING,    // Data acquisition in progress
+        DONE        // Buffer full, wait for trigger release
     } acq_state_t;
 
     acq_state_t acq_state_r;
 
-    // Unutrasnji Registri
-    logic [ADDR_BITS-1:0] write_addr_r; // Adresa za pisanje
-    logic                 adc_we_r;     // Generiše WE signal
-    logic                 csr_done_r;   // Status: 1 kada je bafer pun
+    // --- Internal Registers ---
+    logic [ADDR_BITS-1:0] write_addr_r; // Current write address pointer
+    logic                 adc_we_r;     // Internal Write Enable register
+    logic                 csr_done_r;   // Internal Done flag status
 
-    // Pomoćni signal koji detektuje pisanje na zadnju adresu (puls)
+    // Helper signal to detect the final write operation in the buffer
     logic end_of_buffer_write;
-    assign end_of_buffer_write = (write_addr_r == ADDR_STOP_AT) && acq_state_r == RUNNING;
+    assign end_of_buffer_write = (write_addr_r == ADDR_STOP_AT) && (acq_state_r == RUNNING);
     
     // ====================================================================
-    // State Machine Logika
+    // State Machine Transitions
     // ====================================================================
     always @(posedge sys_clk) begin
         if (!sys_rst_n) begin
@@ -67,33 +69,34 @@ module adc_mem_controller (
         end else begin
             case (acq_state_r)
                 IDLE: begin
-                    // Ako CPU posalje START, prelazi u RUNNING
+                    // Transition to RUNNING when CPU issues the START pulse
                     if (csr_start_i) begin
                         acq_state_r <= RUNNING;
                     end
                 end
                 
                 RUNNING: begin
-                    // Ako smo stigli do zadnje adrese, prelazimo u DONE
+                    // Move to DONE once the last sample is written to RAM
                     if (end_of_buffer_write) begin
                         acq_state_r <= DONE;
                     end
                 end
                 
                 DONE: begin
-                    // Cekamo da CPU resetuje START (tj. da ga ponovo postavi na 0)
-                    // Ako CPU resetuje START, prelazimo u IDLE za novu akviziciju
+                    // Wait for CPU to clear the START signal
+                    // Transition back to IDLE to allow for a new acquisition cycle
                     if (csr_start_i == 0) begin
                         acq_state_r <= IDLE;
                     end
                 end
+
+                default: acq_state_r <= IDLE;
             endcase
         end
     end
 
-
     // ====================================================================
-    // Logika za Adresu (write_addr_r) i WE signal (adc_we_r)
+    // Data Path and Control Logic
     // ====================================================================
     always @(posedge sys_clk) begin
         if (!sys_rst_n) begin
@@ -102,42 +105,43 @@ module adc_mem_controller (
             csr_done_r   <= 1'b0;
         end else begin
             
-            // Default vrijednosti 
+            // Default signal states
             adc_we_r <= 1'b0;
             
-            // Pokretanje/Reset (prema State Machine)
-            if (acq_state_r == IDLE && csr_start_i) begin
-                write_addr_r <= ADDR_START; // Reset adrese pri STARTU
-                csr_done_r   <= 1'b0;       // Reset DONE 
+            // Initialization Logic (IDLE state)
+            if (acq_state_r == IDLE) begin
+                csr_done_r <= 1'b0; // Clear the DONE flag
+                if (csr_start_i) begin
+                    write_addr_r <= ADDR_START; // Initialize address on START
+                end
             end
             
-            // Pisanje u RAM (samo u RUNNING stanju)
+            // Memory Write Management (RUNNING state)
             if (acq_state_r == RUNNING) begin
+                adc_we_r <= 1'b1; // Activate Write Enable
                 
-                // 1. Inkrementiraj adresu
-                write_addr_r <= write_addr_r + 1'b1;
-                
-                // 2. Aktiviraj Write Enable
-                adc_we_r     <= 1'b1;
-                
-                // 3. Detekcija kraja akvizicije
+                // Increment address pointer only after a valid write occurred
+                if (adc_we_r) begin 
+                    write_addr_r <= write_addr_r + 1'b1;
+                end
+
+                // Terminate write operations as soon as we reach the buffer limit
                 if (end_of_buffer_write) begin
-                    // Ovo je posljednji upis.
-                    adc_we_r   <= 1'b1; // Zadnji upis je i dalje WE=1
+                    adc_we_r <= 1'b0; 
                 end
                 
             end else if (acq_state_r == DONE) begin
-                // Postavi DONE
+                // Assert the DONE status flag
                 csr_done_r <= 1'b1;
-                // Postavi adresu na START, ali bez pisanja
+                // Reset address pointer to START for the next cycle (non-writing)
                 write_addr_r <= ADDR_START;
             end
         end
     end
 
-    // Output Logika 
+    // --- Output Assignments ---
     assign adc_we_o   = adc_we_r;
-    assign adc_data_o = adc_sample_in;
+    assign adc_data_o = adc_sample_in; // Pass-through of input sample
     assign adc_addr_o = write_addr_r;
     assign csr_done_o = csr_done_r;
 

@@ -1,89 +1,154 @@
+//==========================================================================
+// Testbench: top_tb 
+// Description: Verification environment for the ADC memory controller.
+//==========================================================================
 `timescale 1ns / 1ps
 
 module top_tb;
+    import soc_pkg::*; 
 
-    // --- Parametri ---
-    localparam CLK_PERIOD = 15.385; // 65 MHz period
+    // Parameters 
+    localparam CLK_PERIOD = 15.385; // 65 MHz clock cycle
+    localparam NUM_SAMPLES = 4096;
+    localparam ADDR_START  = 13'h400;
+    localparam NUM_WORDS_DMEM = 8192;
 
-    // --- Signali za simulaciju ploce ---
-    logic clk_p, clk_n;
-    logic rst_n;
-    logic uart_rx = 1'b1;
-    wire  uart_tx;
-    logic user_key1 = 1'b1;
-    logic user_key2 = 1'b1;
-    wire [3:0] led;
-
-    // ADC ulazi
+    // Signals 
+    logic        sys_clk;
+    logic        sys_rst_n;
+    logic        csr_start_i;
+    wire         csr_done_o;
+    
+    // 12-bit ADC channels (matching hardware specifications)
     logic [11:0] ad9238_data_ch0;
     logic [11:0] ad9238_data_ch1;
+    
+    // Packed 32-bit data word sent to the controller
+    wire [31:0]  adc_sample_in;
+    
+    // Internal signals: Controller to RAM interface
+    wire         adc_we;
+    wire [31:0]  adc_data;
+    wire [12:0]  adc_addr;
 
-    // --- Instanciranje TOP modula ---
-    top uut (
-        .clk_p(clk_p), .clk_n(clk_n), .rst_n(rst_n),
-        .uart_rx(uart_rx), .uart_tx(uart_tx),
-        .user_key1(user_key1), .user_key2(user_key2),
-        .led(led),
-        .ad9238_data_ch0(ad9238_data_ch0), .ad9238_data_ch1(ad9238_data_ch1)
-        // ... ostali signali (DAC, itd) ostaju isti kao u tvom top.sv
+    // Verification Helper Variables
+    integer sample_count = 0;
+    integer i, errors = 0;
+    logic [31:0] expected_mem [0:NUM_SAMPLES-1]; 
+
+    // DATA PACKING: Top-level simulation logic
+    // Format: [ 4'b0 | CH1(12b) | 4'b0 | CH0(12b) ]
+    assign adc_sample_in = {4'h0, ad9238_data_ch1, 4'h0, ad9238_data_ch0};
+
+    // SoC Interface Instance (for RAM Port 1)
+    soc_if bus_dmem (
+        .clk    (sys_clk),
+        .arst_n (sys_rst_n)
+    );
+    // Disable CPU port for this specific test sequence
+    assign bus_dmem.vld = 1'b0; 
+
+    // RAM Instance
+    soc_ram #(
+        .NUM_WORDS (NUM_WORDS_DMEM)
+    ) u_dmem (
+        .bus      (bus_dmem.SLV), 
+        .adc_clk  (sys_clk),      
+        .adc_we   (adc_we),
+        .adc_data (adc_data),
+        .adc_addr (adc_addr)
     );
 
-    // --- Generisanje diferencijalnog sata (65 MHz) ---
-    // 65 MHz sat: period = 15.385 ns
+    // ADC Controller Instance (UUT - Unit Under Test)
+    adc_mem_controller uut (
+        .sys_clk        (sys_clk),
+        .sys_rst_n      (sys_rst_n),
+        .adc_sample_in (adc_sample_in),
+        .csr_start_i   (csr_start_i),
+        .csr_done_o    (csr_done_o),
+        .adc_we_o      (adc_we),
+        .adc_data_o    (adc_data),
+        .adc_addr_o    (adc_addr)
+    );
+
+    // Clock Generation
     always begin
-        clk_p = 1'b0;
-        clk_n = 1'b1;
-        #(15.385 / 2);
-        clk_p = 1'b1;
-        clk_n = 1'b0;
-        #(15.385 / 2);
+        sys_clk = 1'b0;
+        #(CLK_PERIOD / 2) sys_clk = 1'b1;
+        #(CLK_PERIOD / 2);
     end
 
-    // --- MONITOR: Ispisuje sta se desava UNUTAR kontrolera ---
+    // MAIN TEST SEQUENCE
     initial begin
-    // 1. Inicijalizacija
-    rst_n = 1'b0;           // Krenimo od aktivnog reseta
-    ad9238_data_ch0 = 12'hAAA;
-    ad9238_data_ch1 = 12'h555;
-    
-    // 2. Forsiranje unutrašnjeg sata i reseta 
-    // (Ovo radimo jer clk_rst_gen modul često "uguši" simulaciju)
-    force uut.sys_clk = clk_p; 
-    force uut.sys_rst_n = rst_n;
+        // Initialization
+        sys_rst_n = 1'b0;
+        csr_start_i = 1'b0;
+        ad9238_data_ch0 = 12'hAAA;
+        ad9238_data_ch1 = 12'h555;
+        sample_count = 0;
 
-    #200;                   // Drži reset 200ns
-    rst_n = 1'b1;           // Pusti reset
-    force uut.sys_rst_n = 1'b1;
-    $display("[%0t] Reset deaktiviran.", $time);
+        // 1. Reset Phase
+        repeat (10) @(posedge sys_clk);
+        sys_rst_n = 1'b1;
+        $display("[%0t] System reset released.", $time);
 
-    #500;                   // Pusti sat da "odradi" malo u IDLE stanju
+        // 2. Acquisition Start
+        @(posedge sys_clk);
+        csr_start_i = 1'b1;
+        @(posedge sys_clk);
+        csr_start_i = 1'b0;
+        $display("[%0t] Start pulse issued to controller.", $time);
 
-    // 3. SLANJE START SIGNALA
-    // Bitno: Start mora biti sinhronizovan sa ivicom sata!
-    @(posedge uut.sys_clk);
-    force uut.csr_start_in = 1'b1;
-    
-    @(posedge uut.sys_clk);
-    force uut.csr_start_in = 1'b0; // Spusti start nakon jednog ciklusa
-    $display("[%0t] START impuls poslan.", $time);
+        // 3. Dynamic Data Stream Simulation
+        // Wait for the controller to trigger the Write Enable signal
+        wait(adc_we == 1'b1);
+        
+        while (sample_count < NUM_SAMPLES) begin
+            // 1. Wait for clock edge for the controller to sample current data
+            @(posedge sys_clk);
+            
+            if (adc_we) begin
+                // 2. Capture the actual data present on lines for verification
+                expected_mem[sample_count] = adc_sample_in;
+                sample_count++;
+                
+                // 3. Prepare data for the next clock cycle
+                ad9238_data_ch0 <= ad9238_data_ch0 + 1;
+                ad9238_data_ch1 <= ad9238_data_ch1 + 1; 
+            end
+        end
 
-    // 4. Dinamička promjena ADC podataka dok sistem radi
-    // Ovo će ti pokazati da se različite vrijednosti upisuju u RAM
-    repeat(100) begin
-        @(posedge uut.sys_clk);
-        ad9238_data_ch0 <= ad9238_data_ch0 + 1;
-        ad9238_data_ch1 <= ad9238_data_ch1 + 1;
+        // 4. End of Acquisition
+        wait(csr_done_o == 1'b1);
+        $display("[%0t] Acquisition completed. Waiting for stabilization...", $time);
+        repeat(10) @(posedge sys_clk);
+
+        // 5. Automated Self-Checking Verification
+        $display("-------------------------------------------------------");
+        $display("STARTING RAM VERIFICATION (Range: 0x%h - 0x%h)", ADDR_START, ADDR_START + NUM_SAMPLES - 1);
+        
+        for (i = 0; i < NUM_SAMPLES; i = i + 1) begin
+            if (u_dmem.mem[ADDR_START + i] !== expected_mem[i]) begin
+                $display("ERROR: Addr 0x%h | Expected 0x%h | Found 0x%h", 
+                         ADDR_START + i, expected_mem[i], u_dmem.mem[ADDR_START + i]);
+                errors++;
+            end
+        end
+
+        if (errors == 0) 
+            $display("SUCCESS: VERIFICATION PASSED! All %0d samples match perfectly.", NUM_SAMPLES);
+        else 
+            $display("FAILURE: VERIFICATION FAILED! Total errors found: %0d", errors);
+        $display("-------------------------------------------------------");
+
+        repeat (20) @(posedge sys_clk);
+        $finish;
     end
 
-    // 5. Provjera da li je adresa krenula
-    #1000;
-    if (uut.adc_addr > 13'h0400)
-        $display("[%0t] USPJEH: Adresa se inkrementira! Trenutna: %h", $time, uut.adc_addr);
-    else
-        $display("[%0t] GRESKA: Adresa je i dalje 0400. Provjeri FSM uslove.", $time);
-
-    #5000;
-    $stop;
-end
+    // Monitoring
+    initial begin
+        $monitor("[%0t] State: %s | Addr: 0x%h | WE: %b | CH0: 0x%h | CH1: 0x%h", 
+                 $time, uut.acq_state_r.name(), adc_addr, adc_we, ad9238_data_ch0, ad9238_data_ch1);
+    end
 
 endmodule

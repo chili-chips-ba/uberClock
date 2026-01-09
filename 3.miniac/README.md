@@ -117,17 +117,35 @@ This section documents the functional verification of the ADC Memory Controller 
 
 The following analysis is based on the behavioral simulation of the `top_tb` module, which integrates the ADC Controller, CSR registers, and Dual-Port BRAM.
 
+```mermaid 
+flowchart TD
+    ST(( )) --> IDLE
+
+    IDLE(["<b>IDLE</b><br/>adc_we_o = 0<br/>csr_done_o = 0<br/>addr = 0x0400"])
+    RUNNING(["<b>RUNNING</b><br/>adc_we_o = 1<br/>csr_done_o = 0<br/>addr++"])
+    DONE(["<b>DONE</b><br/>adc_we_o = 0<br/>csr_done_o = 1"])
+
+    IDLE -- "csr_start_i == 1" --> RUNNING
+    RUNNING -- "addr == 0x13FF" --> DONE
+    DONE -- "csr_start_i == 0" --> IDLE
+```
+
 ### 1. Acquisition Initiation (IDLE -> RUNNING)
 The simulation confirms the FSM successfully transitions from the **IDLE** state to **RUNNING** upon receiving a trigger pulse.
 * **Trigger Mechanism**: The `csr_start_i` pulse initiates the capture sequence.
-* **Write Enable**: The `adc_we_o` signal is asserted immediately following the trigger, enabling data storage into the Port B of the DPRAM.
-* **Addressing**: The address counter begins at the base address `0x0400`. Due to the registered nature of the address bus, the first effective data write is captured at address `0x0401`.
+* **Write Enable**: The `adc_we_o` signal is asserted synchronously with the first valid sample, enabling data storage into the Port B of the DPRAM.
+* **Addressing**: The address counter begins at the base address `0x0400`. 
 
 ### 2. Data Integrity and Pipeline Latency
-The system demonstrates reliable data throughput with expected hardware latencies.
-* **Pipeline Latency**: A fixed latency of **2 clock cycles** is observed from the moment data appears on the ADC input pins until it is stabilized in the 32-bit `adc_data_o` register.
+The system demonstrates reliable data throughput, verified by a self-checking testbench comparing all 4096 samples.
 * **Data Packing**: The controller correctly packs 12-bit samples from Channel 0 and Channel 1 into a single 32-bit word for efficient memory utilization.
-* **Memory Verification**: Verification of the BRAM contents shows sequential data storage (e.g., `0aaa0555` at index 1025), confirming the correct operation of the address generator.
+    #### Data Word Mapping
+    Each 32-bit word in BRAM contains two ADC samples:
+    | Bits  | [31:28] | [27:16]       | [15:12] | [11:0]        |
+    |-------|---------|---------------|---------|---------------|
+    | Field | Unused  | **Channel 1** | Unused  | **Channel 0** |
+    | Value | 0000    | 12-bit sample | 0000    | 12-bit sample |
+* **Memory Verification**: Verification of the RAM contents confirms the storage of **4096 samples**. The first entry at address `0x0400` was verified as `0x05550AAA`, and the final entry at `0x13FF` was `0x05540AA9`, matching the expected 12-bit incremental wrap-around logic.
 
 <p align="center">
     <img width=600 src="0.doc/top_tb_behav1.png">
@@ -136,15 +154,35 @@ The system demonstrates reliable data throughput with expected hardware latencie
 
 ### 3. Automatic Completion (RUNNING -> DONE -> IDLE)
 The controller features an automated stop mechanism to prevent memory overflow.
-* **End-of-Buffer Logic**: When the address counter reaches the terminal address `0x13FF`, the `end_of_buffer_write` signal is triggered.
-* **State Reset**: The FSM transitions from the **RUNNING** state to **DONE** and then automatically returns to the **IDLE** state and de-asserts `adc_we_o`.
-* **Done Flag**: The `csr_done_o` flag is raised, notifying the CPU that the acquisition buffer is ready for processing via Port A.
+* **End-of-Buffer Logic**: When the address counter reaches the terminal address `0x13FF`, the acquisition sequence completes.
+* **State Reset**: The FSM transitions from the **RUNNING** state to **DONE**, then automatically returns to the **IDLE** state, de-asserting `adc_we_o`.
+* **Done Flag**: The `csr_done_o` flag is raised, notifying the CPU that the acquisition buffer is ready for processing via Port A. The internal address is reset to 0x0400, making the module immediately ready for the next trigger.
 
 <p align="center">
     <img width=600 src="0.doc/top_tb_behav2.png">
     <br><em>Buffer Completion and State Reset</em>
 </p>
 
+### Automated Verification
+
+To ensure scalability and eliminate manual inspection errors ("eye-balling"), the verification process is fully automated within the `top_tb.sv` environment.
+
+#### Verification Methodology
+* **Real-Time Reference Model**: A "gold-standard" array (`expected_mem`) is populated in real-time as data is streamed to the controller, serving as a bit-accurate reference.
+* **Automated Post-Acquisition Comparison**: Upon completion (`csr_done_o == 1`), a verification loop automatically iterates through all **4096 samples** in the RAM, comparing them against the reference model.
+* **Immediate Result Reporting**: The testbench logs any mismatches and prints a final **PASS/FAIL** summary to the simulation console, replacing the need for manual waveform analysis.
+
+#### Testing via Terminal
+The design is set up for quick re-verification after any logic changes. The simulation can be executed directly from the terminal without opening the Vivado GUI, saving time during development.
+
+**Execution Directory:**
+`uberClock/3.miniac/3.build/hw_build.Vivado/uberclock.sim/sim_1/behav/xsim`
+
+**Terminal Command:**
+```bash
+# Runs the simulation in batch mode and returns the verification result
+xsim top_tb_behav -R
+```
 ---
 
 ### Performance & Results

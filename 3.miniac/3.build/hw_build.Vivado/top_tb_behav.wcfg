@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="top_tb_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="soc_pkg" />
+            <top_module name="top_tb" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="98.530 ns"></ZoomStartTime>
+      <ZoomEndTime time="345.531 ns"></ZoomEndTime>
+      <Cursor1Time time="376.227 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="194"></NameColumnWidth>
+      <ValueColumnWidth column_width="99"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="24" />
+   <wvobject type="logic" fp_name="/top_tb/sys_clk">
+      <obj_property name="ElementShortName">sys_clk</obj_property>
+      <obj_property name="ObjectShortName">sys_clk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top_tb/sys_rst_n">
+      <obj_property name="ElementShortName">sys_rst_n</obj_property>
+      <obj_property name="ObjectShortName">sys_rst_n</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/adc_sample_in">
+      <obj_property name="ElementShortName">adc_sample_in[31:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_sample_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top_tb/csr_start_i">
+      <obj_property name="ElementShortName">csr_start_i</obj_property>
+      <obj_property name="ObjectShortName">csr_start_i</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top_tb/csr_done_o">
+      <obj_property name="ElementShortName">csr_done_o</obj_property>
+      <obj_property name="ObjectShortName">csr_done_o</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top_tb/uut/end_of_buffer_write">
+      <obj_property name="ElementShortName">end_of_buffer_write</obj_property>
+      <obj_property name="ObjectShortName">end_of_buffer_write</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/top_tb/adc_we">
+      <obj_property name="ElementShortName">adc_we</obj_property>
+      <obj_property name="ObjectShortName">adc_we</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch0">
+      <obj_property name="ElementShortName">ad9238_data_ch0[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ad9238_data_ch0[11:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch1">
+      <obj_property name="ElementShortName">ad9238_data_ch1[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ad9238_data_ch1[11:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/adc_data">
+      <obj_property name="ElementShortName">adc_data[31:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_data[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/adc_addr">
+      <obj_property name="ElementShortName">adc_addr[12:0]</obj_property>
+      <obj_property name="ObjectShortName">adc_addr[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/sample_count">
+      <obj_property name="ElementShortName">sample_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">sample_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/errors">
+      <obj_property name="ElementShortName">errors[31:0]</obj_property>
+      <obj_property name="ObjectShortName">errors[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/uut/write_addr_r">
+      <obj_property name="ElementShortName">write_addr_r[12:0]</obj_property>
+      <obj_property name="ObjectShortName">write_addr_r[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/uut/acq_state_r">
+      <obj_property name="ElementShortName">acq_state_r[1:0]</obj_property>
+      <obj_property name="ObjectShortName">acq_state_r[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/uut/ADDR_START">
+      <obj_property name="ElementShortName">ADDR_START[12:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_START[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/uut/ADDR_SPAN">
+      <obj_property name="ElementShortName">ADDR_SPAN[12:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_SPAN[12:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/uut/ADDR_STOP_AT">
+      <obj_property name="ElementShortName">ADDR_STOP_AT[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ADDR_STOP_AT[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/NUM_WORDS_DMEM">
+      <obj_property name="ElementShortName">NUM_WORDS_DMEM[31:0]</obj_property>
+      <obj_property name="ObjectShortName">NUM_WORDS_DMEM[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/u_dmem/mem[1024]">
+      <obj_property name="ElementShortName">[1024][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[1024][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/u_dmem/mem[1025]">
+      <obj_property name="ElementShortName">[1025][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[1025][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/u_dmem/mem[1026]">
+      <obj_property name="ElementShortName">[1026][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[1026][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/u_dmem/mem[5118]">
+      <obj_property name="ElementShortName">[5118][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[5118][31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/u_dmem/mem[5119]">
+      <obj_property name="ElementShortName">[5119][31:0]</obj_property>
+      <obj_property name="ObjectShortName">[5119][31:0]</obj_property>
+   </wvobject>
+</wave_config>
