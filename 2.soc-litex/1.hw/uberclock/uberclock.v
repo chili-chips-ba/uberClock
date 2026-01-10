@@ -159,7 +159,8 @@ wire signed [IW-1:0] selected_input =
         selected_input_q <= selected_input;
     end
 
-    assign cap_selected_input = selected_input_q;
+    //assign cap_selected_input = selected_input_q;
+    assign cap_selected_input = nco_cos;   // or nco_sin
 
 
     //------------------------------------------------------------------------

@@ -37,7 +37,7 @@ EDITOR       := code
 # ------------------------------------------------------------------
 FREQ         ?= 65e6
 #OPTIONS      ?= --with-etherbone --with-uberclock
-OPTIONS      ?= --with-uberddr3 --with-uberclock
+OPTIONS      ?= --with-uberddr3 --with-uberclock --with-ethernet
 PORT         ?= /dev/ttyUSB0
 DEMO_FLAGS   ?= --with-cxx
 
