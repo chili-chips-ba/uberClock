@@ -28,7 +28,7 @@ We explore two distinct methodologies: a Direct Method that involves real-time, 
 
 ## Methodology
 
-The Miniac is a tool for data acquisition and visualizationation. As can be seen on teh diagram below, first we use our ADC to sample sine signals from a signal generator, after which we send our data to the Control and Status Registers (CSR). From here we have two options, one is to take the data directly from the CSR and send it via UART to our PC, where we will then run our Python code for visualization and dsp, or we can collect the data from CSR with our RISC-V processor and store the data in DMEM. Once we store this data we can then send all of it (once again via UART) to our PC. There we will have another Python code ready to read the data and do visualization and FFT. The two options we described are our Direct and Indirect snooping methods, respectfully.
+The Miniac is a tool for data acquisition and visualization. As can be seen on the diagram below, first we use our ADC to sample sine signals from a signal generator, after which we send our data to the Control and Status Registers (CSR). From here we have two options, one is to take the data directly from the CSR and send it via UART to our PC, where we will then run our Python code for visualization and dsp, or we can collect the data from CSR with our RISC-V processor and store the data in DMEM. Once we store this data we can then send all of it (once again via UART) to our PC. There we will have another Python code ready to read the data and do visualization and FFT. The two options we described are our Direct and Indirect snooping methods, respectively.
 
 <p align="center">
   <img width=900 src="0.doc/miniac.png">
@@ -63,17 +63,17 @@ For this method we run "CPUSnooping.py" (https://github.com/chili-chips-ba/uberC
 
 The fundamental difference between this script and the direct method lies in their data transfer strategy and overall efficiency. The first script continuously polls the FPGA for individual ADC samples, leading to significant UART overhead and limiting the achievable sampling frequency to approximately 100 Hz due to the overhead of numerous small transactions and PC-side latencies. In contrast, this indirect method batches data transfer by reading large blocks (1024 samples) at once, and crucially, allows the FPGA to sample and buffer data autonomously without constant PC intervention. This approach drastically reduces the number of UART transactions and minimizes PC-side communication overhead, enabling the system to achieve a much higher effective sampling frequency of up to 250 [kHz], making it far more suitable for acquiring higher-frequency signals. We demonstrate the functionality of our method on the pictures below.
 
-- Sampling a 50[Hz] sine with the direct method
+- Sampling a 50[Hz] sine with the indirect method
 <p align="center">
     <img width=600 src="0.doc/CPUSnooping_100kHz.png">
 </p>
 
-- Sampling a 200[kHz] sine with the direct method
+- Sampling a 200[kHz] sine with the indirect method
 <p align="center">
     <img width=600 src="0.doc/CPUSnooping_200kHz.png">
 </p>
 
-- Sampling a 250[kHz] sine with the direct method
+- Sampling a 250[kHz] sine with the indirect method
 <p align="center">
     <img width=600 src="0.doc/CPUSnooping_250kHz.png">
 </p>
@@ -119,15 +119,16 @@ The following analysis is based on the behavioral simulation of the `top_tb` mod
 
 ```mermaid 
 flowchart TD
-    ST(( )) --> IDLE
+    RESET((sys_rst_n)) -- Asynchronous Active-Low Reset --> IDLE
 
     IDLE(["<b>IDLE</b><br/>adc_we_o = 0<br/>csr_done_o = 0<br/>addr = 0x0400"])
     RUNNING(["<b>RUNNING</b><br/>adc_we_o = 1<br/>csr_done_o = 0<br/>addr++"])
-    DONE(["<b>DONE</b><br/>adc_we_o = 0<br/>csr_done_o = 1"])
+    DONE(["<b>DONE</b><br/>adc_we_o = 0<br/>csr_done_o = 1<br/>addr = ADDR_START"])
 
     IDLE -- "csr_start_i == 1" --> RUNNING
-    RUNNING -- "addr == 0x13FF" --> DONE
+    RUNNING -- "addr == ADDR_STOP_AT" --> DONE
     DONE -- "csr_start_i == 0" --> IDLE
+    
 ```
 
 ### 1. Acquisition Initiation (IDLE -> RUNNING)
@@ -145,6 +146,18 @@ The system demonstrates reliable data throughput, verified by a self-checking te
     |-------|---------|---------------|---------|---------------|
     | Field | Unused  | **Channel 1** | Unused  | **Channel 0** |
     | Value | 0000    | 12-bit sample | 0000    | 12-bit sample |
+
+    #### Memory Efficiency Analysis
+
+    | Strategy | Efficiency | Complexity | CPU Impact |
+    | :--- | :--- | :--- | :--- |
+    | **Current (32-bit Aligned)** | **75%** | **Low** | **Fast processing** |
+    | Packed (Back-to-back) | 100% | High | Slow (Bit-shifting needed) |
+
+    The controller stores two 12-bit samples within each 32-bit memory word, resulting in 75% utilization of the available memory space. While 100% efficiency could be achieved by packing samples back-to-back, that would require splitting individual samples across memory word boundaries. 
+    
+    This 32-bit aligned approach was selected to avoid the need for complex bit-shifting logic in RTL and to ensure the CPU can access and process both channels directly without additional data manipulation.
+    
 * **Memory Verification**: Verification of the RAM contents confirms the storage of **4096 samples**. The first entry at address `0x0400` was verified as `0x05550AAA`, and the final entry at `0x13FF` was `0x05540AA9`, matching the expected 12-bit incremental wrap-around logic.
 
 <p align="center">

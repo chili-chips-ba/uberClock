@@ -42,6 +42,16 @@ module adc_mem_controller (
     localparam ADDR_SPAN     = 13'h1000;// Buffer size (4096 words)
     localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // End address (13'h13FF)
 
+    // --- Data Packing Structure ---
+    typedef struct packed {
+        logic [3:0]  unused1;
+        logic [11:0] ch1;     
+        logic [3:0]  unused0;
+        logic [11:0] ch0;     
+    } adc_sample_t;
+
+    adc_sample_t packed_sample_w;
+
     // --- State Machine Definition ---
     typedef enum logic [1:0] {
         IDLE,       // Wait for start trigger (default)
@@ -53,8 +63,8 @@ module adc_mem_controller (
 
     // --- Internal Registers ---
     logic [ADDR_BITS-1:0] write_addr_r; // Current write address pointer
-    logic                 adc_we_r;     // Internal Write Enable register
-    logic                 csr_done_r;   // Internal Done flag status
+    logic                  adc_we_r;     // Internal Write Enable register
+    logic                  csr_done_r;   // Internal Done flag status
 
     // Helper signal to detect the final write operation in the buffer
     logic end_of_buffer_write;
@@ -63,7 +73,7 @@ module adc_mem_controller (
     // ====================================================================
     // State Machine Transitions
     // ====================================================================
-    always @(posedge sys_clk) begin
+    always @(posedge sys_clk or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
             acq_state_r <= IDLE;
         end else begin
@@ -98,7 +108,7 @@ module adc_mem_controller (
     // ====================================================================
     // Data Path and Control Logic
     // ====================================================================
-    always @(posedge sys_clk) begin
+    always @(posedge sys_clk or negedge sys_rst_n) begin
         if (!sys_rst_n) begin
             write_addr_r <= ADDR_START;
             adc_we_r     <= 1'b0;
@@ -139,9 +149,15 @@ module adc_mem_controller (
         end
     end
 
+    // --- Data Mapping to Structure ---
+    assign packed_sample_w.unused1 = 4'b0;
+    assign packed_sample_w.ch1     = adc_sample_in[27:16];
+    assign packed_sample_w.unused0 = 4'b0;
+    assign packed_sample_w.ch0     = adc_sample_in[11:0];
+
     // --- Output Assignments ---
     assign adc_we_o   = adc_we_r;
-    assign adc_data_o = adc_sample_in; // Pass-through of input sample
+    assign adc_data_o = packed_sample_w; // Pass-through via structure
     assign adc_addr_o = write_addr_r;
     assign csr_done_o = csr_done_r;
 

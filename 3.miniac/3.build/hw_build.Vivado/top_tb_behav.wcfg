@@ -12,13 +12,13 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="98.530 ns"></ZoomStartTime>
-      <ZoomEndTime time="345.531 ns"></ZoomEndTime>
-      <Cursor1Time time="376.227 ns"></Cursor1Time>
+      <ZoomStartTime time="116.337 ns"></ZoomStartTime>
+      <ZoomEndTime time="353.738 ns"></ZoomEndTime>
+      <Cursor1Time time="63,674.961 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="194"></NameColumnWidth>
-      <ValueColumnWidth column_width="99"></ValueColumnWidth>
+      <ValueColumnWidth column_width="95"></ValueColumnWidth>
    </column_width_setting>
    <WVObjectSize size="24" />
    <wvobject type="logic" fp_name="/top_tb/sys_clk">
@@ -32,6 +32,14 @@
    <wvobject type="array" fp_name="/top_tb/adc_sample_in">
       <obj_property name="ElementShortName">adc_sample_in[31:0]</obj_property>
       <obj_property name="ObjectShortName">adc_sample_in[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch0">
+      <obj_property name="ElementShortName">ad9238_data_ch0[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ad9238_data_ch0[11:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch1">
+      <obj_property name="ElementShortName">ad9238_data_ch1[11:0]</obj_property>
+      <obj_property name="ObjectShortName">ad9238_data_ch1[11:0]</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/top_tb/csr_start_i">
       <obj_property name="ElementShortName">csr_start_i</obj_property>
@@ -49,13 +57,10 @@
       <obj_property name="ElementShortName">adc_we</obj_property>
       <obj_property name="ObjectShortName">adc_we</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch0">
-      <obj_property name="ElementShortName">ad9238_data_ch0[11:0]</obj_property>
-      <obj_property name="ObjectShortName">ad9238_data_ch0[11:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch1">
-      <obj_property name="ElementShortName">ad9238_data_ch1[11:0]</obj_property>
-      <obj_property name="ObjectShortName">ad9238_data_ch1[11:0]</obj_property>
+   <wvobject type="array" fp_name="/top_tb/uut/packed_sample_w">
+      <obj_property name="ElementShortName">packed_sample_w</obj_property>
+      <obj_property name="ObjectShortName">packed_sample_w</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/adc_data">
       <obj_property name="ElementShortName">adc_data[31:0]</obj_property>
@@ -92,10 +97,6 @@
    <wvobject type="array" fp_name="/top_tb/uut/ADDR_STOP_AT">
       <obj_property name="ElementShortName">ADDR_STOP_AT[31:0]</obj_property>
       <obj_property name="ObjectShortName">ADDR_STOP_AT[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/top_tb/NUM_WORDS_DMEM">
-      <obj_property name="ElementShortName">NUM_WORDS_DMEM[31:0]</obj_property>
-      <obj_property name="ObjectShortName">NUM_WORDS_DMEM[31:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/u_dmem/mem[1024]">
       <obj_property name="ElementShortName">[1024][31:0]</obj_property>
