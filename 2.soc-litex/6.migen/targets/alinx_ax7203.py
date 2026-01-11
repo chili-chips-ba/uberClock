@@ -51,7 +51,7 @@ import math
 # --- set your repo paths ---
 #   repository_dir:  root of your uberClock repo
 #   verilog_dir:     directory that contains the Verilog sources used below
-repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/"
+repository_dir = "/home/ahmed/ws/uberClock"
 verilog_dir    = repository_dir + "/2.soc-litex/1.hw"
 
 
