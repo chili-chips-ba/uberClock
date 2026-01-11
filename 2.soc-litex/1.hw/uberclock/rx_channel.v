@@ -1,11 +1,10 @@
-`default_nettype none
 module rx_channel # (
     parameter IW = 12, 
     parameter OW = 12,
     parameter RX_OW = 16,
     parameter NSTAGES = 15, 
     parameter WW = 15,
-    parameter PW = 19
+    parameter PW = 24
 ) (
     input  wire                   sys_clk,
     input  wire                   rst,

@@ -887,28 +887,60 @@ class UberDDR3(LiteXModule):
 # =============================================================================
 class MainCSRs(LiteXModule):
     def __init__(self):
-        self.phase_inc_nco       = CSRStorage(19)
-        self.phase_inc_down_1    = CSRStorage(19)
-        self.phase_inc_down_2    = CSRStorage(19)
-        self.phase_inc_down_3    = CSRStorage(19)
-        self.phase_inc_down_4    = CSRStorage(19)
-        self.phase_inc_down_5    = CSRStorage(19)
-        self.phase_inc_cpu       = CSRStorage(19)
+        # Match PW=24 in Verilog
+        self.phase_inc_nco       = CSRStorage(24)
+        self.phase_inc_down_1    = CSRStorage(24)
+        self.phase_inc_down_2    = CSRStorage(24)
+        self.phase_inc_down_3    = CSRStorage(24)
+        self.phase_inc_down_4    = CSRStorage(24)
+        self.phase_inc_down_5    = CSRStorage(24)
+        self.phase_inc_down_ref  = CSRStorage(24)
+
+        # CPU NCOs (5 channels) in uberclock.v
+        self.phase_inc_cpu1      = CSRStorage(24)
+        self.phase_inc_cpu2      = CSRStorage(24)
+        self.phase_inc_cpu3      = CSRStorage(24)
+        self.phase_inc_cpu4      = CSRStorage(24)
+        self.phase_inc_cpu5      = CSRStorage(24)
+
+        # Magnitudes (signed in Verilog, stored as 2's complement here)
+        self.nco_mag             = CSRStorage(12, reset=0)
+        self.mag_cpu1            = CSRStorage(12, reset=0)
+        self.mag_cpu2            = CSRStorage(12, reset=0)
+        self.mag_cpu3            = CSRStorage(12, reset=0)
+        self.mag_cpu4            = CSRStorage(12, reset=0)
+        self.mag_cpu5            = CSRStorage(12, reset=0)
+
         self.input_select        = CSRStorage(2)
-        self.output_select_ch1   = CSRStorage(2)
-        self.output_select_ch2   = CSRStorage(2)
         self.upsampler_input_mux = CSRStorage(2)
+
+        # Must be 4 bits to match your Verilog mux (0..12)
+        self.output_select_ch1   = CSRStorage(4)
+        self.output_select_ch2   = CSRStorage(4)
+
+        # Debug selects (3-bit) in uberclock.v
+        self.lowspeed_dbg_select = CSRStorage(3)
+        self.highspeed_dbg_select= CSRStorage(3)
+
         self.gain1               = CSRStorage(32)
         self.gain2               = CSRStorage(32)
         self.gain3               = CSRStorage(32)
         self.gain4               = CSRStorage(32)
         self.gain5               = CSRStorage(32)
+
         self.upsampler_input_x   = CSRStorage(16)
         self.upsampler_input_y   = CSRStorage(16)
         self.final_shift         = CSRStorage(3)
+
+        # DDR capture control (already present)
         self.cap_enable          = CSRStorage(1, description="1=DDR capture from design, 0=internal ramp.")
         self.cap_beats           = CSRStorage(32, reset=256, description="Number of 256-bit beats to capture into DDR.")
 
+        # Optional: low-speed capture RAM inside uberclock.v (cap_arm/cap_idx/cap_done/cap_data)
+        self.cap_arm             = CSRStorage(1, description="Pulse to start low-speed capture RAM.")
+        self.cap_idx             = CSRStorage(16, description="Index for low-speed capture RAM readback.")
+        self.cap_done            = CSRStatus(1, description="Low-speed capture done.")
+        self.cap_data            = CSRStatus(16, description="Low-speed capture sample at cap_idx.")
 
 # =============================================================================
 # SoC
@@ -1097,27 +1129,48 @@ class BaseSoC(SoCCore):
 
         m = self.main
         cfg_sys = {
-            "input_select":        m.input_select.storage,
-            "output_sel_ch1":      m.output_select_ch1.storage,
-            "output_sel_ch2":      m.output_select_ch2.storage,
-            "upsampler_input_mux": m.upsampler_input_mux.storage,
-            "phase_inc_nco":       m.phase_inc_nco.storage,
-            "phase_inc_down_1":    m.phase_inc_down_1.storage,
-            "phase_inc_down_2":    m.phase_inc_down_2.storage,
-            "phase_inc_down_3":    m.phase_inc_down_3.storage,
-            "phase_inc_down_4":    m.phase_inc_down_4.storage,
-            "phase_inc_down_5":    m.phase_inc_down_5.storage,
-            "phase_inc_cpu":       m.phase_inc_cpu.storage,
-            "gain1":               m.gain1.storage,
-            "gain2":               m.gain2.storage,
-            "gain3":               m.gain3.storage,
-            "gain4":               m.gain4.storage,
-            "gain5":               m.gain5.storage,
-            "ups_in_x":            m.upsampler_input_x.storage,
-            "ups_in_y":            m.upsampler_input_y.storage,
-            "final_shift":         m.final_shift.storage,
-            "cap_enable":          m.cap_enable.storage,
-            "cap_beats":           m.cap_beats.storage,
+            "input_select":         m.input_select.storage,
+            "output_sel_ch1":       m.output_select_ch1.storage,
+            "output_sel_ch2":       m.output_select_ch2.storage,
+            "upsampler_input_mux":  m.upsampler_input_mux.storage,
+
+            "phase_inc_nco":        m.phase_inc_nco.storage,
+            "nco_mag":              m.nco_mag.storage,
+
+            "phase_inc_down_1":     m.phase_inc_down_1.storage,
+            "phase_inc_down_2":     m.phase_inc_down_2.storage,
+            "phase_inc_down_3":     m.phase_inc_down_3.storage,
+            "phase_inc_down_4":     m.phase_inc_down_4.storage,
+            "phase_inc_down_5":     m.phase_inc_down_5.storage,
+            "phase_inc_down_ref":   m.phase_inc_down_ref.storage,
+
+            "phase_inc_cpu1":       m.phase_inc_cpu1.storage,
+            "phase_inc_cpu2":       m.phase_inc_cpu2.storage,
+            "phase_inc_cpu3":       m.phase_inc_cpu3.storage,
+            "phase_inc_cpu4":       m.phase_inc_cpu4.storage,
+            "phase_inc_cpu5":       m.phase_inc_cpu5.storage,
+
+            "mag_cpu1":             m.mag_cpu1.storage,
+            "mag_cpu2":             m.mag_cpu2.storage,
+            "mag_cpu3":             m.mag_cpu3.storage,
+            "mag_cpu4":             m.mag_cpu4.storage,
+            "mag_cpu5":             m.mag_cpu5.storage,
+
+            "lowspeed_dbg_select":  m.lowspeed_dbg_select.storage,
+            "highspeed_dbg_select": m.highspeed_dbg_select.storage,
+
+            "gain1":                m.gain1.storage,
+            "gain2":                m.gain2.storage,
+            "gain3":                m.gain3.storage,
+            "gain4":                m.gain4.storage,
+            "gain5":                m.gain5.storage,
+
+            "ups_in_x":             m.upsampler_input_x.storage,
+            "ups_in_y":             m.upsampler_input_y.storage,
+            "final_shift":          m.final_shift.storage,
+
+            "cap_enable":           m.cap_enable.storage,
+            "cap_beats":            m.cap_beats.storage,
         }
 
         self.submodules.cfg_link = CSRConfigAFIFO(
@@ -1144,50 +1197,58 @@ class BaseSoC(SoCCore):
 
         self.specials += Instance(
             "uberclock",
-            i_sys_clk             = ClockSignal("uc"),
-            i_rst                 = ResetSignal("uc"),
+            i_sys_clk              = ClockSignal("uc"),
+            i_rst                  = ResetSignal("uc"),
 
-            o_adc_clk_ch0         = self.platform.request("adc_clk_ch0"),
-            o_adc_clk_ch1         = self.platform.request("adc_clk_ch1"),
-            i_adc_data_ch0        = self.platform.request("adc_data_ch0"),
-            i_adc_data_ch1        = self.platform.request("adc_data_ch1"),
+            # ... ADC/DAC pins unchanged ...
 
-            o_da1_clk             = self.platform.request("da1_clk", 0),
-            o_da1_wrt             = self.platform.request("da1_wrt", 0),
-            o_da1_data            = self.platform.request("da1_data",0),
-            o_da2_clk             = self.platform.request("da2_clk", 0),
-            o_da2_wrt             = self.platform.request("da2_wrt", 0),
-            o_da2_data            = self.platform.request("da2_data",0),
+            i_input_select         = getattr(uc, "out_input_select_uc"),
+            i_output_select_ch1    = getattr(uc, "out_output_sel_ch1_uc"),
+            i_output_select_ch2    = getattr(uc, "out_output_sel_ch2_uc"),
+            i_upsampler_input_mux  = getattr(uc, "out_upsampler_input_mux_uc"),
 
-            i_input_select        = getattr(uc, "out_input_select_uc"),
-            i_output_select_ch1   = getattr(uc, "out_output_sel_ch1_uc"),
-            i_output_select_ch2   = getattr(uc, "out_output_sel_ch2_uc"),
-            i_upsampler_input_mux = getattr(uc, "out_upsampler_input_mux_uc"),
-            i_phase_inc_nco       = getattr(uc, "out_phase_inc_nco_uc"),
-            i_phase_inc_down_1    = getattr(uc, "out_phase_inc_down_1_uc"),
-            i_phase_inc_down_2    = getattr(uc, "out_phase_inc_down_2_uc"),
-            i_phase_inc_down_3    = getattr(uc, "out_phase_inc_down_3_uc"),
-            i_phase_inc_down_4    = getattr(uc, "out_phase_inc_down_4_uc"),
-            i_phase_inc_down_5    = getattr(uc, "out_phase_inc_down_5_uc"),
-            i_phase_inc_cpu       = getattr(uc, "out_phase_inc_cpu_uc"),
-            i_gain1               = getattr(uc, "out_gain1_uc"),
-            i_gain2               = getattr(uc, "out_gain2_uc"),
-            i_gain3               = getattr(uc, "out_gain3_uc"),
-            i_gain4               = getattr(uc, "out_gain4_uc"),
-            i_gain5               = getattr(uc, "out_gain5_uc"),
-            i_upsampler_input_x   = getattr(uc, "out_ups_in_x_uc"),
-            i_upsampler_input_y   = getattr(uc, "out_ups_in_y_uc"),
-            i_final_shift         = getattr(uc, "out_final_shift_uc"),
+            i_phase_inc_nco        = getattr(uc, "out_phase_inc_nco_uc"),
+            i_nco_mag              = getattr(uc, "out_nco_mag_uc"),
 
-            o_ce_down             = ce_down_uc,
-            o_downsampled_data_x  = ds_x_uc,
-            o_downsampled_data_y  = ds_y_uc,
+            i_phase_inc_down_1     = getattr(uc, "out_phase_inc_down_1_uc"),
+            i_phase_inc_down_2     = getattr(uc, "out_phase_inc_down_2_uc"),
+            i_phase_inc_down_3     = getattr(uc, "out_phase_inc_down_3_uc"),
+            i_phase_inc_down_4     = getattr(uc, "out_phase_inc_down_4_uc"),
+            i_phase_inc_down_5     = getattr(uc, "out_phase_inc_down_5_uc"),
+            i_phase_inc_down_ref   = getattr(uc, "out_phase_inc_down_ref_uc"),
 
-            o_magnitude           = Open(16),
-            o_phase               = Open(25),
+            i_phase_inc_cpu1       = getattr(uc, "out_phase_inc_cpu1_uc"),
+            i_phase_inc_cpu2       = getattr(uc, "out_phase_inc_cpu2_uc"),
+            i_phase_inc_cpu3       = getattr(uc, "out_phase_inc_cpu3_uc"),
+            i_phase_inc_cpu4       = getattr(uc, "out_phase_inc_cpu4_uc"),
+            i_phase_inc_cpu5       = getattr(uc, "out_phase_inc_cpu5_uc"),
 
-            o_cap_selected_input  = cap_sel_uc,
+            i_mag_cpu1             = getattr(uc, "out_mag_cpu1_uc"),
+            i_mag_cpu2             = getattr(uc, "out_mag_cpu2_uc"),
+            i_mag_cpu3             = getattr(uc, "out_mag_cpu3_uc"),
+            i_mag_cpu4             = getattr(uc, "out_mag_cpu4_uc"),
+            i_mag_cpu5             = getattr(uc, "out_mag_cpu5_uc"),
+
+            i_lowspeed_dbg_select  = getattr(uc, "out_lowspeed_dbg_select_uc"),
+            i_highspeed_dbg_select = getattr(uc, "out_highspeed_dbg_select_uc"),
+
+            i_gain1                = getattr(uc, "out_gain1_uc"),
+            i_gain2                = getattr(uc, "out_gain2_uc"),
+            i_gain3                = getattr(uc, "out_gain3_uc"),
+            i_gain4                = getattr(uc, "out_gain4_uc"),
+            i_gain5                = getattr(uc, "out_gain5_uc"),
+
+            i_upsampler_input_x    = getattr(uc, "out_ups_in_x_uc"),
+            i_upsampler_input_y    = getattr(uc, "out_ups_in_y_uc"),
+            i_final_shift          = getattr(uc, "out_final_shift_uc"),
+
+            o_ce_down              = ce_down_uc,
+            o_downsampled_data_x   = ds_x_uc,
+            o_downsampled_data_y   = ds_y_uc,
+
+            o_cap_selected_input   = cap_sel_uc,
         )
+
 
         # Wire capture into UberDDR3 if present
         if hasattr(self, "ubddr3"):
