@@ -19,7 +19,8 @@
 
 *\#*\#
 *\#*
-
+*.jou
+.vscode/
 2.soc-litex/3.build/
 *.bin
 *.txt
