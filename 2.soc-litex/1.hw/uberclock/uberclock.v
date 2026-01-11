@@ -826,7 +826,7 @@ module uberclock#(
 
                                 (output_select_ch1 == 4'b1011) ? filter_in << 2:
                                 (output_select_ch1 == 4'b1100) ? filter_in_1 << 2:
-                                                                 sum_final[18:5]; // 19->14:
+                                                                 sum; // 19->14:
 
     wire [13:0] dac2_data_in =  (output_select_ch2 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
                                 (output_select_ch2 == 4'b0001) ? upsampled_gain_y2[15:2]: // 19->14:
@@ -842,7 +842,7 @@ module uberclock#(
 
                                 (output_select_ch2 == 4'b1011) ? filter_in << 2:
                                 (output_select_ch2 == 4'b1100) ? filter_in_1 << 2:
-                                                                 sum_final[18:5]; // 19->14:                             
+                                                                 sum; // 19->14:                             
 
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin
@@ -922,7 +922,7 @@ module uberclock#(
     wire signed [15:0]  highspeed_signal;// = 
     assign highspeed_signal = (highspeed_dbg_select == 0) ? { {4{filter_in[11]}}, filter_in } :
                               (highspeed_dbg_select == 1) ? { {4{filter_in[11]}}, filter_in_1 } :
-                                                            { {4{sum_final[18]}}, sum_final[18:5] };                   
+                                                            { {2{sum[13]}}, sum };                   
 
     // Edge-detect arm (expects a 0->1 pulse from CSR)
     reg hs_arm_q;

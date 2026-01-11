@@ -67,7 +67,7 @@ static void help(void) {
 	puts("Available commands:");
 	puts("  help                      - Show this command");
 	puts("  reboot                    - Reboot CPU");
-	puts("  phaseinc  <val>          - Set input CORDIC NCO phase increment (0–524287)");
+	puts("  phase_nco  <val>          - Set input CORDIC NCO phase increment (0–524287)");
 	puts("  phase_down_1 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 1");
 	puts("  phase_down_2 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 2");
 	puts("  phase_down_3 <val>          - Set downconversion CORDIC phase increment (0–524287) ch 3");
@@ -427,23 +427,23 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		nco_mag_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down_1")) {
+	else if (!strcmp(token, "phase1")) {
 		char *arg = get_token(&line);
 		phase_down_1_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down_2")) {
+	else if (!strcmp(token, "phase2")) {
 		char *arg = get_token(&line);
 		phase_down_2_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down_3")) {
+	else if (!strcmp(token, "phase3")) {
 		char *arg = get_token(&line);
 		phase_down_3_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down_4")) {
+	else if (!strcmp(token, "phase4")) {
 		char *arg = get_token(&line);
 		phase_down_4_cmd(arg);
 	}
-	else if (!strcmp(token, "phase_down_5")) {
+	else if (!strcmp(token, "phase5")) {
 		char *arg = get_token(&line);
 		phase_down_5_cmd(arg);
 	}
@@ -491,11 +491,11 @@ static void console_service(void) {
 		char *arg = get_token(&line);
 		phase_cpu5_cmd(arg);
 	}
-	else if (!strcmp(token, "output_select_ch1")) {
+	else if (!strcmp(token, "select_ch1")) {
 		char *arg = get_token(&line);
 		output_select_ch1_cmd(arg);
 	}
-	else if (!strcmp(token, "output_select_ch2")) {
+	else if (!strcmp(token, "select_ch2")) {
 		char *arg = get_token(&line);
 		output_select_ch2_cmd(arg);
 	}
