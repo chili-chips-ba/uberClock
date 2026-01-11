@@ -121,7 +121,7 @@ The following analysis is based on the behavioral simulation of the `top_tb` mod
 flowchart TD
     RESET((sys_rst_n)) -- Asynchronous Active-Low Reset --> IDLE
 
-    IDLE(["<b>IDLE</b><br/>adc_we_o = 0<br/>csr_done_o = 0<br/>addr = 0x0400"])
+    IDLE(["<b>IDLE</b><br/>adc_we_o = 0<br/>csr_done_o = 0<br/>addr = ADDR_START"])
     RUNNING(["<b>RUNNING</b><br/>adc_we_o = 1<br/>csr_done_o = 0<br/>addr++"])
     DONE(["<b>DONE</b><br/>adc_we_o = 0<br/>csr_done_o = 1<br/>addr = ADDR_START"])
 
