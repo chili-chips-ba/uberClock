@@ -33,18 +33,18 @@ module uberclock#(
     input  [PW-1:0]           phase_inc_down_4,
     input  [PW-1:0]           phase_inc_down_5,
     
-    input  [PW-1:0]           phase_inc_down_ref,
+    input  [PW-1:0]           phase_inc_down_ref,    //NEW
 
-    input  [PW-1:0]           phase_inc_cpu1,
-    input  [PW-1:0]           phase_inc_cpu2,
-    input  [PW-1:0]           phase_inc_cpu3,
-    input  [PW-1:0]           phase_inc_cpu4,
-    input  [PW-1:0]           phase_inc_cpu5,
-    input signed [11:0]       mag_cpu1,
-    input signed [11:0]       mag_cpu2,
-    input signed [11:0]       mag_cpu3,
-    input signed [11:0]       mag_cpu4,
-    input signed [11:0]       mag_cpu5,
+    input  [PW-1:0]           phase_inc_cpu1, //NEW
+    input  [PW-1:0]           phase_inc_cpu2,//NEW
+    input  [PW-1:0]           phase_inc_cpu3,//NEW
+    input  [PW-1:0]           phase_inc_cpu4,//NEW
+    input  [PW-1:0]           phase_inc_cpu5,//NEW
+    input signed [11:0]       mag_cpu1,//NEW
+    input signed [11:0]       mag_cpu2,//NEW
+    input signed [11:0]       mag_cpu3,//NEW
+    input signed [11:0]       mag_cpu4,//NEW
+    input signed [11:0]       mag_cpu5,//NEW
     
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              upsampler_input_mux,
@@ -52,8 +52,9 @@ module uberclock#(
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
     
-    input  [2:0]              lowspeed_dbg_select,
-    input  [2:0]              highspeed_dbg_select,
+    input  [2:0]              lowspeed_dbg_select,//NEW, ne znam da liovo zadrzavamo jer nisam uspio dodati ovu lo
+                                                    // logiku u .py
+    input  [2:0]              highspeed_dbg_select, //NEW
     
     input  [31:0]             gain1,
     input  [31:0]             gain2,
