@@ -51,7 +51,7 @@ import math
 # --- set your repo paths ---
 #   repository_dir:  root of your uberClock repo
 #   verilog_dir:     directory that contains the Verilog sources used below
-repository_dir = "/home/ahmed/ws/uberClock"
+repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock"
 verilog_dir    = repository_dir + "/2.soc-litex/1.hw"
 
 
@@ -1116,6 +1116,19 @@ class BaseSoC(SoCCore):
         ]:
             self.platform.add_source(f"{verilog_dir}/{fn}")
 
+
+        adc_clk_ch0  = self.platform.request("adc_clk_ch0")
+        adc_clk_ch1  = self.platform.request("adc_clk_ch1")
+        adc_data_ch0 = self.platform.request("adc_data_ch0")
+        adc_data_ch1 = self.platform.request("adc_data_ch1")
+
+        da1_clk  = self.platform.request("da1_clk")
+        da1_wrt  = self.platform.request("da1_wrt")
+        da1_data = self.platform.request("da1_data")
+
+        da2_clk  = self.platform.request("da2_clk")
+        da2_wrt  = self.platform.request("da2_wrt")
+        da2_data = self.platform.request("da2_data")
         # CSRs for UberClock configuration
         self.submodules.main = MainCSRs()
         self.add_csr("main")
@@ -1200,7 +1213,19 @@ class BaseSoC(SoCCore):
             i_sys_clk              = ClockSignal("uc"),
             i_rst                  = ResetSignal("uc"),
 
-            # ... ADC/DAC pins unchanged ...
+            o_adc_clk_ch0   = adc_clk_ch0,
+            o_adc_clk_ch1   = adc_clk_ch1,
+            i_adc_data_ch0  = adc_data_ch0,
+            i_adc_data_ch1  = adc_data_ch1,
+
+            # DAC
+            o_da1_clk        = da1_clk,
+            o_da1_wrt        = da1_wrt,
+            o_da1_data       = da1_data,
+
+            o_da2_clk        = da2_clk,
+            o_da2_wrt        = da2_wrt,
+            o_da2_data       = da2_data,
 
             i_input_select         = getattr(uc, "out_input_select_uc"),
             i_output_select_ch1    = getattr(uc, "out_output_sel_ch1_uc"),
