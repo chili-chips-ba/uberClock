@@ -111,7 +111,7 @@ static void uc_help(char *args) {
 /* ---- Phase/NCO/downconversion ---- */
 static void cmd_phase_nco(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_nco"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_nco"); if (p >= (1u<<24)) return;
     main_phase_inc_nco_write(p);
     uc_commit();
     printf("Input NCO phase increment set to %u\n", p);
@@ -122,7 +122,7 @@ static void cmd_phase_nco(char *a) {
 
 static void cmd_phase_cpu1(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_cpu1"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_cpu1"); if (p >= (1u<<24)) return;
     main_phase_inc_cpu1_write(p);
     uc_commit();
     printf("CPU phase increment ch1 set to %u\n", p);
@@ -133,7 +133,7 @@ static void cmd_phase_cpu1(char *a) {
 
 static void cmd_phase_cpu2(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU2_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_cpu2"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_cpu2"); if (p >= (1u<<24)) return;
     main_phase_inc_cpu2_write(p);
     uc_commit();
     printf("CPU phase increment ch2 set to %u\n", p);
@@ -144,7 +144,7 @@ static void cmd_phase_cpu2(char *a) {
 
 static void cmd_phase_cpu3(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU3_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_cpu3"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_cpu3"); if (p >= (1u<<24)) return;
     main_phase_inc_cpu3_write(p);
     uc_commit();
     printf("CPU phase increment ch3 set to %u\n", p);
@@ -155,7 +155,7 @@ static void cmd_phase_cpu3(char *a) {
 
 static void cmd_phase_cpu4(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU4_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_cpu4"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_cpu4"); if (p >= (1u<<24)) return;
     main_phase_inc_cpu4_write(p);
     uc_commit();
     printf("CPU phase increment ch4 set to %u\n", p);
@@ -166,7 +166,7 @@ static void cmd_phase_cpu4(char *a) {
 
 static void cmd_phase_cpu5(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU5_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_cpu5"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<24, "phase_cpu5"); if (p >= (1u<<24)) return;
     main_phase_inc_cpu5_write(p);
     uc_commit();
     printf("CPU phase increment ch5 set to %u\n", p);
@@ -190,7 +190,7 @@ static void cmd_nco_mag(char *a) {
 
 static void cmd_phase_down_ref(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_DOWN_REF_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_down_ref"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u<<19, "phase_down_ref"); if (p >= (1u<<24)) return;
     main_phase_inc_down_ref_write(p);
     uc_commit();
     printf("Downconversion phase ref increment set to %u\n", p);
@@ -916,7 +916,7 @@ void uberclock_register_cmds(void) {
 /* ========================================================================= */
 void uberclock_init(void) {
     #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
-    main_phase_inc_nco_write(80660);
+    main_phase_inc_nco_write(2581110);
 
     main_phase_inc_down_1_write(80656);
     main_phase_inc_down_2_write(80652);
@@ -929,7 +929,7 @@ void uberclock_init(void) {
     #endif
 
     #ifdef CSR_MAIN_NCO_MAG_ADDR
-    main_nco_mag_write((uint32_t)(22 & 0x0fff));
+    main_nco_mag_write((uint32_t)(1000 & 0x0fff));
     #endif
 
     #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
@@ -966,7 +966,7 @@ void uberclock_init(void) {
     main_lowspeed_dbg_select_write(0);
     #endif
     #ifdef CSR_MAIN_HIGHSPEED_DBG_SELECT_ADDR
-    main_highspeed_dbg_select_write(0);
+    main_highspeed_dbg_select_write(3);
     #endif
 
     #ifdef CSR_MAIN_UPSAMPLER_INPUT_X_ADDR
