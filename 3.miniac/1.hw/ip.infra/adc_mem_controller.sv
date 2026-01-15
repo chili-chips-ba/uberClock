@@ -18,41 +18,35 @@
 
 `timescale 1ns / 1ps
 
+import signal_types_pkg::*;
+
 module adc_mem_controller (
     // Clock & Reset
-    input  logic         sys_clk,
-    input  logic         sys_rst_n,
+    input  logic	sys_clk,
+    input  logic	sys_rst_n,
 
     // ADC Data Input
-    input  logic [31:0]  adc_sample_in,
+    input adc_sample_t	adc_sample_in,
 
     // CPU Control Register (CSR) Interface
-    input  logic         csr_start_i, // Start trigger pulse
-    output logic         csr_done_o,  // Status flag: High when buffer is full
+    input  logic	csr_start_i, // Start trigger pulse
+    output logic	csr_done_o,  // Status flag: High when buffer is full
 
     // DPRAM Interface (Write-only port)
-    output logic         adc_we_o,    // Memory Write Enable
-    output logic [31:0]  adc_data_o,  // Data to be stored
-    output logic [12:0]  adc_addr_o   // Target memory address
+    output logic	adc_we_o,    // Memory Write Enable
+    output adc_sample_t	adc_data_o,  // Data to be stored
+    output logic [12:0]	adc_addr_o   // Target memory address
 );
 
-    // --- Address Parameters ---
+    // Address Parameters
     localparam ADDR_BITS     = 13;      // 8192 words (address range 0 to 8191)
     localparam ADDR_START    = 13'h400; // Start offset (Word address 1024)
     localparam ADDR_SPAN     = 13'h1000;// Buffer size (4096 words)
     localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // End address (13'h13FF)
 
-    // --- Data Packing Structure ---
-    typedef struct packed {
-        logic [3:0]  unused1;
-        logic [11:0] ch1;     
-        logic [3:0]  unused0;
-        logic [11:0] ch0;     
-    } adc_sample_t;
-
     adc_sample_t packed_sample_w;
 
-    // --- State Machine Definition ---
+    // State Machine Definition
     typedef enum logic [1:0] {
         IDLE,       // Wait for start trigger (default)
         RUNNING,    // Data acquisition in progress
@@ -61,7 +55,7 @@ module adc_mem_controller (
 
     acq_state_t acq_state_r;
 
-    // --- Internal Registers ---
+    // Internal Registers
     logic [ADDR_BITS-1:0] write_addr_r; // Current write address pointer
     logic                  adc_we_r;     // Internal Write Enable register
     logic                  csr_done_r;   // Internal Done flag status
@@ -150,14 +144,11 @@ module adc_mem_controller (
     end
 
     // --- Data Mapping to Structure ---
-    assign packed_sample_w.unused1 = 4'b0;
-    assign packed_sample_w.ch1     = adc_sample_in[27:16];
-    assign packed_sample_w.unused0 = 4'b0;
-    assign packed_sample_w.ch0     = adc_sample_in[11:0];
+    assign packed_sample_w = adc_sample_in;
 
     // --- Output Assignments ---
     assign adc_we_o   = adc_we_r;
-    assign adc_data_o = packed_sample_w; // Pass-through via structure
+    assign adc_data_o = 32'(packed_sample_w);
     assign adc_addr_o = write_addr_r;
     assign csr_done_o = csr_done_r;
 

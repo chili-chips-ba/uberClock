@@ -1,30 +1,32 @@
 //==========================================================================
-// Testbench za adc_mem_controller
-// Fokus: Prikaz toka State Machine (FSM) i signala za RAM upis.
+// Testbench for adc_mem_controller
+// Focus: Monitoring Finite State Machine (FSM) transitions and RAM write signals.
 //==========================================================================
 `timescale 1ns / 1ps
 
+import signal_types_pkg::*;
+
 module adc_mem_controller_tb;
 
-    // Parametri Testbencha
-    localparam CLK_PERIOD = 15.385; // 65 MHz
-    localparam NUM_SAMPLES = 4096; // 4K uzoraka
-    localparam ADDR_START = 13'h400; 
+    // Testbench Parameters
+    localparam CLK_PERIOD = 15.385; // ~65 MHz
+    localparam NUM_SAMPLES = 4096;  // 4K samples buffer size
+    localparam ADDR_START  = 13'h400; 
 
-    // Signali za UUT (Unit Under Test)
-    logic         sys_clk;
-    logic         sys_rst_n;
-    logic [31:0]  adc_sample_in;
-    logic         csr_start_i;
-    wire          csr_done_o;
-    wire          adc_we_o;
-    wire [31:0]   adc_data_o;
-    wire [12:0]   adc_addr_o;
+    // Signals for UUT (Unit Under Test)
+    logic           sys_clk;
+    logic           sys_rst_n;
+    adc_sample_t    adc_sample_in; // Promijenjeno u strukturu
+    logic           csr_start_i;
+    wire            csr_done_o;
+    wire            adc_we_o;
+    adc_sample_t    adc_data_o;   // Promijenjeno u strukturu
+    wire [12:0]     adc_addr_o;
     
-    // Brojac za simulaciju
-    integer       sample_count;
+    // Simulation counter
+    integer        sample_count;
     
-    // Instanciranje Modula pod Testom (UUT)
+    // UUT Instance
     adc_mem_controller uut (
         .sys_clk       (sys_clk),
         .sys_rst_n     (sys_rst_n),
@@ -36,99 +38,103 @@ module adc_mem_controller_tb;
         .adc_addr_o    (adc_addr_o)
     );
 
-    // Generisanje Sata
+    // Clock Generation
     always begin
         sys_clk = 1'b0;
         #(CLK_PERIOD / 2) sys_clk = 1'b1;
         #(CLK_PERIOD / 2);
     end
 
-    // --- Kontinuirano pracenje kljucnih signala ---
-    // Prikazujemo FSM stanje DIREKTNO preko uut.acq_state_r (hijerarhijski pristup)
-    
+    // --- Signal Monitoring ---
+    // Direct FSM state monitoring via hierarchical path: uut.acq_state_r
     initial begin
-        // %s format za enumeraciju automatski ispisuje simbolicko ime stanja (IDLE, RUNNING, DONE)
-        $monitor("[%0t] FSM Stanje: %s | WE=%b | DONE=%b | ADDR=0x%h | DATA_OUT=0x%h | IN=0x%h", 
+        $monitor("[%0t] FSM State: %s | WE=%b | DONE=%b | ADDR=0x%h | CH1=%d | CH0=%d | IN=0x%h", 
             $time, 
-            uut.acq_state_r, // NOVO: Direktno pracenje interne varijable stanja
-            adc_we_o, csr_done_o, adc_addr_o, adc_data_o, adc_sample_in);
+            uut.acq_state_r.name(), 
+            adc_we_o, 
+            csr_done_o, 
+            adc_addr_o, 
+            uut.packed_sample_w.adc_ch1, 
+            uut.packed_sample_w.adc_ch0, 
+            adc_sample_in);
     end
 
-    // --- Inicijalizacija i Test Sekvenca ---
+    // --- Test Sequence ---
     initial begin
         $display("-------------------------------------------------------");
-        $display("Pocetak simulacije ADC Memory Controller-a");
+        $display("Starting ADC Memory Controller Simulation");
         $display("-------------------------------------------------------");
         
         $dumpfile("adc_mem_controller.vcd");
         $dumpvars(0, adc_mem_controller_tb);
         
-        // Inicijalne vrednosti
-        sys_rst_n     = 1'b0; // Reset aktivan (Low)
+        // Initial values
+        sys_rst_n     = 1'b0; // Active-low reset
         csr_start_i   = 1'b0;
         adc_sample_in = 32'hFEED_FEED; 
         sample_count  = 0;
         
-        // 1. Reset
+        // 1. Reset Phase
         @(posedge sys_clk);
         @(posedge sys_clk);
-        sys_rst_n = 1'b1; // Reset neaktivan
-        $display("[%0t] Izlazak iz reset stanja. Ocekivano: IDLE", $time);
+        sys_rst_n = 1'b1; // Release reset
+        $display("[%0t] Reset released. Expected state: IDLE", $time);
         
-        // 2. Start Akvizicije (Puls)
+        // 2. Start Acquisition (Pulse)
         @(posedge sys_clk);
-        csr_start_i = 1'b1; // Start puls
-        $display("[%0t] START puls: csr_start_i = 1", $time);
+        csr_start_i = 1'b1; // Issue START pulse
+        $display("[%0t] START pulse issued: csr_start_i = 1", $time);
 
         @(posedge sys_clk);
-        csr_start_i = 1'b0; // Spustanje pulsa
-        $display("[%0t] START puls: csr_start_i = 0. Ocekivano: RUNNING", $time);
+        csr_start_i = 1'b0; // Release pulse
+        $display("[%0t] START pulse released: csr_start_i = 0. Expected state: RUNNING", $time);
 
-        // 3. Akvizicija - 4096 Uzoraka
-        
-        // Akvizicija je aktivna (RUNNING)
+        // 3. Data Acquisition Phase - 4096 Samples
         while (sample_count < NUM_SAMPLES) begin
             
-            // Postavljamo ulazni podatak za sljedeci ciklus
-            adc_sample_in = sample_count; 
+            // Pack data using structure fields to simulate real ADC input
+            adc_sample_in.adc_unused1 = 4'b0;
+            adc_sample_in.adc_ch1     = 12'(sample_count + 100);
+            adc_sample_in.adc_unused0 = 4'b0;
+            adc_sample_in.adc_ch0     = 12'(sample_count); 
             
-            @(posedge sys_clk); // Sacekaj clock edge (Upis se dogadja ovdje)
+            @(posedge sys_clk); // Wait for clock edge (Write occurs here)
             
             sample_count++;
         end
 
-        // 4. Provera DONE stanja (posljednji uzorak je pisan)
+        // 4. Verification of DONE state
         
-        // Postavi posljednju vrednost (nece biti upisana u RAM jer je brojac pun)
-        adc_sample_in = NUM_SAMPLES; 
+        // Set dummy value (should not be written to RAM since buffer is full)
+        adc_sample_in = 32'(NUM_SAMPLES); 
 
-        @(posedge sys_clk); // Ciklus nakon poslednjeg upisa
+        @(posedge sys_clk); // Cycle after the final write
         
-        $display("[%0t] Akvizicija Zavrsena. Upisano %0d uzoraka. Ocekivano: DONE", $time, NUM_SAMPLES);
+        $display("[%0t] Acquisition Finished. Written %0d samples. Expected state: DONE", $time, NUM_SAMPLES);
         
-        // Sacekaj par ciklusa u DONE stanju
+        // Stay in DONE state for a few cycles
         repeat (3) @(posedge sys_clk);
         
-        // 5. Test Ponovnog Pokretanja
+        // 5. Restart Test
         
-        // Novi Start puls
+        // New START pulse
         @(posedge sys_clk);
         csr_start_i = 1'b1;
         
         @(posedge sys_clk);
         csr_start_i = 1'b0; 
         
-        $display("[%0t] Druga START akvizicija. Ocekivano: RUNNING", $time);
+        $display("[%0t] Second START issued. Expected state: RUNNING", $time);
         
-        // Pusti da se ponovno pokretanje izvrši
+        // Let the second run execute for a few cycles
         repeat (5) @(posedge sys_clk);
 
 
-        // 6. Zavrsetak Simulacije
+        // 6. Simulation Cleanup
         repeat (10) @(posedge sys_clk);
         
         $display("-------------------------------------------------------");
-        $display("SIMULACIJA ZAVRSENA: Log toka FSM-a je prikazan iznad.");
+        $display("SIMULATION FINISHED: Check FSM log above for details.");
         $display("-------------------------------------------------------");
         
         $stop;

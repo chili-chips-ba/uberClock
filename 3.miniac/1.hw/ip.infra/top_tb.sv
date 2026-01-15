@@ -6,6 +6,7 @@
 
 module top_tb;
     import soc_pkg::*; 
+    import signal_types_pkg::*; // Dodan import za strukture
 
     // Parameters 
     localparam CLK_PERIOD = 15.385; // 65 MHz clock cycle
@@ -23,12 +24,12 @@ module top_tb;
     logic [11:0] ad9238_data_ch0;
     logic [11:0] ad9238_data_ch1;
     
-    // Packed 32-bit data word sent to the controller
-    wire [31:0]  adc_sample_in;
+    // Packed data word using the sample structure
+    adc_sample_t adc_sample_in;
     
     // Internal signals: Controller to RAM interface
     wire         adc_we;
-    wire [31:0]  adc_data;
+    adc_sample_t adc_data; // Promijenjeno u strukturu
     wire [12:0]  adc_addr;
 
     // Verification Helper Variables
@@ -37,8 +38,10 @@ module top_tb;
     logic [31:0] expected_mem [0:NUM_SAMPLES-1]; 
 
     // DATA PACKING: Top-level simulation logic
-    // Format: [ 4'b0 | CH1(12b) | 4'b0 | CH0(12b) ]
-    assign adc_sample_in = {4'h0, ad9238_data_ch1, 4'h0, ad9238_data_ch0};
+    assign adc_sample_in.adc_unused1 = 4'h0;
+    assign adc_sample_in.adc_ch1     = ad9238_data_ch1;
+    assign adc_sample_in.adc_unused0 = 4'h0;
+    assign adc_sample_in.adc_ch0     = ad9238_data_ch0;
 
     // SoC Interface Instance (for RAM Port 1)
     soc_if bus_dmem (
@@ -55,7 +58,7 @@ module top_tb;
         .bus      (bus_dmem.SLV), 
         .adc_clk  (sys_clk),      
         .adc_we   (adc_we),
-        .adc_data (adc_data),
+        .adc_data (32'(adc_data)), // Cast u 32 bita za RAM
         .adc_addr (adc_addr)
     );
 
@@ -63,12 +66,12 @@ module top_tb;
     adc_mem_controller uut (
         .sys_clk        (sys_clk),
         .sys_rst_n      (sys_rst_n),
-        .adc_sample_in (adc_sample_in),
-        .csr_start_i   (csr_start_i),
-        .csr_done_o    (csr_done_o),
-        .adc_we_o      (adc_we),
-        .adc_data_o    (adc_data),
-        .adc_addr_o    (adc_addr)
+        .adc_sample_in  (adc_sample_in),
+        .csr_start_i    (csr_start_i),
+        .csr_done_o     (csr_done_o),
+        .adc_we_o       (adc_we),
+        .adc_data_o     (adc_data),
+        .adc_addr_o     (adc_addr)
     );
 
     // Clock Generation
@@ -108,8 +111,8 @@ module top_tb;
             @(posedge sys_clk);
             
             if (adc_we) begin
-                // 2. Capture the actual data present on lines for verification
-                expected_mem[sample_count] = adc_sample_in;
+                // 2. Capture the actual data present on lines for verification (cast to logic[31:0])
+                expected_mem[sample_count] = 32'(adc_sample_in);
                 sample_count++;
                 
                 // 3. Prepare data for the next clock cycle
