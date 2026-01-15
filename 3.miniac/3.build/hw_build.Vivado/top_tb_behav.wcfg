@@ -6,21 +6,22 @@
       <db_ref path="top_tb_behav.wdb" id="1">
          <top_modules>
             <top_module name="glbl" />
+            <top_module name="signal_types_pkg" />
             <top_module name="soc_pkg" />
             <top_module name="top_tb" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="116.337 ns"></ZoomStartTime>
-      <ZoomEndTime time="353.738 ns"></ZoomEndTime>
-      <Cursor1Time time="63,674.961 ns"></Cursor1Time>
+      <ZoomStartTime time="115.700 ns"></ZoomStartTime>
+      <ZoomEndTime time="365.101 ns"></ZoomEndTime>
+      <Cursor1Time time="429.432 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="194"></NameColumnWidth>
-      <ValueColumnWidth column_width="95"></ValueColumnWidth>
+      <ValueColumnWidth column_width="87"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="24" />
+   <WVObjectSize size="20" />
    <wvobject type="logic" fp_name="/top_tb/sys_clk">
       <obj_property name="ElementShortName">sys_clk</obj_property>
       <obj_property name="ObjectShortName">sys_clk</obj_property>
@@ -30,16 +31,9 @@
       <obj_property name="ObjectShortName">sys_rst_n</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/adc_sample_in">
-      <obj_property name="ElementShortName">adc_sample_in[31:0]</obj_property>
-      <obj_property name="ObjectShortName">adc_sample_in[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch0">
-      <obj_property name="ElementShortName">ad9238_data_ch0[11:0]</obj_property>
-      <obj_property name="ObjectShortName">ad9238_data_ch0[11:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/top_tb/ad9238_data_ch1">
-      <obj_property name="ElementShortName">ad9238_data_ch1[11:0]</obj_property>
-      <obj_property name="ObjectShortName">ad9238_data_ch1[11:0]</obj_property>
+      <obj_property name="ElementShortName">adc_sample_in</obj_property>
+      <obj_property name="ObjectShortName">adc_sample_in</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/top_tb/csr_start_i">
       <obj_property name="ElementShortName">csr_start_i</obj_property>
@@ -57,14 +51,10 @@
       <obj_property name="ElementShortName">adc_we</obj_property>
       <obj_property name="ObjectShortName">adc_we</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/top_tb/uut/packed_sample_w">
-      <obj_property name="ElementShortName">packed_sample_w</obj_property>
-      <obj_property name="ObjectShortName">packed_sample_w</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/top_tb/adc_data">
-      <obj_property name="ElementShortName">adc_data[31:0]</obj_property>
-      <obj_property name="ObjectShortName">adc_data[31:0]</obj_property>
+      <obj_property name="ElementShortName">adc_data</obj_property>
+      <obj_property name="ObjectShortName">adc_data</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/adc_addr">
       <obj_property name="ElementShortName">adc_addr[12:0]</obj_property>
@@ -85,14 +75,12 @@
    <wvobject type="array" fp_name="/top_tb/uut/acq_state_r">
       <obj_property name="ElementShortName">acq_state_r[1:0]</obj_property>
       <obj_property name="ObjectShortName">acq_state_r[1:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/uut/ADDR_START">
       <obj_property name="ElementShortName">ADDR_START[12:0]</obj_property>
       <obj_property name="ObjectShortName">ADDR_START[12:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/top_tb/uut/ADDR_SPAN">
-      <obj_property name="ElementShortName">ADDR_SPAN[12:0]</obj_property>
-      <obj_property name="ObjectShortName">ADDR_SPAN[12:0]</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/top_tb/uut/ADDR_STOP_AT">
       <obj_property name="ElementShortName">ADDR_STOP_AT[31:0]</obj_property>
