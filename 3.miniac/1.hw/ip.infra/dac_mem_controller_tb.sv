@@ -4,22 +4,22 @@
 //==========================================================================
 `timescale 1ns / 1ps
 
-import signal_types_pkg::*; // Import package for dac_sample_t structure
+import signal_types_pkg::*;
 
 module dac_mem_controller_tb;
 
     // Parameters
     localparam ADDR_WIDTH = 11;
-    localparam CLK_PERIOD = 15.38; // ~65MHz in nanoseconds
+    localparam CLK_PERIOD = 15.38;
 
-    // Signal definitions for UUT connection
+    // Signal definitions
     logic                    clk;
     logic                    rst_n;
     logic                    dac_en_i;
     logic [ADDR_WIDTH-1:0]   dac_len_i;
     logic [ADDR_WIDTH-1:0]   mem_addr_o;
     logic                    mem_rd_en_o;
-    logic [31:0]             mem_data_i;
+    dac_sample_t             mem_data_i; // Strukturni tip
     logic [13:0]             dac_ch0_o;
     logic [13:0]             dac_ch1_o;
 
@@ -27,8 +27,7 @@ module dac_mem_controller_tb;
     dac_mem_controller #(
         .ADDR_WIDTH(ADDR_WIDTH)
     ) uut (
-        .* // Automatic port connection
-    );
+        .* );
 
     // Clock Generation
     initial begin
@@ -38,52 +37,40 @@ module dac_mem_controller_tb;
 
     // --- Main Test Sequence ---
     initial begin
-        // --- 1. Initialization and Reset ---
-        $display("-------------------------------------------------------");
-        $display("Starting DAC Memory Controller Simulation");
-        $display("-------------------------------------------------------");
-        
+        // Initialization and Reset
         rst_n      = 0;
         dac_en_i   = 0;
         dac_len_i  = 0;
-        mem_data_i = 32'h0;
+        mem_data_i = '0;
         
         #(CLK_PERIOD * 5);
-        rst_n = 1; // Release reset
+        rst_n = 1;
         #(CLK_PERIOD * 2);
 
-        // --- 2. Test RUN State (Looping) ---
-        $display("[%0t] Starting continuous loop test...", $time);
-        dac_len_i = 11'd4; // Loop through addresses 0, 1, 2, 3
+        // Test RUN State (Looping)
+        dac_len_i = 11'd4;
         dac_en_i  = 1;
 
-        // Memory Responder: Simulates BRAM behavior in the background
+        // Memory Responder using structural assignments
         fork
             forever begin
                 @(posedge clk);
-                // Data is packed according to dac_sample_t:
-                // {unused1[2], ch1[14], unused0[2], ch0[14]}
+                mem_data_i = '0; // Clear unused bits
                 case (mem_addr_o)
-                    11'd0: mem_data_i <= {2'b0, 14'd100, 2'b0, 14'd50};
-                    11'd1: mem_data_i <= {2'b0, 14'd200, 2'b0, 14'd150};
-                    11'd2: mem_data_i <= {2'b0, 14'd300, 2'b0, 14'd250};
-                    11'd3: mem_data_i <= {2'b0, 14'd400, 2'b0, 14'd350};
-                    default: mem_data_i <= 32'h0;
+                    11'd0: begin mem_data_i.dac_ch1 = 14'd100; mem_data_i.dac_ch0 = 14'd50;  end
+                    11'd1: begin mem_data_i.dac_ch1 = 14'd200; mem_data_i.dac_ch0 = 14'd150; end
+                    11'd2: begin mem_data_i.dac_ch1 = 14'd300; mem_data_i.dac_ch0 = 14'd250; end
+                    11'd3: begin mem_data_i.dac_ch1 = 14'd400; mem_data_i.dac_ch0 = 14'd350; end
+                    default: mem_data_i = '0;
                 endcase
             end
         join_none 
 
-        // Let the controller loop for 3 full cycles (3 * 4 = 12 clock cycles)
         repeat(12) @(posedge clk); 
 
-        // --- 3. Shutdown Test ---
-        $display("[%0t] Disabling DAC controller...", $time);
+        // Shutdown Test
         dac_en_i = 0;
         #(CLK_PERIOD * 5);
-        
-        $display("-------------------------------------------------------");
-        $display("Simulation finished successfully.");
-        $display("-------------------------------------------------------");
         $finish;
     end
 

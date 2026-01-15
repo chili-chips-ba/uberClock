@@ -7,6 +7,7 @@
          <top_modules>
             <top_module name="dac_mem_controller_tb" />
             <top_module name="glbl" />
+            <top_module name="signal_types_pkg" />
          </top_modules>
       </db_ref>
    </db_ref_list>
@@ -17,9 +18,9 @@
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="194"></NameColumnWidth>
-      <ValueColumnWidth column_width="87"></ValueColumnWidth>
+      <ValueColumnWidth column_width="83"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="14" />
+   <WVObjectSize size="13" />
    <wvobject type="logic" fp_name="/dac_mem_controller_tb/uut/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -45,8 +46,9 @@
       <obj_property name="ObjectShortName">mem_rd_en_o</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/dac_mem_controller_tb/uut/mem_data_i">
-      <obj_property name="ElementShortName">mem_data_i[31:0]</obj_property>
-      <obj_property name="ObjectShortName">mem_data_i[31:0]</obj_property>
+      <obj_property name="ElementShortName">mem_data_i</obj_property>
+      <obj_property name="ObjectShortName">mem_data_i</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/dac_mem_controller_tb/uut/dac_ch0_o">
       <obj_property name="ElementShortName">dac_ch0_o[13:0]</obj_property>
@@ -59,15 +61,12 @@
    <wvobject type="other" fp_name="/dac_mem_controller_tb/uut/state_reg">
       <obj_property name="ElementShortName">state_reg</obj_property>
       <obj_property name="ObjectShortName">state_reg</obj_property>
+      <obj_property name="CustomSignalColor">#FFD700</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="other" fp_name="/dac_mem_controller_tb/uut/state_next">
       <obj_property name="ElementShortName">state_next</obj_property>
       <obj_property name="ObjectShortName">state_next</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/dac_mem_controller_tb/uut/dac_data_struct">
-      <obj_property name="ElementShortName">dac_data_struct</obj_property>
-      <obj_property name="ObjectShortName">dac_data_struct</obj_property>
-      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/dac_mem_controller_tb/uut/addr_cnt">
       <obj_property name="ElementShortName">addr_cnt[10:0]</obj_property>

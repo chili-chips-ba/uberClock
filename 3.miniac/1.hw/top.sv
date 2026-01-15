@@ -89,6 +89,11 @@ module top (
    logic adc_we;
    adc_sample_t adc_data;
    logic [12:0] adc_addr;
+   
+   dac_sample_t dac_data_from_mem;
+   logic [10:0] dac_mem_addr;
+   logic        dac_mem_rd;
+   
 //---------------------------------
    soc_cpu #(
       .ADDR_RESET      (32'h 0000_0000),
@@ -220,6 +225,20 @@ adc u_adc (
          .da2_wrt   (da2_wrt),//da2_wrt
          .da2_data  (da2_data)
      );
+     
+     dac_mem_controller #(
+       .ADDR_WIDTH(11)
+     ) u_dac_mem_ctrl (
+       .clk          (sys_clk),
+       .rst_n        (sys_rst_n),
+       .dac_en_i     (from_csr.dac.en.value),   
+       .dac_len_i    (from_csr.dac.len.value),  
+       .mem_addr_o   (dac_mem_addr),
+       .mem_rd_en_o  (dac_mem_rd),
+       .mem_data_i   (dac_data_from_mem),       
+       .dac_ch0_o    (da_data_ch1_14),          
+       .dac_ch1_o    (da_data_ch2_14)           
+   );
 
 
 //==========================================================================
@@ -227,7 +246,7 @@ adc u_adc (
 //==========================================================================
    assign led[1] = ~from_csr.gpio.led2.value;
    assign led[0] = ~from_csr.gpio.led1.value;
-   assign to_csr.gpio.key2.next = ~user_key2;  //TODO: Add debounce
-   assign to_csr.gpio.key1.next = ~user_key1;  //TODO: Add debounce
+   assign to_csr.gpio.key2.next = ~user_key2;  
+   assign to_csr.gpio.key1.next = ~user_key1;  
 
 endmodule
