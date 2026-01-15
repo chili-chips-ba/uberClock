@@ -142,7 +142,7 @@ addrmap csr {
       name = "csr.adc";
       desc = "ADC Register";
 
-      // START flag: CPU piše (W), ADC Kontroler čita (R). CPU će napisati 1 kao puls.
+      // START bit: CPU piše (W), ADC Kontroler čita (R). CPU će napisati 1 kao puls.
       field {
          name = "csr.adc.start";
          desc = "Control: Start ADC data transfer to DMEM (SW writes 1, HW reads)";
@@ -150,7 +150,7 @@ addrmap csr {
          hw = r;	// Hardware Read Only
       } start[31:31] = 0;
 
-      // DONE flag: ADC Kontroler piše (W), CPU čita (R). HW setuje 1 kada završi.
+      // DONE bit: ADC Kontroler piše (W), CPU čita (R). HW setuje 1 kada završi.
       field {
          name = "csr.adc.done";
          desc = "Status: ADC data transfer finished (HW writes 1, SW reads)";
@@ -191,6 +191,32 @@ addrmap csr {
          hw = r;
       } ch2[13:0] = 0;
    } dac;
+   
+   reg {
+      name = "csr.dac_ctrl";
+      desc = "Control for Continuous Generation";
+
+      field {
+         name = "en";
+         desc = "Enable continuous loop from memory";
+         sw = rw; hw = r;
+      } en[31:31] = 0;
+
+      field {
+         name = "len";
+         desc = "Loop length (up to 2048)";
+         sw = rw; hw = r;
+      } len[10:0] = 0; // 11 bitova za adresu 0-2047
+   } dac_ctrl;
+   
+   reg {
+      name = "csr.dac_freq";
+      desc = "Phase increment for CORDIC / Frequency control";
+      field {
+         name = "step";
+         sw = rw; hw = r;
+      } step[31:0] = 0;
+   } dac_freq;
 
    reg {
       name = "csr.hw_version";
