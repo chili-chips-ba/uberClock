@@ -54,69 +54,89 @@ import math
 repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock"
 verilog_dir    = repository_dir + "/2.soc-litex/1.hw"
 
-
 # =============================================================================
 #                           CRG  (Clock/Reset Generation)
 # =============================================================================
-class _CRG(LiteXModule):
-    """
-    Clock/Reset generator for AX7203.
 
-    - Uses on-board 200 MHz differential clock.
-    - Generates:
-        * cd_sys      @ 100 MHz               (LiteX system domain)
-        * cd_uc       @  65 MHz               (UberClock domain)
-        * cd_ub_4x    @ 400 MHz               (DDR3 internal clock)
-        * cd_ub_4x_dqs@ 400 MHz phase-shifted (DDR3 DQS)
-        * cd_idelay   @ 200 MHz               (IDELAY regulation)
-    """
+class _CRG(LiteXModule):
     def __init__(self, platform, need_ddr_clks=True):
         self.rst          = Signal()
+
         self.cd_sys       = ClockDomain()
         self.cd_uc        = ClockDomain()
         self.cd_ub_4x     = ClockDomain()
         self.cd_ub_4x_dqs = ClockDomain()
         self.cd_idelay    = ClockDomain()
 
+        # 200 MHz differential input
         clk200    = platform.request("clk200")
         clk200_se = Signal()
 
-        # Convert diff -> single-ended
         self.specials += Instance("IBUFDS",
             i_I  = clk200.p,
             i_IB = clk200.n,
             o_O  = clk200_se
         )
 
-        # First MMCM: sys + DDR clocks
+        margin = 1e-6
+
+        # ---------------- pll0 (sys + ddr) ----------------
         self.pll0 = S7MMCM(speedgrade=-2)
         self.comb += self.pll0.reset.eq(self.rst)
         self.pll0.register_clkin(clk200_se, 200e6)
 
-        margin = 1e-2
         self.pll0.create_clkout(self.cd_sys, 100e6, margin=margin)
         if need_ddr_clks:
             self.pll0.create_clkout(self.cd_ub_4x,     400e6,           margin=margin)
             self.pll0.create_clkout(self.cd_ub_4x_dqs, 400e6, phase=90, margin=margin)
 
-        # Second MMCM: UberClock domain (65 MHz)
+        # ---------------- pll1 (uc exact 65 MHz) ----------------
         self.pll1 = S7MMCM(speedgrade=-2)
         self.comb += self.pll1.reset.eq(self.rst)
         self.pll1.register_clkin(clk200_se, 200e6)
-        self.pll1.create_clkout(self.cd_uc, 65e6, margin=margin)
 
-        # IDELAYCTRL clock (200 MHz BUFG)
+        # Create output normally (LiteX will choose a config), we will override later.
+        self.pll1.create_clkout(self.cd_uc, 65e6, margin=margin, with_reset=False)
+
+        # ---------------- IDELAYCTRL clock (200 MHz BUFG) ----------------
         clk200_bufg = Signal()
         self.specials += Instance("BUFG", i_I=clk200_se, o_O=clk200_bufg)
         self.comb += self.cd_idelay.clk.eq(clk200_bufg)
         self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
         # Constraints
-        platform.add_false_path_constraints(self.cd_sys.clk,       self.pll0.clkin)
-        platform.add_false_path_constraints(self.cd_uc.clk,        self.pll1.clkin)
+        platform.add_false_path_constraints(self.cd_sys.clk, self.pll0.clkin)
+        platform.add_false_path_constraints(self.cd_uc.clk,  self.pll1.clkin)
         if need_ddr_clks:
             platform.add_false_path_constraints(self.cd_ub_4x.clk,     self.pll0.clkin)
             platform.add_false_path_constraints(self.cd_ub_4x_dqs.clk, self.pll0.clkin)
+
+    def do_finalize(self):
+        # Let submodules (pll0/pll1) finalize first (they populate params from compute_config()).
+        super().do_finalize()
+
+        # Force pll1 exact 65.000 MHz:
+        # VCO = 200 * 13 / 2 = 1300 MHz (within -2 range 600..1440)
+        # uc  = 1300 / 20    = 65.000 MHz
+        p = self.pll1.params
+
+        # VCO ratio
+        p["p_DIVCLK_DIVIDE"]   = 2
+        p["p_CLKFBOUT_MULT_F"] = 13.0
+        p["p_CLKFBOUT_PHASE"]  = 0.0
+
+        # Output divider:
+        # In your S7MMCM, output 0 uses *_DIVIDE_F, others use *_DIVIDE.
+        # The first create_clkout() typically maps to CLKOUT0, so set CLKOUT0.
+        p["p_CLKOUT0_DIVIDE_F"]   = 20.0
+        p["p_CLKOUT0_PHASE"]      = 0.0
+        p["p_CLKOUT0_DUTY_CYCLE"] = 0.5
+
+        # Optional safety: if your LiteX ever mapped uc to CLKOUT1 instead, also force it.
+        # Harmless even if unused.
+        p["p_CLKOUT1_DIVIDE"]     = 20
+        p["p_CLKOUT1_PHASE"]      = 0.0
+        p["p_CLKOUT1_DUTY_CYCLE"] = 0.5
 
 
 # =============================================================================

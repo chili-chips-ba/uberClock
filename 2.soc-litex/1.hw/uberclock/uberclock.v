@@ -8,7 +8,7 @@ module uberclock#(
 )(
     input                     sys_clk,
     input                     rst,
-    input  [2:0]              final_shift, 
+    input  [2:0]              final_shift,
     // ADC (12-bit inputs; AD9238 on J11)
     output                    adc_clk_ch0,  // AD channel 0 sampling clock
     output                    adc_clk_ch1,  // AD channel 1 sampling clock
@@ -32,7 +32,7 @@ module uberclock#(
     input  [PW-1:0]           phase_inc_down_3,
     input  [PW-1:0]           phase_inc_down_4,
     input  [PW-1:0]           phase_inc_down_5,
-    
+
     input  [PW-1:0]           phase_inc_down_ref,    //NEW
 
     input  [PW-1:0]           phase_inc_cpu1, //NEW
@@ -45,17 +45,17 @@ module uberclock#(
     input signed [11:0]       mag_cpu3,//NEW
     input signed [11:0]       mag_cpu4,//NEW
     input signed [11:0]       mag_cpu5,//NEW
-    
+
     input  [1:0]              input_select,  // 0=use ADC, 1=use internal NCO
     input  [1:0]              upsampler_input_mux,
-    
+
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
-    
+
     input  [2:0]              lowspeed_dbg_select,//NEW, ne znam da liovo zadrzavamo jer nisam uspio dodati ovu lo
                                                     // logiku u .py
     input  [2:0]              highspeed_dbg_select, //NEW
-    
+
     input  [31:0]             gain1,
     input  [31:0]             gain2,
     input  [31:0]             gain3,
@@ -146,10 +146,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude1;
     wire signed [24:0] rx0_phase1;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_1 (
@@ -199,12 +199,12 @@ module uberclock#(
     wire signed [15:0] tx_channel_output1;
     wire signed [15:0] upsampled_x1, upsampled_y1;
     tx_channel # (
-        .IW(16), 
-        .OW(16), 
+        .IW(16),
+        .OW(16),
         .TX_OW(16),
-        .NSTAGES(19), 
+        .NSTAGES(19),
         .WW(19),
-        .PW_I(24), 
+        .PW_I(24),
         .PW(23)
     ) tx_1 (
        .sys_clk (sys_clk),
@@ -229,10 +229,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude2;
     wire signed [24:0] rx0_phase2;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_2 (
@@ -281,12 +281,12 @@ module uberclock#(
     wire signed [15:0] tx_channel_output2;
     wire signed [15:0] upsampled_x2, upsampled_y2;
     tx_channel # (
-        .IW(16), 
-        .OW(16), 
+        .IW(16),
+        .OW(16),
         .TX_OW(16),
-        .NSTAGES(19), 
+        .NSTAGES(19),
         .WW(19),
-        .PW_I(24), 
+        .PW_I(24),
         .PW(23)
     ) tx_2 (
         .sys_clk (sys_clk),
@@ -310,10 +310,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude3;
     wire signed [24:0] rx0_phase3;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_3 (
@@ -362,12 +362,12 @@ module uberclock#(
     wire signed [15:0] tx_channel_output3;
     wire signed [15:0] upsampled_x3, upsampled_y3;
     tx_channel # (
-        .IW(16), 
-        .OW(16), 
+        .IW(16),
+        .OW(16),
         .TX_OW(16),
-        .NSTAGES(19), 
+        .NSTAGES(19),
         .WW(19),
-        .PW_I(24), 
+        .PW_I(24),
         .PW(23)
     ) tx_3 (
         .sys_clk (sys_clk),
@@ -390,10 +390,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude4;
     wire signed [24:0] rx0_phase4;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_4 (
@@ -442,12 +442,12 @@ module uberclock#(
     wire signed [15:0] tx_channel_output4;
     wire signed [15:0] upsampled_x4, upsampled_y4;
     tx_channel # (
-        .IW(16), 
-        .OW(16), 
+        .IW(16),
+        .OW(16),
         .TX_OW(16),
-        .NSTAGES(19), 
+        .NSTAGES(19),
         .WW(19),
-        .PW_I(24), 
+        .PW_I(24),
         .PW(23)
     ) tx_4 (
         .sys_clk (sys_clk),
@@ -470,10 +470,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude5;
     wire signed [24:0] rx0_phase5;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_5 (
@@ -522,12 +522,12 @@ module uberclock#(
     wire signed [15:0] tx_channel_output5;
     wire signed [15:0] upsampled_x5, upsampled_y5;
     tx_channel # (
-        .IW(16), 
-        .OW(16), 
+        .IW(16),
+        .OW(16),
         .TX_OW(16),
-        .NSTAGES(19), 
+        .NSTAGES(19),
         .WW(19),
-        .PW_I(24), 
+        .PW_I(24),
         .PW(23)
     ) tx_5 (
         .sys_clk (sys_clk),
@@ -545,7 +545,7 @@ module uberclock#(
     // Sum tree
     // ----------------------------------------------------------------------
     reg  signed [16:0] sum_1, sum_2;   // 16+16 = 17
-    reg  signed [16:0] sum_3;          
+    reg  signed [16:0] sum_3;
 
     always @(posedge sys_clk) begin
         sum_1 <= $signed(tx_channel_output1) + $signed(tx_channel_output2);
@@ -566,10 +566,10 @@ module uberclock#(
     end
 
     // Scaling S (3 for /8)
-    // wire [2:0] S = final_shift;  
+    // wire [2:0] S = final_shift;
 
     // // round-to-nearest before shift
-    // wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1)); 
+    // wire signed [18:0] sum_rnd = sum_final + $signed(19'sd1 << (S - 1));
     // wire signed [18:0] sum_shf = (S == 3'd0) ? sum_final : (sum_rnd >>> S);
 
     // function automatic [13:0] sat14(input signed [18:0] x);
@@ -588,16 +588,16 @@ module uberclock#(
     assign pre_sum_val = sum_pre_round + $signed({ {(14){1'b0}},
                                         sum_pre_round[5],
                                         {(4){~sum_pre_round[5]}}});
-                                        
+
     always @(posedge sys_clk) begin
     if (rst) begin
         system_output_14 <= 0;
 
     end else begin
-        system_output_14 <= sum_pre_round [18:5]; 
+        system_output_14 <= sum_pre_round [18:5];
     end
     end
-    wire [2:0] S = final_shift;  
+    wire [2:0] S = final_shift;
     wire signed[13:0] sum = (S == 3'd0) ? system_output_14: (system_output_14 << S);
 
     //------------------------------------------------------------------------
@@ -609,10 +609,10 @@ module uberclock#(
     wire signed [15:0] rx0_magnitude_ref;
     wire signed [24:0] rx0_phase_ref;
     rx_channel # (
-        .IW (12), 
+        .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
+        .NSTAGES (15),
         .WW (15),
         .PW (24)
     ) rx_ref (
@@ -634,7 +634,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x1_cpu_nco, y1_cpu_nco;
     wire                 down_aux_cpu1;
-   
+
     reg [PW-1:0] phase_acc_cpu_reg1 = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
@@ -643,7 +643,7 @@ module uberclock#(
             if (ce_down)
                 phase_acc_cpu_reg1 <= phase_acc_cpu_reg1 + phase_inc_cpu1; //52429 for 1kz at 10kHz rate
        end
-        
+
     end
    cordic #(
        .IW(IW),
@@ -670,7 +670,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x2_cpu_nco, y2_cpu_nco;
     wire                 down_aux_cpu2;
-   
+
     reg [PW-1:0] phase_acc_cpu_reg2 = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
@@ -679,7 +679,7 @@ module uberclock#(
             if (ce_down)
                 phase_acc_cpu_reg2 <= phase_acc_cpu_reg2 + phase_inc_cpu2; //52429 for 1kz at 10kHz rate
        end
-        
+
     end
    cordic #(
        .IW(IW),
@@ -705,7 +705,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x3_cpu_nco, y3_cpu_nco;
     wire                 down_aux_cpu3;
-   
+
     reg [PW-1:0] phase_acc_cpu_reg3 = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
@@ -714,7 +714,7 @@ module uberclock#(
             if (ce_down)
                 phase_acc_cpu_reg3 <= phase_acc_cpu_reg3 + phase_inc_cpu3; //52429 for 1kz at 10kHz rate
        end
-        
+
     end
    cordic #(
        .IW(IW),
@@ -740,7 +740,7 @@ module uberclock#(
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x4_cpu_nco, y4_cpu_nco;
     wire                 down_aux_cpu4;
-   
+
     reg [PW-1:0] phase_acc_cpu_reg4 = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
@@ -749,7 +749,7 @@ module uberclock#(
             if (ce_down)
                 phase_acc_cpu_reg4 <= phase_acc_cpu_reg4 + phase_inc_cpu4; //52429 for 1kz at 10kHz rate
        end
-        
+
     end
    cordic #(
        .IW(IW),
@@ -769,14 +769,14 @@ module uberclock#(
        .o_yval (y4_cpu_nco),
        .o_aux  (down_aux_cpu4)
    );
-   
+
 
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO TX4
     // ----------------------------------------------------------------------
     wire signed [IW-1:0] x5_cpu_nco, y5_cpu_nco;
     wire                 down_aux_cpu5;
-   
+
     reg [PW-1:0] phase_acc_cpu_reg5 = {PW{1'b0}};
     always @(posedge sys_clk or posedge rst) begin
        if (rst)
@@ -785,7 +785,7 @@ module uberclock#(
             if (ce_down)
                 phase_acc_cpu_reg5 <= phase_acc_cpu_reg5 + phase_inc_cpu5; //52429 for 1kz at 10kHz rate
        end
-        
+
     end
    cordic #(
        .IW(IW),
@@ -839,7 +839,7 @@ module uberclock#(
 
                                 (output_select_ch2 == 4'b1011) ? filter_in << 2:
                                 (output_select_ch2 == 4'b1100) ? filter_in_1 << 2:
-                                                                 sum; // 19->14:                             
+                                                                 sum; // 19->14:
 
     reg  [13:0] dac1_data_reg, dac2_data_reg;
     always @(posedge sys_clk) begin
@@ -912,7 +912,7 @@ module uberclock#(
 
     // ============================================================
     // High-speed capture @ sys_clk (65 MHz): grab filter_in
-    wire signed [IW-1:0]  highspeed_signal;// = 
+    wire signed [IW-1:0]  highspeed_signal;// =
     assign highspeed_signal = (highspeed_dbg_select == 0) ? filter_in :
                               (highspeed_dbg_select == 1) ? filter_in_1 :
                               (highspeed_dbg_select == 2) ? $signed(sum[13:2]) : $signed(nco_cos);
