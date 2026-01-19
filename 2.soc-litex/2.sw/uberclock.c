@@ -11,7 +11,7 @@
 
 #include "uberclock.h"
 #include "console.h"
-#include "libliteeth/udp.h"   // <-- your UDP stack header
+#include "libliteeth/udp.h"   // LiteEth UDP stack header
 
 #if defined(__has_include)
 #if __has_include(<libbase/cache.h>)
@@ -34,7 +34,7 @@ static int32_t  g_phase;
 
 static inline unsigned parse_u(const char *s, unsigned max, const char *what) {
     unsigned v = (unsigned)strtoul(s ? s : "0", NULL, 0);
-    if (v >= max) printf("Error: %s must be 0..%u\n", what, max-1);
+    if (v >= max) printf("Error: %s must be 0..%u\n", what, max - 1);
     return v;
 }
 
@@ -67,17 +67,17 @@ static void uc_help(char *args) {
     (void)args;
     puts_help_header("UberClock commands");
 
-    puts("  phase_nco        <val>      (0..524287)");
+    puts("  phase_nco        <val>      (0..16777215)");
     puts("  nco_mag          <val>      (signed 12-bit: -2048..2047)");
 
     puts("  phase_down_1 <val> ... phase_down_5 <val>  (0..524287)");
     puts("  phase_down_ref   <val>      (0..524287)");
 
-    puts("  phase_cpu1       <val>      (0..524287)");
-    puts("  phase_cpu2       <val>      (0..524287)");
-    puts("  phase_cpu3       <val>      (0..524287)");
-    puts("  phase_cpu4       <val>      (0..524287)");
-    puts("  phase_cpu5       <val>      (0..524287)");
+    puts("  phase_cpu1       <val>      (0..16777215)");
+    puts("  phase_cpu2       <val>      (0..16777215)");
+    puts("  phase_cpu3       <val>      (0..16777215)");
+    puts("  phase_cpu4       <val>      (0..16777215)");
+    puts("  phase_cpu5       <val>      (0..16777215)");
 
     puts("  mag_cpu1         <val>      (signed 12-bit: -2048..2047)");
     puts("  mag_cpu2         <val>      (signed 12-bit: -2048..2047)");
@@ -107,11 +107,11 @@ static void uc_help(char *args) {
     puts("");
 }
 
-
 /* ---- Phase/NCO/downconversion ---- */
 static void cmd_phase_nco(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_nco"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_nco");
+    if (p >= (1u << 24)) return;
     main_phase_inc_nco_write(p);
     uc_commit();
     printf("Input NCO phase increment set to %u\n", p);
@@ -122,7 +122,8 @@ static void cmd_phase_nco(char *a) {
 
 static void cmd_phase_cpu1(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_cpu1"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_cpu1");
+    if (p >= (1u << 24)) return;
     main_phase_inc_cpu1_write(p);
     uc_commit();
     printf("CPU phase increment ch1 set to %u\n", p);
@@ -133,7 +134,8 @@ static void cmd_phase_cpu1(char *a) {
 
 static void cmd_phase_cpu2(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU2_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_cpu2"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_cpu2");
+    if (p >= (1u << 24)) return;
     main_phase_inc_cpu2_write(p);
     uc_commit();
     printf("CPU phase increment ch2 set to %u\n", p);
@@ -144,7 +146,8 @@ static void cmd_phase_cpu2(char *a) {
 
 static void cmd_phase_cpu3(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU3_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_cpu3"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_cpu3");
+    if (p >= (1u << 24)) return;
     main_phase_inc_cpu3_write(p);
     uc_commit();
     printf("CPU phase increment ch3 set to %u\n", p);
@@ -155,7 +158,8 @@ static void cmd_phase_cpu3(char *a) {
 
 static void cmd_phase_cpu4(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU4_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_cpu4"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_cpu4");
+    if (p >= (1u << 24)) return;
     main_phase_inc_cpu4_write(p);
     uc_commit();
     printf("CPU phase increment ch4 set to %u\n", p);
@@ -166,7 +170,8 @@ static void cmd_phase_cpu4(char *a) {
 
 static void cmd_phase_cpu5(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_CPU5_ADDR
-    unsigned p = parse_u(a, 1u<<24, "phase_cpu5"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_cpu5");
+    if (p >= (1u << 24)) return;
     main_phase_inc_cpu5_write(p);
     uc_commit();
     printf("CPU phase increment ch5 set to %u\n", p);
@@ -190,7 +195,8 @@ static void cmd_nco_mag(char *a) {
 
 static void cmd_phase_down_ref(char *a) {
     #ifdef CSR_MAIN_PHASE_INC_DOWN_REF_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_down_ref"); if (p >= (1u<<24)) return;
+    unsigned p = parse_u(a, 1u << 19, "phase_down_ref");
+    if (p >= (1u << 19)) return;
     main_phase_inc_down_ref_write(p);
     uc_commit();
     printf("Downconversion phase ref increment set to %u\n", p);
@@ -279,11 +285,10 @@ static void cmd_highspeed_dbg_select(char *a) {
     #endif
 }
 
-
-
 static void cmd_phase_dn(char *a, int ch) {
     #ifdef CSR_MAIN_PHASE_INC_DOWN_1_ADDR
-    unsigned p = parse_u(a, 1u<<19, "phase_down"); if (p >= (1u<<19)) return;
+    unsigned p = parse_u(a, 1u << 19, "phase_down");
+    if (p >= (1u << 19)) return;
     switch (ch) {
         case 1: main_phase_inc_down_1_write(p); break;
         case 2: main_phase_inc_down_2_write(p); break;
@@ -298,16 +303,16 @@ static void cmd_phase_dn(char *a, int ch) {
     puts("Not built with UberClock CSRs.");
     #endif
 }
-static void cmd_phase_down_1(char *a){ cmd_phase_dn(a,1); }
-static void cmd_phase_down_2(char *a){ cmd_phase_dn(a,2); }
-static void cmd_phase_down_3(char *a){ cmd_phase_dn(a,3); }
-static void cmd_phase_down_4(char *a){ cmd_phase_dn(a,4); }
-static void cmd_phase_down_5(char *a){ cmd_phase_dn(a,5); }
+static void cmd_phase_down_1(char *a){ cmd_phase_dn(a, 1); }
+static void cmd_phase_down_2(char *a){ cmd_phase_dn(a, 2); }
+static void cmd_phase_down_3(char *a){ cmd_phase_dn(a, 3); }
+static void cmd_phase_down_4(char *a){ cmd_phase_dn(a, 4); }
+static void cmd_phase_down_5(char *a){ cmd_phase_dn(a, 5); }
 
 /* ---- Muxes / gains ---- */
 static void cmd_output_sel_ch1(char *a) {
     #ifdef CSR_MAIN_OUTPUT_SELECT_CH1_ADDR
-    unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;  // 4-bit
+    unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch1_write(v);
     uc_commit();
     printf("output_select_ch1 set to %u\n", v);
@@ -318,7 +323,7 @@ static void cmd_output_sel_ch1(char *a) {
 
 static void cmd_output_sel_ch2(char *a) {
     #ifdef CSR_MAIN_OUTPUT_SELECT_CH2_ADDR
-    unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;  // 4-bit
+    unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch2_write(v);
     uc_commit();
     printf("output_select_ch2 set to %u\n", v);
@@ -352,7 +357,7 @@ static void cmd_ups_in_mux(char *a) {
 static void cmd_gain(char *a, int idx) {
     #ifdef CSR_MAIN_GAIN1_ADDR
     int32_t g = (int32_t)strtol(a ? a : "0", NULL, 0);
-    switch(idx){
+    switch (idx) {
         case 1: main_gain1_write((uint32_t)g); break;
         case 2: main_gain2_write((uint32_t)g); break;
         case 3: main_gain3_write((uint32_t)g); break;
@@ -361,23 +366,25 @@ static void cmd_gain(char *a, int idx) {
         default: return;
     }
     uc_commit();
-    printf("Gain%d register set to %ld (0x%08lX)\n", idx, (long)g, (unsigned long)g);
+    printf("Gain%d register set to %ld (0x%08lX)\n",
+           idx, (long)g, (unsigned long)g);
     #else
     puts("Not built with UberClock CSRs.");
     #endif
 }
-static void cmd_gain1(char *a){ cmd_gain(a,1); }
-static void cmd_gain2(char *a){ cmd_gain(a,2); }
-static void cmd_gain3(char *a){ cmd_gain(a,3); }
-static void cmd_gain4(char *a){ cmd_gain(a,4); }
-static void cmd_gain5(char *a){ cmd_gain(a,5); }
+static void cmd_gain1(char *a){ cmd_gain(a, 1); }
+static void cmd_gain2(char *a){ cmd_gain(a, 2); }
+static void cmd_gain3(char *a){ cmd_gain(a, 3); }
+static void cmd_gain4(char *a){ cmd_gain(a, 4); }
+static void cmd_gain5(char *a){ cmd_gain(a, 5); }
 
 static void cmd_final_shift(char *a) {
     #ifdef CSR_MAIN_FINAL_SHIFT_ADDR
     int32_t fs = (int32_t)strtol(a ? a : "0", NULL, 0);
     main_final_shift_write((uint32_t)fs);
     uc_commit();
-    printf("final_shift set to %ld (0x%08lX)\n", (long)fs, (unsigned long)fs);
+    printf("final_shift set to %ld (0x%08lX)\n",
+           (long)fs, (unsigned long)fs);
     #else
     puts("Not built with UberClock CSRs.");
     #endif
@@ -419,7 +426,6 @@ static void cmd_upsampler_y(char *a) {
     #endif
 }
 
-
 static void cmd_cap_arm_pulse(char *a) {
     (void)a;
     #ifdef CSR_MAIN_CAP_ARM_ADDR
@@ -448,7 +454,6 @@ static void cmd_cap_rd(char *args) {
     unsigned idx = (unsigned)strtoul(tok, NULL, 0);
     if (idx > 2047) { puts("idx must be 0..2047"); return; }
     main_cap_idx_write(idx);
-    /* cap_data is read-only */
     uint32_t v = main_cap_data_read();
     int16_t s = (int16_t)(v & 0xffff);
     printf("cap[%u] = %d (0x%04x)\n", idx, (int)s, (unsigned)(v & 0xffff));
@@ -459,7 +464,6 @@ static void cmd_cap_rd(char *args) {
     puts("cap_idx CSR not present.");
     #endif
 }
-
 
 static void cmd_phase_print(char *a){ (void)a; printf("Phase %ld\n", (long)g_phase); }
 static void cmd_magnitude  (char *a){ (void)a; printf("Magnitude %d\n", g_mag); }
@@ -607,7 +611,6 @@ static void cmd_ub_start(char *args) {
            (unsigned)beats,
            (sz==0)?"bus":(sz==1)?"32":(sz==2)?"16":"8");
 
-
     #ifdef CSR_MAIN_CAP_BEATS_ADDR
     main_cap_beats_write(beats);
     uc_commit();
@@ -693,7 +696,7 @@ static void cmd_cap_beats(char *a) {
 }
 
 /* ========================================================================= */
-/*                           UDP DDR streamer                                 */
+/*                           UDP DDR streamer (FAST)                          */
 /* ========================================================================= */
 
 #ifndef UBD3_MAGIC
@@ -712,10 +715,27 @@ struct __attribute__((packed)) ubd3_hdr {
 #define UBD3_BOARD_IP IPTOINT(192,168,0,123)
 #endif
 
-/* Keep payload below MTU. 1400 is safe for most stacks. */
+/* Keep payload below MTU. 1400 is safe; 1472 may work with MTU1500. */
 #ifndef UBD3_PAYLOAD_MAX
 #define UBD3_PAYLOAD_MAX 1400u
 #endif
+
+/* Call udp_service() once every N packets (power-of-two recommended) */
+#ifndef UBD3_SERVICE_EVERY
+#define UBD3_SERVICE_EVERY 64u
+#endif
+
+/* 0 disables progress completely */
+#ifndef UBD3_PROGRESS_EVERY
+#define UBD3_PROGRESS_EVERY 0u
+#endif
+
+static inline void u32le_store(uint8_t *p, uint32_t v) {
+    p[0] = (uint8_t)(v >> 0);
+    p[1] = (uint8_t)(v >> 8);
+    p[2] = (uint8_t)(v >> 16);
+    p[3] = (uint8_t)(v >> 24);
+}
 
 static int parse_ipv4(const char *s, uint32_t *out_ip) {
     unsigned a,b,c,d;
@@ -726,6 +746,7 @@ static int parse_ipv4(const char *s, uint32_t *out_ip) {
     return 0;
 }
 
+/* Fast sender: minimal prints, fewer udp_service() calls, direct header store. */
 static void cmd_ub_send(char *args) {
     char *tok_addr = strtok(args, " \t");
     char *tok_len  = strtok(NULL, " \t");
@@ -734,7 +755,6 @@ static void cmd_ub_send(char *args) {
 
     if (!tok_addr || !tok_len || !tok_ip || !tok_port) {
         puts("Usage: ub_send <addr_hex> <bytes> <dst_ip> <dst_port>");
-        puts("Example: ub_send 0xA0000000 8192 192.168.0.2 5000");
         return;
     }
 
@@ -748,18 +768,12 @@ static void cmd_ub_send(char *args) {
     }
 
     uint16_t dst_port = (uint16_t)strtoul(tok_port, NULL, 0);
-    uint16_t src_port = dst_port; /* simplest */
+    uint16_t src_port = dst_port;
 
     if (total == 0) {
         puts("Error: bytes must be > 0");
         return;
     }
-
-    printf("UDP send: addr=0x%08lx_%08lx bytes=%lu dst=%s:%u\n",
-           (unsigned long)(addr >> 32),
-           (unsigned long)(addr & 0xffffffffu),
-           (unsigned long)total,
-           tok_ip, (unsigned)dst_port);
 
     static const unsigned char board_mac[6] = {0x02,0x00,0x00,0x00,0x00,0xAB};
 
@@ -768,77 +782,74 @@ static void cmd_ub_send(char *args) {
     udp_set_ip(UBD3_BOARD_IP);
     udp_start(board_mac, UBD3_BOARD_IP);
 
-    /* Wait for ARP to resolve (many tiny stacks require this) */
-    printf("ARP resolve %u.%u.%u.%u ... ",
-           (dst_ip>>24)&255, (dst_ip>>16)&255, (dst_ip>>8)&255, (dst_ip>>0)&255);
-    fflush(stdout);
-
+    /* ARP resolve (minimal) */
     int ok = 0;
-    for (unsigned i = 0; i < 500000; i++) {
+    for (unsigned i = 0; i < 200000; i++) {
         udp_service();
-        if (udp_arp_resolve(dst_ip) != 0) { ok = 1; break; }   /* adjust if your API uses !=0 for success */
+        if (udp_arp_resolve(dst_ip) != 0) { ok = 1; break; }
     }
-    puts(ok ? "ok" : "FAILED");
     if (!ok) {
-        puts("No ARP reply. Check link, IPs, subnet, and PC firewall.");
+        puts("No ARP reply.");
         return;
     }
 
-
     volatile uint8_t *p = (volatile uint8_t*)(uintptr_t)addr;
 
-    uint32_t sent = 0;
-    uint32_t seq  = 0;
-
-    const uint32_t hdr_sz = (uint32_t)sizeof(struct ubd3_hdr);
-    const uint32_t max_data = (UBD3_PAYLOAD_MAX > hdr_sz) ? (UBD3_PAYLOAD_MAX - hdr_sz) : 0;
-
-    if (max_data < 64) {
+    const uint32_t hdr_sz   = 16u;
+    const uint32_t max_data = (UBD3_PAYLOAD_MAX > hdr_sz) ? (UBD3_PAYLOAD_MAX - hdr_sz) : 0u;
+    if (max_data < 64u) {
         puts("Error: UBD3_PAYLOAD_MAX too small");
         return;
     }
 
+    uint32_t sent = 0;
+    uint32_t seq  = 0;
+
+    /* If SERVICE_EVERY is not power-of-two, fallback to modulo logic */
+    const uint32_t service_mask = (UBD3_SERVICE_EVERY && ((UBD3_SERVICE_EVERY & (UBD3_SERVICE_EVERY - 1u)) == 0u))
+    ? (UBD3_SERVICE_EVERY - 1u)
+    : 0u;
+
     while (sent < total) {
-        /* keep the network stack alive */
-        udp_service();
+        /* keep the network stack alive (not every packet) */
+        if (UBD3_SERVICE_EVERY) {
+            if (service_mask) {
+                if ((seq & service_mask) == 0u) udp_service();
+            } else {
+                if ((seq % UBD3_SERVICE_EVERY) == 0u) udp_service();
+            }
+        }
 
         uint32_t chunk = total - sent;
         if (chunk > max_data) chunk = max_data;
 
         uint8_t *tx = (uint8_t*)udp_get_tx_buffer();
-        if (!tx) {
-            puts("udp_get_tx_buffer() returned NULL");
-            return;
-        }
+        if (!tx) return;
 
-        struct ubd3_hdr h;
-        h.magic  = UBD3_MAGIC;
-        h.seq    = seq;
-        h.offset = sent;
-        h.total  = total;
+        /* Write header directly (little-endian) */
+        u32le_store(tx + 0,  UBD3_MAGIC);
+        u32le_store(tx + 4,  seq);
+        u32le_store(tx + 8,  sent);
+        u32le_store(tx + 12, total);
 
-        memcpy(tx, &h, hdr_sz);
         memcpy(tx + hdr_sz, (const void*)(p + sent), chunk);
-
-        int rc = udp_send(src_port, dst_port, (unsigned)(hdr_sz + chunk));
-        (void)rc;
+        (void)udp_send(src_port, dst_port, (unsigned)(hdr_sz + chunk));
 
         sent += chunk;
         seq++;
 
-        /* Optional: print progress occasionally */
-        if ((seq & 0x3ffu) == 0) {
-            printf("  sent %lu / %lu bytes\n", (unsigned long)sent, (unsigned long)total);
+        #if UBD3_PROGRESS_EVERY
+        if ((seq % UBD3_PROGRESS_EVERY) == 0u) {
+            printf("sent %lu / %lu\n", (unsigned long)sent, (unsigned long)total);
         }
+        #endif
     }
-
-    printf("ub_send done: %lu bytes in %lu packets\n",
-           (unsigned long)total, (unsigned long)seq);
 }
 
 /* ========================================================================= */
 /*                           Command registration                             */
 /* ========================================================================= */
+
 static const struct cmd_entry uc_tbl[] = {
     /* UberClock commands */
     {"help_uc",              uc_help,                 "UberClock help"},
@@ -906,14 +917,14 @@ static const struct cmd_entry uc_tbl[] = {
     {"ub_send",              cmd_ub_send,             "Send DDR memory region via UDP"},
 };
 
-
 void uberclock_register_cmds(void) {
-    console_register(uc_tbl, (unsigned)(sizeof(uc_tbl)/sizeof(uc_tbl[0])));
+    console_register(uc_tbl, (unsigned)(sizeof(uc_tbl) / sizeof(uc_tbl[0])));
 }
 
 /* ========================================================================= */
 /*                            Init / poll functions                           */
 /* ========================================================================= */
+
 void uberclock_init(void) {
     #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
     main_phase_inc_nco_write(2581110);
@@ -929,7 +940,7 @@ void uberclock_init(void) {
     #endif
 
     #ifdef CSR_MAIN_NCO_MAG_ADDR
-    main_nco_mag_write((uint32_t)(1000 & 0x0fff));
+    main_nco_mag_write((uint32_t)(30 & 0x0fff));
     #endif
 
     #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
@@ -957,8 +968,8 @@ void uberclock_init(void) {
     main_gain4_write(0x40000000);
     main_gain5_write(0x40000000);
 
-    main_output_select_ch1_write(3);
-    main_output_select_ch2_write(3);
+    main_output_select_ch1_write(11);
+    main_output_select_ch2_write(10);
 
     main_final_shift_write(2);
 
@@ -966,7 +977,7 @@ void uberclock_init(void) {
     main_lowspeed_dbg_select_write(0);
     #endif
     #ifdef CSR_MAIN_HIGHSPEED_DBG_SELECT_ADDR
-    main_highspeed_dbg_select_write(3);
+    main_highspeed_dbg_select_write(0);
     #endif
 
     #ifdef CSR_MAIN_UPSAMPLER_INPUT_X_ADDR
@@ -974,8 +985,7 @@ void uberclock_init(void) {
     main_upsampler_input_y_write(0);
     #endif
 
-    /* Default: ramp mode (safe, deterministic) */
-    main_cap_enable_write(0);
+    main_cap_enable_write(1);
 
     uc_commit();
     #endif

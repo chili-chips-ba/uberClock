@@ -27,7 +27,7 @@ module cordic_logic #(
             phase_acc <= phase_acc + phase_inc;
     end
 
-    assign phase_acc_out = phase_acc;    wire [PW-1:0] phase_acc_out;
+    assign phase_acc_out = phase_acc;
 
     // CORDIC instance
     localparam signed [IW-1:0] I_XINIT = 12'sd1000;

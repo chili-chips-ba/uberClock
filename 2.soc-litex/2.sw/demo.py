@@ -43,8 +43,9 @@ def main():
 
     # 2) Copy contents (recursive!) to demo directory
     src_dir = os.path.abspath(os.path.dirname(__file__))
-    os.system(f"cp -r {src_dir}/* {app_dir}/")
-    os.system(f"chmod -R u+w {app_dir}")  # Allow linker script edits on Nix
+
+    os.system(f'rsync -a --delete --exclude "{app_dir}/" "{src_dir}/" "{app_dir}/"')
+    os.system(f'chmod -R u+w "{app_dir}"')
 
     # 3) Update memory region in linker script
     replace_in_file(f"{app_dir}/linker.ld", "main_ram", args.mem)

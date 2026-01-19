@@ -1131,7 +1131,7 @@ class BaseSoC(SoCCore):
             "to_polar/to_polar.v",
             "cordic/cordic_pre_rotate.v","cordic/cordic_pipeline_stage.v",
             "cordic/cordic_round.v","cordic/cordic.v",
-            "cordic/cordic_logic.v","cordic/gain_and_saturate.v",
+            "cordic/gain_and_saturate.v",
             "cordic16/cordic16.v","cordic16/cordic_pre_rotate_16.v",
         ]:
             self.platform.add_source(f"{verilog_dir}/{fn}")
