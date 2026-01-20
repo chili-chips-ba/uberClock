@@ -190,6 +190,36 @@ typedef union {
     uint32_t w;
 } csr__dac_t;
 
+// Reg - csr::dac_mem_ctrl
+#define CSR__DAC_MEM_CTRL__LEN_bm 0x7ff
+#define CSR__DAC_MEM_CTRL__LEN_bp 0
+#define CSR__DAC_MEM_CTRL__LEN_bw 11
+#define CSR__DAC_MEM_CTRL__LEN_reset 0x0
+#define CSR__DAC_MEM_CTRL__EN_bm 0x80000000
+#define CSR__DAC_MEM_CTRL__EN_bp 31
+#define CSR__DAC_MEM_CTRL__EN_bw 1
+#define CSR__DAC_MEM_CTRL__EN_reset 0x0
+typedef union {
+    struct __attribute__ ((__packed__)) {
+        uint32_t len :11;
+        uint32_t :20;
+        uint32_t en :1;
+    } f;
+    uint32_t w;
+} csr__dac_mem_ctrl_t;
+
+// Reg - csr::dac_freq
+#define CSR__DAC_FREQ__STEP_bm 0xffffffff
+#define CSR__DAC_FREQ__STEP_bp 0
+#define CSR__DAC_FREQ__STEP_bw 32
+#define CSR__DAC_FREQ__STEP_reset 0x0
+typedef union {
+    struct __attribute__ ((__packed__)) {
+        uint32_t step :32;
+    } f;
+    uint32_t w;
+} csr__dac_freq_t;
+
 // Reg - csr::hw_version
 #define CSR__HW_VERSION__PATCH_bm 0xffff
 #define CSR__HW_VERSION__PATCH_bp 0
@@ -224,8 +254,10 @@ typedef struct __attribute__ ((__packed__)) {
     csr__hw_id_t hw_id;
     csr__adc_t adc;
     csr__dac_t dac;
+    csr__dac_mem_ctrl_t dac_mem_ctrl;
+    csr__dac_freq_t dac_freq;
     csr__hw_version_t hw_version;
-    uint8_t RESERVED_24_1fff[0x1fdc];
+    uint8_t RESERVED_2c_1fff[0x1fd4];
     csr__dac_mem_t dac_mem;
 } csr_t;
 

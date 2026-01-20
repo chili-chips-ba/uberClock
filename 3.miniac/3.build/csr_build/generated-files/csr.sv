@@ -95,6 +95,8 @@ module csr (
         logic hw_id;
         logic adc;
         logic dac;
+        logic dac_mem_ctrl;
+        logic dac_freq;
         logic hw_version;
         logic dac_mem;
     } decoded_reg_strb_t;
@@ -119,7 +121,9 @@ module csr (
         decoded_reg_strb.hw_id = cpuif_req_masked & (cpuif_addr == 14'h14);
         decoded_reg_strb.adc = cpuif_req_masked & (cpuif_addr == 14'h18);
         decoded_reg_strb.dac = cpuif_req_masked & (cpuif_addr == 14'h1c);
-        decoded_reg_strb.hw_version = cpuif_req_masked & (cpuif_addr == 14'h20);
+        decoded_reg_strb.dac_mem_ctrl = cpuif_req_masked & (cpuif_addr == 14'h20);
+        decoded_reg_strb.dac_freq = cpuif_req_masked & (cpuif_addr == 14'h24);
+        decoded_reg_strb.hw_version = cpuif_req_masked & (cpuif_addr == 14'h28);
         decoded_reg_strb.dac_mem = cpuif_req_masked & (cpuif_addr >= 14'h2000) & (cpuif_addr <= 14'h2000 + 14'h1fff);
         is_external |= cpuif_req_masked & (cpuif_addr >= 14'h2000) & (cpuif_addr <= 14'h2000 + 14'h1fff);
         decoded_strb_is_external = is_external;
@@ -184,6 +188,22 @@ module csr (
                 logic load_next;
             } ch1;
         } dac;
+        struct {
+            struct {
+                logic [10:0] next;
+                logic load_next;
+            } len;
+            struct {
+                logic next;
+                logic load_next;
+            } en;
+        } dac_mem_ctrl;
+        struct {
+            struct {
+                logic [31:0] next;
+                logic load_next;
+            } step;
+        } dac_freq;
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -226,6 +246,19 @@ module csr (
                 logic [13:0] value;
             } ch1;
         } dac;
+        struct {
+            struct {
+                logic [10:0] value;
+            } len;
+            struct {
+                logic value;
+            } en;
+        } dac_mem_ctrl;
+        struct {
+            struct {
+                logic [31:0] value;
+            } step;
+        } dac_freq;
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -423,6 +456,75 @@ module csr (
         end
     end
     assign hwif_out.dac.ch1.value = field_storage.dac.ch1.value;
+    // Field: csr.dac_mem_ctrl.len
+    always_comb begin
+        automatic logic [10:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.dac_mem_ctrl.len.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.dac_mem_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.dac_mem_ctrl.len.value & ~decoded_wr_biten[10:0]) | (decoded_wr_data[10:0] & decoded_wr_biten[10:0]);
+            load_next_c = '1;
+        end
+        field_combo.dac_mem_ctrl.len.next = next_c;
+        field_combo.dac_mem_ctrl.len.load_next = load_next_c;
+    end
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            field_storage.dac_mem_ctrl.len.value <= 11'h0;
+        end else begin
+            if(field_combo.dac_mem_ctrl.len.load_next) begin
+                field_storage.dac_mem_ctrl.len.value <= field_combo.dac_mem_ctrl.len.next;
+            end
+        end
+    end
+    assign hwif_out.dac_mem_ctrl.len.value = field_storage.dac_mem_ctrl.len.value;
+    // Field: csr.dac_mem_ctrl.en
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.dac_mem_ctrl.en.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.dac_mem_ctrl && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.dac_mem_ctrl.en.value & ~decoded_wr_biten[31:31]) | (decoded_wr_data[31:31] & decoded_wr_biten[31:31]);
+            load_next_c = '1;
+        end
+        field_combo.dac_mem_ctrl.en.next = next_c;
+        field_combo.dac_mem_ctrl.en.load_next = load_next_c;
+    end
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            field_storage.dac_mem_ctrl.en.value <= 1'h0;
+        end else begin
+            if(field_combo.dac_mem_ctrl.en.load_next) begin
+                field_storage.dac_mem_ctrl.en.value <= field_combo.dac_mem_ctrl.en.next;
+            end
+        end
+    end
+    assign hwif_out.dac_mem_ctrl.en.value = field_storage.dac_mem_ctrl.en.value;
+    // Field: csr.dac_freq.step
+    always_comb begin
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.dac_freq.step.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.dac_freq && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.dac_freq.step.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+            load_next_c = '1;
+        end
+        field_combo.dac_freq.step.next = next_c;
+        field_combo.dac_freq.step.load_next = load_next_c;
+    end
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            field_storage.dac_freq.step.value <= 32'h0;
+        end else begin
+            if(field_combo.dac_freq.step.load_next) begin
+                field_storage.dac_freq.step.value <= field_combo.dac_freq.step.next;
+            end
+        end
+    end
+    assign hwif_out.dac_freq.step.value = field_storage.dac_freq.step.value;
     assign hwif_out.hw_version.PATCH.value = 16'h0;
     assign hwif_out.hw_version.MINOR.value = 8'h1;
     assign hwif_out.hw_version.MAJOR.value = 8'h0;
@@ -465,7 +567,7 @@ module csr (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [31:0] readback_array[10];
+    logic [31:0] readback_array[12];
     assign readback_array[0][7:0] = (decoded_reg_strb.uart.rx && !decoded_req_is_wr) ? hwif_in.uart.rx.data.next : '0;
     assign readback_array[0][29:8] = '0;
     assign readback_array[0][30:30] = (decoded_reg_strb.uart.rx && !decoded_req_is_wr) ? hwif_in.uart.rx.oflow.next : '0;
@@ -495,10 +597,14 @@ module csr (
     assign readback_array[7][15:14] = '0;
     assign readback_array[7][29:16] = (decoded_reg_strb.dac && !decoded_req_is_wr) ? field_storage.dac.ch1.value : '0;
     assign readback_array[7][31:30] = '0;
-    assign readback_array[8][15:0] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 16'h0 : '0;
-    assign readback_array[8][23:16] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 8'h1 : '0;
-    assign readback_array[8][31:24] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 8'h0 : '0;
-    assign readback_array[9] = hwif_in.dac_mem.rd_ack ? hwif_in.dac_mem.rd_data : '0;
+    assign readback_array[8][10:0] = (decoded_reg_strb.dac_mem_ctrl && !decoded_req_is_wr) ? field_storage.dac_mem_ctrl.len.value : '0;
+    assign readback_array[8][30:11] = '0;
+    assign readback_array[8][31:31] = (decoded_reg_strb.dac_mem_ctrl && !decoded_req_is_wr) ? field_storage.dac_mem_ctrl.en.value : '0;
+    assign readback_array[9][31:0] = (decoded_reg_strb.dac_freq && !decoded_req_is_wr) ? field_storage.dac_freq.step.value : '0;
+    assign readback_array[10][15:0] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 16'h0 : '0;
+    assign readback_array[10][23:16] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 8'h1 : '0;
+    assign readback_array[10][31:24] = (decoded_reg_strb.hw_version && !decoded_req_is_wr) ? 8'h0 : '0;
+    assign readback_array[11] = hwif_in.dac_mem.rd_ack ? hwif_in.dac_mem.rd_data : '0;
 
     // Reduce the array
     always_comb begin
@@ -506,7 +612,7 @@ module csr (
         readback_done = decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<10; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<12; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

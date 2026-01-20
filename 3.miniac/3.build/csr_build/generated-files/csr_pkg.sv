@@ -172,6 +172,27 @@ package csr_pkg;
     } csr__dac__out_t;
 
     typedef struct {
+        logic [10:0] value;
+    } csr__dac_mem_ctrl__len__out_t;
+
+    typedef struct {
+        logic value;
+    } csr__dac_mem_ctrl__en__out_t;
+
+    typedef struct {
+        csr__dac_mem_ctrl__len__out_t len;
+        csr__dac_mem_ctrl__en__out_t en;
+    } csr__dac_mem_ctrl__out_t;
+
+    typedef struct {
+        logic [31:0] value;
+    } csr__dac_freq__step__out_t;
+
+    typedef struct {
+        csr__dac_freq__step__out_t step;
+    } csr__dac_freq__out_t;
+
+    typedef struct {
         logic [15:0] value;
     } csr__hw_version__PATCH__out_t;
 
@@ -203,6 +224,8 @@ package csr_pkg;
         csr__hw_id__out_t hw_id;
         csr__adc__out_t adc;
         csr__dac__out_t dac;
+        csr__dac_mem_ctrl__out_t dac_mem_ctrl;
+        csr__dac_freq__out_t dac_freq;
         csr__hw_version__out_t hw_version;
         csr__dac_mem__external__out_t dac_mem;
     } csr__out_t;

@@ -90,9 +90,19 @@ module top (
    adc_sample_t adc_data;
    logic [12:0] adc_addr;
    
-   dac_sample_t dac_data_from_mem;
    logic [10:0] dac_mem_addr;
    logic        dac_mem_rd;
+   
+   // DAC Control and Memory signals
+    logic [10:0] dac_mem_addr_ctrl;  
+    dac_sample_t dac_data_from_mem;  
+    logic        dac_mem_rd_ctrl;    
+
+    // Intermediate signals for dac_dpram Port 1 (CPU side)
+    logic        dac_dpram_we1;
+    logic [10:0] dac_dpram_addr1;
+    logic [31:0] dac_dpram_din1;
+    logic [31:0] dac_dpram_dout1;
    
 //---------------------------------
    soc_cpu #(
@@ -184,8 +194,11 @@ adc u_adc (
     assign csr_start_in = from_csr.adc.start.value;      // CPU write, ADC Controller read
     assign to_csr.adc.done.next = csr_done_out;    // ADC Controller write, CPU read
    
-    wire[13:0] da_data_ch1_14 = from_csr.dac.ch1.value;
-    wire[13:0] da_data_ch2_14 = from_csr.dac.ch2.value;
+    //wire[13:0] da_data_ch1_14 = from_csr.dac.ch1.value;
+    //wire[13:0] da_data_ch2_14 = from_csr.dac.ch2.value;
+    
+    logic [13:0] da_data_ch1_14;
+    logic [13:0] da_data_ch2_14;
    
    
     adc_sample_t adc_to_ctrl;
@@ -209,37 +222,54 @@ adc u_adc (
         .adc_addr_o     (adc_addr)
     );
    
-   
-    //We instatiate the DAC module
+    // DAC IP instance
     dac u_dac (
-         .sys_clk   (sys_clk),
-         .rst_n     (rst_n),
-         .data1     (da_data_ch1_14), //dac1_input_14_reg
-         .data2     (da_data_ch2_14), //dac2_input_14_reg
-         .da1_clk   (da1_clk),//da1_clk
-         .da1_wrt   (da1_wrt),//da1_wrt
-                
-                
-         .da1_data  (da1_data),
-         .da2_clk   (da2_clk),//da2_clk
-         .da2_wrt   (da2_wrt),//da2_wrt
-         .da2_data  (da2_data)
-     );
+        .sys_clk   (sys_clk),
+        .rst_n     (rst_n),
+        .data1     (da_data_ch1_14), 
+        .data2     (da_data_ch2_14), 
+        .da1_clk   (da1_clk),
+        .da1_wrt   (da1_wrt),
+        .da1_data  (da1_data),
+        .da2_clk   (da2_clk),
+        .da2_wrt   (da2_wrt),
+        .da2_data  (da2_data)
+    );
      
-     dac_mem_controller #(
-       .ADDR_WIDTH(11)
-     ) u_dac_mem_ctrl (
-       .clk          (sys_clk),
-       .rst_n        (sys_rst_n),
-       .dac_en_i     (from_csr.dac.en.value),   
-       .dac_len_i    (from_csr.dac.len.value),  
-       .mem_addr_o   (dac_mem_addr),
-       .mem_rd_en_o  (dac_mem_rd),
-       .mem_data_i   (dac_data_from_mem),       
-       .dac_ch0_o    (da_data_ch1_14),          
-       .dac_ch1_o    (da_data_ch2_14)           
-   );
+    // True Dual-Port RAM instance for DAC samples
+    dac_dpram #(
+        .DATA_WIDTH(32),
+        .ADDR_WIDTH(11)
+    ) u_dac_dpram (
+        // Port 1: CPU Side (via CSR)
+        .clk1  (sys_clk),
+        .we1   (dac_dpram_we1),
+        .addr1 (dac_dpram_addr1),
+        .din1  (dac_dpram_din1),
+        .dout1 (dac_dpram_dout1),
 
+        // Port 2: DAC Side (via Controller)
+        .clk2  (sys_clk),
+        .we2   (1'b0),
+        .addr2 (dac_mem_addr_ctrl),
+        .din2  (32'h0),
+        .dout2 (dac_data_from_mem)
+    );
+
+    // DAC Controller instance
+    dac_mem_controller #(
+        .ADDR_WIDTH(11)
+    ) u_dac_mem_ctrl (
+        .clk         (sys_clk),
+        .rst_n       (sys_rst_n),
+        .dac_en_i    (from_csr.dac_mem_ctrl.en.value), 
+        .dac_len_i   (from_csr.dac_mem_ctrl.len.value),
+        .mem_addr_o  (dac_mem_addr_ctrl),
+        .mem_rd_en_o (dac_mem_rd_ctrl),
+        .mem_data_i  (dac_data_from_mem),
+        .dac_ch0_o   (da_data_ch1_14),
+        .dac_ch1_o   (da_data_ch2_14)
+    );
 
 //==========================================================================
 // GPIO
@@ -248,5 +278,22 @@ adc u_adc (
    assign led[0] = ~from_csr.gpio.led1.value;
    assign to_csr.gpio.key2.next = ~user_key2;  
    assign to_csr.gpio.key1.next = ~user_key1;  
+   
+//==========================================================================
+// CSR External Interface to DAC DPRAM (Port 1)
+//==========================================================================
+always_comb begin
+    // 1. Handshake responses back to the CPU
+    to_csr.dac_mem.rd_ack   = from_csr.dac_mem.req;
+    to_csr.dac_mem.wr_ack   = from_csr.dac_mem.req & from_csr.dac_mem.req_is_wr;
+    
+    // 2. Data being read by the CPU from DPRAM Port 1
+    to_csr.dac_mem.rd_data  = dac_dpram_dout1; 
+
+    // 3. Logic for signals entering DPRAM Port 1
+    dac_dpram_we1   = from_csr.dac_mem.req & from_csr.dac_mem.req_is_wr;
+    dac_dpram_addr1 = from_csr.dac_mem.addr[12:2]; 
+    dac_dpram_din1  = from_csr.dac_mem.wr_data;
+end
 
 endmodule

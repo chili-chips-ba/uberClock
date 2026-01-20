@@ -193,7 +193,7 @@ addrmap csr {
    } dac;
    
    reg {
-      name = "csr.dac_ctrl";
+      name = "csr.dac_mem_ctrl";
       desc = "Control for Continuous Generation";
 
       field {
@@ -207,7 +207,7 @@ addrmap csr {
          desc = "Loop length (up to 2048)";
          sw = rw; hw = r;
       } len[10:0] = 0; // 11 bitova za adresu 0-2047
-   } dac_ctrl;
+   } dac_mem_ctrl;
    
    reg {
       name = "csr.dac_freq";
