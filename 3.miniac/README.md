@@ -125,15 +125,15 @@ flowchart TD
     RUNNING(["<b>RUNNING</b><br/>adc_we_o = 1<br/>csr_done_o = 0<br/>addr++"])
     DONE(["<b>DONE</b><br/>adc_we_o = 0<br/>csr_done_o = 1<br/>addr = ADDR_START"])
 
-    IDLE -- "csr_start_i == 1" --> RUNNING
+    IDLE -- "csr_start_i == 1 (pulse)" --> RUNNING
     RUNNING -- "addr == ADDR_STOP_AT" --> DONE
-    DONE -- "csr_start_i == 0" --> IDLE
+    DONE --> IDLE
     
 ```
 
 ### 1. Acquisition Initiation (IDLE -> RUNNING)
-The simulation confirms the FSM successfully transitions from the **IDLE** state to **RUNNING** upon receiving a trigger pulse.
-* **Trigger Mechanism**: The `csr_start_i` pulse initiates the capture sequence.
+The simulation confirms the FSM successfully transitions from the **IDLE** state to **RUNNING** upon receiving a single-clock cycle trigger pulse.
+* **Trigger Mechanism**: The `csr_start_i` signal acts as an impulse. The FSM is edge-sensitive to this trigger, meaning it initiates the capture sequence immediately and does not require the CPU to manually clear the bit to proceed.
 * **Write Enable**: The `adc_we_o` signal is asserted synchronously with the first valid sample, enabling data storage into the Port B of the DPRAM.
 * **Addressing**: The address counter begins at the base address `0x0400`. 
 
@@ -168,7 +168,7 @@ The system demonstrates reliable data throughput, verified by a self-checking te
 ### 3. Automatic Completion (RUNNING -> DONE -> IDLE)
 The controller features an automated stop mechanism to prevent memory overflow.
 * **End-of-Buffer Logic**: When the address counter reaches the terminal address `0x13FF`, the acquisition sequence completes.
-* **State Reset**: The FSM transitions from the **RUNNING** state to **DONE**, then automatically returns to the **IDLE** state, de-asserting `adc_we_o`.
+* **State Reset**: Upon completion, the FSM transitions to **DONE** for one clock cycle to latch the status, and then **automatically returns to IDLE**. Since `csr_start_i` is treated as an impulse, there is no risk of re-triggering unless a new pulse is issued by the CPU.
 * **Done Flag**: The `csr_done_o` flag is raised, notifying the CPU that the acquisition buffer is ready for processing via Port A. The internal address is reset to 0x0400, making the module immediately ready for the next trigger.
 
 <p align="center">
