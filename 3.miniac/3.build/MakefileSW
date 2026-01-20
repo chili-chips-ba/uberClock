@@ -75,7 +75,7 @@ $(SW_MAIN)/main.cpp
    $(SW_APP)/string_bare.c \
    $(SW_APP)/uberclock_libs.cpp \
    $(SW_MAIN)/main.cpp \
-   -lgcc
+   -lgcc -lm
 
 #------------------------
 # Create all necessary other file format from the compiled ELF

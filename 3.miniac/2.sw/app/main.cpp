@@ -3,92 +3,102 @@
 #include "uberclock_regs.h"
 #include "uart.h"
 
-// --- HARDVERSKE KONSTANTE ---
-// Pocetna adresa
-#define ADC_BUFFER_START_ADDR (0x10000400)
-// Velicina buffera u rijecima (32-bit/4 bajta)
-#define BUFFER_WORDS          (4096) 
-// Pokazivac na bafer u BRAM-u
-volatile uint32_t* adc_buffer = (volatile uint32_t*)ADC_BUFFER_START_ADDR;
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
 
-// Funkcija za pokretanje i čekanje akvizicije
-void run_single_acquisition(volatile csr_vp_t* csr) {
+// --- HARDWARE CONSTANTS ---
+#define ADC_BUFFER_START_ADDR  (0x10000400)
+#define DAC_DPRAM_START_ADDR   (0x20002000) 
+
+#define BUFFER_WORDS           (4096) 
+#define DAC_SAMPLES            (65)
+
+volatile uint32_t* adc_buffer = (volatile uint32_t*)ADC_BUFFER_START_ADDR;
+volatile uint32_t* dac_buffer = (volatile uint32_t*)DAC_DPRAM_START_ADDR;
+
+/**
+ * Generate sine wave table using built-in math functions to avoid 
+ * standard library dependencies in freestanding mode.
+ */
+void prepare_dac_sine(volatile csr_vp_t* csr, int amplitude) {
+    uart_send(csr, "DAC: Generating synchronized table for 65MHz Clock...\r\n");
     
-    // 1. SIGNALIZIRAJ HARDVERU DA POKRENE AKVIZICIJU
-    uart_send(csr, "ADC: Priprema...\r\n");
-    csr->adc->start(1); // START puls (postavi na 1)
-    
-    // Potrebno je spustiti start signal da bi se FSM prebacio u RUNNING
-    for(int i=0; i<1000; i++); // Mala pauza (moze i bez nje, ali je sigurnije)
-    csr->adc->start(0); // Spusti start signal
-    
-    uart_send(csr, "ADC: Akvizicija zapoceta...\r\n");
-    
-    // 2. ČEKAJ NA DONE FLAG
-    uart_send(csr, "ADC: Cekamo done...\r\n");
-    while (csr->adc->done() == 0) {
-        uart_send_char(csr, '.'); 
+    csr->dac_mem_ctrl->en(0);
+
+    // Na 65 uzoraka pri 65MHz: k=3 daje 3MHz, k=11 daje 11MHz
+    float k0 = 3.0f;
+    float k1 = 11.0f;
+
+    for (int i = 0; i < DAC_SAMPLES; i++) {
+        // f = (k * f_clk) / N. Pošto je f_clk = N = 65, f = k.
+        float phase0 = 2.0f * (float)M_PI * (k0 / (float)DAC_SAMPLES) * (float)i;
+        float phase1 = 2.0f * (float)M_PI * (k1 / (float)DAC_SAMPLES) * (float)i;
+
+        uint16_t val0 = (uint16_t)(amplitude * __builtin_sin(phase0) + 8192);
+        uint16_t val1 = (uint16_t)(amplitude * __builtin_sin(phase1) + 8192);
+        
+        uint32_t packed_sample = ((uint32_t)val1 << 16) | (uint32_t)val0;
+        dac_buffer[i] = packed_sample;
     }
+
+    // Postavljamo hardver na 65 uzoraka
+    csr->dac_mem_ctrl->len(DAC_SAMPLES);
+    csr->dac_mem_ctrl->en(1);
     
-    // 3. DONE FLAG JE POSTAVLJEN - CITAJ I SALJI PODATKE
-    uart_send(csr, "ADC: Bafer popunjen. Pokrecem transfer...\r\n");
-    
-    // --- START TRANSFERA - SIGNAL ZA PYTHON ---
-    uart_send(csr, "=== BRAM_TRANSFER_START ===\r\n");
-    
-    // Čitanje bafera i slanje
-    for (int i = 0; i < BUFFER_WORDS; i++) {
-        uint32_t data = adc_buffer[i];
-        // Šalji 32-bitnu riječ kao 8 heksadecimalnih karaktera
-        uart_send_hex(csr, data, 8);
-        //uart_send(csr, "\r\n"); // Novi red
-        if (i < BUFFER_WORDS - 1) { // Šalji \r\n samo ako nije zadnji
-            uart_send(csr, "\r\n"); 
-        } else {
-            // Dodajte samo \n za zadnji uzorak ili čak nista
-            uart_send(csr, "\n"); 
-        }
-        for(volatile int j = 0; j < 2000; j++);
-    }
-    
-    // --- KRAJ TRANSFERA - SIGNAL ZA PYTHON ---
-    uart_send(csr, "=== BRAM_TRANSFER_END ===\r\n");
-    
-    uart_send(csr, "ADC: Transfer zavrsen.\r\n");
+    uart_send(csr, "DAC: 3MHz and 11MHz signals active (N=65).\r\n");
 }
 
+/**
+ * Trigger ADC acquisition and stream data via UART
+ */
+void run_single_acquisition(volatile csr_vp_t* csr) {
+    uart_send(csr, "ADC: Triggering...\r\n");
+    csr->adc->start(1); 
+    
+    for(volatile int i=0; i<1000; i++); 
+    csr->adc->start(0); 
+    
+    uart_send(csr, "ADC: Acquisition in progress...\r\n");
+    
+    while (csr->adc->done() == 0) {
+        // Waiting for hardware 'done' flag
+    }
+    
+    uart_send(csr, "=== BRAM_TRANSFER_START ===\r\n");
+    for (int i = 0; i < BUFFER_WORDS; i++) {
+        uint32_t data = adc_buffer[i];
+        uart_send_hex(csr, data, 8);
+        
+        if (i < BUFFER_WORDS - 1) {
+            uart_send(csr, "\r\n"); 
+        } else {
+            uart_send(csr, "\n"); 
+        }
+        for(volatile int j = 0; j < 500; j++);
+    }
+    uart_send(csr, "=== BRAM_TRANSFER_END ===\r\n");
+}
 
 int main(void)
 {
     volatile csr_vp_t* csr = new csr_vp_t();
-    
-    csr->gpio->led2(1);
+    csr->gpio->led2(1); 
 
-    uart_send(csr, "--- RISC-V ADC Snapshot Acquisition Demo ---\r\n");
-    uart_send(csr, "Buffer adresa: 0x");
-    uart_send_hex(csr, ADC_BUFFER_START_ADDR, 8);
-    uart_send(csr, ", Velicina: ");
-    uart_send_dec(csr, BUFFER_WORDS);
-    uart_send(csr, " uzoraka.\r\n");
-    uart_send(csr, "Pritisnite KEY1 na FPGA za akviziciju...\r\n");
+    uart_send(csr, "--- RISC-V ADC/DAC Mixed Signal Demo ---\r\n");
+
+    // Initialize DAC
+    prepare_dac_sine(csr, 2000); 
+
+    uart_send(csr, "Press KEY1 to capture ADC snapshot...\r\n");
 
     while(1){
-        
-        // 1. Čekaj da se pritisne KEY1 (za pokretanje akvizicije)
         if (csr->gpio->key1() == 1) {
-        
-            uart_send(csr, "Pritisnut KEY1.\r\n");
-
-            // Pokreni akviziciju, cekaj DONE, i posalji bafer
+            uart_send(csr, "KEY1 Pressed.\r\n");
             run_single_acquisition(csr);
-            
-            uart_send(csr, "Spreman za novu akviziciju (Cekam KEY1).\r\n");
-
-            // Čekaj da se taster otpusti
+            uart_send(csr, "Ready for next trigger.\r\n");
             while (csr->gpio->key1() == 1) {} 
         }
-        
     }
-    
     return 0;
 }
