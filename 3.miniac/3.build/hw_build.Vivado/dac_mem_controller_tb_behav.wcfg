@@ -14,7 +14,7 @@
    <zoom_setting>
       <ZoomStartTime time="0.000 ns"></ZoomStartTime>
       <ZoomEndTime time="361.431 ns"></ZoomEndTime>
-      <Cursor1Time time="361.430 ns"></Cursor1Time>
+      <Cursor1Time time="189.816 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="194"></NameColumnWidth>
