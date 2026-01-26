@@ -45,12 +45,23 @@ module adc_mem_controller (
     localparam ADDR_STOP_AT  = ADDR_START + ADDR_SPAN - 1; // End address (13'h13FF)
 
     adc_sample_t packed_sample_w;
+    
+    // Internal Signals
+    logic csr_start_ff;
+    logic start_pulse;
+    
+    // Edge detector: detects 0 -> 1 transition of csr_start_i
+    always @(posedge sys_clk or negedge sys_rst_n) begin
+        if (!sys_rst_n) csr_start_ff <= 1'b0;
+        else            csr_start_ff <= csr_start_i;
+    end
+    assign start_pulse = csr_start_i && !csr_start_ff;
 
     // State Machine Definition
     typedef enum logic [1:0] {
-        IDLE,       // Wait for start trigger (default)
+        IDLE,       // Wait for start pulse
         RUNNING,    // Data acquisition in progress
-        DONE        // Buffer full, wait for trigger release
+        DONE        // Buffer full, waiting for next cycle
     } acq_state_t;
 
     acq_state_t acq_state_r;
@@ -74,7 +85,7 @@ module adc_mem_controller (
             case (acq_state_r)
                 IDLE: begin
                     // Transition to RUNNING when CPU issues the START pulse
-                    if (csr_start_i) begin
+                    if (start_pulse) begin
                         acq_state_r <= RUNNING;
                     end
                 end
@@ -87,11 +98,9 @@ module adc_mem_controller (
                 end
                 
                 DONE: begin
-                    // Wait for CPU to clear the START signal
-                    // Transition back to IDLE to allow for a new acquisition cycle
-                    if (csr_start_i == 0) begin
-                        acq_state_r <= IDLE;
-                    end
+                    // Automatically go back to IDLE to be ready for next pulse
+                    // done signal stays high until next IDLE starts
+                    acq_state_r <= IDLE;
                 end
 
                 default: acq_state_r <= IDLE;
@@ -114,10 +123,11 @@ module adc_mem_controller (
             
             // Initialization Logic (IDLE state)
             if (acq_state_r == IDLE) begin
-                csr_done_r <= 1'b0; // Clear the DONE flag
-                if (csr_start_i) begin
-                    write_addr_r <= ADDR_START; // Initialize address on START
-                end
+                adc_we_r   <= 1'b0;
+                if (start_pulse) begin
+                        csr_done_r   <= 1'b0; // Clear the DONE flag
+                        write_addr_r <= ADDR_START;
+                    end
             end
             
             // Memory Write Management (RUNNING state)
@@ -137,7 +147,6 @@ module adc_mem_controller (
             end else if (acq_state_r == DONE) begin
                 // Assert the DONE status flag
                 csr_done_r <= 1'b1;
-                // Reset address pointer to START for the next cycle (non-writing)
                 write_addr_r <= ADDR_START;
             end
         end

@@ -197,16 +197,28 @@ addrmap csr {
       desc = "Control for Continuous Generation";
 
       field {
-         name = "en";
-         desc = "Enable continuous loop from memory";
+         name = "en_ch1";
+         desc = "Enable continuous loop from memory for channel 2";
          sw = rw; hw = r;
-      } en[31:31] = 0;
-
+      } en_ch1[31:31] = 0;
+      
       field {
-         name = "len";
+         name = "en_ch0";
+         desc = "Enable continuous loop from memory for channel 1";
+         sw = rw; hw = r;
+      } en_ch0[30:30] = 0;
+      
+      field {
+         name = "len_ch1";
          desc = "Loop length (up to 2048)";
          sw = rw; hw = r;
-      } len[10:0] = 0; // 11 bitova za adresu 0-2047
+      } len_ch1[26:16] = 0; // 11 bits for the address 0-2047
+
+      field {
+         name = "len_ch0";
+         desc = "Loop length (up to 2048)";
+         sw = rw; hw = r;
+      } len_ch0[10:0] = 0; // 11 bits for the address 0-2047
    } dac_mem_ctrl;
    
    reg {

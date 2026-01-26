@@ -93,10 +93,20 @@ module top (
    logic [10:0] dac_mem_addr;
    logic        dac_mem_rd;
    
-   // DAC Control and Memory signals
-    logic [10:0] dac_mem_addr_ctrl;  
-    dac_sample_t dac_data_from_mem;  
-    logic        dac_mem_rd_ctrl;    
+    // DAC Control and Memory signals
+    
+    //logic [10:0] dac_mem_addr_ctrl;  
+    logic [10:0] dac_addr0_ctrl, dac_addr1_ctrl;
+    //dac_sample_t dac_data_from_mem; 
+    logic [15:0] dac_data0_raw, dac_data1_raw;
+    dac_sample_t dac_data_combined;
+    
+    logic        dac_mem_rd_ctrl;   
+    
+    assign dac_data_combined.dac_ch0     = dac_data0_raw[13:0];
+    assign dac_data_combined.dac_unused0 = dac_data0_raw[15:14];
+    assign dac_data_combined.dac_ch1     = dac_data1_raw[13:0];
+    assign dac_data_combined.dac_unused1 = dac_data1_raw[15:14];
 
     // Intermediate signals for dac_dpram Port 1 (CPU side)
     logic        dac_dpram_we1;
@@ -237,23 +247,38 @@ adc u_adc (
     );
      
     // True Dual-Port RAM instance for DAC samples
-    dac_dpram #(
-        .DATA_WIDTH(32),
-        .ADDR_WIDTH(11)
-    ) u_dac_dpram (
-        // Port 1: CPU Side (via CSR)
+    //--------------------------------------------------------------------------
+    // RAM for Channel 0 (Lower 16 bits of CPU word)
+    //--------------------------------------------------------------------------
+    dac_dpram #(.DATA_WIDTH(16), .ADDR_WIDTH(11)) u_dac_ram0 (
         .clk1  (sys_clk),
         .we1   (dac_dpram_we1),
         .addr1 (dac_dpram_addr1),
-        .din1  (dac_dpram_din1),
-        .dout1 (dac_dpram_dout1),
+        .din1  (dac_dpram_din1[15:0]), // Donjih 16 bita
+        .dout1 (dac_dpram_dout1[15:0]),
 
-        // Port 2: DAC Side (via Controller)
         .clk2  (sys_clk),
         .we2   (1'b0),
-        .addr2 (dac_mem_addr_ctrl),
-        .din2  (32'h0),
-        .dout2 (dac_data_from_mem)
+        .addr2 (dac_addr0_ctrl),
+        .din2  (16'h0),
+        .dout2 (dac_data0_raw)
+    );
+
+    //--------------------------------------------------------------------------
+    // RAM for Channel 1 (Upper 16 bits of CPU word)
+    //--------------------------------------------------------------------------
+    dac_dpram #(.DATA_WIDTH(16), .ADDR_WIDTH(11)) u_dac_ram1 (
+        .clk1  (sys_clk),
+        .we1   (dac_dpram_we1),
+        .addr1 (dac_dpram_addr1),
+        .din1  (dac_dpram_din1[31:16]), // Gornjih 16 bita
+        .dout1 (dac_dpram_dout1[31:16]),
+
+        .clk2  (sys_clk),
+        .we2   (1'b0),
+        .addr2 (dac_addr1_ctrl),
+        .din2  (16'h0),
+        .dout2 (dac_data1_raw)
     );
 
     // DAC Controller instance
@@ -262,11 +287,24 @@ adc u_adc (
     ) u_dac_mem_ctrl (
         .clk         (sys_clk),
         .rst_n       (sys_rst_n),
-        .dac_en_i    (from_csr.dac_mem_ctrl.en.value), 
-        .dac_len_i   (from_csr.dac_mem_ctrl.len.value),
-        .mem_addr_o  (dac_mem_addr_ctrl),
+        
+        //.dac_en_i    (from_csr.dac_mem_ctrl.en.value), 
+        .dac_en0_i   (from_csr.dac_mem_ctrl.en_ch0.value), 
+        .dac_en1_i   (from_csr.dac_mem_ctrl.en_ch1.value),
+        
+        //.dac_len_i   (from_csr.dac_mem_ctrl.len.value),
+        .dac_len0_i  (from_csr.dac_mem_ctrl.len_ch0.value),
+        .dac_len1_i  (from_csr.dac_mem_ctrl.len_ch1.value),
+        
+        //.mem_addr_o  (dac_mem_addr_ctrl),
+        .mem_addr0_o (dac_addr0_ctrl),
+        .mem_addr1_o (dac_addr1_ctrl),
+        
         .mem_rd_en_o (dac_mem_rd_ctrl),
-        .mem_data_i  (dac_data_from_mem),
+        
+        //.mem_data_i  (dac_data_from_mem),
+        .mem_data_i  (dac_data_combined),
+        
         .dac_ch0_o   (da_data_ch1_14),
         .dac_ch1_o   (da_data_ch2_14)
     );
@@ -288,7 +326,7 @@ always_comb begin
     to_csr.dac_mem.wr_ack   = from_csr.dac_mem.req & from_csr.dac_mem.req_is_wr;
     
     // 2. Data being read by the CPU from DPRAM Port 1
-    to_csr.dac_mem.rd_data  = dac_dpram_dout1; 
+    to_csr.dac_mem.rd_data = {dac_dpram_dout1[31:16], dac_dpram_dout1[15:0]};
 
     // 3. Logic for signals entering DPRAM Port 1
     dac_dpram_we1   = from_csr.dac_mem.req & from_csr.dac_mem.req_is_wr;

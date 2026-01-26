@@ -19,7 +19,7 @@
 `timescale 1ns / 1ps
 
 module dac_dpram #(
-    parameter DATA_WIDTH = 32,
+    parameter DATA_WIDTH = 16,
     parameter ADDR_WIDTH = 11 // 2048 entries
 )(
     // Port 1: CPU Interface (Povezuješ na CSR signale u top.sv)
