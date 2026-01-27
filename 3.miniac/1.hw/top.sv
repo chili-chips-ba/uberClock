@@ -296,6 +296,9 @@ adc u_adc (
         .dac_len0_i  (from_csr.dac_mem_ctrl.len_ch0.value),
         .dac_len1_i  (from_csr.dac_mem_ctrl.len_ch1.value),
         
+        .dac_mode0_i(from_csr.dac_mem_ctrl.mode_ch0.value),
+	.dac_mode1_i(from_csr.dac_mem_ctrl.mode_ch1.value),
+        
         //.mem_addr_o  (dac_mem_addr_ctrl),
         .mem_addr0_o (dac_addr0_ctrl),
         .mem_addr1_o (dac_addr1_ctrl),

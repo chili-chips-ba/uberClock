@@ -47,16 +47,44 @@ const uint16_t SINE_QUARTER_LUT[512] = {
 volatile uint32_t* adc_buffer = (volatile uint32_t*)ADC_BUFFER_START_ADDR;
 volatile uint32_t* dac_buffer = (volatile uint32_t*)DAC_DPRAM_START_ADDR;
 
+// Funkcija za ispis uzoraka na UART
+void debug_dump_snapshot(volatile csr_vp_t* csr, volatile uint32_t* buffer, uint32_t n_samples) {
+    char log_msg[64];
+    uart_send(csr, "\r\n--- SNAPSHOT BUFFER LOG ---\r\n");
+    uart_send(csr, "Index | CH1 (Snapshot) | CH0 (Cont)\r\n");
+    uart_send(csr, "-------------------------------------\r\n");
+
+    uint32_t limit = (n_samples > 32) ? 32 : n_samples;
+
+    for (uint32_t i = 0; i < limit; i++) {
+        uint32_t raw = buffer[i];
+        uint16_t ch1 = (uint16_t)(raw >> 16);
+        uint16_t ch0 = (uint16_t)(raw & 0xFFFF);
+        
+        // Ako ti sprintf pravi problem, koristi više uart_send poziva:
+        uart_send(csr, "[");
+        uart_send_hex(csr, i, 2); 
+        uart_send(csr, "]  |  ");
+        uart_send_hex(csr, ch1, 4);
+        uart_send(csr, "       |  ");
+        uart_send_hex(csr, ch0, 4);
+        uart_send(csr, "\r\n");
+    }
+    uart_send(csr, "-------------------------------------\r\n");
+}
+
+
 /**
  * Configure both DAC channels using lookup table for Sine and integer math for others.
  * f0_hz / f1_hz: Target frequencies in Hz.
  * mv0 / mv1: Peak-to-Peak amplitude in millivolts.
  * type0 / type1: 0=Sine (LUT), 1=Sawtooth, 2=Square.
+ * mode0 / mode1: 0=Continuous, 1=Snapshot (One-Shot).
  */
 void setup_dac_dual_synchronized(volatile csr_vp_t* csr, 
-                                 uint32_t f0_hz, uint32_t mv0, int type0,
-                                 uint32_t f1_hz, uint32_t mv1, int type1) {
-    
+                                 uint32_t f0_hz, uint32_t mv0, int type0, int mode0,
+                                 uint32_t f1_hz, uint32_t mv1, int type1, int mode1) {
+                                 
     const uint32_t f_clk = 65000000; // 65 MHz
     
     // 1. Disable channels before writing to memory
@@ -79,8 +107,7 @@ void setup_dac_dual_synchronized(volatile csr_vp_t* csr,
     if (amp1 > 8191) amp1 = 8191;
 
     // 4. Fill DAC DPRAM
-    uint32_t max_n = (n0 > n1) ? n0 : n1;
-    for (uint32_t i = 0; i < max_n; i++) {
+    for (uint32_t i = 0; i < 2048; i++) {
         uint16_t v0 = 8192, v1 = 8192; // Default to mid-scale (0V)
 
         // --- Channel 0 Processing ---
@@ -92,17 +119,15 @@ void setup_dac_dual_synchronized(volatile csr_vp_t* csr,
                 uint32_t quadrant = (phase / 512) % 4;
                 int16_t s_val;
 
-                if (quadrant == 0)      s_val = SINE_QUARTER_LUT[idx];
+                if      (quadrant == 0) s_val = SINE_QUARTER_LUT[idx];
                 else if (quadrant == 1) s_val = SINE_QUARTER_LUT[511 - idx];
                 else if (quadrant == 2) s_val = -SINE_QUARTER_LUT[idx];
                 else                    s_val = -SINE_QUARTER_LUT[511 - idx];
 
                 v0 = (uint16_t)(((s_val * (int32_t)amp0) / 8191) + 8192);
             } else if (type0 == 1) { // Sawtooth
-            uart_send(csr, "DAC: Configured for Saw/Square!\r\n");
                 v0 = (uint16_t)((amp0 * 2 * i / n0) + (8192 - amp0));
             } else { // Square
-            uart_send(csr, "DAC: Configured for Saw/Square!\r\n");
                 v0 = (i < n0 / 2) ? (8192 + amp0) : (8192 - amp0);
             }
         }
@@ -114,13 +139,25 @@ void setup_dac_dual_synchronized(volatile csr_vp_t* csr,
                 uint32_t idx = phase % 512;
                 uint32_t quadrant = (phase / 512) % 4;
                 int16_t s_val;
-
-                if (quadrant == 0)      s_val = SINE_QUARTER_LUT[idx];
+                /*
+                if      (quadrant == 0) s_val = SINE_QUARTER_LUT[idx];
                 else if (quadrant == 1) s_val = SINE_QUARTER_LUT[511 - idx];
                 else if (quadrant == 2) s_val = -SINE_QUARTER_LUT[idx];
                 else                    s_val = -SINE_QUARTER_LUT[511 - idx];
 
                 v1 = (uint16_t)(((s_val * (int32_t)amp1) / 8191) + 8192);
+                */
+                
+                int32_t calculate_v;
+                if      (quadrant == 0) s_val = SINE_QUARTER_LUT[idx];
+                else if (quadrant == 1) s_val = SINE_QUARTER_LUT[511 - idx];
+                else if (quadrant == 2) s_val = -((int16_t)SINE_QUARTER_LUT[idx]);      
+                else                    s_val = -((int16_t)SINE_QUARTER_LUT[511 - idx]);
+
+                // Ključni dio: Prvo pomnožimo, pa podijelimo, pa tek onda dodamo offset
+                calculate_v = ((int32_t)s_val * (int32_t)amp1) / 8191;
+                v1 = (uint16_t)(calculate_v + 8192);
+            
             } else if (type1 == 1) { // Sawtooth
                 v1 = (uint16_t)((amp1 * 2 * i / n1) + (8192 - amp1));
             } else { // Square
@@ -129,7 +166,7 @@ void setup_dac_dual_synchronized(volatile csr_vp_t* csr,
         }
 
         // Write both channels to 32-bit DPRAM (Ch1 in high 16 bits, Ch0 in low 16 bits)
-        dac_buffer[i] = ((uint32_t)v1 << 16) | (v0 & 0xFFFF);
+        dac_buffer[i] = ((uint32_t)v1 << 16) | ((uint32_t)v0 & 0xFFFF);
     }
 
     // 5. Apply configuration and Synchronized Start
@@ -137,8 +174,12 @@ void setup_dac_dual_synchronized(volatile csr_vp_t* csr,
     if (f0_hz > 0) ctrl_reg |= (1 << 30); // Enable CH0
     if (f1_hz > 0) ctrl_reg |= (1 << 31); // Enable CH1
     
+    if (mode0) ctrl_reg |= (1 << 28); // Snapshot za CH0
+    if (mode1) ctrl_reg |= (1 << 29); // Snapshot za CH1
+    
     // Set buffer lengths and trigger
     ctrl_reg |= ((n1 & 0x7FF) << 16) | (n0 & 0x7FF);
+    //ctrl_reg |= (2047 << 16) | (n0 & 0x7FF);
     *(volatile uint32_t*)(csr->dac_mem_ctrl->get_addr()) = ctrl_reg;
 }
 
@@ -178,15 +219,11 @@ int main(void)
 {
     volatile csr_vp_t* csr = new csr_vp_t();
     csr->gpio->led2(1); 
-
+    
     // Initialize DAC with synchronized waveforms
-    // Example: Ch0 Sine 4MHz, Ch1 Sine 11MHz
     setup_dac_dual_synchronized(csr, 
-                                13000000, 4000, 0,   // Channel 0: 4MHz Sine
-                                6500000, 2000, 0);  // Channel 1: 11MHz Sine
-                                
-    //setup_dac_dual_synchronized(csr, 1000000, 3000, 1, 500000, 2000, 2);  // Channel 1: 1MHz Sawtooth and 500kHz Square
-                                      
+                                6000000, 4000, 0, 0,   // Channel 0: 6MHz Sine
+                                6000000, 3000, 0, 0);  // Channel 1: 6MHz Sine                                 
 
     uart_send(csr, "Press KEY1 to capture ADC snapshot...\r\n");
 
@@ -194,8 +231,28 @@ int main(void)
         if (csr->gpio->key1() == 1) {
             uart_send(csr, "KEY1 Pressed.\r\n");
             run_single_acquisition(csr);
-            uart_send(csr, "Ready for next trigger.\r\n");
             while (csr->gpio->key1() == 1) {} 
+        }
+        if (csr->gpio->key2() == 1) {
+            uart_send(csr, "DAC: CH1 One-Shot Triggered!\r\n");
+
+            // 1. Prvo sve ugasi (da budemo sigurni da smo na nuli)
+            csr->dac_mem_ctrl->en_ch0(0);
+            csr->dac_mem_ctrl->en_ch1(0);
+
+            // 2. Konfiguriši CH0 da stalno radi (Continuous)
+            // CH0 = Continuous (mode 0), CH1 = One-shot (mode 1)
+            setup_dac_dual_synchronized(csr, 
+                                            6500000, 2048, 0, 0,  // CH0
+                                            6500000, 2048, 0, 1); // CH1 namješten na Snapshot
+
+            // 3. Pošto setup_dac već postavlja en=1, Snapshot je već okinuo ovdje.
+            // Da bismo bili sigurni da je završio snimanje prije čitanja:
+            for(volatile int i=0; i<5000; i++); 
+
+            debug_dump_snapshot(csr, dac_buffer, 15);
+
+            while (csr->gpio->key2() == 1); 
         }
     }
     return 0;

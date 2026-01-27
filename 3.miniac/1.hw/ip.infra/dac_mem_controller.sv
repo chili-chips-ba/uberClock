@@ -30,6 +30,8 @@ module dac_mem_controller #(
     // CSR Control Interface
     input  logic                   dac_en0_i,  // Enable continuous generation on DAC channel 1
     input  logic                   dac_en1_i,  // Enable continuous generation on DAC channel 2
+    input  logic                   dac_mode0_i, // 0: Continuous, 1: Snapshot (One-shot)
+    input  logic                   dac_mode1_i, // 0: Continuous, 1: Snapshot (One-shot)
     input  logic [ADDR_WIDTH-1:0]  dac_len0_i, // Loop length (number of samples) for DAC channel 1
     input  logic [ADDR_WIDTH-1:0]  dac_len1_i, // Loop length (number of samples) for DAC channel 2
 
@@ -52,6 +54,23 @@ module dac_mem_controller #(
         IDLE = 1'b0,
         RUN  = 1'b1
     } state_t;
+    
+    // Edge detection logic
+    logic dac_en0_prev, dac_en1_prev;
+    logic dac_en0_edge, dac_en1_edge;
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dac_en0_prev <= 1'b0;
+            dac_en1_prev <= 1'b0;
+        end else begin
+            dac_en0_prev <= dac_en0_i;
+            dac_en1_prev <= dac_en1_i;
+        end
+    end
+
+    assign dac_en0_edge = dac_en0_i && !dac_en0_prev;
+    assign dac_en1_edge = dac_en1_i && !dac_en1_prev;
 
     state_t state0_reg, state1_reg;
     logic [ADDR_WIDTH-1:0] addr0_cnt, addr1_cnt;
@@ -68,15 +87,21 @@ module dac_mem_controller #(
             case (state0_reg)
                 IDLE: begin
                     addr0_cnt <= '0;
-                    if (dac_en0_i && dac_len0_i > 0) state0_reg <= RUN;
+                    if (dac_en0_edge && dac_len0_i > 0) state0_reg <= RUN;
                 end
                 RUN: begin
                     if (!dac_en0_i) begin
                         state0_reg <= IDLE;
                     end else begin
-                        if (addr0_cnt >= (dac_len0_i - 1)) addr0_cnt <= '0;
-                        else                              addr0_cnt <= addr0_cnt + 1'b1;
-                    end
+                        if (addr0_cnt >= (dac_len0_i - 1)) begin
+                            addr0_cnt  <= '0;                    
+                            if (dac_mode0_i) begin
+                                state0_reg <= IDLE; // Snapshot: stop and wait for new edge
+                            end
+                        end else begin
+                            addr0_cnt <= addr0_cnt + 1'b1;
+                        end
+                    	end
                 end
             endcase
         end
@@ -93,14 +118,20 @@ module dac_mem_controller #(
             case (state1_reg)
                 IDLE: begin
                     addr1_cnt <= '0;
-                    if (dac_en1_i && dac_len1_i > 0) state1_reg <= RUN;
+                    if (dac_en1_edge && dac_len1_i > 0) state1_reg <= RUN;
                 end
                 RUN: begin
                     if (!dac_en1_i) begin
                         state1_reg <= IDLE;
                     end else begin
-                        if (addr1_cnt >= (dac_len1_i - 1)) addr1_cnt <= '0;
-                        else                              addr1_cnt <= addr1_cnt + 1'b1;
+                        if (addr1_cnt >= (dac_len1_i)) begin
+                            addr1_cnt  <= '0;                    
+                            if (dac_mode1_i) begin
+                                state1_reg <= IDLE; // Snapshot: stop and wait for new edge
+                            end 
+                        end else begin
+                            addr1_cnt <= addr1_cnt + 1'b1;
+                        end
                     end
                 end
             endcase

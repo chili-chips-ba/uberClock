@@ -209,6 +209,18 @@ addrmap csr {
       } en_ch0[30:30] = 0;
       
       field {
+         name = "mode_ch1";
+         desc = "0: Continuous, 1: One-shot (Snapshot) for CH1";
+         sw = rw; hw = r;
+      } mode_ch1[29:29] = 0;
+
+      field {
+         name = "mode_ch0";
+         desc = "0: Continuous, 1: One-shot (Snapshot) for CH0";
+         sw = rw; hw = r;
+      } mode_ch0[28:28] = 0;
+      
+      field {
          name = "len_ch1";
          desc = "Loop length (up to 2048)";
          sw = rw; hw = r;
