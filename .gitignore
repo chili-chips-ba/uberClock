@@ -24,3 +24,12 @@
 2.soc-litex/3.build/
 *.bin
 *.txt
+*.o
+*.d
+*.elf
+*.bin
+*.fbi
+*.map
+# ignore generated binaries
+/2.soc-litex/2.sw/demo.bin
+/2.soc-litex/2.sw/demo.fbi
