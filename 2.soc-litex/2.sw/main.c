@@ -581,13 +581,13 @@ static void ce_down_isr(void) {
 void tran(void) {
     switch (curr_state) {
         case IDLE: {
-            if (ce_ticks == 99999 ) {
-                main_phase_inc_nco_write(shooting_phase_inc);
-                main_phase_inc_down_1_write(shooting_phase_inc+1);  
-                printf("Input NCO phase increment set to %u\n", shooting_phase_inc);
+            if (ce_ticks == 39999 ) {
                 curr_state = S1;
-            // puts("IDLE");
-            } 
+            }  else if (ce_ticks ==1) {
+                main_phase_inc_nco_write(shooting_phase_inc);
+                main_phase_inc_down_1_write(shooting_phase_inc + 500);  
+                printf("Input NCO phase increment set to %u\n", shooting_phase_inc);
+            }
         }
         break;
         case S1: {
@@ -599,16 +599,17 @@ void tran(void) {
                        
                      }else 
 
-                     if ( (uint32_t)mag > max_mag   ) { //OFFSET for magnitude register read error
+                     if ( (uint32_t)mag + 10  > max_mag  ) {
                          puts("mag greater");
-                       max_mag = mag; /// phase_down ?????
+                       max_mag = mag; 
                        max_mag_phase_inc = shooting_phase_inc;
                        shooting_phase_inc = shooting_phase_inc + sgn * 1;
                        curr_state = IDLE;
                        ce_ticks = 0;
                     } else {
-                        sgn = -sgn;
-                       shooting_phase_inc = shooting_phase_inc - sgn * 2;
+                       //  sgn = -sgn;
+                       // shooting_phase_inc = shooting_phase_inc - sgn * 2;
+                        main_phase_inc_nco_write(shooting_phase_inc - 1);
                        ce_ticks = 0;
                        curr_state = S2;
                     }
@@ -617,7 +618,8 @@ void tran(void) {
         
         case S2: {
             puts("S2");
-            curr_state = IDLE;
+            magnitude();
+            // curr_state = IDLE;
                  }
             break;
     }
