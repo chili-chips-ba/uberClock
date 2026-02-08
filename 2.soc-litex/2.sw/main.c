@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -557,17 +558,76 @@ static void console_service(void) {
 	prompt();
 }
 
+
+enum fsm_states {IDLE, S1, S2};
+char curr_state;
+uint32_t fsm_counter, max_mag, current_phase_inc, max_mag_phase_inc, shooting_phase_inc ;
+static volatile uint32_t ce_ticks = 0; 
+void fsm_init (void) {
+ curr_state = IDLE; 
+ ce_ticks= 0;
+ max_mag = 0;
+ max_mag_phase_inc = 0; 
+ shooting_phase_inc = 2582065;
+}
+int8_t sgn = 1;
 static volatile bool ce_event = false;
 static void ce_down_isr(void) {
+    ce_ticks++;    
 	evm_pending_write(1);
 	evm_enable_write(0);
 	ce_event = true;
 }
+void tran(void) {
+    switch (curr_state) {
+        case IDLE: {
+            if (ce_ticks == 99999 ) {
+                main_phase_inc_nco_write(shooting_phase_inc);
+                main_phase_inc_down_1_write(shooting_phase_inc+1);  
+                printf("Input NCO phase increment set to %u\n", shooting_phase_inc);
+                curr_state = S1;
+            // puts("IDLE");
+            } 
+        }
+        break;
+        case S1: {
+                     magnitude();
+                     if (mag < 30) {
+                       curr_state = IDLE;
+                       ce_ticks = 0;
+                       shooting_phase_inc = shooting_phase_inc + 2;
+                       
+                     }else 
+
+                     if ( (uint32_t)mag > max_mag   ) { //OFFSET for magnitude register read error
+                         puts("mag greater");
+                       max_mag = mag; /// phase_down ?????
+                       max_mag_phase_inc = shooting_phase_inc;
+                       shooting_phase_inc = shooting_phase_inc + sgn * 1;
+                       curr_state = IDLE;
+                       ce_ticks = 0;
+                    } else {
+                        sgn = -sgn;
+                       shooting_phase_inc = shooting_phase_inc - sgn * 2;
+                       ce_ticks = 0;
+                       curr_state = S2;
+                    }
+                 }
+            break;
+        
+        case S2: {
+            puts("S2");
+            curr_state = IDLE;
+                 }
+            break;
+    }
+}
 
 int main(void) {
 
-	main_phase_inc_nco_write(2581110);	
-	main_nco_mag_write(22); // NCO magnitude
+	main_phase_inc_nco_write(2582065);	
+	main_nco_mag_write(70); // NCO magnitude
+                          //
 	main_phase_inc_down_1_write(2581884);  // 10 003 000
 	main_phase_inc_down_2_write(2580852);  // 9 999 000
 	main_phase_inc_down_3_write(2580722);    // 9 998 500
@@ -612,33 +672,25 @@ int main(void) {
 	help();
 	prompt();
 
-
-	evm_pending_write(1);
-	evm_enable_write(1);
-
-
-	irq_attach(EVM_INTERRUPT, ce_down_isr);
-	uint32_t m = irq_getmask();
-	irq_setmask(m | (1 << EVM_INTERRUPT));
-
+    fsm_init();
 	while (1) {
 		console_service();
 
 		if (ce_event) {
 			// now that we've got the flag, process it here:
-			uint16_t ds_x = main_downsampled_data_x_read();
-			uint32_t doubled_x = (uint32_t)ds_x * 2;
-			main_upsampler_input_x_write(doubled_x);
-			uint16_t ds_y = main_downsampled_data_y_read();
-			uint32_t doubled_y = (uint32_t)ds_y * 2;
-			main_upsampler_input_y_write(doubled_y);
+			// uint16_t ds_x = main_downsampled_data_x_read();
+			// uint32_t doubled_x = (uint32_t)ds_x * 2;
+			// main_upsampler_input_x_write(doubled_x);
+			// uint16_t ds_y = main_downsampled_data_y_read();
+			// uint32_t doubled_y = (uint32_t)ds_y * 2;
+			// main_upsampler_input_y_write(doubled_y);
 
 			mag = main_magnitude_read();
 			phase_val = main_phase_read();
 			ce_event = false;
-			// re-arm the next CE_DOWN
 			evm_pending_write(1);
 			evm_enable_write(1);
+            tran();
 		}
 	}
 }

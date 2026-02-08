@@ -152,9 +152,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_1 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -235,9 +235,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_2 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -316,9 +316,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_3 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -396,9 +396,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_4 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -476,9 +476,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_5 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -615,9 +615,9 @@ module uberclock#(
         .IW (12), 
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15), 
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_ref (
         .sys_clk (sys_clk),
         .rst(rst),
