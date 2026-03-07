@@ -163,7 +163,7 @@ static void reboot_cmd(void) {
 
 static void phase_nco_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_nco must be 0–524287\n");
 		return;
 	}
@@ -182,7 +182,7 @@ static void nco_mag_cmd(char *args) {
 }
 static void phase_down_1_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -192,7 +192,7 @@ static void phase_down_1_cmd(char *args) {
 
 static void phase_down_2_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -202,7 +202,7 @@ static void phase_down_2_cmd(char *args) {
 
 static void phase_down_3_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -213,7 +213,7 @@ static void phase_down_3_cmd(char *args) {
 
 static void phase_down_4_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -223,7 +223,7 @@ static void phase_down_4_cmd(char *args) {
 
 static void phase_down_5_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -232,7 +232,7 @@ static void phase_down_5_cmd(char *args) {
 }
 static void phase_down_ref_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_down must be 0–524287\n");
 		return;
 	}
@@ -287,7 +287,7 @@ static void mag_cpu5_cmd(char *args) {
 }
 static void phase_cpu1_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -297,7 +297,7 @@ static void phase_cpu1_cmd(char *args) {
 
 static void phase_cpu2_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -307,7 +307,7 @@ static void phase_cpu2_cmd(char *args) {
 
 static void phase_cpu3_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -317,7 +317,7 @@ static void phase_cpu3_cmd(char *args) {
 
 static void phase_cpu4_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -327,7 +327,7 @@ static void phase_cpu4_cmd(char *args) {
 
 static void phase_cpu5_cmd(char *args) {
 	unsigned p = strtoul(args, NULL, 0);
-	if (p >= (1u << 24)) {
+	if (p >= (1u << 26)) {
 		printf("Error: phase_cpu must be 0–524287\n");
 		return;
 	}
@@ -627,11 +627,11 @@ void tran(void) {
 
 int main(void) {
 
-	main_phase_inc_nco_write(2582065);	
+	main_phase_inc_nco_write(10324440);	
 	main_nco_mag_write(70); // NCO magnitude
                           //
-	main_phase_inc_down_1_write(2581884);  // 10 003 000
-	main_phase_inc_down_2_write(2580852);  // 9 999 000
+	main_phase_inc_down_1_write(10324441);  // 10 003 000
+	main_phase_inc_down_2_write(10324442);  // 9 999 000
 	main_phase_inc_down_3_write(2580722);    // 9 998 500
 	main_phase_inc_down_4_write(2580593);    // 9 998 000
 	main_phase_inc_down_5_write(2580465);    // 9 997 500
@@ -645,7 +645,7 @@ int main(void) {
 	main_gain3_write (0x40000000);
 	main_gain4_write (0x40000000);
 	main_gain5_write (0x40000000);
-	main_output_select_ch1_write(11);
+	main_output_select_ch1_write(10);
 	main_output_select_ch2_write(10);
 
 
@@ -692,7 +692,7 @@ int main(void) {
 			ce_event = false;
 			evm_pending_write(1);
 			evm_enable_write(1);
-            tran();
+            // tran();
 		}
 	}
 }

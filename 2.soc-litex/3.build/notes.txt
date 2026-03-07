@@ -1,0 +1,5 @@
+1. How wide is the resonance peak? Will determine experimentaly?
+2. This will tell how to space out the three tones as well as how big fft is going to have to be
+    to separate them out?
+3. The tones have to be at 50% peak location for this to work ? We must not be on the same side of the res. peak?
+4. A Quadratic fit will give the new center frequnecy location?
