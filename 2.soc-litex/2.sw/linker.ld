@@ -61,6 +61,10 @@ SECTIONS
 }
 
 PROVIDE(_fstack = ORIGIN(sram) + LENGTH(sram));
+PROVIDE(__stack = _fstack);
+PROVIDE(__heap_start = _end);
+PROVIDE(__heap_end = __stack - (DEFINED(__stack_size) ? __stack_size : 0x800));
+PROVIDE(__heap_size = __heap_end - __heap_start);
 
 PROVIDE(_fdata_rom = LOADADDR(.data));
 PROVIDE(_edata_rom = LOADADDR(.data) + SIZEOF(.data));

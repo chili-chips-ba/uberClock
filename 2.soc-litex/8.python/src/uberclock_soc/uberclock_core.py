@@ -43,7 +43,8 @@ from migen import *
 from litex.gen import *
 
 from litex.soc.interconnect.csr_eventmanager import EventManager, EventSourcePulse
-from migen.genlib.cdc import PulseSynchronizer, MultiReg
+from migen.genlib.cdc import PulseSynchronizer, MultiReg, ClockDomainsRenamer
+from migen.genlib.fifo import AsyncFIFO
 
 from .uberclock_csrs import UberClockCSRBank
 from .csr_snapshot_fifo import CsrConfigSnapshotFIFO
@@ -115,11 +116,9 @@ def add_uberclock_fullrate(soc, leds):
     - Instantiates the Verilog `uberclock` module.
     - Optionally wires high-speed capture into `soc.ubddr3` if it exists.
     """
-    platform = soc.platform  # needed by add_sources() and request()
+    platform = soc.platform
 
-    # -------------------------------------------------------------------------
-    # Add required Verilog sources for UberClock
-    # -------------------------------------------------------------------------
+
     add_sources(platform, UBERCLOCK_RTL_FILES)
 
     # -------------------------------------------------------------------------
@@ -239,6 +238,13 @@ def add_uberclock_fullrate(soc, leds):
     ds_y_uc    = Signal(16, name="downsampled_y_uc")
     cap_sel_uc = Signal(12, name="cap_selected_uc")  # selected sample for HS capture
 
+    # UC-domain upsampler FIFO hold registers
+    ups_x_uc = Signal(16, name="upsampler_fifo_x_uc")
+    ups_y_uc = Signal(16, name="upsampler_fifo_y_uc")
+    ups_have_sample_uc = Signal(name="upsampler_fifo_has_sample_uc")
+    ups_in_x_uc = Signal(16, name="upsampler_in_x_uc")
+    ups_in_y_uc = Signal(16, name="upsampler_in_y_uc")
+
     # Low-speed capture outputs (UC domain)
     cap_done_uc = Signal(name="ls_cap_done_uc")
     cap_data_uc = Signal(16, name="ls_cap_data_uc")
@@ -304,8 +310,8 @@ def add_uberclock_fullrate(soc, leds):
         i_gain4=_uc_out("gain4"),
         i_gain5=_uc_out("gain5"),
 
-        i_upsampler_input_x=_uc_out("ups_in_x"),
-        i_upsampler_input_y=_uc_out("ups_in_y"),
+        i_upsampler_input_x=ups_in_x_uc,
+        i_upsampler_input_y=ups_in_y_uc,
         i_final_shift=_uc_out("final_shift"),
 
         # Outputs
@@ -337,6 +343,139 @@ def add_uberclock_fullrate(soc, leds):
     soc.comb += [
         m.cap_done.status.eq(cap_done_sys),
         m.cap_data.status.eq(cap_data_sys),
+    ]
+
+    # -------------------------------------------------------------------------
+    # UC->SYS: downsampled data async FIFO (for CPU readback)
+    # -------------------------------------------------------------------------
+    DS_FIFO_DEPTH = 16384
+
+    ds_fifo_width = 32
+    ds_fifo = AsyncFIFO(width=ds_fifo_width, depth=DS_FIFO_DEPTH)
+    soc.submodules.ds_fifo = ClockDomainsRenamer({"write": "uc", "read": "sys"})(ds_fifo)
+
+    ds_overflow_uc = Signal(name="ds_fifo_overflow_uc")
+    ds_overflow_sys = Signal(name="ds_fifo_overflow_sys")
+    ds_underflow_sys = Signal(name="ds_fifo_underflow_sys")
+    ds_clear_uc = Signal(name="ds_fifo_clear_uc")
+
+    # UC write-side: push on ce_down
+    soc.comb += [
+        ds_fifo.din.eq(Cat(ds_x_uc, ds_y_uc)),
+        ds_fifo.we.eq(ce_down_uc & ds_fifo.writable),
+    ]
+
+    # SYS->UC clear pulse
+    soc.submodules.ds_clear_ps = PulseSynchronizer("sys", "uc")
+    soc.comb += soc.ds_clear_ps.i.eq(m.ds_fifo_clear.re)
+    soc.comb += ds_clear_uc.eq(soc.ds_clear_ps.o)
+
+    # UC overflow sticky
+    soc.sync.uc += [
+        If(ce_down_uc & ~ds_fifo.writable,
+            ds_overflow_uc.eq(1)
+        ),
+        If(ds_clear_uc,
+            ds_overflow_uc.eq(0)
+        ),
+    ]
+
+    soc.specials += MultiReg(ds_overflow_uc, ds_overflow_sys, "sys")
+
+    # SYS read-side: pop on CPU strobe
+    ds_data_sys = Signal(ds_fifo_width, name="ds_fifo_data_sys")
+    ds_pop_sys = Signal(name="ds_fifo_pop_sys")
+    soc.comb += ds_pop_sys.eq(m.ds_fifo_pop.re)
+
+    soc.comb += ds_fifo.re.eq(ds_pop_sys & ds_fifo.readable)
+
+    soc.sync.sys += [
+        If(ds_pop_sys & ds_fifo.readable,
+            ds_data_sys.eq(ds_fifo.dout)
+        ),
+        If(ds_pop_sys & ~ds_fifo.readable,
+            ds_underflow_sys.eq(1)
+        ),
+        If(m.ds_fifo_clear.re,
+            ds_underflow_sys.eq(0)
+        ),
+    ]
+
+    soc.comb += [
+        m.ds_fifo_x.status.eq(ds_data_sys[0:16]),
+        m.ds_fifo_y.status.eq(ds_data_sys[16:32]),
+        m.ds_fifo_overflow.status.eq(ds_overflow_sys),
+        m.ds_fifo_underflow.status.eq(ds_underflow_sys),
+        m.ds_fifo_flags.status.eq(Cat(ds_fifo.readable, C(0, 7))),
+    ]
+
+    # -------------------------------------------------------------------------
+    # SYS->UC: upsampler input async FIFO (CPU injection)
+    # -------------------------------------------------------------------------
+    UPS_FIFO_DEPTH = 16384
+
+    ups_fifo_width = 32
+    ups_fifo = AsyncFIFO(width=ups_fifo_width, depth=UPS_FIFO_DEPTH)
+    soc.submodules.ups_fifo = ClockDomainsRenamer({"write": "sys", "read": "uc"})(ups_fifo)
+
+    ups_overflow_sys = Signal(name="ups_fifo_overflow_sys")
+    ups_underflow_uc = Signal(name="ups_fifo_underflow_uc")
+    ups_underflow_sys = Signal(name="ups_fifo_underflow_sys")
+    ups_clear_uc = Signal(name="ups_fifo_clear_uc")
+
+    # SYS write-side: push on CPU strobe
+    ups_push_sys = Signal(name="ups_fifo_push_sys")
+    soc.comb += ups_push_sys.eq(m.ups_fifo_push.re)
+
+    soc.comb += [
+        ups_fifo.din.eq(Cat(m.ups_fifo_x.storage, m.ups_fifo_y.storage)),
+        ups_fifo.we.eq(ups_push_sys & ups_fifo.writable),
+    ]
+
+    soc.sync.sys += [
+        If(ups_push_sys & ~ups_fifo.writable,
+            ups_overflow_sys.eq(1)
+        ),
+        If(m.ups_fifo_clear.re,
+            ups_overflow_sys.eq(0)
+        ),
+    ]
+
+    soc.comb += [
+        m.ups_fifo_overflow.status.eq(ups_overflow_sys),
+        m.ups_fifo_underflow.status.eq(ups_underflow_sys),
+        m.ups_fifo_flags.status.eq(Cat(C(0, 1), ups_fifo.writable, C(0, 6))),
+    ]
+
+    # UC read-side: pop on ce_down, hold last sample
+    soc.comb += ups_fifo.re.eq(ce_down_uc & ups_fifo.readable)
+
+    soc.sync.uc += If(ce_down_uc & ups_fifo.readable,
+        ups_x_uc.eq(ups_fifo.dout[0:16]),
+        ups_y_uc.eq(ups_fifo.dout[16:32]),
+        ups_have_sample_uc.eq(1)
+    )
+
+    soc.sync.uc += [
+        If(ce_down_uc & ~ups_fifo.readable & ups_have_sample_uc,
+            ups_underflow_uc.eq(1)
+        ),
+        If(ups_clear_uc,
+            ups_underflow_uc.eq(0)
+        ),
+    ]
+
+    soc.specials += MultiReg(ups_underflow_uc, ups_underflow_sys, "sys")
+
+    # SYS->UC clear pulse
+    soc.submodules.ups_clear_ps = PulseSynchronizer("sys", "uc")
+    soc.comb += soc.ups_clear_ps.i.eq(m.ups_fifo_clear.re)
+    soc.comb += ups_clear_uc.eq(soc.ups_clear_ps.o)
+
+    # Upsampler input always comes from FIFO; before first sample, drive zero.
+    soc.comb += [
+        ups_in_x_uc.eq(Mux(ups_have_sample_uc, ups_x_uc, C(0, 16))),
+        ups_in_y_uc.eq(Mux(ups_have_sample_uc, ups_y_uc, C(0, 16))),
     ]
 
     # -------------------------------------------------------------------------

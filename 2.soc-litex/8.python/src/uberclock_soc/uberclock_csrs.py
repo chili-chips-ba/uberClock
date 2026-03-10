@@ -193,6 +193,100 @@ class UberClockCSRBank(LiteXModule):
             description="CPU-provided Q (Y) sample injected into upsampler."
         )
 
+        # =====================================================================
+        #        Downsampled data FIFO (UC->SYS, CPU readback)
+        # =====================================================================
+
+        self.ds_fifo_pop = CSRStorage(
+            1,
+            description="Write (strobe) to pop one downsampled sample from the FIFO."
+        )
+
+        self.ds_fifo_x = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Downsampled X sample from FIFO (latched on pop)."
+        )
+
+        self.ds_fifo_y = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Downsampled Y sample from FIFO (latched on pop)."
+        )
+
+        self.ds_fifo_overflow = CSRStatus(
+            1,
+            description="Sticky: downsample FIFO overflow (UC wrote while full)."
+        )
+
+        self.ds_fifo_underflow = CSRStatus(
+            1,
+            description="Sticky: downsample FIFO underflow (CPU pop while empty)."
+        )
+
+        self.ds_fifo_clear = CSRStorage(
+            1,
+            description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
+        )
+
+        self.ds_fifo_clear = CSRStorage(
+            1,
+            description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
+        )
+
+        self.ds_fifo_flags = CSRStatus(
+            8,
+            description=(
+                "FIFO flags packed into status bits: bit0=readable (SYS can pop). "
+                "Remaining bits are reserved (0)."
+            ),
+        )
+
+        # =====================================================================
+        #        Upsampler input FIFO (SYS->UC, CPU injection)
+        # =====================================================================
+
+        self.ups_fifo_x = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided X sample to enqueue into upsampler FIFO."
+        )
+
+        self.ups_fifo_y = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided Y sample to enqueue into upsampler FIFO."
+        )
+
+        self.ups_fifo_push = CSRStorage(
+            1,
+            description="Write (strobe) to enqueue one sample into the upsampler FIFO."
+        )
+
+        self.ups_fifo_overflow = CSRStatus(
+            1,
+            description="Sticky: upsampler FIFO overflow (CPU push while full)."
+        )
+
+        self.ups_fifo_underflow = CSRStatus(
+            1,
+            description="Sticky: upsampler FIFO underflow (UC read while empty)."
+        )
+
+        self.ups_fifo_clear = CSRStorage(
+            1,
+            description="Write (strobe) to clear upsampler FIFO overflow/underflow flags."
+        )
+
+        self.ups_fifo_clear = CSRStorage(
+            1,
+            description="Write (strobe) to clear upsampler FIFO overflow/underflow flags."
+        )
+
+        self.ups_fifo_flags = CSRStatus(
+            8,
+            description=(
+                "FIFO flags packed into status bits: bit1=writable (CPU can push). "
+                "Remaining bits are reserved (0)."
+            ),
+        )
+
         self.final_shift = CSRStorage(
             self.FINAL_SHIFT_WIDTH,
             description="Final arithmetic right-shift applied to DSP output."

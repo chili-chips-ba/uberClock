@@ -3,7 +3,9 @@ BUILD_DIR?=../build/
 include $(BUILD_DIR)/software/include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-OBJECTS   = donut.o helloc.o crt0.o main.o console.o uberclock.o ubddr3.o
+OBJECTS   = donut.o helloc.o crt0.o main.o console.o uberclock.o ubddr3.o kiss_fft.o
+CFLAGS   += -I$(CURDIR)/kissfft
+CFLAGS   += -DFIXED_POINT=16
 ifdef WITH_CXX
 	OBJECTS += hellocpp.o
 	CFLAGS += -DWITH_CXX

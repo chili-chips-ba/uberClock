@@ -11,18 +11,10 @@
 
 #include "uberclock.h"
 #include "console.h"
+#include "kissfft/kiss_fft.h"
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 
-#if defined(__has_include)
-#if __has_include(<libbase/cache.h>)
-#include <libbase/cache.h>
 static inline void ub_cache_sync(void) { flush_cpu_dcache(); flush_l2_cache(); }
-#else
-static inline void ub_cache_sync(void) { /* no-op */ }
-#endif
-#else
-static inline void ub_cache_sync(void) { /* no-op */ }
-#endif
 
 /* ========================================================================= */
 /*                             UberClock                                     */
@@ -31,6 +23,29 @@ static inline void ub_cache_sync(void) { /* no-op */ }
 static volatile int ce_event = 0;
 static int16_t  g_mag;
 static int32_t  g_phase;
+static volatile int dsp_pump_enable = 0;
+static volatile uint32_t dsp_work_tokens = 0;
+
+#define DSP_SWQ_LEN 256u
+static int16_t dsp_swq_x[DSP_SWQ_LEN];
+static int16_t dsp_swq_y[DSP_SWQ_LEN];
+static unsigned dsp_swq_r = 0;
+static unsigned dsp_swq_w = 0;
+static unsigned dsp_swq_count = 0;
+
+/* Fixed-cadence DSP pumping is driven from ce_down ISR. */
+static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
+
+#define FFT_MAX_N 32u
+#define FFT_CFG_MAX_BYTES 768u
+static kiss_fft_cpx fft_in[FFT_MAX_N];
+static kiss_fft_cpx fft_out[FFT_MAX_N];
+static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
+static uint32_t fft_fs_hz = 1000000u;
+
+static inline int is_pow2_u(unsigned x) {
+    return (x != 0u) && ((x & (x - 1u)) == 0u);
+}
 
 static inline unsigned parse_u(const char *s, unsigned max, const char *what) {
     unsigned v = (unsigned)strtoul(s ? s : "0", NULL, 0);
@@ -48,19 +63,18 @@ static inline int parse_s(const char *s, int minv, int maxv, const char *what) {
 
 /* ---- COMMIT helper ---- */
 static inline void uc_commit(void) {
-    #ifdef CSR_CFG_LINK_BASE
     cfg_link_commit_write(1);
-    #endif
 }
 
 /* ---- ISR ---- */
-#ifdef CSR_EVM_PENDING_ADDR
 static void ce_down_isr(void) {
     evm_pending_write(1);
     evm_enable_write(0);
+    if (dsp_pump_enable) {
+        if (dsp_work_tokens < 1024u) dsp_work_tokens++;
+    }
     ce_event = 1;
 }
-#endif
 
 /* ---- Help ---- */
 static void uc_help(char *args) {
@@ -98,6 +112,13 @@ static void uc_help(char *args) {
 
     puts("  upsampler_x          <val>  (signed 16-bit)");
     puts("  upsampler_y          <val>  (signed 16-bit)");
+    puts("  ds_pop                      (pop one downsampled sample)");
+    puts("  ds_status                   (read downsample FIFO flags/overflow)");
+    puts("  ups_push <x> <y>             (enqueue one upsampler sample)");
+    puts("  ups_status                  (read upsampler FIFO flags/overflow)");
+    puts("  dsp_run <0|1>               (enable/disable non-blocking DSP pump)");
+    puts("  fft_ds [N]                  (FFT over DS FIFO IQ samples, N=8/16/32)");
+    puts("  fft_fs <Hz>                 (set DS sample rate used for fft_ds Hz print)");
 
     puts("  cap_arm              (pulse arm capture)");
     puts("  cap_done             (read cap_done)");
@@ -109,186 +130,125 @@ static void uc_help(char *args) {
 
 /* ---- Phase/NCO/downconversion ---- */
 static void cmd_phase_nco(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_nco");
     if (p >= (1u << 24)) return;
     main_phase_inc_nco_write(p);
     uc_commit();
     printf("Input NCO phase increment set to %u\n", p);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_phase_cpu1(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_cpu1");
     if (p >= (1u << 24)) return;
     main_phase_inc_cpu1_write(p);
     uc_commit();
     printf("CPU phase increment ch1 set to %u\n", p);
-    #else
-    puts("phase_inc_cpu1 CSR not present.");
-    #endif
 }
 
 static void cmd_phase_cpu2(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_CPU2_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_cpu2");
     if (p >= (1u << 24)) return;
     main_phase_inc_cpu2_write(p);
     uc_commit();
     printf("CPU phase increment ch2 set to %u\n", p);
-    #else
-    puts("phase_inc_cpu2 CSR not present.");
-    #endif
 }
 
 static void cmd_phase_cpu3(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_CPU3_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_cpu3");
     if (p >= (1u << 24)) return;
     main_phase_inc_cpu3_write(p);
     uc_commit();
     printf("CPU phase increment ch3 set to %u\n", p);
-    #else
-    puts("phase_inc_cpu3 CSR not present.");
-    #endif
 }
 
 static void cmd_phase_cpu4(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_CPU4_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_cpu4");
     if (p >= (1u << 24)) return;
     main_phase_inc_cpu4_write(p);
     uc_commit();
     printf("CPU phase increment ch4 set to %u\n", p);
-    #else
-    puts("phase_inc_cpu4 CSR not present.");
-    #endif
 }
 
 static void cmd_phase_cpu5(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_CPU5_ADDR
     unsigned p = parse_u(a, 1u << 24, "phase_cpu5");
     if (p >= (1u << 24)) return;
     main_phase_inc_cpu5_write(p);
     uc_commit();
     printf("CPU phase increment ch5 set to %u\n", p);
-    #else
-    puts("phase_inc_cpu5 CSR not present.");
-    #endif
 }
 
 static void cmd_nco_mag(char *a) {
-    #ifdef CSR_MAIN_NCO_MAG_ADDR
     int v = parse_s(a, -2048, 2047, "nco_mag");
     if (v < -2048 || v > 2047) return;
     /* store as 12-bit signed in low bits */
     main_nco_mag_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("nco_mag set to %d\n", v);
-    #else
-    puts("nco_mag CSR not present.");
-    #endif
 }
 
 static void cmd_phase_down_ref(char *a) {
-    #ifdef CSR_MAIN_PHASE_INC_DOWN_REF_ADDR
-    unsigned p = parse_u(a, 1u << 19, "phase_down_ref");
-    if (p >= (1u << 19)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_down_ref");
+    if (p >= (1u << 24)) return;
     main_phase_inc_down_ref_write(p);
     uc_commit();
     printf("Downconversion phase ref increment set to %u\n", p);
-    #else
-    puts("phase_inc_down_ref CSR not present.");
-    #endif
 }
 
 static void cmd_mag_cpu1(char *a) {
-    #ifdef CSR_MAIN_MAG_CPU1_ADDR
     int v = parse_s(a, -2048, 2047, "mag_cpu1");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu1_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu1 set to %d\n", v);
-    #else
-    puts("mag_cpu1 CSR not present.");
-    #endif
 }
 static void cmd_mag_cpu2(char *a) {
-    #ifdef CSR_MAIN_MAG_CPU2_ADDR
     int v = parse_s(a, -2048, 2047, "mag_cpu2");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu2_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu2 set to %d\n", v);
-    #else
-    puts("mag_cpu2 CSR not present.");
-    #endif
 }
 static void cmd_mag_cpu3(char *a) {
-    #ifdef CSR_MAIN_MAG_CPU3_ADDR
     int v = parse_s(a, -2048, 2047, "mag_cpu3");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu3_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu3 set to %d\n", v);
-    #else
-    puts("mag_cpu3 CSR not present.");
-    #endif
 }
 static void cmd_mag_cpu4(char *a) {
-    #ifdef CSR_MAIN_MAG_CPU4_ADDR
     int v = parse_s(a, -2048, 2047, "mag_cpu4");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu4_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu4 set to %d\n", v);
-    #else
-    puts("mag_cpu4 CSR not present.");
-    #endif
 }
 static void cmd_mag_cpu5(char *a) {
-    #ifdef CSR_MAIN_MAG_CPU5_ADDR
     int v = parse_s(a, -2048, 2047, "mag_cpu5");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu5_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu5 set to %d\n", v);
-    #else
-    puts("mag_cpu5 CSR not present.");
-    #endif
 }
 
 static void cmd_lowspeed_dbg_select(char *a) {
-    #ifdef CSR_MAIN_LOWSPEED_DBG_SELECT_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     if (v > 4) { puts("lowspeed_dbg_select must be 0..4"); return; }
     main_lowspeed_dbg_select_write(v);
     uc_commit();
     printf("lowspeed_dbg_select = %u\n", v);
-    #else
-    puts("lowspeed_dbg_select CSR not present.");
-    #endif
 }
 
 static void cmd_highspeed_dbg_select(char *a) {
-    #ifdef CSR_MAIN_HIGHSPEED_DBG_SELECT_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     if (v > 3) { puts("highspeed_dbg_select must be 0..3"); return; }
     main_highspeed_dbg_select_write(v);
     uc_commit();
     printf("highspeed_dbg_select = %u\n", v);
-    #else
-    puts("highspeed_dbg_select CSR not present.");
-    #endif
 }
 
 static void cmd_phase_dn(char *a, int ch) {
-    #ifdef CSR_MAIN_PHASE_INC_DOWN_1_ADDR
-    unsigned p = parse_u(a, 1u << 19, "phase_down");
-    if (p >= (1u << 19)) return;
+    unsigned p = parse_u(a, 1u << 24, "phase_down");
+    if (p >= (1u << 24)) return;
     switch (ch) {
         case 1: main_phase_inc_down_1_write(p); break;
         case 2: main_phase_inc_down_2_write(p); break;
@@ -299,9 +259,6 @@ static void cmd_phase_dn(char *a, int ch) {
     }
     uc_commit();
     printf("Downconversion phase ch%d increment set to %u\n", ch, p);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 static void cmd_phase_down_1(char *a){ cmd_phase_dn(a, 1); }
 static void cmd_phase_down_2(char *a){ cmd_phase_dn(a, 2); }
@@ -311,51 +268,34 @@ static void cmd_phase_down_5(char *a){ cmd_phase_dn(a, 5); }
 
 /* ---- Muxes / gains ---- */
 static void cmd_output_sel_ch1(char *a) {
-    #ifdef CSR_MAIN_OUTPUT_SELECT_CH1_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch1_write(v);
     uc_commit();
     printf("output_select_ch1 set to %u\n", v);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_output_sel_ch2(char *a) {
-    #ifdef CSR_MAIN_OUTPUT_SELECT_CH2_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch2_write(v);
     uc_commit();
     printf("output_select_ch2 set to %u\n", v);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_input_select(char *a) {
-    #ifdef CSR_MAIN_INPUT_SELECT_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     main_input_select_write(v);
     uc_commit();
     printf("Main input select register set to %u\n", v);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_ups_in_mux(char *a) {
-    #ifdef CSR_MAIN_UPSAMPLER_INPUT_MUX_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     main_upsampler_input_mux_write(v);
     uc_commit();
     printf("Upsampler input mux register set to %u\n", v);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_gain(char *a, int idx) {
-    #ifdef CSR_MAIN_GAIN1_ADDR
     int32_t g = (int32_t)strtol(a ? a : "0", NULL, 0);
     switch (idx) {
         case 1: main_gain1_write((uint32_t)g); break;
@@ -368,9 +308,6 @@ static void cmd_gain(char *a, int idx) {
     uc_commit();
     printf("Gain%d register set to %ld (0x%08lX)\n",
            idx, (long)g, (unsigned long)g);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 static void cmd_gain1(char *a){ cmd_gain(a, 1); }
 static void cmd_gain2(char *a){ cmd_gain(a, 2); }
@@ -379,76 +316,265 @@ static void cmd_gain4(char *a){ cmd_gain(a, 4); }
 static void cmd_gain5(char *a){ cmd_gain(a, 5); }
 
 static void cmd_final_shift(char *a) {
-    #ifdef CSR_MAIN_FINAL_SHIFT_ADDR
     int32_t fs = (int32_t)strtol(a ? a : "0", NULL, 0);
     main_final_shift_write((uint32_t)fs);
     uc_commit();
     printf("final_shift set to %ld (0x%08lX)\n",
            (long)fs, (unsigned long)fs);
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_cap_enable(char *a) {
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     v = v ? 1u : 0u;
     main_cap_enable_write(v);
     uc_commit();
     printf("cap_enable = %u (%s)\n", v, v ? "CAPTURE(design)->DDR" : "RAMP->DDR");
-    #else
-    puts("Not built with UberClock CSRs.");
-    #endif
 }
 
 static void cmd_upsampler_x(char *a) {
-    #ifdef CSR_MAIN_UPSAMPLER_INPUT_X_ADDR
     int v = parse_s(a, -32768, 32767, "upsampler_x");
     if (v < -32768 || v > 32767) return;
     main_upsampler_input_x_write((uint32_t)((int32_t)v & 0xffff));
     uc_commit();
     printf("upsampler_input_x = %d\n", v);
-    #else
-    puts("upsampler_input_x CSR not present.");
-    #endif
 }
 
 static void cmd_upsampler_y(char *a) {
-    #ifdef CSR_MAIN_UPSAMPLER_INPUT_Y_ADDR
     int v = parse_s(a, -32768, 32767, "upsampler_y");
     if (v < -32768 || v > 32767) return;
     main_upsampler_input_y_write((uint32_t)((int32_t)v & 0xffff));
     uc_commit();
     printf("upsampler_input_y = %d\n", v);
-    #else
-    puts("upsampler_input_y CSR not present.");
-    #endif
+}
+
+/* ========================================================================= */
+/*                         FIFO DSP test harness                             */
+/* ========================================================================= */
+
+static inline void dsp_process(int16_t in_x, int16_t in_y,
+                               int16_t *out_x, int16_t *out_y) {
+    /* Passthrough. */
+    *out_x = in_x;
+    *out_y = in_y;
+}
+
+static unsigned dsp_pump_step(unsigned max_in, unsigned max_out) {
+    unsigned popped = 0;
+    unsigned i;
+
+    /* Stage A: drain input aggressively into SW queue. */
+    for (i = 0; i < max_in; i++) {
+        if (((main_ds_fifo_flags_read() & 0x1u) != 0u) && (dsp_swq_count < DSP_SWQ_LEN)) {
+            main_ds_fifo_pop_write(1);
+            int16_t in_x = (int16_t)(main_ds_fifo_x_read() & 0xffff);
+            int16_t in_y = (int16_t)(main_ds_fifo_y_read() & 0xffff);
+
+            int16_t out_x = 0, out_y = 0;
+            dsp_process(in_x, in_y, &out_x, &out_y);
+
+            dsp_swq_x[dsp_swq_w] = out_x;
+            dsp_swq_y[dsp_swq_w] = out_y;
+            dsp_swq_w = (dsp_swq_w + 1u) % DSP_SWQ_LEN;
+            dsp_swq_count++;
+            popped++;
+        } else {
+            break;
+        }
+    }
+
+    /* Stage B: push with a smaller cap to avoid large output bursts. */
+    for (i = 0; i < max_out; i++) {
+        if ((dsp_swq_count != 0u) && ((main_ups_fifo_flags_read() & 0x2u) != 0u)) {
+            int16_t out_x = dsp_swq_x[dsp_swq_r];
+            int16_t out_y = dsp_swq_y[dsp_swq_r];
+            dsp_swq_r = (dsp_swq_r + 1u) % DSP_SWQ_LEN;
+            dsp_swq_count--;
+
+            main_ups_fifo_x_write((uint32_t)((int32_t)out_x & 0xffff));
+            main_ups_fifo_y_write((uint32_t)((int32_t)out_y & 0xffff));
+            main_ups_fifo_push_write(1);
+        } else {
+            break;
+        }
+    }
+    return popped;
+}
+
+static void fifo_clear_flags(void) {
+    main_ds_fifo_clear_write(1);
+    main_ups_fifo_clear_write(1);
+}
+
+static void cmd_dsp_test(char *args) {
+    char *tok = strtok(args, " \t");
+    unsigned limit = tok ? (unsigned)strtoul(tok, NULL, 0) : 0;
+
+    /* Temporarily disable background pump so dsp_test owns the flow. */
+    int prev_run = dsp_pump_enable;
+    dsp_pump_enable = 0;
+
+    unsigned processed = 0;
+    unsigned stall = 0;
+    const unsigned STALL_MAX = 1000000u;
+
+    while (!limit || processed < limit) {
+        unsigned step = dsp_pump_step(64, 64);
+        if (step == 0u) {
+            if (++stall >= STALL_MAX) break;
+            continue;
+        }
+        stall = 0;
+        processed += step;
+    }
+
+    dsp_pump_enable = prev_run;
+
+    printf("dsp_test processed %u samples (stall=%u)\n", processed, stall);
+}
+
+static void cmd_ds_pop(char *a) {
+    (void)a;
+    main_ds_fifo_pop_write(1);
+    uint32_t vx = main_ds_fifo_x_read();
+    uint32_t vy = main_ds_fifo_y_read();
+    int16_t sx = (int16_t)(vx & 0xffff);
+    int16_t sy = (int16_t)(vy & 0xffff);
+    printf("ds_fifo: x=%d y=%d\n", (int)sx, (int)sy);
+}
+
+static void cmd_ds_status(char *a) {
+    (void)a;
+    unsigned flags = (unsigned)(main_ds_fifo_flags_read() & 0xffu);
+    unsigned overflow = (unsigned)(main_ds_fifo_overflow_read() & 1u);
+    unsigned underflow = (unsigned)(main_ds_fifo_underflow_read() & 1u);
+    printf("ds_fifo: readable=%u overflow=%u underflow=%u\n", flags & 1u, overflow, underflow);
+    main_ds_fifo_clear_write(1);
+}
+
+static void cmd_ups_push(char *args) {
+    char *tokx = strtok(args, " \t");
+    char *toky = strtok(NULL, " \t");
+    if (!tokx || !toky) { puts("Usage: ups_push <x> <y>"); return; }
+    int x = parse_s(tokx, -32768, 32767, "ups_x");
+    int y = parse_s(toky, -32768, 32767, "ups_y");
+    if (x < -32768 || x > 32767 || y < -32768 || y > 32767) return;
+    main_ups_fifo_x_write((uint32_t)((int32_t)x & 0xffff));
+    main_ups_fifo_y_write((uint32_t)((int32_t)y & 0xffff));
+    main_ups_fifo_push_write(1);
+    printf("ups_fifo push: x=%d y=%d\n", x, y);
+}
+
+static void cmd_ups_status(char *a) {
+    (void)a;
+    unsigned flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
+    unsigned overflow = (unsigned)(main_ups_fifo_overflow_read() & 1u);
+    unsigned underflow = (unsigned)(main_ups_fifo_underflow_read() & 1u);
+    printf("ups_fifo: writable=%u overflow=%u underflow=%u\n",
+           (flags >> 1) & 1u, overflow, underflow);
+    main_ups_fifo_clear_write(1);
+}
+
+static void cmd_dsp_run(char *a) {
+    unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
+    dsp_pump_enable = v ? 1 : 0;
+    if (dsp_pump_enable) {
+        dsp_swq_r = 0;
+        dsp_swq_w = 0;
+        dsp_swq_count = 0;
+        dsp_work_tokens = 0;
+        fifo_clear_flags();
+    } else {
+        dsp_work_tokens = 0;
+    }
+    printf("dsp_run = %u\n", dsp_pump_enable);
+}
+
+static void cmd_fft_fs(char *a) {
+    uint32_t v = (uint32_t)strtoul(a ? a : "0", NULL, 0);
+    if (v == 0u) {
+        puts("Usage: fft_fs <Hz>, Hz must be > 0");
+        return;
+    }
+    fft_fs_hz = v;
+    printf("fft_fs = %lu Hz\n", (unsigned long)fft_fs_hz);
+}
+
+static void cmd_fft_ds(char *args) {
+    char *tok = strtok(args, " \t");
+    unsigned n = tok ? (unsigned)strtoul(tok, NULL, 0) : 32u;
+    if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
+        printf("Usage: fft_ds [N], N must be power-of-2 and <= %u\n", FFT_MAX_N);
+        return;
+    }
+
+    for (unsigned i = 0; i < n; i++) {
+        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+            printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
+            return;
+        }
+        main_ds_fifo_pop_write(1);
+        int16_t sx = (int16_t)(main_ds_fifo_x_read() & 0xffffu);
+        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+        fft_in[i].r = (kiss_fft_scalar)sx;
+        fft_in[i].i = (kiss_fft_scalar)sy;
+    }
+
+    size_t cfg_need = 0;
+    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    if (cfg_need > (size_t)FFT_CFG_MAX_BYTES) {
+        printf("fft cfg too big: need %lu bytes (max %u)\n",
+               (unsigned long)cfg_need, FFT_CFG_MAX_BYTES);
+        return;
+    }
+
+    size_t cfg_len = (size_t)FFT_CFG_MAX_BYTES;
+    kiss_fft_cfg cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    if (!cfg) {
+        puts("kiss_fft_alloc failed (static cfg)");
+        return;
+    }
+
+    kiss_fft(cfg, fft_in, fft_out);
+
+    uint64_t peak_pwr = 0;
+    unsigned peak_k = 0;
+    unsigned bins = (n / 2u);
+    for (unsigned k = 0; k < bins; k++) {
+        int32_t re = (int32_t)fft_out[k].r;
+        int32_t im = (int32_t)fft_out[k].i;
+        uint64_t pwr = (uint64_t)(re * re) + (uint64_t)(im * im);
+        printf("bin[%3u] re=%7ld im=%7ld pwr=%10llu\n",
+               k, (long)re, (long)im, (unsigned long long)pwr);
+        if (k > 0u && pwr > peak_pwr) {
+            peak_pwr = pwr;
+            peak_k = k;
+        }
+    }
+
+    if (bins > 1u) {
+        uint64_t f_hz = ((uint64_t)peak_k * (uint64_t)fft_fs_hz) / (uint64_t)n;
+        printf("peak: bin=%u f=%llu Hz (Fs=%lu, N=%u, pwr=%llu)\n",
+               peak_k,
+               (unsigned long long)f_hz,
+               (unsigned long)fft_fs_hz,
+               n,
+               (unsigned long long)peak_pwr);
+    }
 }
 
 static void cmd_cap_arm_pulse(char *a) {
     (void)a;
-    #ifdef CSR_MAIN_CAP_ARM_ADDR
     main_cap_arm_write(1);
     uc_commit();
     printf("cap_arm pulsed\n");
-    #else
-    puts("cap_arm CSR not present.");
-    #endif
 }
 
 static void cmd_cap_done(char *a) {
     (void)a;
-    #ifdef CSR_MAIN_CAP_DONE_ADDR
     printf("cap_done = %u\n", (unsigned)(main_cap_done_read() & 1u));
-    #else
-    puts("cap_done CSR not present.");
-    #endif
 }
 
 static void cmd_cap_rd(char *args) {
-    #ifdef CSR_MAIN_CAP_IDX_ADDR
-    #ifdef CSR_MAIN_CAP_DATA_ADDR
     char *tok = strtok(args, " \t");
     if (!tok) { puts("Usage: cap_rd <idx>"); return; }
     unsigned idx = (unsigned)strtoul(tok, NULL, 0);
@@ -457,12 +583,6 @@ static void cmd_cap_rd(char *args) {
     uint32_t v = main_cap_data_read();
     int16_t s = (int16_t)(v & 0xffff);
     printf("cap[%u] = %d (0x%04x)\n", idx, (int)s, (unsigned)(v & 0xffff));
-    #else
-    puts("cap_data CSR not present.");
-    #endif
-    #else
-    puts("cap_idx CSR not present.");
-    #endif
 }
 
 static void cmd_phase_print(char *a){ (void)a; printf("Phase %ld\n", (long)g_phase); }
@@ -508,83 +628,43 @@ static void ub_help(char *args) {
 
 static void cmd_ub_info(char *a) {
     (void)a;
-    #ifdef CSR_UBDDR3_BASE
     int cal = 0;
-    #ifdef CSR_UBDDR3_CALIB_DONE_ADDR
     cal = ubddr3_calib_done_read();
-    #endif
     printf("UBDDR3 CSR base: 0x%08lx  calib_done: %d",
            (unsigned long)CSR_UBDDR3_BASE, cal);
-    #ifdef UBDDR3_MEM_BASE
     printf("  (UBDDR3_MEM_BASE: 0x%08lx)\n", (unsigned long)UBDDR3_MEM_BASE);
-    #else
-    printf("  (UBDDR3_MEM_BASE: <not defined>)\n");
-    #endif
-    #else
-    puts("No ubddr3 CSRs in this build.");
-    #endif
 }
 
 static void cmd_ub_mode(char *a) {
     (void)a;
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     unsigned v = main_cap_enable_read() & 1u;
     printf("cap_enable = %u (%s)\n", v, v ? "CAPTURE(design)->DDR" : "RAMP->DDR");
-    #else
-    puts("cap_enable CSR not present.");
-    #endif
 }
 
 static void cmd_ub_setmode(char *a) {
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     v = v ? 1u : 0u;
     main_cap_enable_write(v);
     uc_commit();
     printf("cap_enable = %u (%s)\n", v, v ? "CAPTURE(design)->DDR" : "RAMP->DDR");
-    #else
-    puts("cap_enable CSR not present.");
-    #endif
 }
 
 /* Core DMA start helper used by ub_ramp/ub_cap/ub_start */
 static void ub_dma_start(uint64_t addr, uint32_t beats, uint8_t size_code) {
-    #ifdef CSR_UBDDR3_BASE
     (void)beats;
     (void)size_code;
 
-    #ifdef CSR_UBDDR3_DMA_INC_ADDR
     ubddr3_dma_inc_write(1);
-    #endif
-    #ifdef CSR_UBDDR3_DMA_SIZE_ADDR
     ubddr3_dma_size_write(size_code);
-    #endif
-    #ifdef CSR_UBDDR3_DMA_ADDR0_ADDR
     ubddr3_dma_addr0_write((uint32_t)(addr & 0xffffffffu));
-    #endif
-    #ifdef CSR_UBDDR3_DMA_ADDR1_ADDR
     ubddr3_dma_addr1_write((uint32_t)(addr >> 32));
-    #endif
 
-    #ifdef CSR_UBDDR3_RAMP_LEN_ADDR
-    ubddr3_ramp_len_write(beats);
-    #endif
-
-    #ifdef CSR_UBDDR3_DMA_REQ_ADDR
     ubddr3_dma_req_write(1);
-    #else
-    puts("ubddr3_dma_req CSR not present.");
-    #endif
 
-    #else
-    puts("No ubddr3 CSRs in this build.");
-    (void)addr; (void)beats; (void)size_code;
-    #endif
 }
 
 /* ub_start: run DMA using current cap_enable mode */
 static void cmd_ub_start(char *args) {
-    #ifdef CSR_UBDDR3_BASE
     char *p = args;
     char *tok_addr  = strtok(p, " \t");
     char *tok_beats = strtok(NULL, " \t");
@@ -599,11 +679,7 @@ static void cmd_ub_start(char *args) {
     uint32_t beats = (uint32_t)(tok_beats ? strtoul(tok_beats, NULL, 0) : 256);
     uint8_t  sz    = ub_size_to_code(tok_size);
 
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     unsigned mode = main_cap_enable_read() & 1u;
-    #else
-    unsigned mode = 0;
-    #endif
 
     printf("S2MM start: mode=%s addr=0x%08lx_%08lx beats=%u size=%s\n",
            mode ? "CAPTURE" : "RAMP",
@@ -611,57 +687,36 @@ static void cmd_ub_start(char *args) {
            (unsigned)beats,
            (sz==0)?"bus":(sz==1)?"32":(sz==2)?"16":"8");
 
-    #ifdef CSR_MAIN_CAP_BEATS_ADDR
     main_cap_beats_write(beats);
     uc_commit();
-    #endif
     ub_dma_start(addr, beats, sz);
-    #else
-    (void)args;
-    puts("No ubddr3 CSRs in this build.");
-    #endif
 }
 
 /* ub_ramp: force ramp mode then start */
 static void cmd_ub_ramp2(char *args) {
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     main_cap_enable_write(0);
     uc_commit();
-    #endif
     cmd_ub_start(args);
 }
 
 /* ub_cap: force capture mode then start */
 static void cmd_ub_cap(char *args) {
-    #ifdef CSR_MAIN_CAP_ENABLE_ADDR
     main_cap_enable_write(1);
     uc_commit();
-    #endif
     cmd_ub_start(args);
 }
 
 static void cmd_ub_wait(char *a) {
     (void)a;
-    #ifdef CSR_UBDDR3_BASE
-    #ifdef CSR_UBDDR3_DMA_BUSY_ADDR
     printf("Waiting for DMA ... "); fflush(stdout);
     while (ubddr3_dma_busy_read()) ;
     ub_cache_sync();
     puts("done.");
-    #ifdef CSR_UBDDR3_DMA_ERR_ADDR
     if (ubddr3_dma_err_read())
         puts("DMA error flag is set!");
-    #endif
-    #else
-    puts("ubddr3_dma_busy CSR not present.");
-    #endif
-    #else
-    puts("No ubddr3 CSRs in this build.");
-    #endif
 }
 
 static void cmd_ub_hexdump(char *a) {
-    #ifdef UBDDR3_MEM_BASE
     char *tok_addr = strtok(a, " \t");
     char *tok_len  = strtok(NULL, " \t");
     if (!tok_addr || !tok_len) {
@@ -678,30 +733,21 @@ static void cmd_ub_hexdump(char *a) {
         printf("%02x ", p[i]);
     }
     puts("");
-    #else
-    puts("UBDDR3_MEM_BASE not defined; cannot hexdump.");
-    #endif
 }
 
 static void cmd_cap_beats(char *a) {
-    #ifdef CSR_MAIN_CAP_BEATS_ADDR
     uint32_t v = (uint32_t)strtoul(a ? a : "256", NULL, 0);
     if (v == 0) { puts("cap_beats must be >= 1"); return; }
     main_cap_beats_write(v);
     uc_commit();
     printf("cap_beats = %u\n", (unsigned)v);
-    #else
-    puts("cap_beats CSR not present.");
-    #endif
 }
 
 /* ========================================================================= */
 /*                           UDP DDR streamer (FAST)                          */
 /* ========================================================================= */
 
-#ifndef UBD3_MAGIC
 #define UBD3_MAGIC 0x55424433u /* "UBD3" */
-#endif
 
 struct __attribute__((packed)) ubd3_hdr {
     uint32_t magic;
@@ -711,24 +757,16 @@ struct __attribute__((packed)) ubd3_hdr {
 };
 
 /* Your board IP (change if you want) */
-#ifndef UBD3_BOARD_IP
 #define UBD3_BOARD_IP IPTOINT(192,168,0,123)
-#endif
 
 /* Keep payload below MTU. 1400 is safe; 1472 may work with MTU1500. */
-#ifndef UBD3_PAYLOAD_MAX
 #define UBD3_PAYLOAD_MAX 1400u
-#endif
 
 /* Call udp_service() once every N packets (power-of-two recommended) */
-#ifndef UBD3_SERVICE_EVERY
 #define UBD3_SERVICE_EVERY 64u
-#endif
 
 /* 0 disables progress completely */
-#ifndef UBD3_PROGRESS_EVERY
 #define UBD3_PROGRESS_EVERY 0u
-#endif
 
 static inline void u32le_store(uint8_t *p, uint32_t v) {
     p[0] = (uint8_t)(v >> 0);
@@ -838,11 +876,9 @@ static void cmd_ub_send(char *args) {
         sent += chunk;
         seq++;
 
-        #if UBD3_PROGRESS_EVERY
-        if ((seq % UBD3_PROGRESS_EVERY) == 0u) {
-            printf("sent %lu / %lu\n", (unsigned long)sent, (unsigned long)total);
-        }
-        #endif
+    if (UBD3_PROGRESS_EVERY && ((seq % UBD3_PROGRESS_EVERY) == 0u)) {
+        printf("sent %lu / %lu\n", (unsigned long)sent, (unsigned long)total);
+    }
     }
 }
 
@@ -886,6 +922,14 @@ static const struct cmd_entry uc_tbl[] = {
 
     {"upsampler_x",          cmd_upsampler_x,         "Write upsampler_input_x (signed 16-bit)"},
     {"upsampler_y",          cmd_upsampler_y,         "Write upsampler_input_y (signed 16-bit)"},
+    {"ds_pop",               cmd_ds_pop,              "Pop one downsampled sample from FIFO"},
+    {"ds_status",            cmd_ds_status,           "Show downsample FIFO readable/overflow"},
+    {"ups_push",             cmd_ups_push,            "Push one sample into upsampler FIFO"},
+    {"ups_status",           cmd_ups_status,          "Show upsampler FIFO writable/overflow"},
+    {"dsp_test",             cmd_dsp_test,            "Run DSP loop over FIFO samples (optional N)"},
+    {"dsp_run",              cmd_dsp_run,             "Enable/disable non-blocking DSP pump"},
+    {"fft_fs",               cmd_fft_fs,              "Set DS sample rate (Hz) used by fft_ds"},
+    {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples"},
 
     {"gain1",                cmd_gain1,               "Set gain1"},
     {"gain2",                cmd_gain2,               "Set gain2"},
@@ -926,40 +970,31 @@ void uberclock_register_cmds(void) {
 /* ========================================================================= */
 
 void uberclock_init(void) {
-    #ifdef CSR_MAIN_PHASE_INC_NCO_ADDR
     main_phase_inc_nco_write(2581110);
 
-    main_phase_inc_down_1_write(80656);
+    main_phase_inc_down_1_write(2581368);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
     main_phase_inc_down_5_write(80640);
 
-    #ifdef CSR_MAIN_PHASE_INC_DOWN_REF_ADDR
-    main_phase_inc_down_ref_write(80656);
-    #endif
+    main_phase_inc_down_ref_write(2581110);
 
-    #ifdef CSR_MAIN_NCO_MAG_ADDR
-    main_nco_mag_write((uint32_t)(30 & 0x0fff));
-    #endif
+    main_nco_mag_write((uint32_t)(500 & 0x0fff));
 
-    #ifdef CSR_MAIN_PHASE_INC_CPU1_ADDR
     main_phase_inc_cpu1_write(52429);
     main_phase_inc_cpu2_write(52429);
     main_phase_inc_cpu3_write(52429);
     main_phase_inc_cpu4_write(52429);
     main_phase_inc_cpu5_write(52429);
-    #endif
 
-    #ifdef CSR_MAIN_MAG_CPU1_ADDR
     main_mag_cpu1_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu2_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu3_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu4_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu5_write((uint32_t)(0 & 0x0fff));
-    #endif
 
-    main_input_select_write(0);
+    main_input_select_write(1);
     main_upsampler_input_mux_write(0);
 
     main_gain1_write(0x40000000);
@@ -968,40 +1003,45 @@ void uberclock_init(void) {
     main_gain4_write(0x40000000);
     main_gain5_write(0x40000000);
 
-    main_output_select_ch1_write(11);
-    main_output_select_ch2_write(10);
+    main_output_select_ch1_write(5);
+    main_output_select_ch2_write(5);
 
     main_final_shift_write(2);
 
-    #ifdef CSR_MAIN_LOWSPEED_DBG_SELECT_ADDR
     main_lowspeed_dbg_select_write(0);
-    #endif
-    #ifdef CSR_MAIN_HIGHSPEED_DBG_SELECT_ADDR
     main_highspeed_dbg_select_write(0);
-    #endif
 
-    #ifdef CSR_MAIN_UPSAMPLER_INPUT_X_ADDR
     main_upsampler_input_x_write(0);
     main_upsampler_input_y_write(0);
-    #endif
 
+    main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
 
     uc_commit();
-    #endif
 
-    #ifdef CSR_EVM_PENDING_ADDR
+    dsp_swq_r = 0;
+    dsp_swq_w = 0;
+    dsp_swq_count = 0;
+    fifo_clear_flags();
+
     evm_pending_write(1);
     evm_enable_write(1);
     irq_attach(EVM_INTERRUPT, ce_down_isr);
     irq_setmask(irq_getmask() | (1u << EVM_INTERRUPT));
-    #endif
 
     printf("UberClock init done.\n");
 }
 
 void uberclock_poll(void) {
-    #ifdef CSR_EVM_PENDING_ADDR
+    if (dsp_pump_enable) {
+        unsigned budget = 32u;
+        while (budget && dsp_work_tokens) {
+            (void)dsp_pump_step(1, 1);
+            dsp_work_tokens--;
+            budget--;
+        }
+    }
+
     if (!ce_event) return;
 
     /* If you later expose magnitude/phase CSRs, read them here. */
@@ -1009,5 +1049,4 @@ void uberclock_poll(void) {
     ce_event = 0;
     evm_pending_write(1);
     evm_enable_write(1);
-    #endif
 }
