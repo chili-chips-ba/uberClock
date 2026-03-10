@@ -630,7 +630,7 @@ int main(void) {
 	main_phase_inc_nco_write(10324440);	
 	main_nco_mag_write(70); // NCO magnitude
                           //
-	main_phase_inc_down_1_write(10324441);  // 10 003 000
+	main_phase_inc_down_1_write(10325473);  // 10 003 000
 	main_phase_inc_down_2_write(10324442);  // 9 999 000
 	main_phase_inc_down_3_write(2580722);    // 9 998 500
 	main_phase_inc_down_4_write(2580593);    // 9 998 000
