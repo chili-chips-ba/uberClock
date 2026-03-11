@@ -130,48 +130,48 @@ static void uc_help(char *args) {
 
 /* ---- Phase/NCO/downconversion ---- */
 static void cmd_phase_nco(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_nco");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_nco");
+    if (p >= (1u << 26)) return;
     main_phase_inc_nco_write(p);
     uc_commit();
     printf("Input NCO phase increment set to %u\n", p);
 }
 
 static void cmd_phase_cpu1(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_cpu1");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_cpu1");
+    if (p >= (1u << 26)) return;
     main_phase_inc_cpu1_write(p);
     uc_commit();
     printf("CPU phase increment ch1 set to %u\n", p);
 }
 
 static void cmd_phase_cpu2(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_cpu2");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_cpu2");
+    if (p >= (1u << 26)) return;
     main_phase_inc_cpu2_write(p);
     uc_commit();
     printf("CPU phase increment ch2 set to %u\n", p);
 }
 
 static void cmd_phase_cpu3(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_cpu3");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_cpu3");
+    if (p >= (1u << 26)) return;
     main_phase_inc_cpu3_write(p);
     uc_commit();
     printf("CPU phase increment ch3 set to %u\n", p);
 }
 
 static void cmd_phase_cpu4(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_cpu4");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_cpu4");
+    if (p >= (1u << 26)) return;
     main_phase_inc_cpu4_write(p);
     uc_commit();
     printf("CPU phase increment ch4 set to %u\n", p);
 }
 
 static void cmd_phase_cpu5(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_cpu5");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_cpu5");
+    if (p >= (1u << 26)) return;
     main_phase_inc_cpu5_write(p);
     uc_commit();
     printf("CPU phase increment ch5 set to %u\n", p);
@@ -187,8 +187,8 @@ static void cmd_nco_mag(char *a) {
 }
 
 static void cmd_phase_down_ref(char *a) {
-    unsigned p = parse_u(a, 1u << 24, "phase_down_ref");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_down_ref");
+    if (p >= (1u << 26)) return;
     main_phase_inc_down_ref_write(p);
     uc_commit();
     printf("Downconversion phase ref increment set to %u\n", p);
@@ -247,8 +247,8 @@ static void cmd_highspeed_dbg_select(char *a) {
 }
 
 static void cmd_phase_dn(char *a, int ch) {
-    unsigned p = parse_u(a, 1u << 24, "phase_down");
-    if (p >= (1u << 24)) return;
+    unsigned p = parse_u(a, 1u << 26, "phase_down");
+    if (p >= (1u << 26)) return;
     switch (ch) {
         case 1: main_phase_inc_down_1_write(p); break;
         case 2: main_phase_inc_down_2_write(p); break;

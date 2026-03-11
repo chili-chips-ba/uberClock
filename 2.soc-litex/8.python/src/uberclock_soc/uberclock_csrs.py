@@ -18,7 +18,7 @@ class UberClockCSRBank(LiteXModule):
     # ---------------------------------------------------------------------
     # Global width definitions
     # ---------------------------------------------------------------------
-    PHASE_WIDTH        = 24  # Phase accumulator / phase increment width
+    PHASE_WIDTH        = 26  # Phase accumulator / phase increment width
     MAG_WIDTH          = 12  # Signed magnitude width (2's complement)
     GAIN_WIDTH         = 32  # Fixed-point gain coefficients
     SAMPLE_WIDTH       = 16  # Low-speed / CPU-injected sample width

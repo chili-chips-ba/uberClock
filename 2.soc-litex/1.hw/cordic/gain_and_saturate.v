@@ -11,7 +11,7 @@ module gain_and_saturate #(
   output reg  signed [OW-1:0]  y_out
 );
 
-  localparam [31:0]              CORDIC_GAIN = 32'hdbd95b17;
+  localparam [31:0]              CORDIC_GAIN = 32'hdbd95b16;
   // extend to 33 bits to make signed multiplication unambiguous
   wire signed [32:0]             gain_const_s = {1'b0, CORDIC_GAIN};
 

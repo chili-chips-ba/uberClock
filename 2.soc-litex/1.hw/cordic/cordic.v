@@ -19,9 +19,9 @@
 module cordic #(
     parameter IW       = 12,  // Input width
     parameter OW       = 12,  // Output width
-    parameter NSTAGES  = 15,  // Number of CORDIC stages
-    parameter WW       = 15,  // Working width for internal computations
-    parameter PW       = 24   // Phase accumulator width
+    parameter NSTAGES  = 22,  // Number of CORDIC stages
+    parameter WW       = 22,  // Working width for internal computations
+    parameter PW       = 26   // Phase accumulator width
 ) (
     input  wire                   i_clk,
     input  wire                   i_reset,
@@ -76,28 +76,30 @@ module cordic #(
   // Pipeline Stages: Each stage rotates the vector by a predetermined angle.
   //--------------------------------------------------------------------------
 
-  wire	[23:0]	cordic_angle [0:(NSTAGES-1)];
+	wire	[25:0]	cordic_angle [0:(NSTAGES-1)];
 
-	assign	cordic_angle[ 0] = 24'h12_e405; //  26.565051 deg
-	assign	cordic_angle[ 1] = 24'h09_fb38; //  14.036243 deg
-	assign	cordic_angle[ 2] = 24'h05_1111; //   7.125016 deg
-	assign	cordic_angle[ 3] = 24'h02_8b0d; //   3.576334 deg
-	assign	cordic_angle[ 4] = 24'h01_45d7; //   1.789911 deg
-	assign	cordic_angle[ 5] = 24'h00_a2f6; //   0.895174 deg
-	assign	cordic_angle[ 6] = 24'h00_517c; //   0.447614 deg
-	assign	cordic_angle[ 7] = 24'h00_28be; //   0.223811 deg
-	assign	cordic_angle[ 8] = 24'h00_145f; //   0.111906 deg
-	assign	cordic_angle[ 9] = 24'h00_0a2f; //   0.055953 deg
-	assign	cordic_angle[10] = 24'h00_0517; //   0.027976 deg
-	assign	cordic_angle[11] = 24'h00_028b; //   0.013988 deg
-	assign	cordic_angle[12] = 24'h00_0145; //   0.006994 deg
-	assign	cordic_angle[13] = 24'h00_00a2; //   0.003497 deg
-	assign	cordic_angle[14] = 24'h00_0051; //   0.001749 deg
-	assign	cordic_angle[15] = 24'h00_0028; //   0.000874 deg
-	assign	cordic_angle[16] = 24'h00_0014; //   0.000437 deg
-	assign	cordic_angle[17] = 24'h00_000a; //   0.000219 deg
-	assign	cordic_angle[18] = 24'h00_0005; //   0.000109 deg
-	assign	cordic_angle[19] = 24'h00_0002; //   0.000055 deg
+	assign	cordic_angle[ 0] = 26'h04b_9014; //  26.565051 deg
+	assign	cordic_angle[ 1] = 26'h027_ece1; //  14.036243 deg
+	assign	cordic_angle[ 2] = 26'h014_4447; //   7.125016 deg
+	assign	cordic_angle[ 3] = 26'h00a_2c35; //   3.576334 deg
+	assign	cordic_angle[ 4] = 26'h005_175f; //   1.789911 deg
+	assign	cordic_angle[ 5] = 26'h002_8bd8; //   0.895174 deg
+	assign	cordic_angle[ 6] = 26'h001_45f1; //   0.447614 deg
+	assign	cordic_angle[ 7] = 26'h000_a2f9; //   0.223811 deg
+	assign	cordic_angle[ 8] = 26'h000_517c; //   0.111906 deg
+	assign	cordic_angle[ 9] = 26'h000_28be; //   0.055953 deg
+	assign	cordic_angle[10] = 26'h000_145f; //   0.027976 deg
+	assign	cordic_angle[11] = 26'h000_0a2f; //   0.013988 deg
+	assign	cordic_angle[12] = 26'h000_0517; //   0.006994 deg
+	assign	cordic_angle[13] = 26'h000_028b; //   0.003497 deg
+	assign	cordic_angle[14] = 26'h000_0145; //   0.001749 deg
+	assign	cordic_angle[15] = 26'h000_00a2; //   0.000874 deg
+	assign	cordic_angle[16] = 26'h000_0051; //   0.000437 deg
+	assign	cordic_angle[17] = 26'h000_0028; //   0.000219 deg
+	assign	cordic_angle[18] = 26'h000_0014; //   0.000109 deg
+	assign	cordic_angle[19] = 26'h000_000a; //   0.000055 deg
+	assign	cordic_angle[20] = 26'h000_0005; //   0.000027 deg
+	assign	cordic_angle[21] = 26'h000_0002; //   0.000014 deg
 	// {{{
 	// Std-Dev    : 0.00 (Units)
 	// Phase Quantization: 0.000030 (Radians)

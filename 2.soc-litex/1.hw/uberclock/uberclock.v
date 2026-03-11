@@ -2,9 +2,9 @@
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
-    parameter NSTAGES  = 20,   // pipeline stages
-    parameter WW       = 20,   // working width
-    parameter PW       = 24    // phase accumulator width
+    parameter NSTAGES  = 22,   // pipeline stages
+    parameter WW       = 22,   // working width
+    parameter PW       = 26    // phase accumulator width
 )(
     input                     sys_clk,
     input                     rst,
@@ -149,9 +149,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES),
+        .WW (WW),
+        .PW (PW)
     ) rx_1 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -204,7 +204,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19),
         .WW(19),
-        .PW_I(24),
+        .PW_I(26),
         .PW(23)
     ) tx_1 (
        .sys_clk (sys_clk),
@@ -232,9 +232,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES), 
+        .WW (WW),
+        .PW (PW)
     ) rx_2 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -286,7 +286,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19),
         .WW(19),
-        .PW_I(24),
+        .PW_I(26),
         .PW(23)
     ) tx_2 (
         .sys_clk (sys_clk),
@@ -313,9 +313,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES),
+        .WW (WW),
+        .PW (PW)
     ) rx_3 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -367,7 +367,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19),
         .WW(19),
-        .PW_I(24),
+        .PW_I(26),
         .PW(23)
     ) tx_3 (
         .sys_clk (sys_clk),
@@ -393,9 +393,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES),
+        .WW (WW),
+        .PW (PW)
     ) rx_4 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -447,7 +447,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19),
         .WW(19),
-        .PW_I(24),
+        .PW_I(26),
         .PW(23)
     ) tx_4 (
         .sys_clk (sys_clk),
@@ -473,9 +473,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES),
+        .WW (WW),
+        .PW (PW)
     ) rx_5 (
         .sys_clk (sys_clk),
         .rst(rst),
@@ -527,7 +527,7 @@ module uberclock#(
         .TX_OW(16),
         .NSTAGES(19),
         .WW(19),
-        .PW_I(24),
+        .PW_I(26),
         .PW(23)
     ) tx_5 (
         .sys_clk (sys_clk),
@@ -612,9 +612,9 @@ module uberclock#(
         .IW (12),
         .OW (12),
         .RX_OW (16),
-        .NSTAGES (15),
-        .WW (15),
-        .PW (24)
+        .NSTAGES (NSTAGES),
+        .WW (WW),
+        .PW (PW)
     ) rx_ref (
         .sys_clk (sys_clk),
         .rst(rst),

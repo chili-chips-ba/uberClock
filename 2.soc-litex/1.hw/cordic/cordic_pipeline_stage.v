@@ -1,9 +1,7 @@
-`timescale 1 ns / 1 ns
-`default_nettype none
 module cordic_pipeline_stage #(
     parameter STAGE        = 0,
-    parameter WW           = 16,
-    parameter PW           = 20
+    parameter WW           = 22,
+    parameter PW           = 22
 ) (
     input  wire                   i_clk,
     input  wire                   i_reset,
