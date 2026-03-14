@@ -347,6 +347,39 @@ static void cmd_upsampler_y(char *a) {
     printf("upsampler_input_y = %d\n", v);
 }
 
+static void cap_start_cmd(void) {
+    main_cap_arm_write(0);
+    uc_commit();
+
+    main_cap_arm_write(1);
+    uc_commit();
+
+    main_cap_arm_write(0);
+    uc_commit();
+
+    puts("Capture started.");
+}
+
+static void cap_status_cmd(void) {
+    unsigned d = main_cap_done_read();
+    printf("Capture %s\n", d ? "DONE" : "IN-PROGRESS");
+}
+
+static void cap_dump_cmd(void) {
+    if (!main_cap_done_read()) {
+        puts("Capture not done yet. Use 'cap_status' or wait.");
+        return;
+    }
+
+    puts("#idx,value");
+    for (unsigned i = 0; i < 2048; ++i) {
+        main_cap_idx_write(i);
+        uc_commit();
+        (void)main_cap_data_read();
+        int16_t v = (int16_t)main_cap_data_read();
+        printf("%u,%d\n", i, v);
+    }
+}
 /* ========================================================================= */
 /*                         FIFO DSP test harness                             */
 /* ========================================================================= */
@@ -564,9 +597,17 @@ static void cmd_fft_ds(char *args) {
 
 static void cmd_cap_arm_pulse(char *a) {
     (void)a;
+
+    main_cap_arm_write(0);
+    uc_commit();
+
     main_cap_arm_write(1);
     uc_commit();
-    printf("cap_arm pulsed\n");
+
+    main_cap_arm_write(0);
+    uc_commit();
+
+    puts("cap_arm pulsed");
 }
 
 static void cmd_cap_done(char *a) {
@@ -577,10 +618,17 @@ static void cmd_cap_done(char *a) {
 static void cmd_cap_rd(char *args) {
     char *tok = strtok(args, " \t");
     if (!tok) { puts("Usage: cap_rd <idx>"); return; }
+
     unsigned idx = (unsigned)strtoul(tok, NULL, 0);
     if (idx > 2047) { puts("idx must be 0..2047"); return; }
+
     main_cap_idx_write(idx);
+    uc_commit();
+
+    /* dummy read to allow CDC/update latency */
+    (void)main_cap_data_read();
     uint32_t v = main_cap_data_read();
+
     int16_t s = (int16_t)(v & 0xffff);
     printf("cap[%u] = %d (0x%04x)\n", idx, (int)s, (unsigned)(v & 0xffff));
 }
@@ -947,7 +995,9 @@ static const struct cmd_entry uc_tbl[] = {
 
     {"phase",                cmd_phase_print,         "Print current CORDIC phase (if wired)"},
     {"magnitude",            cmd_magnitude,           "Print current CORDIC magnitude (if wired)"},
-
+    {"cap_start",            cap_start_cmd,           "Start LS debug"},
+    {"cap_status",           cap_status_cmd,          "LS debug status"},
+    {"cap_dump",             cap_dump_cmd,             "Ls dump cmd"},
     /* UberDDR3 / S2MM commands */
     {"ub_help",              ub_help,                 "UberDDR3/S2MM help"},
     {"ub_info",              cmd_ub_info,             "Show UBDDR3 info/state"},
@@ -970,9 +1020,9 @@ void uberclock_register_cmds(void) {
 /* ========================================================================= */
 
 void uberclock_init(void) {
-    main_phase_inc_nco_write(2581110);
+    main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(2581368);
+    main_phase_inc_down_1_write(10325473);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
@@ -1003,7 +1053,7 @@ void uberclock_init(void) {
     main_gain4_write(0x40000000);
     main_gain5_write(0x40000000);
 
-    main_output_select_ch1_write(5);
+    main_output_select_ch1_write(0);
     main_output_select_ch2_write(5);
 
     main_final_shift_write(2);

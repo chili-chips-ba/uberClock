@@ -878,8 +878,8 @@ module uberclock#(
     always @(posedge sys_clk) cap_arm_q <= cap_arm;
 
     reg         capturing;
-    reg  [10:0]  wr_ptr;                 // 0..511
-    reg  [15:0] cap_mem [0:2047];        // 512 x 16-bit
+    reg  [10:0]  wr_ptr;                 // 0..2047
+    reg  [15:0] cap_mem [0:2047];        // 2047 x 16-bit
 
     always @(posedge sys_clk or posedge rst) begin
         if (rst) begin
