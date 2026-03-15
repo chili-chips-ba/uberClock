@@ -52,8 +52,8 @@ module uberclock#(
     input  [3:0]              output_select_ch1,
     input  [3:0]              output_select_ch2,
 
-    input  [2:0]              lowspeed_dbg_select,//NEW, ne znam da liovo zadrzavamo jer nisam uspio dodati ovu lo
-                                                    // logiku u .py
+    input  [2:0]              lowspeed_dbg_select,
+                                                  
     input  [2:0]              highspeed_dbg_select, //NEW
 
     input  [31:0]             gain1,
@@ -822,7 +822,8 @@ module uberclock#(
                                 (output_select_ch1 == 4'b1010) ? nco_cos << 2:
 
                                 (output_select_ch1 == 4'b1011) ? filter_in << 2:
-                                (output_select_ch1 == 4'b1100) ? filter_in_1 << 2:
+                                (output_select_ch1 == 4'b1100) ? upsampler_in_x1[15:2] :
+                                (output_select_ch1 == 4'b1101) ? filter_in_1 << 2:
                                                                  sum; // 19->14:
 
     wire [13:0] dac2_data_in =  (output_select_ch2 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
@@ -838,7 +839,8 @@ module uberclock#(
                                 (output_select_ch2 == 4'b1010) ? nco_cos << 2:
 
                                 (output_select_ch2 == 4'b1011) ? filter_in << 2:
-                                (output_select_ch2 == 4'b1100) ? filter_in_1 << 2:
+                                (output_select_ch2 == 4'b1100) ? upsampler_in_x1[15:2] :
+                                (output_select_ch2 == 4'b1101) ? filter_in_1 << 2:
                                                                  sum; // 19->14:
 
     reg  [13:0] dac1_data_reg, dac2_data_reg;
@@ -871,7 +873,8 @@ module uberclock#(
         (lowspeed_dbg_select == 3'b001) ? upsampled_gain_y2 :
         (lowspeed_dbg_select == 3'b010) ? upsampled_gain_y3 :
         (lowspeed_dbg_select == 3'b011) ? upsampled_gain_y4 :
-        (lowspeed_dbg_select == 3'b100) ? upsampled_gain_y5 : 16'sd0;
+        (lowspeed_dbg_select == 3'b100) ? upsampled_gain_y5 : 
+        (lowspeed_dbg_select == 3'b101) ? upsampler_in_x1 : 16'sd0;
 
     reg cap_arm_q;
     wire cap_arm_pulse = cap_arm & ~cap_arm_q;

@@ -330,3 +330,7 @@ class UberClockCSRBank(LiteXModule):
             16,
             description="Captured low-speed sample at cap_idx."
         )
+
+
+        self.magnitude           = CSRStatus(16, description="Downsampled magnitude")
+        self.phase               = CSRStatus(25, description="Downsampled phase")

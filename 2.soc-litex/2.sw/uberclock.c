@@ -8,21 +8,137 @@
 #include <libbase/uart.h>
 #include <generated/csr.h>
 #include <generated/soc.h>
-
 #include "uberclock.h"
 #include "console.h"
 #include "kissfft/kiss_fft.h"
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
+static inline unsigned parse_u(const char *s, unsigned max, const char *what);
+static inline int parse_s(const char *s, int minv, int maxv, const char *what);
+#define SIG3_ENABLE_DEFAULT 1
 
+static volatile int sig3_enable = 0;
+
+/* 32-bit DDS phase accumulators */
+static uint32_t sig3_ph_940  = 0;
+static uint32_t sig3_ph_1000 = 0;
+static uint32_t sig3_ph_1060 = 0;
+
+/* phase increments for Fs = 10 kHz */
+static uint32_t sig3_inc_940  = 0;
+static uint32_t sig3_inc_1000 = 0;
+static uint32_t sig3_inc_1060 = 0;
+
+/* per-tone amplitude in output counts */
+static int16_t sig3_amp = 3000;
+
+/* 256-entry sine LUT, one full cycle, Q15-ish signed values */
+static const int16_t sine_q64[64] = {
+      0,   804,  1608,  2410,  3212,  4011,  4808,  5602,
+   6393,  7179,  7962,  8739,  9512, 10278, 11039, 11793,
+  12539, 13279, 14010, 14732, 15446, 16151, 16846, 17530,
+  18204, 18868, 19519, 20159, 20787, 21403, 22005, 22594,
+  23170, 23731, 24279, 24811, 25329, 25831, 26318, 26789,
+  27244, 27683, 28105, 28510, 28898, 29269, 29622, 29957,
+  30274, 30572, 30852, 31113, 31356, 31579, 31783, 31968,
+  32133, 32279, 32405, 32512, 32598, 32665, 32713, 32740
+};
+static uint32_t sig3_phase_inc(uint32_t f_hz, uint32_t fs_hz) {
+    return (uint32_t)(((uint64_t)f_hz << 32) / fs_hz);
+}
+
+static inline int16_t sig3_sin_u32(uint32_t ph) {
+    uint8_t q = (uint8_t)(ph >> 30);          /* quadrant 0..3 */
+    uint8_t idx = (uint8_t)((ph >> 24) & 0x3f); /* 0..63 within quadrant */
+
+    switch (q) {
+        case 0: return sine_q64[idx];
+        case 1: return sine_q64[63 - idx];
+        case 2: return (int16_t)(-sine_q64[idx]);
+        default: return (int16_t)(-sine_q64[63 - idx]);
+    }
+}
+
+static void sig3_start(void) {
+    sig3_ph_940  = 0;
+    sig3_ph_1000 = 0;
+    sig3_ph_1060 = 0;
+
+    sig3_inc_940  = sig3_phase_inc( 940, 10000);
+    sig3_inc_1000 = sig3_phase_inc(1000, 10000);
+    sig3_inc_1060 = sig3_phase_inc(1060, 10000);
+
+    sig3_enable = 1;
+    puts("3-tone software generator enabled");
+}
+
+static void sig3_stop(void) {
+    sig3_enable = 0;
+    puts("3-tone software generator disabled");
+}
+
+static inline int16_t sig3_clamp_s16(int32_t x) {
+    if (x >  32767) return  32767;
+    if (x < -32768) return -32768;
+    return (int16_t)x;
+}
+
+static int sig3_step(int16_t *x, int16_t *y) {
+    if (!sig3_enable) return 0;
+
+    sig3_ph_940  += sig3_inc_940;
+    sig3_ph_1000 += sig3_inc_1000;
+    sig3_ph_1060 += sig3_inc_1060;
+
+    int32_t s1 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_940))  / 32767;
+    int32_t s2 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1000)) / 32767;
+    int32_t s3 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1060)) / 32767;
+
+    *x = sig3_clamp_s16(s1 + s2 + s3);
+    *y = 0;
+    return 1;
+}
+
+static void sig3_push_one(void) {
+    unsigned flags;
+    int16_t x, y;
+
+    flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
+    if (((flags >> 1) & 1u) == 0u)
+        return;
+
+    if (!sig3_step(&x, &y))
+        return;
+
+    main_ups_fifo_x_write((uint32_t)((int32_t)x & 0xffff));
+    main_ups_fifo_y_write((uint32_t)((int32_t)y & 0xffff));
+    main_ups_fifo_push_write(1);
+}
+static void cmd_sig3_amp(char *a) {
+    int v = parse_s(a, 1, 10000, "sig3_amp");
+    if (v < 1 || v > 10000) return;
+    sig3_amp = (int16_t)v;
+    printf("sig3 amplitude per tone = %d\n", sig3_amp);
+}
+static void cmd_sig3_start(char *a) {
+    (void)a;
+    sig3_start();
+}
+
+static void cmd_sig3_stop(char *a) {
+    (void)a;
+    sig3_stop();
+}
 static inline void ub_cache_sync(void) { flush_cpu_dcache(); flush_l2_cache(); }
+
+
 
 /* ========================================================================= */
 /*                             UberClock                                     */
 /* ========================================================================= */
 
 static volatile int ce_event = 0;
-static int16_t  g_mag;
-static int32_t  g_phase;
+static int16_t  mag;
+static int32_t  phase;
 static volatile int dsp_pump_enable = 0;
 static volatile uint32_t dsp_work_tokens = 0;
 
@@ -66,6 +182,7 @@ static inline void uc_commit(void) {
     cfg_link_commit_write(1);
 }
 
+static volatile uint32_t ce_ticks = 0; 
 /* ---- ISR ---- */
 static void ce_down_isr(void) {
     evm_pending_write(1);
@@ -74,6 +191,7 @@ static void ce_down_isr(void) {
         if (dsp_work_tokens < 1024u) dsp_work_tokens++;
     }
     ce_event = 1;
+    ce_ticks++;
 }
 
 /* ---- Help ---- */
@@ -232,7 +350,7 @@ static void cmd_mag_cpu5(char *a) {
 
 static void cmd_lowspeed_dbg_select(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
-    if (v > 4) { puts("lowspeed_dbg_select must be 0..4"); return; }
+    if (v > 7) { puts("lowspeed_dbg_select must be 0..7"); return; }
     main_lowspeed_dbg_select_write(v);
     uc_commit();
     printf("lowspeed_dbg_select = %u\n", v);
@@ -633,8 +751,15 @@ static void cmd_cap_rd(char *args) {
     printf("cap[%u] = %d (0x%04x)\n", idx, (int)s, (unsigned)(v & 0xffff));
 }
 
-static void cmd_phase_print(char *a){ (void)a; printf("Phase %ld\n", (long)g_phase); }
-static void cmd_magnitude  (char *a){ (void)a; printf("Magnitude %d\n", g_mag); }
+static void cmd_phase_print(char *a) {
+    (void)a;
+    printf("Phase %ld\n", (long)phase);
+}
+
+static void cmd_magnitude(char *a) {
+    (void)a;
+    printf("Magnitude %d\n", mag);
+}
 
 /* ========================================================================= */
 /*                     UberDDR3 + S2MM (capture-to-DDR) CLI                   */
@@ -1009,10 +1134,76 @@ static const struct cmd_entry uc_tbl[] = {
     {"ub_wait",              cmd_ub_wait,             "Wait until DMA done"},
     {"ub_hexdump",           cmd_ub_hexdump,          "Hexdump DDR memory"},
     {"ub_send",              cmd_ub_send,             "Send DDR memory region via UDP"},
+    {"sig3_start", cmd_sig3_start, "Start 3-tone software generator"},
+    {"sig3_stop",  cmd_sig3_stop,  "Stop 3-tone software generator"},
+    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude"},
 };
 
 void uberclock_register_cmds(void) {
     console_register(uc_tbl, (unsigned)(sizeof(uc_tbl) / sizeof(uc_tbl[0])));
+}
+
+/* ========================================================================= */
+/*                            FSM                                             */
+/* ========================================================================= */
+
+enum fsm_states {IDLE, S1, S2};
+char curr_state;
+uint32_t fsm_counter, max_mag, current_phase_inc, max_mag_phase_inc, shooting_phase_inc ;
+int8_t sgn = 1;
+
+void fsm_init(void) {
+ curr_state = IDLE; 
+ ce_ticks = 0;
+ max_mag = 0;
+ max_mag_phase_inc = 0; 
+ shooting_phase_inc = 10326505;
+}
+void tran(void) {
+    switch (curr_state) {
+        case IDLE: {
+            if (ce_ticks == 9999) {
+                curr_state = S1;
+            }  else if (ce_ticks == 1) {
+                main_phase_inc_nco_write(shooting_phase_inc);
+                main_phase_inc_down_1_write(shooting_phase_inc + 1032);  
+                puts("Input NCO phase increment set");
+            }
+        }
+        break;
+        case S1: {
+                     cmd_magnitude(NULL);
+                     if (mag < 30) {
+                       curr_state = IDLE;
+                       ce_ticks = 0;
+                       shooting_phase_inc = shooting_phase_inc + 6;
+                       
+                     }else 
+
+                     if ( (uint32_t)mag + 10  > max_mag  ) {
+                         puts("mag greater");
+                       max_mag = mag; 
+                       max_mag_phase_inc = shooting_phase_inc;
+                       shooting_phase_inc = shooting_phase_inc + sgn * 6;
+                       curr_state = IDLE;
+                       ce_ticks = 0;
+                    } else {
+                       //  sgn = -sgn;
+                       // shooting_phase_inc = shooting_phase_inc - sgn * 2;
+                        main_phase_inc_nco_write(shooting_phase_inc - 6);
+                       ce_ticks = 0;
+                       curr_state = S2;
+                    }
+                 }
+            break;
+        
+        case S2: {
+            puts("S2");
+            cmd_magnitude(NULL);
+            curr_state = IDLE;
+                 }
+            break;
+    }
 }
 
 /* ========================================================================= */
@@ -1053,12 +1244,12 @@ void uberclock_init(void) {
     main_gain4_write(0x40000000);
     main_gain5_write(0x40000000);
 
-    main_output_select_ch1_write(0);
-    main_output_select_ch2_write(5);
+    main_output_select_ch1_write(12);
+    main_output_select_ch2_write(10);
 
-    main_final_shift_write(2);
+    main_final_shift_write(0);
 
-    main_lowspeed_dbg_select_write(0);
+    main_lowspeed_dbg_select_write(5);
     main_highspeed_dbg_select_write(0);
 
     main_upsampler_input_x_write(0);
@@ -1066,7 +1257,9 @@ void uberclock_init(void) {
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
-
+    cmd_dsp_run("1");
+    fsm_init();
+    sig3_start();
     uc_commit();
 
     dsp_swq_r = 0;
@@ -1093,10 +1286,11 @@ void uberclock_poll(void) {
     }
 
     if (!ce_event) return;
-
-    /* If you later expose magnitude/phase CSRs, read them here. */
-
+    sig3_push_one();
+    mag = (int16_t)(main_magnitude_read() & 0xffff);
     ce_event = 0;
     evm_pending_write(1);
     evm_enable_write(1);
+    // tran();
+
 }

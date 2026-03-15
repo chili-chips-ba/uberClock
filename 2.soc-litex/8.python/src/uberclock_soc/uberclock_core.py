@@ -230,7 +230,8 @@ def add_uberclock_fullrate(soc, leds):
         ce_down_sys.eq(soc.ps_down.o),
         soc.evm.ce_down.trigger.eq(ce_down_sys),
     ]
-
+    mag_uc   = Signal(16, name="magnitude_uc")
+    phase_uc = Signal(25, name="phase_uc")
     # -------------------------------------------------------------------------
     # UberClock instance (UC domain)
     # -------------------------------------------------------------------------
@@ -327,6 +328,8 @@ def add_uberclock_fullrate(soc, leds):
         i_cap_idx=_uc_out("cap_idx"),
         o_cap_done=cap_done_uc,
         o_cap_data=cap_data_uc,
+        o_magnitude=mag_uc,
+        o_phase=phase_uc,
     )
 
     soc.specials += Instance("uberclock", **ports)
@@ -344,7 +347,16 @@ def add_uberclock_fullrate(soc, leds):
         m.cap_done.status.eq(cap_done_sys),
         m.cap_data.status.eq(cap_data_sys),
     ]
+    mag_sys   = Signal(16, name="magnitude_sys")
+    phase_sys = Signal(25, name="phase_sys")
 
+    soc.specials += MultiReg(mag_uc, mag_sys, "sys")
+    soc.specials += MultiReg(phase_uc, phase_sys, "sys")
+
+    soc.comb += [
+        m.magnitude.status.eq(mag_sys),
+        m.phase.status.eq(phase_sys),
+    ]
     # -------------------------------------------------------------------------
     # UC->SYS: downsampled data async FIFO (for CPU readback)
     # -------------------------------------------------------------------------
