@@ -29,7 +29,7 @@ static uint32_t sig3_inc_1000 = 0;
 static uint32_t sig3_inc_1060 = 0;
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp = 3000;
+static int16_t sig3_amp = 1000;
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -63,9 +63,9 @@ static void sig3_start(void) {
     sig3_ph_1000 = 0;
     sig3_ph_1060 = 0;
 
-    sig3_inc_940  = sig3_phase_inc( 940, 10000);
+    sig3_inc_940  = sig3_phase_inc( 980, 10000);
     sig3_inc_1000 = sig3_phase_inc(1000, 10000);
-    sig3_inc_1060 = sig3_phase_inc(1060, 10000);
+    sig3_inc_1060 = sig3_phase_inc(1020, 10000);
 
     sig3_enable = 1;
     puts("3-tone software generator enabled");
@@ -1157,7 +1157,7 @@ void fsm_init(void) {
  ce_ticks = 0;
  max_mag = 0;
  max_mag_phase_inc = 0; 
- shooting_phase_inc = 10326505;
+ shooting_phase_inc = 10328467;
 }
 void tran(void) {
     switch (curr_state) {
@@ -1166,13 +1166,13 @@ void tran(void) {
                 curr_state = S1;
             }  else if (ce_ticks == 1) {
                 main_phase_inc_nco_write(shooting_phase_inc);
-                main_phase_inc_down_1_write(shooting_phase_inc + 1032);  
+                main_phase_inc_down_1_write(shooting_phase_inc + 1000);  
                 puts("Input NCO phase increment set");
             }
         }
         break;
         case S1: {
-                     cmd_magnitude(NULL);
+                     // cmd_magnitude(NULL);
                      if (mag < 30) {
                        curr_state = IDLE;
                        ce_ticks = 0;
@@ -1181,7 +1181,7 @@ void tran(void) {
                      }else 
 
                      if ( (uint32_t)mag + 10  > max_mag  ) {
-                         puts("mag greater");
+                       puts("mag greater");
                        max_mag = mag; 
                        max_mag_phase_inc = shooting_phase_inc;
                        shooting_phase_inc = shooting_phase_inc + sgn * 6;
@@ -1199,8 +1199,8 @@ void tran(void) {
         
         case S2: {
             puts("S2");
-            cmd_magnitude(NULL);
-            curr_state = IDLE;
+            // cmd_magnitude(NULL);
+            // curr_state = IDLE;
                  }
             break;
     }
@@ -1213,7 +1213,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10325473);
+    main_phase_inc_down_1_write(10327486);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
@@ -1236,7 +1236,7 @@ void uberclock_init(void) {
     main_mag_cpu5_write((uint32_t)(0 & 0x0fff));
 
     main_input_select_write(1);
-    main_upsampler_input_mux_write(0);
+    main_upsampler_input_mux_write(1);
 
     main_gain1_write(0x40000000);
     main_gain2_write(0x40000000);
@@ -1244,8 +1244,8 @@ void uberclock_init(void) {
     main_gain4_write(0x40000000);
     main_gain5_write(0x40000000);
 
-    main_output_select_ch1_write(12);
-    main_output_select_ch2_write(10);
+    main_output_select_ch1_write(5);
+    main_output_select_ch2_write(5);
 
     main_final_shift_write(0);
 
@@ -1257,7 +1257,7 @@ void uberclock_init(void) {
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
-    cmd_dsp_run("1");
+    cmd_dsp_run("0");
     fsm_init();
     sig3_start();
     uc_commit();
