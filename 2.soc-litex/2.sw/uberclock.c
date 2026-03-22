@@ -14,6 +14,10 @@
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
+
+
+
+
 #define SIG3_ENABLE_DEFAULT 1
 
 static volatile int sig3_enable = 0;
@@ -29,7 +33,7 @@ static uint32_t sig3_inc_1000 = 0;
 static uint32_t sig3_inc_1060 = 0;
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp = 1000;
+static int16_t sig3_amp = 3000;
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -152,8 +156,8 @@ static unsigned dsp_swq_count = 0;
 /* Fixed-cadence DSP pumping is driven from ce_down ISR. */
 static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
 
-#define FFT_MAX_N 32u
-#define FFT_CFG_MAX_BYTES 768u
+#define FFT_MAX_N 64u
+#define FFT_CFG_MAX_BYTES 1536u
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
@@ -162,7 +166,73 @@ static uint32_t fft_fs_hz = 1000000u;
 static inline int is_pow2_u(unsigned x) {
     return (x != 0u) && ((x & (x - 1u)) == 0u);
 }
+static void cmd_fft64_peak(char *args) {
+    (void)args;
 
+    const unsigned n = 64u;
+
+    for (unsigned i = 0; i < n; i++) {
+        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+            printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
+            return;
+        }
+
+        main_ds_fifo_pop_write(1);
+
+        /* safer read pattern after pop */
+        (void)main_ds_fifo_x_read();
+        (void)main_ds_fifo_y_read();
+
+        int16_t sx = (int16_t)(main_ds_fifo_x_read() & 0xffffu);
+        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+
+        fft_in[i].r = (kiss_fft_scalar)sx;
+        fft_in[i].i = (kiss_fft_scalar)sy;
+    }
+
+    size_t cfg_need = 0;
+    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    if (cfg_need > (size_t)FFT_CFG_MAX_BYTES) {
+        printf("fft cfg too big: need %lu bytes (max %u)\n",
+               (unsigned long)cfg_need, FFT_CFG_MAX_BYTES);
+        return;
+    }
+
+    size_t cfg_len = (size_t)FFT_CFG_MAX_BYTES;
+    kiss_fft_cfg cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    if (!cfg) {
+        puts("kiss_fft_alloc failed");
+        return;
+    }
+
+    kiss_fft(cfg, fft_in, fft_out);
+
+    uint64_t peak_pwr = 0;
+    unsigned peak_k = 0;
+    unsigned bins = (n / 2u);
+
+    for (unsigned k = 1; k < bins; k++) { /* skip DC */
+        int32_t re = (int32_t)fft_out[k].r;
+        int32_t im = (int32_t)fft_out[k].i;
+        uint64_t pwr = (uint64_t)((int64_t)re * re) + (uint64_t)((int64_t)im * im);
+
+        if (pwr > peak_pwr) {
+            peak_pwr = pwr;
+            peak_k = k;
+        }
+    }
+
+    {
+        uint64_t f_hz = ((uint64_t)peak_k * (uint64_t)fft_fs_hz) / (uint64_t)n;
+        printf("fft64 peak: bin=%u f=%llu Hz pwr=%llu (Fs=%lu, N=%u, df=%lu Hz)\n",
+               peak_k,
+               (unsigned long long)f_hz,
+               (unsigned long long)peak_pwr,
+               (unsigned long)fft_fs_hz,
+               n,
+               (unsigned long)(fft_fs_hz / n));
+    }
+}
 static inline unsigned parse_u(const char *s, unsigned max, const char *what) {
     unsigned v = (unsigned)strtoul(s ? s : "0", NULL, 0);
     if (v >= max) printf("Error: %s must be 0..%u\n", what, max - 1);
@@ -510,44 +580,45 @@ static inline void dsp_process(int16_t in_x, int16_t in_y,
 }
 
 static unsigned dsp_pump_step(unsigned max_in, unsigned max_out) {
+    (void)max_out; /* no loopback push anymore */
+
     unsigned popped = 0;
     unsigned i;
 
-    /* Stage A: drain input aggressively into SW queue. */
     for (i = 0; i < max_in; i++) {
-        if (((main_ds_fifo_flags_read() & 0x1u) != 0u) && (dsp_swq_count < DSP_SWQ_LEN)) {
+        if ((main_ds_fifo_flags_read() & 0x1u) != 0u) {
             main_ds_fifo_pop_write(1);
+
+            /* safer read pattern after pop */
+            (void)main_ds_fifo_x_read();
+            (void)main_ds_fifo_y_read();
+
             int16_t in_x = (int16_t)(main_ds_fifo_x_read() & 0xffff);
             int16_t in_y = (int16_t)(main_ds_fifo_y_read() & 0xffff);
 
+            /* optional processing hook, but no UPS push */
             int16_t out_x = 0, out_y = 0;
             dsp_process(in_x, in_y, &out_x, &out_y);
+            (void)out_x;
+            (void)out_y;
 
-            dsp_swq_x[dsp_swq_w] = out_x;
-            dsp_swq_y[dsp_swq_w] = out_y;
+            /* store for later analysis if wanted */
+            dsp_swq_x[dsp_swq_w] = in_x;
+            dsp_swq_y[dsp_swq_w] = in_y;
             dsp_swq_w = (dsp_swq_w + 1u) % DSP_SWQ_LEN;
-            dsp_swq_count++;
+            if (dsp_swq_count < DSP_SWQ_LEN) {
+                dsp_swq_count++;
+            } else {
+                /* overwrite oldest if buffer full */
+                dsp_swq_r = (dsp_swq_r + 1u) % DSP_SWQ_LEN;
+            }
+
             popped++;
         } else {
             break;
         }
     }
 
-    /* Stage B: push with a smaller cap to avoid large output bursts. */
-    for (i = 0; i < max_out; i++) {
-        if ((dsp_swq_count != 0u) && ((main_ups_fifo_flags_read() & 0x2u) != 0u)) {
-            int16_t out_x = dsp_swq_x[dsp_swq_r];
-            int16_t out_y = dsp_swq_y[dsp_swq_r];
-            dsp_swq_r = (dsp_swq_r + 1u) % DSP_SWQ_LEN;
-            dsp_swq_count--;
-
-            main_ups_fifo_x_write((uint32_t)((int32_t)out_x & 0xffff));
-            main_ups_fifo_y_write((uint32_t)((int32_t)out_y & 0xffff));
-            main_ups_fifo_push_write(1);
-        } else {
-            break;
-        }
-    }
     return popped;
 }
 
@@ -633,7 +704,7 @@ static void cmd_dsp_run(char *a) {
         dsp_swq_w = 0;
         dsp_swq_count = 0;
         dsp_work_tokens = 0;
-        fifo_clear_flags();
+        main_ds_fifo_clear_write(1);
     } else {
         dsp_work_tokens = 0;
     }
@@ -1062,6 +1133,7 @@ static void cmd_ub_send(char *args) {
 static const struct cmd_entry uc_tbl[] = {
     /* UberClock commands */
     {"help_uc",              uc_help,                 "UberClock help"},
+    {"fft64_peak", cmd_fft64_peak, "64-point FFT over DS FIFO IQ samples, print peak only"},
 
     {"phase_nco",            cmd_phase_nco,           "Set input CORDIC NCO phase increment"},
     {"nco_mag",              cmd_nco_mag,             "Set NCO magnitude (signed 12-bit)"},
@@ -1134,6 +1206,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"ub_wait",              cmd_ub_wait,             "Wait until DMA done"},
     {"ub_hexdump",           cmd_ub_hexdump,          "Hexdump DDR memory"},
     {"ub_send",              cmd_ub_send,             "Send DDR memory region via UDP"},
+    {"fft32_ds_y", cmd_fft32_ds_y, "Real FFT of 32 Y samples from DS FIFO"},
     {"sig3_start", cmd_sig3_start, "Start 3-tone software generator"},
     {"sig3_stop",  cmd_sig3_stop,  "Stop 3-tone software generator"},
     {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude"},
@@ -1213,7 +1286,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10327486);
+    main_phase_inc_down_1_write(10327455);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
@@ -1235,17 +1308,17 @@ void uberclock_init(void) {
     main_mag_cpu4_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu5_write((uint32_t)(0 & 0x0fff));
 
-    main_input_select_write(1);
+    main_input_select_write(0);
     main_upsampler_input_mux_write(1);
 
     main_gain1_write(0x40000000);
-    main_gain2_write(0x40000000);
-    main_gain3_write(0x40000000);
-    main_gain4_write(0x40000000);
-    main_gain5_write(0x40000000);
+    main_gain2_write(0x00000000);
+    main_gain3_write(0x00000000);
+    main_gain4_write(0x00000000);
+    main_gain5_write(0x00000000);
 
     main_output_select_ch1_write(5);
-    main_output_select_ch2_write(5);
+    main_output_select_ch2_write(0);
 
     main_final_shift_write(0);
 
@@ -1257,7 +1330,7 @@ void uberclock_init(void) {
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
-    cmd_dsp_run("0");
+    cmd_dsp_run("1");
     fsm_init();
     sig3_start();
     uc_commit();

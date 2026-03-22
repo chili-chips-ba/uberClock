@@ -915,7 +915,7 @@ module uberclock#(
 
     // ============================================================
     // High-speed capture @ sys_clk (65 MHz): grab filter_in
-    wire signed [IW-1:0]  highspeed_signal;// =
+    wire signed [IW-1:0]  highspeed_signal;
     assign highspeed_signal = (highspeed_dbg_select == 0) ? filter_in :
                               (highspeed_dbg_select == 1) ? filter_in_1 :
                               (highspeed_dbg_select == 2) ? $signed(sum[13:2]) : $signed(nco_cos);
