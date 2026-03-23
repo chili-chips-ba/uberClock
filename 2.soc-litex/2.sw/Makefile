@@ -3,11 +3,20 @@ BUILD_DIR?=../build/
 include $(BUILD_DIR)/software/include/generated/variables.mak
 include $(SOC_DIRECTORY)/software/common.mak
 
-OBJECTS   = donut.o helloc.o crt0.o main.o console.o uberclock.o ubddr3.o kiss_fft.o
-CFLAGS   += -I$(CURDIR)/kissfft
-CFLAGS   += -DFIXED_POINT=16
+OBJECTS = src/donut.o src/helloc.o crt0.o src/main.o src/console.o src/ubddr3.o src/kiss_fft.o \
+          src/uberclock.o \
+          src/uberclock_common.o \
+          src/uberclock_cmds.o \
+          src/uberclock_dsp.o \
+          src/uberclock_capture.o \
+          src/uberclock_udp.o
+
+CFLAGS += -I$(CURDIR)
+CFLAGS += -I$(CURDIR)/inc
+CFLAGS += -I$(CURDIR)/kissfft
+CFLAGS += -DFIXED_POINT=16
 ifdef WITH_CXX
-	OBJECTS += hellocpp.o
+	OBJECTS += src/hellocpp.o
 	CFLAGS += -DWITH_CXX
 endif
 
@@ -39,7 +48,7 @@ endif
 # pull in dependency info for *existing* .o files
 -include $(OBJECTS:.o=.d)
 
-donut.o: CFLAGS   += -w
+src/donut.o: CFLAGS   += -w
 
 VPATH = $(BIOS_DIRECTORY):$(BIOS_DIRECTORY)/cmds:$(CPU_DIRECTORY)
 

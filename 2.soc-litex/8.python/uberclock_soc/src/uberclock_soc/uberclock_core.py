@@ -49,51 +49,7 @@ from migen.genlib.fifo import AsyncFIFO
 from .uberclock_csrs import UberClockCSRBank
 from .csr_snapshot_fifo import CsrConfigSnapshotFIFO
 from .rtl_sources import add_sources
-
-
-# -----------------------------------------------------------------------------
-# RTL file list (relative to your RTL root, e.g. ../1.hw/)
-# -----------------------------------------------------------------------------
-UBERCLOCK_RTL_FILES = [
-    # UberClock top + channels
-    "uberclock/uberclock.v",
-    "uberclock/rx_channel.v",
-    "uberclock/tx_channel.v",
-
-    # ADC/DAC interface blocks
-    "adc/adc.v",
-    "dac/dac.v",
-
-    # Filters + coefficient memories
-    "filters/cic.v",
-    "filters/cic_comp_down_mac.v",
-    "filters/comp_down_coeffs.mem",
-    "filters/hb_down_mac.v",
-    "filters/hb_down_coeffs.mem",
-    "filters/downsamplerFilter.v",
-    "filters/upsamplerFilter.v",
-    "filters/hb_up_mac.v",
-    "filters/coeffs.mem",
-    "filters/cic_comp_up_mac.v",
-    "filters/coeffs_comp.mem",
-    "filters/cic_int.v",
-
-    # Polar conversion
-    "to_polar/to_polar.v",
-
-    # CORDIC (full precision)
-    "cordic/cordic_pre_rotate.v",
-    "cordic/cordic_pipeline_stage.v",
-    "cordic/cordic_round.v",
-    "cordic/cordic.v",
-    "cordic/cordic_logic.v",
-    "cordic/gain_and_saturate.v",
-
-    # CORDIC16 variant
-    "cordic16/cordic16.v",
-    "cordic16/cordic_pre_rotate_16.v",
-]
-
+from .rtl_filelist import UBERCLOCK_RTL_FILES
 
 def add_uberclock_fullrate(soc, leds):
     """

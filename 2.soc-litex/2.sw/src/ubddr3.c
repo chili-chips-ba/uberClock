@@ -6,7 +6,7 @@
 #include <generated/csr.h>
 #include <generated/mem.h>
 #include <generated/soc.h>
-#include "console.h"
+#include "inc/console.h"
 #include "ubddr3.h"
 
 /* ===== UberDDR3 bring-up helpers ===== */

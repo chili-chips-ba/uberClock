@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <irq.h>
 #include <libbase/uart.h>
-#include "console.h"
+#include "inc/console.h"
 #include "uberclock.h"
 #include "ubddr3.h"
 
@@ -19,12 +19,15 @@ static void cmd_hellocpp(char *a){ (void)a; puts_help_header("Hello C++"); hello
 static void cmd_help_root(char *a){
 	(void)a;
 	puts_help_header("Top-level help");
-	puts("  help_uc             - UberClock command list");
-	puts("  help_ddr            - DDR/UberDDR3 memory command list");
-	puts("  ddrinfo/ddrwait/... - DDR helpers (see also: ddrtest, ddrpat, timertest)");
-	puts("  donut | helloc"
+	puts("  help        - Show this overview");
+	puts("  help_uc     - UberClock control, debug, capture, DSP, and UDP commands");
+	puts("  help_ddr    - DDR/UberDDR3 memory bring-up and test commands");
+	puts("  ub_help     - UDP / S2MM streaming commands only");
+	puts("  ddrinfo     - Quick DDR calibration / base-address status");
+	puts("  donut       - ASCII donut demo");
+	puts("  helloc      - Minimal C hello test"
 	#ifdef WITH_CXX
-	" | hellocpp"
+	"  |  hellocpp - Minimal C++ hello test"
 	#endif
 	);
 }
@@ -52,7 +55,7 @@ int main(void) {
 
 	uberclock_init();
 
-    puts("Type 'help' for top-level, 'help_uc' for UberClock commands, 'help_ddr' for DDR commands.");
+    puts("Type 'help' for an overview, 'help_uc' for UberClock controls, 'ub_help' for UDP/S2MM, or 'help_ddr' for DDR tests.");
 	console_print_prompt();
 
 	while (1) {

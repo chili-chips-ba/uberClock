@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <libbase/console.h>
-#include "console.h"
+#include "inc/console.h"
 
 /* ===== Simple shared console ===== */
 
