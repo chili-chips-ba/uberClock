@@ -235,12 +235,20 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     # UberClock instance (UC domain)
     # -------------------------------------------------------------------------
-    ds_x_uc    = Signal(16, name="downsampled_x_uc")
-    ds_y_uc    = Signal(16, name="downsampled_y_uc")
+    ds_x_uc1    = Signal(16, name="downsampled_x_uc1")
+    ds_y_uc1    = Signal(16, name="downsampled_y_uc1")
+    ds_x_uc2    = Signal(16, name="downsampled_x_uc2")
+    ds_y_uc2    = Signal(16, name="downsampled_y_uc2")
+    ds_x_uc3    = Signal(16, name="downsampled_x_uc3")
+    ds_y_uc3    = Signal(16, name="downsampled_y_uc3")
+    ds_x_uc4    = Signal(16, name="downsampled_x_uc4")
+    ds_y_uc4    = Signal(16, name="downsampled_y_uc4")
+    ds_x_uc5    = Signal(16, name="downsampled_x_uc5")
+    ds_y_uc5    = Signal(16, name="downsampled_y_uc5")
     cap_sel_uc = Signal(12, name="cap_selected_uc")  # selected sample for HS capture
 
     # UC-domain upsampler FIFO hold registers
-    ups_x_uc = Signal(16, name="upsampler_fifo_x_uc")
+    ups_x_uc = Signal(16, name="upsampler_fifo_x_uc") #TODO
     ups_y_uc = Signal(16, name="upsampler_fifo_y_uc")
     ups_have_sample_uc = Signal(name="upsampler_fifo_has_sample_uc")
     ups_in_x_uc = Signal(16, name="upsampler_in_x_uc")
@@ -317,8 +325,16 @@ def add_uberclock_fullrate(soc, leds):
 
         # Outputs
         o_ce_down=ce_down_uc,
-        o_downsampled_data_x=ds_x_uc,
-        o_downsampled_data_y=ds_y_uc,
+        o_downsampled_data_x1=ds_x_uc1,
+        o_downsampled_data_y1=ds_y_uc1,
+        o_downsampled_data_x2=ds_x_uc2,
+        o_downsampled_data_y2=ds_y_uc2,
+        o_downsampled_data_x3=ds_x_uc3,
+        o_downsampled_data_y3=ds_y_uc3,
+        o_downsampled_data_x4=ds_x_uc4,
+        o_downsampled_data_y4=ds_y_uc4,
+        o_downsampled_data_x5=ds_x_uc5,
+        o_downsampled_data_y5=ds_y_uc5,
 
         # High-speed capture sample out
         o_cap_selected_input=cap_sel_uc,

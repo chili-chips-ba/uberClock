@@ -184,19 +184,51 @@ class UberClockCSRBank(LiteXModule):
         #               CPU-injected samples and final output scaling
         # =====================================================================
 
-        self.upsampler_input_x = CSRStorage(
+        self.upsampler_input_x1 = CSRStorage(
             self.SAMPLE_WIDTH,
             description="CPU-provided I (X) sample injected into upsampler."
         )
-        self.upsampler_input_y = CSRStorage(
+        self.upsampler_input_y1 = CSRStorage(
             self.SAMPLE_WIDTH,
             description="CPU-provided Q (Y) sample injected into upsampler."
         )
 
+        self.upsampler_input_x2 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided I (X) sample injected into upsampler."
+        )
+        self.upsampler_input_y2 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided Q (Y) sample injected into upsampler."
+        )
+        self.upsampler_input_x3 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided I (X) sample injected into upsampler."
+        )
+        self.upsampler_input_y3 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided Q (Y) sample injected into upsampler."
+        )
+        self.upsampler_input_x4 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided I (X) sample injected into upsampler."
+        )
+        self.upsampler_input_y4 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided Q (Y) sample injected into upsampler."
+        )
+        self.upsampler_input_x5 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided I (X) sample injected into upsampler."
+        )
+        self.upsampler_input_y5 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="CPU-provided Q (Y) sample injected into upsampler."
+        )
         # =====================================================================
         #        Downsampled data FIFO (UC->SYS, CPU readback)
         # =====================================================================
-
+        # TODO: EXTEND TO 5 CHANNELS
         self.ds_fifo_pop = CSRStorage(
             1,
             description="Write (strobe) to pop one downsampled sample from the FIFO."
