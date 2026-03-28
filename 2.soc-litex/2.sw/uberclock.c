@@ -15,6 +15,84 @@
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
 
+static void cmd_fft32_ds_y(char *args) {
+    (void)args;
+
+    const unsigned N = 32u;
+    const uint32_t fs_hz = 10000u; /* ce_down rate */
+
+    kiss_fft_cpx in[32];
+    kiss_fft_cpx out[32];
+    uint8_t cfg_mem[768];
+
+    size_t cfg_need = 0;
+    (void)kiss_fft_alloc((int)N, 0, NULL, &cfg_need);
+    if (cfg_need > sizeof(cfg_mem)) {
+        printf("fft32 cfg too big: need %lu bytes\n", (unsigned long)cfg_need);
+        return;
+    }
+
+    size_t cfg_len = sizeof(cfg_mem);
+    kiss_fft_cfg cfg = kiss_fft_alloc((int)N, 0, cfg_mem, &cfg_len);
+    if (!cfg) {
+        puts("kiss_fft_alloc failed");
+        return;
+    }
+
+    /* Pop last 32 real Y samples from DS FIFO */
+    for (unsigned i = 0; i < N; i++) {
+        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+            printf("Not enough DS FIFO samples: got %u/%u\n", i, N);
+            return;
+        }
+
+        main_ds_fifo_pop_write(1);
+
+        /* Read both to complete the FIFO transaction; use Y only */
+        (void)main_ds_fifo_x_read();
+        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+
+        in[i].r = (kiss_fft_scalar)sy;
+        in[i].i = (kiss_fft_scalar)0;
+    }
+
+    kiss_fft(cfg, in, out);
+
+    puts("bin,freq_hz,re,im,pwr");
+
+    uint64_t peak_pwr = 0;
+    unsigned peak_k = 0;
+
+    for (unsigned k = 0; k < (N / 2u); k++) {
+        int32_t re = (int32_t)out[k].r;
+        int32_t im = (int32_t)out[k].i;
+        uint64_t pwr = (uint64_t)((int64_t)re * re) + (uint64_t)((int64_t)im * im);
+        uint64_t f_hz = ((uint64_t)k * (uint64_t)fs_hz) / (uint64_t)N;
+
+        printf("%2u,%5llu,%8ld,%8ld,%12llu\n",
+               k,
+               (unsigned long long)f_hz,
+               (long)re,
+               (long)im,
+               (unsigned long long)pwr);
+
+        if (k > 0u && pwr > peak_pwr) {
+            peak_pwr = pwr;
+            peak_k = k;
+        }
+    }
+
+    {
+        uint64_t peak_f_hz = ((uint64_t)peak_k * (uint64_t)fs_hz) / (uint64_t)N;
+        printf("fft32_ds_y peak: bin=%u f=%llu Hz pwr=%llu  (Fs=%lu, N=%u, df=%lu Hz)\n",
+               peak_k,
+               (unsigned long long)peak_f_hz,
+               (unsigned long long)peak_pwr,
+               (unsigned long)fs_hz,
+               N,
+               (unsigned long)(fs_hz / N));
+    }
+}
 
 
 
@@ -156,8 +234,8 @@ static unsigned dsp_swq_count = 0;
 /* Fixed-cadence DSP pumping is driven from ce_down ISR. */
 static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
 
-#define FFT_MAX_N 64u
-#define FFT_CFG_MAX_BYTES 1536u
+#define FFT_MAX_N 256u
+#define FFT_CFG_MAX_BYTES 4096u
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
@@ -1133,7 +1211,7 @@ static void cmd_ub_send(char *args) {
 static const struct cmd_entry uc_tbl[] = {
     /* UberClock commands */
     {"help_uc",              uc_help,                 "UberClock help"},
-    {"fft64_peak", cmd_fft64_peak, "64-point FFT over DS FIFO IQ samples, print peak only"},
+{"fft64_peak", cmd_fft64_peak, "64-point FFT over DS FIFO IQ samples, print peak only"},
 
     {"phase_nco",            cmd_phase_nco,           "Set input CORDIC NCO phase increment"},
     {"nco_mag",              cmd_nco_mag,             "Set NCO magnitude (signed 12-bit)"},
@@ -1330,7 +1408,7 @@ void uberclock_init(void) {
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
-    cmd_dsp_run("1");
+    cmd_dsp_run("0");
     fsm_init();
     sig3_start();
     uc_commit();
