@@ -36,7 +36,7 @@ class UberClockCRG(LiteXModule):
         self.locked1 = Signal()
 
         # ----------------------------
-        # Clock domains (MUST be named)
+        # Clock domains
         # ----------------------------
         self.cd_sys       = ClockDomain("sys")
         self.cd_uc        = ClockDomain("uc")

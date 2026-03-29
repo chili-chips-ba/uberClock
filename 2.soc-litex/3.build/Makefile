@@ -13,8 +13,8 @@ BAUD          ?= 115200
 PORT          ?= /dev/ttyUSB0
 
 # LiteX install
-LITEX_PATH    ?= $(HOME)/litex
-LITEX_VENV    ?= $(HOME)/litex-venv
+LITEX_PATH    ?= $(HOME)/FPGA/Tools/litex-hub/litex
+LITEX_VENV    ?= $(LITEX_PATH)/litex-venv
 PYTHON        := python3
 
 # Board/target
@@ -27,6 +27,8 @@ PYTHONPATH_REPO := $(PROJECT_ROOT)/8.python/src
 # Defaults
 FREQ          ?= 100e6
 OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
+SW_CODE_MEM   ?= main_ram
+SW_DATA_MEM   ?= main_ram
 
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
@@ -39,7 +41,7 @@ help:
 	@echo "  make build-board [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make term        [PORT=/dev/ttyUSB0]"
-	@echo "  make build-sw    [DEMO_FLAGS='..']"
+	@echo "  make build-sw    [SW_CODE_MEM=main_ram] [SW_DATA_MEM=main_ram] [DEMO_FLAGS='..']"
 	@echo "  make clean-gateware   (delete build output only)"
 	@echo "  make clean            (delete build + logs + temp)"
 
@@ -59,13 +61,14 @@ build-board:
 #  Build & run software example under 2.sw/
 # ——————————————————————————————————————————————————————————————
 build-sw:
-	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
+	@echo "[software build] code_mem=$(SW_CODE_MEM) data_mem=$(SW_DATA_MEM) DEMO_FLAGS='$(DEMO_FLAGS)'"
 	@echo "→ Executing demo.py in $(SW_DIR)"
 	source $(LITEX_VENV)/bin/activate && \
 	cd $(SW_DIR) && \
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
-	  --mem=main_ram \
+	  --mem=$(SW_CODE_MEM) \
+	  --data-mem=$(SW_DATA_MEM) \
 	  $(DEMO_FLAGS)
 
 load:

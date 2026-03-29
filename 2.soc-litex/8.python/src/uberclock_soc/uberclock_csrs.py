@@ -186,82 +186,116 @@ class UberClockCSRBank(LiteXModule):
 
         self.upsampler_input_x1 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided I (X) sample injected into upsampler."
+            description="Direct X (I) input sample for upsampler channel 1."
         )
         self.upsampler_input_y1 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Q (Y) sample injected into upsampler."
+            description="Direct Y (Q) input sample for upsampler channel 1."
         )
 
         self.upsampler_input_x2 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided I (X) sample injected into upsampler."
+            description="Direct X (I) input sample for upsampler channel 2."
         )
         self.upsampler_input_y2 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Q (Y) sample injected into upsampler."
+            description="Direct Y (Q) input sample for upsampler channel 2."
         )
         self.upsampler_input_x3 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided I (X) sample injected into upsampler."
+            description="Direct X (I) input sample for upsampler channel 3."
         )
         self.upsampler_input_y3 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Q (Y) sample injected into upsampler."
+            description="Direct Y (Q) input sample for upsampler channel 3."
         )
         self.upsampler_input_x4 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided I (X) sample injected into upsampler."
+            description="Direct X (I) input sample for upsampler channel 4."
         )
         self.upsampler_input_y4 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Q (Y) sample injected into upsampler."
+            description="Direct Y (Q) input sample for upsampler channel 4."
         )
         self.upsampler_input_x5 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided I (X) sample injected into upsampler."
+            description="Direct X (I) input sample for upsampler channel 5."
         )
         self.upsampler_input_y5 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Q (Y) sample injected into upsampler."
+            description="Direct Y (Q) input sample for upsampler channel 5."
         )
         # =====================================================================
-        #        Downsampled data FIFO (UC->SYS, CPU readback)
+        #        Downsampled 5-channel frame FIFO (UC->SYS, CPU readback)
         # =====================================================================
-        # TODO: EXTEND TO 5 CHANNELS
         self.ds_fifo_pop = CSRStorage(
             1,
-            description="Write (strobe) to pop one downsampled sample from the FIFO."
+            description="Write (strobe) to pop one 5-channel downsampled frame from the FIFO."
         )
 
-        self.ds_fifo_x = CSRStatus(
+        self.ds_fifo_x1 = CSRStatus(
             self.SAMPLE_WIDTH,
-            description="Downsampled X sample from FIFO (latched on pop)."
+            description="Latched X sample for channel 1 from the last popped downsample FIFO frame."
         )
 
-        self.ds_fifo_y = CSRStatus(
+        self.ds_fifo_y1 = CSRStatus(
             self.SAMPLE_WIDTH,
-            description="Downsampled Y sample from FIFO (latched on pop)."
+            description="Latched Y sample for channel 1 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_x2 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for channel 2 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_y2 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for channel 2 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_x3 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for channel 3 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_y3 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for channel 3 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_x4 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for channel 4 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_y4 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for channel 4 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_x5 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for channel 5 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_y5 = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for channel 5 from the last popped downsample FIFO frame."
         )
 
         self.ds_fifo_overflow = CSRStatus(
             1,
-            description="Sticky: downsample FIFO overflow (UC wrote while full)."
+            description="Sticky: downsample frame FIFO overflow (UC tried to enqueue while full)."
         )
 
         self.ds_fifo_underflow = CSRStatus(
             1,
-            description="Sticky: downsample FIFO underflow (CPU pop while empty)."
+            description="Sticky: downsample frame FIFO underflow (CPU popped while empty)."
         )
 
         self.ds_fifo_clear = CSRStorage(
             1,
-            description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
-        )
-
-        self.ds_fifo_clear = CSRStorage(
-            1,
-            description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
+            description="Write (strobe) to clear downsample frame FIFO overflow/underflow flags."
         )
 
         self.ds_fifo_flags = CSRStatus(
@@ -273,48 +307,83 @@ class UberClockCSRBank(LiteXModule):
         )
 
         # =====================================================================
-        #        Upsampler input FIFO (SYS->UC, CPU injection)
+        #        Upsampler 5-channel frame FIFO (SYS->UC, CPU injection)
         # =====================================================================
 
-        self.ups_fifo_x = CSRStorage(
+        self.ups_fifo_x1 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided X sample to enqueue into upsampler FIFO."
+            description="Frame X sample for channel 1 to enqueue into the SYS->UC upsampler FIFO."
         )
 
-        self.ups_fifo_y = CSRStorage(
+        self.ups_fifo_y1 = CSRStorage(
             self.SAMPLE_WIDTH,
-            description="CPU-provided Y sample to enqueue into upsampler FIFO."
+            description="Frame Y sample for channel 1 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_x2 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame X sample for channel 2 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_y2 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame Y sample for channel 2 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_x3 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame X sample for channel 3 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_y3 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame Y sample for channel 3 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_x4 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame X sample for channel 4 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_y4 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame Y sample for channel 4 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_x5 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame X sample for channel 5 to enqueue into the SYS->UC upsampler FIFO."
+        )
+
+        self.ups_fifo_y5 = CSRStorage(
+            self.SAMPLE_WIDTH,
+            description="Frame Y sample for channel 5 to enqueue into the SYS->UC upsampler FIFO."
         )
 
         self.ups_fifo_push = CSRStorage(
             1,
-            description="Write (strobe) to enqueue one sample into the upsampler FIFO."
+            description="Write (strobe) to enqueue one 5-channel frame into the upsampler FIFO."
         )
 
         self.ups_fifo_overflow = CSRStatus(
             1,
-            description="Sticky: upsampler FIFO overflow (CPU push while full)."
+            description="Sticky: upsampler frame FIFO overflow (CPU pushed while full)."
         )
 
         self.ups_fifo_underflow = CSRStatus(
             1,
-            description="Sticky: upsampler FIFO underflow (UC read while empty)."
+            description="Sticky: upsampler frame FIFO underflow (UC consumed while empty)."
         )
 
         self.ups_fifo_clear = CSRStorage(
             1,
-            description="Write (strobe) to clear upsampler FIFO overflow/underflow flags."
-        )
-
-        self.ups_fifo_clear = CSRStorage(
-            1,
-            description="Write (strobe) to clear upsampler FIFO overflow/underflow flags."
+            description="Write (strobe) to clear upsampler frame FIFO overflow/underflow flags."
         )
 
         self.ups_fifo_flags = CSRStatus(
             8,
             description=(
-                "FIFO flags packed into status bits: bit1=writable (CPU can push). "
+                "FIFO flags packed into status bits: bit1=writable (CPU can enqueue a frame). "
                 "Remaining bits are reserved (0)."
             ),
         )

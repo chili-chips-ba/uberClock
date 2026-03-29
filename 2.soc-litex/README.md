@@ -150,7 +150,19 @@
 | UberDDR3 size            | `0x1000_0000`  | 256 MiB (`ub_size`)                          |
 | UberDDR3 region flags    | `cached=False` | `linker=False`                               |
 | Firmware constant        | `UBDDR3_MEM_BASE` | Exported to C firmware                    |
-| Integrated main RAM size | 64 KiB         | Default `integrated_main_ram_size`           |
+| Integrated main RAM size | 512 KiB        | Default `integrated_main_ram_size`           |
+
+By default, firmware links against ``main_ram`` and that region is the 512 KiB integrated BRAM.
+If you want large C ``.bss``/heap allocations for things like FFT buffers, build the SoC with
+``--with-sdram-main-ram`` so LiteDRAM-backed DDR3 becomes ``main_ram``.
+
+For the bare-metal firmware, large static arrays live in ``.bss`` and the heap/stack live in the
+``data_ram`` linker region. When building the app with ``2.sw/demo.py``, use
+``--mem main_ram --data-mem main_ram`` if you want both code and data placed in DDR-backed
+``main_ram`` instead of the small internal SRAM.
+
+``--with-sdram-main-ram`` cannot be combined with ``--with-uberddr3`` because both modes need the
+same physical DDR3 interface.
 | SoC ident string         | `"AX7203 UberClock65 UberDDR3 with S2MM via wbxbar"` | Printed at boot |
 
 

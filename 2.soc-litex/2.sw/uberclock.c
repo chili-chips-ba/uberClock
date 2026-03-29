@@ -10,10 +10,70 @@
 #include <generated/soc.h>
 #include "uberclock.h"
 #include "console.h"
+#include "ubddr3.h"
 #include "kissfft/kiss_fft.h"
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
+
+typedef struct {
+    int16_t x[5];
+    int16_t y[5];
+} iq5_frame_t;
+
+static void write_upsampler_inputs_all_x(int16_t v) {
+    uint32_t w = (uint32_t)((int32_t)v & 0xffff);
+    main_upsampler_input_x1_write(w);
+    main_upsampler_input_x2_write(w);
+    main_upsampler_input_x3_write(w);
+    main_upsampler_input_x4_write(w);
+    main_upsampler_input_x5_write(w);
+}
+
+static void write_upsampler_inputs_all_y(int16_t v) {
+    uint32_t w = (uint32_t)((int32_t)v & 0xffff);
+    main_upsampler_input_y1_write(w);
+    main_upsampler_input_y2_write(w);
+    main_upsampler_input_y3_write(w);
+    main_upsampler_input_y4_write(w);
+    main_upsampler_input_y5_write(w);
+}
+
+static void ups_fifo_write_frame(const iq5_frame_t *frame) {
+    main_ups_fifo_x1_write((uint32_t)((int32_t)frame->x[0] & 0xffff));
+    main_ups_fifo_y1_write((uint32_t)((int32_t)frame->y[0] & 0xffff));
+    main_ups_fifo_x2_write((uint32_t)((int32_t)frame->x[1] & 0xffff));
+    main_ups_fifo_y2_write((uint32_t)((int32_t)frame->y[1] & 0xffff));
+    main_ups_fifo_x3_write((uint32_t)((int32_t)frame->x[2] & 0xffff));
+    main_ups_fifo_y3_write((uint32_t)((int32_t)frame->y[2] & 0xffff));
+    main_ups_fifo_x4_write((uint32_t)((int32_t)frame->x[3] & 0xffff));
+    main_ups_fifo_y4_write((uint32_t)((int32_t)frame->y[3] & 0xffff));
+    main_ups_fifo_x5_write((uint32_t)((int32_t)frame->x[4] & 0xffff));
+    main_ups_fifo_y5_write((uint32_t)((int32_t)frame->y[4] & 0xffff));
+    main_ups_fifo_push_write(1);
+}
+
+static void ups_fifo_write_replicated(int16_t x, int16_t y) {
+    iq5_frame_t frame = {
+        .x = {x, x, x, x, x},
+        .y = {y, y, y, y, y},
+    };
+    ups_fifo_write_frame(&frame);
+}
+
+static void ds_fifo_read_frame(iq5_frame_t *frame) {
+    main_ds_fifo_pop_write(1);
+    frame->x[0] = (int16_t)(main_ds_fifo_x1_read() & 0xffffu);
+    frame->y[0] = (int16_t)(main_ds_fifo_y1_read() & 0xffffu);
+    frame->x[1] = (int16_t)(main_ds_fifo_x2_read() & 0xffffu);
+    frame->y[1] = (int16_t)(main_ds_fifo_y2_read() & 0xffffu);
+    frame->x[2] = (int16_t)(main_ds_fifo_x3_read() & 0xffffu);
+    frame->y[2] = (int16_t)(main_ds_fifo_y3_read() & 0xffffu);
+    frame->x[3] = (int16_t)(main_ds_fifo_x4_read() & 0xffffu);
+    frame->y[3] = (int16_t)(main_ds_fifo_y4_read() & 0xffffu);
+    frame->x[4] = (int16_t)(main_ds_fifo_x5_read() & 0xffffu);
+    frame->y[4] = (int16_t)(main_ds_fifo_y5_read() & 0xffffu);
+}
 
 static void cmd_fft32_ds_y(char *args) {
     (void)args;
@@ -46,11 +106,9 @@ static void cmd_fft32_ds_y(char *args) {
             return;
         }
 
-        main_ds_fifo_pop_write(1);
-
-        /* Read both to complete the FIFO transaction; use Y only */
-        (void)main_ds_fifo_x_read();
-        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+        iq5_frame_t frame;
+        ds_fifo_read_frame(&frame);
+        int16_t sy = frame.y[0];
 
         in[i].r = (kiss_fft_scalar)sy;
         in[i].i = (kiss_fft_scalar)0;
@@ -191,9 +249,7 @@ static void sig3_push_one(void) {
     if (!sig3_step(&x, &y))
         return;
 
-    main_ups_fifo_x_write((uint32_t)((int32_t)x & 0xffff));
-    main_ups_fifo_y_write((uint32_t)((int32_t)y & 0xffff));
-    main_ups_fifo_push_write(1);
+    ups_fifo_write_replicated(x, y);
 }
 static void cmd_sig3_amp(char *a) {
     int v = parse_s(a, 1, 10000, "sig3_amp");
@@ -234,8 +290,8 @@ static unsigned dsp_swq_count = 0;
 /* Fixed-cadence DSP pumping is driven from ce_down ISR. */
 static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
 
-#define FFT_MAX_N 256u
-#define FFT_CFG_MAX_BYTES 4096u
+#define FFT_MAX_N 2048u
+#define FFT_CFG_MAX_BYTES 12288u
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
@@ -255,14 +311,10 @@ static void cmd_fft64_peak(char *args) {
             return;
         }
 
-        main_ds_fifo_pop_write(1);
-
-        /* safer read pattern after pop */
-        (void)main_ds_fifo_x_read();
-        (void)main_ds_fifo_y_read();
-
-        int16_t sx = (int16_t)(main_ds_fifo_x_read() & 0xffffu);
-        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+        iq5_frame_t frame;
+        ds_fifo_read_frame(&frame);
+        int16_t sx = frame.x[0];
+        int16_t sy = frame.y[0];
 
         fft_in[i].r = (kiss_fft_scalar)sx;
         fft_in[i].i = (kiss_fft_scalar)sy;
@@ -376,14 +428,15 @@ static void uc_help(char *args) {
     puts("  lowspeed_dbg_select  <0..4>");
     puts("  highspeed_dbg_select <0..3>");
 
-    puts("  upsampler_x          <val>  (signed 16-bit)");
-    puts("  upsampler_y          <val>  (signed 16-bit)");
-    puts("  ds_pop                      (pop one downsampled sample)");
+    puts("  upsampler_x          <val>  (signed 16-bit, replicated to ch1..ch5)");
+    puts("  upsampler_y          <val>  (signed 16-bit, replicated to ch1..ch5)");
+    puts("  ds_pop                      (pop one 5-channel downsampled frame)");
     puts("  ds_status                   (read downsample FIFO flags/overflow)");
-    puts("  ups_push <x> <y>             (enqueue one upsampler sample)");
+    puts("  ups_push <x> <y>             (enqueue one 5-channel frame, replicated)");
     puts("  ups_status                  (read upsampler FIFO flags/overflow)");
     puts("  dsp_run <0|1>               (enable/disable non-blocking DSP pump)");
-    puts("  fft_ds [N]                  (FFT over DS FIFO IQ samples, N=8/16/32)");
+    puts("  fft_ds [N]                  (FFT over DS FIFO IQ samples, N=8..2048, prints bins)");
+    puts("  fft_ds_peak [N]             (FFT over DS FIFO IQ samples, N=8..2048, peak only)");
     puts("  fft_fs <Hz>                 (set DS sample rate used for fft_ds Hz print)");
 
     puts("  cap_arm              (pulse arm capture)");
@@ -600,20 +653,21 @@ static void cmd_cap_enable(char *a) {
 static void cmd_upsampler_x(char *a) {
     int v = parse_s(a, -32768, 32767, "upsampler_x");
     if (v < -32768 || v > 32767) return;
-    main_upsampler_input_x_write((uint32_t)((int32_t)v & 0xffff));
+    write_upsampler_inputs_all_x((int16_t)v);
     uc_commit();
-    printf("upsampler_input_x = %d\n", v);
+    printf("upsampler_input_x[1..5] = %d\n", v);
 }
 
 static void cmd_upsampler_y(char *a) {
     int v = parse_s(a, -32768, 32767, "upsampler_y");
     if (v < -32768 || v > 32767) return;
-    main_upsampler_input_y_write((uint32_t)((int32_t)v & 0xffff));
+    write_upsampler_inputs_all_y((int16_t)v);
     uc_commit();
-    printf("upsampler_input_y = %d\n", v);
+    printf("upsampler_input_y[1..5] = %d\n", v);
 }
 
-static void cap_start_cmd(void) {
+static void cap_start_cmd(char *a) {
+    (void)a;
     main_cap_arm_write(0);
     uc_commit();
 
@@ -626,12 +680,14 @@ static void cap_start_cmd(void) {
     puts("Capture started.");
 }
 
-static void cap_status_cmd(void) {
+static void cap_status_cmd(char *a) {
+    (void)a;
     unsigned d = main_cap_done_read();
     printf("Capture %s\n", d ? "DONE" : "IN-PROGRESS");
 }
 
-static void cap_dump_cmd(void) {
+static void cap_dump_cmd(char *a) {
+    (void)a;
     if (!main_cap_done_read()) {
         puts("Capture not done yet. Use 'cap_status' or wait.");
         return;
@@ -665,14 +721,10 @@ static unsigned dsp_pump_step(unsigned max_in, unsigned max_out) {
 
     for (i = 0; i < max_in; i++) {
         if ((main_ds_fifo_flags_read() & 0x1u) != 0u) {
-            main_ds_fifo_pop_write(1);
-
-            /* safer read pattern after pop */
-            (void)main_ds_fifo_x_read();
-            (void)main_ds_fifo_y_read();
-
-            int16_t in_x = (int16_t)(main_ds_fifo_x_read() & 0xffff);
-            int16_t in_y = (int16_t)(main_ds_fifo_y_read() & 0xffff);
+            iq5_frame_t frame;
+            ds_fifo_read_frame(&frame);
+            int16_t in_x = frame.x[0];
+            int16_t in_y = frame.y[0];
 
             /* optional processing hook, but no UPS push */
             int16_t out_x = 0, out_y = 0;
@@ -734,12 +786,19 @@ static void cmd_dsp_test(char *args) {
 
 static void cmd_ds_pop(char *a) {
     (void)a;
-    main_ds_fifo_pop_write(1);
-    uint32_t vx = main_ds_fifo_x_read();
-    uint32_t vy = main_ds_fifo_y_read();
-    int16_t sx = (int16_t)(vx & 0xffff);
-    int16_t sy = (int16_t)(vy & 0xffff);
-    printf("ds_fifo: x=%d y=%d\n", (int)sx, (int)sy);
+    iq5_frame_t frame;
+    ds_fifo_read_frame(&frame);
+    printf("ds_fifo:"
+           " ch1=(%d,%d)"
+           " ch2=(%d,%d)"
+           " ch3=(%d,%d)"
+           " ch4=(%d,%d)"
+           " ch5=(%d,%d)\n",
+           (int)frame.x[0], (int)frame.y[0],
+           (int)frame.x[1], (int)frame.y[1],
+           (int)frame.x[2], (int)frame.y[2],
+           (int)frame.x[3], (int)frame.y[3],
+           (int)frame.x[4], (int)frame.y[4]);
 }
 
 static void cmd_ds_status(char *a) {
@@ -758,10 +817,8 @@ static void cmd_ups_push(char *args) {
     int x = parse_s(tokx, -32768, 32767, "ups_x");
     int y = parse_s(toky, -32768, 32767, "ups_y");
     if (x < -32768 || x > 32767 || y < -32768 || y > 32767) return;
-    main_ups_fifo_x_write((uint32_t)((int32_t)x & 0xffff));
-    main_ups_fifo_y_write((uint32_t)((int32_t)y & 0xffff));
-    main_ups_fifo_push_write(1);
-    printf("ups_fifo push: x=%d y=%d\n", x, y);
+    ups_fifo_write_replicated((int16_t)x, (int16_t)y);
+    printf("ups_fifo push: replicated x=%d y=%d to ch1..ch5\n", x, y);
 }
 
 static void cmd_ups_status(char *a) {
@@ -799,7 +856,7 @@ static void cmd_fft_fs(char *a) {
     printf("fft_fs = %lu Hz\n", (unsigned long)fft_fs_hz);
 }
 
-static void cmd_fft_ds(char *args) {
+static void run_fft_ds(char *args, int peak_only) {
     char *tok = strtok(args, " \t");
     unsigned n = tok ? (unsigned)strtoul(tok, NULL, 0) : 32u;
     if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
@@ -812,9 +869,10 @@ static void cmd_fft_ds(char *args) {
             printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
             return;
         }
-        main_ds_fifo_pop_write(1);
-        int16_t sx = (int16_t)(main_ds_fifo_x_read() & 0xffffu);
-        int16_t sy = (int16_t)(main_ds_fifo_y_read() & 0xffffu);
+        iq5_frame_t frame;
+        ds_fifo_read_frame(&frame);
+        int16_t sx = frame.x[0];
+        int16_t sy = frame.y[0];
         fft_in[i].r = (kiss_fft_scalar)sx;
         fft_in[i].i = (kiss_fft_scalar)sy;
     }
@@ -843,8 +901,10 @@ static void cmd_fft_ds(char *args) {
         int32_t re = (int32_t)fft_out[k].r;
         int32_t im = (int32_t)fft_out[k].i;
         uint64_t pwr = (uint64_t)(re * re) + (uint64_t)(im * im);
-        printf("bin[%3u] re=%7ld im=%7ld pwr=%10llu\n",
-               k, (long)re, (long)im, (unsigned long long)pwr);
+        if (!peak_only) {
+            printf("bin[%4u] re=%7ld im=%7ld pwr=%10llu\n",
+                   k, (long)re, (long)im, (unsigned long long)pwr);
+        }
         if (k > 0u && pwr > peak_pwr) {
             peak_pwr = pwr;
             peak_k = k;
@@ -860,6 +920,14 @@ static void cmd_fft_ds(char *args) {
                n,
                (unsigned long long)peak_pwr);
     }
+}
+
+static void cmd_fft_ds(char *args) {
+    run_fft_ds(args, 0);
+}
+
+static void cmd_fft_ds_peak(char *args) {
+    run_fft_ds(args, 1);
 }
 
 static void cmd_cap_arm_pulse(char *a) {
@@ -952,9 +1020,13 @@ static void cmd_ub_info(char *a) {
     (void)a;
     int cal = 0;
     cal = ubddr3_calib_done_read();
+#ifdef CSR_UBDDR3_BASE
     printf("UBDDR3 CSR base: 0x%08lx  calib_done: %d",
            (unsigned long)CSR_UBDDR3_BASE, cal);
-    printf("  (UBDDR3_MEM_BASE: 0x%08lx)\n", (unsigned long)UBDDR3_MEM_BASE);
+#else
+    printf("UBDDR3 CSR base: <not exported>  calib_done: %d", cal);
+#endif
+    printf("\n");
 }
 
 static void cmd_ub_mode(char *a) {
@@ -991,15 +1063,18 @@ static void cmd_ub_start(char *args) {
     char *tok_addr  = strtok(p, " \t");
     char *tok_beats = strtok(NULL, " \t");
     char *tok_size  = strtok(NULL, " \t");
+    uint64_t addr;
+    uint32_t beats;
+    uint8_t  sz;
 
     if (!tok_addr) {
         puts("Usage: ub_start <addr_hex> [beats] [size]");
         return;
     }
 
-    uint64_t addr  = strtoull(tok_addr, NULL, 0);
-    uint32_t beats = (uint32_t)(tok_beats ? strtoul(tok_beats, NULL, 0) : 256);
-    uint8_t  sz    = ub_size_to_code(tok_size);
+    addr = strtoull(tok_addr, NULL, 0);
+    beats = (uint32_t)(tok_beats ? strtoul(tok_beats, NULL, 0) : 256u);
+    sz = ub_size_to_code(tok_size);
 
     unsigned mode = main_cap_enable_read() & 1u;
 
@@ -1243,16 +1318,17 @@ static const struct cmd_entry uc_tbl[] = {
     {"lowspeed_dbg_select",  cmd_lowspeed_dbg_select, "Select low-speed debug source (0..4)"},
     {"highspeed_dbg_select", cmd_highspeed_dbg_select,"Select high-speed debug source (0..3)"},
 
-    {"upsampler_x",          cmd_upsampler_x,         "Write upsampler_input_x (signed 16-bit)"},
-    {"upsampler_y",          cmd_upsampler_y,         "Write upsampler_input_y (signed 16-bit)"},
-    {"ds_pop",               cmd_ds_pop,              "Pop one downsampled sample from FIFO"},
+    {"upsampler_x",          cmd_upsampler_x,         "Write upsampler_input_x1..x5 (signed 16-bit)"},
+    {"upsampler_y",          cmd_upsampler_y,         "Write upsampler_input_y1..y5 (signed 16-bit)"},
+    {"ds_pop",               cmd_ds_pop,              "Pop one 5-channel downsampled frame from FIFO"},
     {"ds_status",            cmd_ds_status,           "Show downsample FIFO readable/overflow"},
-    {"ups_push",             cmd_ups_push,            "Push one sample into upsampler FIFO"},
+    {"ups_push",             cmd_ups_push,            "Push one replicated 5-channel frame into upsampler FIFO"},
     {"ups_status",           cmd_ups_status,          "Show upsampler FIFO writable/overflow"},
     {"dsp_test",             cmd_dsp_test,            "Run DSP loop over FIFO samples (optional N)"},
     {"dsp_run",              cmd_dsp_run,             "Enable/disable non-blocking DSP pump"},
     {"fft_fs",               cmd_fft_fs,              "Set DS sample rate (Hz) used by fft_ds"},
-    {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples"},
+    {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples and print bins"},
+    {"fft_ds_peak",          cmd_fft_ds_peak,         "Run FFT over downsample FIFO IQ samples and print peak only"},
 
     {"gain1",                cmd_gain1,               "Set gain1"},
     {"gain2",                cmd_gain2,               "Set gain2"},
@@ -1403,8 +1479,8 @@ void uberclock_init(void) {
     main_lowspeed_dbg_select_write(5);
     main_highspeed_dbg_select_write(0);
 
-    main_upsampler_input_x_write(0);
-    main_upsampler_input_y_write(0);
+    write_upsampler_inputs_all_x(0);
+    write_upsampler_inputs_all_y(0);
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);

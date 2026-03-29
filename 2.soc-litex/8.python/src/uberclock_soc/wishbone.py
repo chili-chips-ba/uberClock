@@ -4,11 +4,10 @@
 # ===============================================
 # Glue modules that adapt LiteX/Migen Wishbone busses to the
 # pipelined wishbone used by the external UberDDR3 controller RTL.
-#
+
 
 from __future__ import annotations
 
-from migen import *
 from litex.gen import *
 from litex.soc.interconnect import wishbone as wb
 

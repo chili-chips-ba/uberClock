@@ -59,14 +59,14 @@ class BaseSoC(SoCCore):
       - idelay   : IDELAYCTRL reference, 200 MHz
 
     Memory options:
-      - Integrated LiteX main RAM (default 64 KiB)
+      - Integrated LiteX main RAM (default 512 KiB)
       - Optional LiteDRAM (if integrated_main_ram_size == 0 AND not using UberDDR3)
       - Optional UberDDR3 as *side memory* mapped at 0xA0000000
     """
 
     # ---- Useful constants for readability / maintenance ----
     SYS_CLK_HZ_DEFAULT        = 100e6
-    INTEGRATED_MAIN_RAM_BYTES = 64 * 1024
+    INTEGRATED_MAIN_RAM_BYTES = 256 * 1024
 
     UBDDR3_BASE               = 0xA000_0000
     UBDDR3_SIZE               = 0x1000_0000
@@ -335,8 +335,22 @@ def build_main() -> None:
 
     parser.add_argument("--with-uberclock", action="store_true")
     parser.add_argument("--with-uberddr3", action="store_true")
+    parser.add_argument(
+        "--with-sdram-main-ram",
+        action="store_true",
+        help="Use external DDR3/LiteDRAM as main_ram instead of the default 512 KiB integrated RAM.",
+    )
 
     args = parser.parse_args()
+
+    if args.with_sdram_main_ram and args.with_uberddr3:
+        parser.error(
+            "--with-sdram-main-ram and --with-uberddr3 are mutually exclusive: "
+            "both modes require ownership of the same DDR3 device."
+        )
+
+    if args.with_sdram_main_ram:
+        parser.soc_argdict["integrated_main_ram_size"] = 0
 
     soc = BaseSoC(
         toolchain=args.toolchain,
