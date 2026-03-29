@@ -155,18 +155,22 @@ static void cmd_fft32_ds_y(char *args) {
 
 
 #define SIG3_ENABLE_DEFAULT 1
+#define SIG3_CHANNELS 5
+#define SIG3_TONES    3
 
 static volatile int sig3_enable = 0;
+static uint8_t sig3_channel_enable[SIG3_CHANNELS] = {1u, 0u, 0u, 0u, 0u};
 
-/* 32-bit DDS phase accumulators */
-static uint32_t sig3_ph_940  = 0;
-static uint32_t sig3_ph_1000 = 0;
-static uint32_t sig3_ph_1060 = 0;
-
-/* phase increments for Fs = 10 kHz */
-static uint32_t sig3_inc_940  = 0;
-static uint32_t sig3_inc_1000 = 0;
-static uint32_t sig3_inc_1060 = 0;
+/* 32-bit DDS phase accumulators/increments for 5 channels x 3 tones. */
+static uint32_t sig3_phase[SIG3_CHANNELS][SIG3_TONES];
+static uint32_t sig3_inc[SIG3_CHANNELS][SIG3_TONES];
+static uint32_t sig3_freq_hz[SIG3_CHANNELS][SIG3_TONES] = {
+    { 980u, 1000u, 1020u},
+    { 940u,  960u,  980u},
+    { 980u, 1000u, 1020u},
+    {1020u, 1040u, 1060u},
+    {1060u, 1080u, 1100u},
+};
 
 /* per-tone amplitude in output counts */
 static int16_t sig3_amp = 3000;
@@ -186,6 +190,16 @@ static uint32_t sig3_phase_inc(uint32_t f_hz, uint32_t fs_hz) {
     return (uint32_t)(((uint64_t)f_hz << 32) / fs_hz);
 }
 
+static void sig3_update_increments(void) {
+    unsigned ch, tone;
+
+    for (ch = 0; ch < SIG3_CHANNELS; ch++) {
+        for (tone = 0; tone < SIG3_TONES; tone++) {
+            sig3_inc[ch][tone] = sig3_phase_inc(sig3_freq_hz[ch][tone], 10000u);
+        }
+    }
+}
+
 static inline int16_t sig3_sin_u32(uint32_t ph) {
     uint8_t q = (uint8_t)(ph >> 30);          /* quadrant 0..3 */
     uint8_t idx = (uint8_t)((ph >> 24) & 0x3f); /* 0..63 within quadrant */
@@ -199,21 +213,26 @@ static inline int16_t sig3_sin_u32(uint32_t ph) {
 }
 
 static void sig3_start(void) {
-    sig3_ph_940  = 0;
-    sig3_ph_1000 = 0;
-    sig3_ph_1060 = 0;
-
-    sig3_inc_940  = sig3_phase_inc( 980, 10000);
-    sig3_inc_1000 = sig3_phase_inc(1000, 10000);
-    sig3_inc_1060 = sig3_phase_inc(1020, 10000);
+    memset(sig3_phase, 0, sizeof(sig3_phase));
+    sig3_update_increments();
+    sig3_channel_enable[0] = 1u;
+    sig3_channel_enable[1] = 0u;
+    sig3_channel_enable[2] = 0u;
+    sig3_channel_enable[3] = 0u;
+    sig3_channel_enable[4] = 0u;
 
     sig3_enable = 1;
-    puts("3-tone software generator enabled");
+    puts("sig3 enabled on ch1 only");
 }
 
 static void sig3_stop(void) {
+    unsigned ch;
+
+    for (ch = 0; ch < SIG3_CHANNELS; ch++) {
+        sig3_channel_enable[ch] = 0u;
+    }
     sig3_enable = 0;
-    puts("3-tone software generator disabled");
+    puts("5-channel 3-tone software generator disabled");
 }
 
 static inline int16_t sig3_clamp_s16(int32_t x) {
@@ -222,34 +241,43 @@ static inline int16_t sig3_clamp_s16(int32_t x) {
     return (int16_t)x;
 }
 
-static int sig3_step(int16_t *x, int16_t *y) {
+static int sig3_step(iq5_frame_t *frame) {
+    unsigned ch, tone;
+
     if (!sig3_enable) return 0;
 
-    sig3_ph_940  += sig3_inc_940;
-    sig3_ph_1000 += sig3_inc_1000;
-    sig3_ph_1060 += sig3_inc_1060;
+    for (ch = 0; ch < SIG3_CHANNELS; ch++) {
+        int32_t acc = 0;
 
-    int32_t s1 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_940))  / 32767;
-    int32_t s2 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1000)) / 32767;
-    int32_t s3 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1060)) / 32767;
+        if (!sig3_channel_enable[ch]) {
+            frame->x[ch] = 0;
+            frame->y[ch] = 0;
+            continue;
+        }
 
-    *x = sig3_clamp_s16(s1 + s2 + s3);
-    *y = 0;
+        for (tone = 0; tone < SIG3_TONES; tone++) {
+            sig3_phase[ch][tone] += sig3_inc[ch][tone];
+            acc += ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_phase[ch][tone])) / 32767;
+        }
+
+        frame->x[ch] = sig3_clamp_s16(acc);
+        frame->y[ch] = 0;
+    }
     return 1;
 }
 
 static void sig3_push_one(void) {
     unsigned flags;
-    int16_t x, y;
+    iq5_frame_t frame;
 
     flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
     if (((flags >> 1) & 1u) == 0u)
         return;
 
-    if (!sig3_step(&x, &y))
+    if (!sig3_step(&frame))
         return;
 
-    ups_fifo_write_replicated(x, y);
+    ups_fifo_write_frame(&frame);
 }
 static void cmd_sig3_amp(char *a) {
     int v = parse_s(a, 1, 10000, "sig3_amp");
@@ -257,6 +285,76 @@ static void cmd_sig3_amp(char *a) {
     sig3_amp = (int16_t)v;
     printf("sig3 amplitude per tone = %d\n", sig3_amp);
 }
+
+static void cmd_sig3_freqs(char *args) {
+    char *tok_ch = strtok(args, " \t");
+    char *tok_f1 = strtok(NULL, " \t");
+    char *tok_f2 = strtok(NULL, " \t");
+    char *tok_f3 = strtok(NULL, " \t");
+    unsigned ch;
+    unsigned f1, f2, f3;
+
+    if (!tok_ch || !tok_f1 || !tok_f2 || !tok_f3) {
+        puts("Usage: sig3_freqs <ch:1..5> <f1_hz> <f2_hz> <f3_hz>");
+        return;
+    }
+
+    ch = (unsigned)strtoul(tok_ch, NULL, 0);
+    if (ch < 1u || ch > SIG3_CHANNELS) {
+        puts("sig3_freqs channel must be 1..5");
+        return;
+    }
+
+    f1 = (unsigned)strtoul(tok_f1, NULL, 0);
+    f2 = (unsigned)strtoul(tok_f2, NULL, 0);
+    f3 = (unsigned)strtoul(tok_f3, NULL, 0);
+    if (f1 == 0u || f2 == 0u || f3 == 0u) {
+        puts("sig3_freqs frequencies must be > 0 Hz");
+        return;
+    }
+
+    sig3_freq_hz[ch - 1u][0] = f1;
+    sig3_freq_hz[ch - 1u][1] = f2;
+    sig3_freq_hz[ch - 1u][2] = f3;
+    sig3_update_increments();
+
+    printf("sig3 ch%u freqs = %u, %u, %u Hz\n", ch, f1, f2, f3);
+}
+
+static void cmd_sig3_enable_ch(char *a) {
+    unsigned ch = (unsigned)strtoul(a ? a : "0", NULL, 0);
+
+    if (ch < 1u || ch > SIG3_CHANNELS) {
+        puts("sig3_enable_ch channel must be 1..5");
+        return;
+    }
+
+    sig3_enable = 1;
+    sig3_channel_enable[ch - 1u] = 1u;
+    printf("sig3 channel %u enabled\n", ch);
+}
+
+static void cmd_sig3_disable_ch(char *a) {
+    unsigned ch = (unsigned)strtoul(a ? a : "0", NULL, 0);
+    unsigned any_enabled = 0u;
+    unsigned i;
+
+    if (ch < 1u || ch > SIG3_CHANNELS) {
+        puts("sig3_disable_ch channel must be 1..5");
+        return;
+    }
+
+    sig3_channel_enable[ch - 1u] = 0u;
+    for (i = 0; i < SIG3_CHANNELS; i++) {
+        if (sig3_channel_enable[i]) {
+            any_enabled = 1u;
+            break;
+        }
+    }
+    sig3_enable = (int)any_enabled;
+    printf("sig3 channel %u disabled\n", ch);
+}
+
 static void cmd_sig3_start(char *a) {
     (void)a;
     sig3_start();
@@ -430,6 +528,12 @@ static void uc_help(char *args) {
 
     puts("  upsampler_x          <val>  (signed 16-bit, replicated to ch1..ch5)");
     puts("  upsampler_y          <val>  (signed 16-bit, replicated to ch1..ch5)");
+    puts("  sig3_start                  (start 5 independent 3-tone generators)");
+    puts("  sig3_stop                   (stop 5 independent 3-tone generators)");
+    puts("  sig3_amp           <val>    (per-tone amplitude, shared by all channels)");
+    puts("  sig3_freqs <ch> <f1> <f2> <f3> (set 3-tone frequencies for one channel)");
+    puts("  sig3_enable_ch     <ch>     (enable one sig3 channel)");
+    puts("  sig3_disable_ch    <ch>     (disable one sig3 channel)");
     puts("  ds_pop                      (pop one 5-channel downsampled frame)");
     puts("  ds_status                   (read downsample FIFO flags/overflow)");
     puts("  ups_push <x> <y>             (enqueue one 5-channel frame, replicated)");
@@ -1361,9 +1465,12 @@ static const struct cmd_entry uc_tbl[] = {
     {"ub_hexdump",           cmd_ub_hexdump,          "Hexdump DDR memory"},
     {"ub_send",              cmd_ub_send,             "Send DDR memory region via UDP"},
     {"fft32_ds_y", cmd_fft32_ds_y, "Real FFT of 32 Y samples from DS FIFO"},
-    {"sig3_start", cmd_sig3_start, "Start 3-tone software generator"},
-    {"sig3_stop",  cmd_sig3_stop,  "Stop 3-tone software generator"},
-    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude"},
+    {"sig3_start", cmd_sig3_start, "Start 5 independent 3-tone software generators"},
+    {"sig3_stop",  cmd_sig3_stop,  "Stop 5 independent 3-tone software generators"},
+    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude shared by all channels"},
+    {"sig3_freqs", cmd_sig3_freqs, "Set channel 3-tone frequencies: sig3_freqs <ch> <f1> <f2> <f3>"},
+    {"sig3_enable_ch",  cmd_sig3_enable_ch,  "Enable one sig3 channel: sig3_enable_ch <ch>"},
+    {"sig3_disable_ch", cmd_sig3_disable_ch, "Disable one sig3 channel: sig3_disable_ch <ch>"},
 };
 
 void uberclock_register_cmds(void) {
