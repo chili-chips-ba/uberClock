@@ -42,7 +42,7 @@ SECTIONS
 		*(.sdata .sdata.* .gnu.linkonce.s.*)
 		. = ALIGN(8);
 		_edata = .;
-	} > sram AT > main_ram
+	} > data_ram AT > main_ram
 
 	.bss :
 	{
@@ -57,10 +57,10 @@ SECTIONS
 		. = ALIGN(8);
 		_ebss = .;
 		_end = .;
-	} > sram
+	} > data_ram
 }
 
-PROVIDE(_fstack = ORIGIN(sram) + LENGTH(sram));
+PROVIDE(_fstack = ORIGIN(data_ram) + LENGTH(data_ram));
 PROVIDE(__stack = _fstack);
 PROVIDE(__heap_start = _end);
 PROVIDE(__heap_end = __stack - (DEFINED(__stack_size) ? __stack_size : 0x800));

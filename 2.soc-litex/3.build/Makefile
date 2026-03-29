@@ -66,6 +66,7 @@ build-sw:
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
 	  --mem=main_ram \
+	  --data-mem=main_ram\
 	  $(DEMO_FLAGS)
 
 load:

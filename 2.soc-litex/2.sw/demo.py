@@ -30,6 +30,11 @@ def main():
         help="Memory Region where code will be loaded/executed."
     )
     parser.add_argument(
+        "--data-mem",
+        default="sram",
+        help="Memory Region where .data,.bss,  heap, stack will be placed."
+    )
+    parser.add_argument(
         "--app-dir",
         default="uberClock",
         help="Name of the application directory to create (default: uberClock)."
@@ -49,6 +54,7 @@ def main():
 
     # 3) Update memory region in linker script
     replace_in_file(f"{app_dir}/linker.ld", "main_ram", args.mem)
+    replace_in_file(f"{app_dir}/linker.ld", "data_ram", args.data_mem)
 
     # 4) Patch Makefile so CRT0_SRC points at this venv’s litex
     import litex, os as _os

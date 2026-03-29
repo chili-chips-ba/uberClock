@@ -234,8 +234,8 @@ static unsigned dsp_swq_count = 0;
 /* Fixed-cadence DSP pumping is driven from ce_down ISR. */
 static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
 
-#define FFT_MAX_N 256u
-#define FFT_CFG_MAX_BYTES 4096u
+#define FFT_MAX_N 2048u
+#define FFT_CFG_MAX_BYTES 32768u
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
@@ -1364,7 +1364,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10327455);
+    main_phase_inc_down_1_write(10327486);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
@@ -1408,8 +1408,8 @@ void uberclock_init(void) {
 
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
-    cmd_dsp_run("0");
-    fsm_init();
+    cmd_dsp_run("1");
+    // fsm_init();
     sig3_start();
     uc_commit();
 

@@ -66,7 +66,7 @@ class BaseSoC(SoCCore):
 
     # ---- Useful constants for readability / maintenance ----
     SYS_CLK_HZ_DEFAULT        = 100e6
-    INTEGRATED_MAIN_RAM_BYTES = 64 * 1024
+    INTEGRATED_MAIN_RAM_BYTES = 256 * 1024
 
     UBDDR3_BASE               = 0xA000_0000
     UBDDR3_SIZE               = 0x1000_0000
