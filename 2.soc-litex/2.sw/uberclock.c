@@ -231,6 +231,17 @@ static void sig3_stop(void) {
     for (ch = 0; ch < SIG3_CHANNELS; ch++) {
         sig3_channel_enable[ch] = 0u;
     }
+    {
+        iq5_frame_t frame = {0};
+        unsigned limit = 100000u;
+        while (limit--) {
+            unsigned flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
+            if (((flags >> 1) & 1u) != 0u) {
+                ups_fifo_write_frame(&frame);
+                break;
+            }
+        }
+    }
     sig3_enable = 0;
     puts("5-channel 3-tone software generator disabled");
 }
@@ -264,6 +275,37 @@ static int sig3_step(iq5_frame_t *frame) {
         frame->y[ch] = 0;
     }
     return 1;
+}
+
+static int sig3_push_update_now(void) {
+    iq5_frame_t frame;
+    unsigned limit;
+
+    if (!sig3_step(&frame))
+        return 0;
+
+    limit = 100000u;
+    while (limit--) {
+        unsigned flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
+        if (((flags >> 1) & 1u) != 0u) {
+            ups_fifo_write_frame(&frame);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void sig3_push_zero_now(void) {
+    iq5_frame_t frame = {0};
+    unsigned limit = 100000u;
+
+    while (limit--) {
+        unsigned flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
+        if (((flags >> 1) & 1u) != 0u) {
+            ups_fifo_write_frame(&frame);
+            return;
+        }
+    }
 }
 
 static void sig3_push_one(void) {
@@ -351,7 +393,13 @@ static void cmd_sig3_disable_ch(char *a) {
             break;
         }
     }
-    sig3_enable = (int)any_enabled;
+    if (any_enabled) {
+        sig3_enable = 1;
+        (void)sig3_push_update_now();
+    } else {
+        sig3_push_zero_now();
+        sig3_enable = 0;
+    }
     printf("sig3 channel %u disabled\n", ch);
 }
 
@@ -1547,7 +1595,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10327455);
+    main_phase_inc_down_1_write(10327476);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);

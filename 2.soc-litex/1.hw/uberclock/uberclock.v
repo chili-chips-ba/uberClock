@@ -186,8 +186,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    assign  downsampled_data_x = downsampled_x1;
-    assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x1 = downsampled_x1;
+    assign  downsampled_data_y1 = downsampled_y1;
     assign  magnitude = rx0_magnitude1;
     assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -269,8 +269,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x2 = downsampled_x2;
+    assign  downsampled_data_y2 = downsampled_y2;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -350,8 +350,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x3 = downsampled_x3;
+    assign  downsampled_data_y3 = downsampled_y3;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -430,8 +430,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x4 = downsampled_x4;
+    assign  downsampled_data_y4 = downsampled_y4;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -510,8 +510,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x5 = downsampled_x5;
+    assign  downsampled_data_y5 = downsampled_y5;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------

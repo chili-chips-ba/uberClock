@@ -163,7 +163,7 @@ def add_uberclock_fullrate(soc, leds):
         "ups_in_y2":            m.upsampler_input_y2.storage,
         "ups_in_x3":            m.upsampler_input_x3.storage,
         "ups_in_y3":            m.upsampler_input_y3.storage,
-        "ups_in_x4":             m.upsampler_input_x4.storage,
+        "ups_in_x4":            m.upsampler_input_x4.storage,
         "ups_in_y4":            m.upsampler_input_y4.storage,
         "ups_in_x5":            m.upsampler_input_x5.storage,
         "ups_in_y5":            m.upsampler_input_y5.storage,
