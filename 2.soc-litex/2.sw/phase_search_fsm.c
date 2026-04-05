@@ -1,5 +1,5 @@
-#include "fsm_algorithm.h"
-#include "uberclock.h"
+#include "phase_search_fsm.h"
+#include "uberclock/uberclock.h"
 
 #include <generated/csr.h>
 #include <generated/soc.h>
@@ -11,7 +11,7 @@ static volatile uint32_t ce_ticks = 0;
 int8_t sgn = 1;
 int16_t mag;
 int32_t phase_val;
-void fsm_init(void) {
+void phase_search_fsm_init(void) {
  curr_state = IDLE; 
  ce_ticks= 0;
  max_mag = 0;
@@ -20,7 +20,7 @@ void fsm_init(void) {
 }
 static void cmd_phase_print(){  printf("Phase %ld\n", (long)phase_val); }
 static void cmd_magnitude  (){  printf("Magnitude %d\n", mag); }
-void tran(void) {
+void phase_search_fsm_step(void) {
     switch (curr_state) {
         case IDLE: {
             if (ce_ticks == 39999 ) {

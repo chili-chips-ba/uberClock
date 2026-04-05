@@ -2,20 +2,19 @@
 #include <irq.h>
 #include <libbase/uart.h>
 #include "console.h"
-#include "uberclock.h"
+#include "uberclock/uberclock.h"
 #include "ubddr3.h"
-#include "fsm_algorithm.h"
 
-extern void donut(void);
-extern void helloc(void);
+extern void ascii_donut_run(void);
+extern void hello_c_run(void);
 #ifdef WITH_CXX
-extern void hellocpp(void);
+extern void hello_cpp_run(void);
 #endif
 
-static void cmd_donut(char *a){ (void)a; puts_help_header("Donut"); donut(); }
-static void cmd_helloc(char *a){ (void)a; puts_help_header("Hello C"); helloc(); }
+static void cmd_donut(char *a){ (void)a; puts_help_header("ASCII Donut"); ascii_donut_run(); }
+static void cmd_hello_c(char *a){ (void)a; puts_help_header("Hello C"); hello_c_run(); }
 #ifdef WITH_CXX
-static void cmd_hellocpp(char *a){ (void)a; puts_help_header("Hello C++"); hellocpp(); }
+static void cmd_hello_cpp(char *a){ (void)a; puts_help_header("Hello C++"); hello_cpp_run(); }
 #endif
 static void cmd_help_root(char *a){
 	(void)a;
@@ -23,19 +22,21 @@ static void cmd_help_root(char *a){
 	puts("  help_uc             - UberClock command list");
 	puts("  help_ddr            - DDR/UberDDR3 memory command list");
 	puts("  ddrinfo/ddrwait/... - DDR helpers (see also: ddrtest, ddrpat, timertest)");
-	puts("  donut | helloc"
+	puts("  donut | hello_c"
 	#ifdef WITH_CXX
-	" | hellocpp"
+	" | hello_cpp"
 	#endif
 	);
 }
 
 static const struct cmd_entry g_root_cmds[] = {
-	{ "help",   cmd_help_root },
-	{ "donut",  cmd_donut     },
-	{ "helloc", cmd_helloc    },
+	{ "help",    cmd_help_root },
+	{ "donut",   cmd_donut     },
+	{ "hello_c", cmd_hello_c   },
+	{ "helloc",  cmd_hello_c   },
 	#ifdef WITH_CXX
-	{ "hellocpp", cmd_hellocpp },
+	{ "hello_cpp", cmd_hello_cpp },
+	{ "hellocpp",  cmd_hello_cpp },
 	#endif
 };
 

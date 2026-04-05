@@ -47,6 +47,7 @@ from migen.genlib.cdc import PulseSynchronizer, MultiReg, ClockDomainsRenamer
 from migen.genlib.fifo import AsyncFIFO
 
 from .uberclock_csrs import UberClockCSRBank
+from .uberclock_regspec import build_uc_config_map
 from .csr_snapshot_fifo import CsrConfigSnapshotFIFO
 from .rtl_sources import add_sources
 from .rtl_filelist import UBERCLOCK_RTL_FILES
@@ -113,70 +114,7 @@ def add_uberclock_fullrate(soc, leds):
     # SYS->UC configuration snapshot FIFO
     # -------------------------------------------------------------------------
     # Each dictionary entry becomes an `out_<name>_uc` Signal in UC domain.
-    cfg_sys = {
-        # Muxing / IO routing
-        "input_select":         m.input_select.storage,
-        "output_sel_ch1":       m.output_select_ch1.storage,
-        "output_sel_ch2":       m.output_select_ch2.storage,
-        "upsampler_input_mux":  m.upsampler_input_mux.storage,
-
-        # Main NCO (shared)
-        "phase_inc_nco":        m.phase_inc_nco.storage,
-        "nco_mag":              m.nco_mag.storage,
-
-        # Downsample NCOs
-        "phase_inc_down_1":     m.phase_inc_down_1.storage,
-        "phase_inc_down_2":     m.phase_inc_down_2.storage,
-        "phase_inc_down_3":     m.phase_inc_down_3.storage,
-        "phase_inc_down_4":     m.phase_inc_down_4.storage,
-        "phase_inc_down_5":     m.phase_inc_down_5.storage,
-        "phase_inc_down_ref":   m.phase_inc_down_ref.storage,
-
-        # CPU-driven NCOs (per-channel)
-        "phase_inc_cpu1":       m.phase_inc_cpu1.storage,
-        "phase_inc_cpu2":       m.phase_inc_cpu2.storage,
-        "phase_inc_cpu3":       m.phase_inc_cpu3.storage,
-        "phase_inc_cpu4":       m.phase_inc_cpu4.storage,
-        "phase_inc_cpu5":       m.phase_inc_cpu5.storage,
-
-        "mag_cpu1":             m.mag_cpu1.storage,
-        "mag_cpu2":             m.mag_cpu2.storage,
-        "mag_cpu3":             m.mag_cpu3.storage,
-        "mag_cpu4":             m.mag_cpu4.storage,
-        "mag_cpu5":             m.mag_cpu5.storage,
-
-        # Debug selection
-        "lowspeed_dbg_select":  m.lowspeed_dbg_select.storage,
-        "highspeed_dbg_select": m.highspeed_dbg_select.storage,
-
-        # DSP gains
-        "gain1":                m.gain1.storage,
-        "gain2":                m.gain2.storage,
-        "gain3":                m.gain3.storage,
-        "gain4":                m.gain4.storage,
-        "gain5":                m.gain5.storage,
-
-        # CPU-fed upsampler injection
-        "ups_in_x1":            m.upsampler_input_x1.storage,
-        "ups_in_y1":            m.upsampler_input_y1.storage,
-        "ups_in_x2":            m.upsampler_input_x2.storage,
-        "ups_in_y2":            m.upsampler_input_y2.storage,
-        "ups_in_x3":            m.upsampler_input_x3.storage,
-        "ups_in_y3":            m.upsampler_input_y3.storage,
-        "ups_in_x4":            m.upsampler_input_x4.storage,
-        "ups_in_y4":            m.upsampler_input_y4.storage,
-        "ups_in_x5":            m.upsampler_input_x5.storage,
-        "ups_in_y5":            m.upsampler_input_y5.storage,
-        "final_shift":          m.final_shift.storage,
-
-        # High-speed DDR capture control (used if soc.ubddr3 exists)
-        "cap_enable":           m.cap_enable.storage,
-        "cap_beats":            m.cap_beats.storage,
-
-        # Low-speed capture RAM control (if present in uberclock.v)
-        "cap_arm":              m.cap_arm.storage,
-        "cap_idx":              m.cap_idx.storage,
-    }
+    cfg_sys = build_uc_config_map(m)
 
     soc.submodules.cfg_link = CsrConfigSnapshotFIFO(cfg_sys, cd_write="sys", cd_read="uc", fifo_depth=4)
     soc.add_csr("cfg_link")
@@ -348,6 +286,7 @@ def add_uberclock_fullrate(soc, leds):
     soc.specials += MultiReg(cap_data_uc, cap_data_sys, "sys")
 
     soc.comb += [
+        m.example_status.status.eq(m.example_control.storage),
         m.cap_done.status.eq(cap_done_sys),
         m.cap_data.status.eq(cap_data_sys),
     ]

@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+MAKEFLAGS += --no-print-directory
 
 MAKEFILE_DIR  := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 PROJECT_ROOT  := $(realpath $(MAKEFILE_DIR)/..)
@@ -49,9 +50,10 @@ help:
 # Build / Load using your repo target
 # ----------------------------
 build-board:
-	@echo "[build] target=$(TARGET_PY)"
-	@echo "[build] sys_clk=$(FREQ) options=$(OPTIONS)"
-	source $(LITEX_VENV)/bin/activate && \
+	@printf '[build-board] board=%s freq=%s\n' "$(BOARD)" "$(FREQ)"
+	@printf '  - options: %s\n' "$(OPTIONS)"
+	@printf '  - target: %s\n' "$(TARGET_PY)"
+	@source $(LITEX_VENV)/bin/activate && \
 	PYTHONPATH=$(PYTHONPATH_REPO) \
 	$(PYTHON) $(TARGET_PY) \
 	  --build \
@@ -61,23 +63,30 @@ build-board:
 #  Build & run software example under 2.sw/
 # ——————————————————————————————————————————————————————————————
 build-sw:
-	@echo "[software build] code_mem=$(SW_CODE_MEM) data_mem=$(SW_DATA_MEM) WITH_CXX=$(WITH_CXX)"
-	@echo "→ Building software in place from $(SW_DIR)"
-	source $(LITEX_VENV)/bin/activate && \
+	@printf '[build-sw] board=%s code_mem=%s data_mem=%s with_cxx=%s\n' "$(BOARD)" "$(SW_CODE_MEM)" "$(SW_DATA_MEM)" "$(if $(WITH_CXX),1,0)"
+	@printf '  - app dir: %s\n' "$(SW_DIR)"
+	@printf '  - build dir: %s\n' "$(BUILD_DIR)/build/$(BOARD)"
+	@source $(LITEX_VENV)/bin/activate && \
 	export BUILD_DIR=$(BUILD_DIR)/build/$(BOARD) && \
 	export WITH_CXX=$(WITH_CXX) && \
 	tmp_linker=$$(mktemp) && \
-	cp $(SW_DIR)/linker.ld $$tmp_linker && \
-	trap 'cp $$tmp_linker $(SW_DIR)/linker.ld; rm -f $$tmp_linker' EXIT && \
+	cleanup() { cp "$$tmp_linker" $(SW_DIR)/linker.ld; rm -f "$$tmp_linker"; }; \
+	cp $(SW_DIR)/linker.ld "$$tmp_linker" && \
+	trap cleanup EXIT && \
+	printf '  - patch linker regions\n' && \
 	sed -i 's/main_ram/$(SW_CODE_MEM)/g; s/data_ram/$(SW_DATA_MEM)/g' $(SW_DIR)/linker.ld && \
-	$(MAKE) -C $(SW_DIR) clean && \
+	printf '  - clean software\n' && \
+	$(MAKE) -s -C $(SW_DIR) clean && \
+	printf '  - compile software\n' && \
 	$(MAKE) -C $(SW_DIR) && \
+	printf '  - generate demo.fbi\n' && \
 	$(PYTHON) -m litex.soc.software.crcfbigen \
 	  $(SW_DIR)/demo.bin -o $(SW_DIR)/demo.fbi --fbi --little
 
 load:
-	@echo "[load] target=$(TARGET_PY)"
-	source $(LITEX_VENV)/bin/activate && \
+	@printf '[load] board=%s freq=%s\n' "$(BOARD)" "$(FREQ)"
+	@printf '  - options: %s\n' "$(OPTIONS)"
+	@source $(LITEX_VENV)/bin/activate && \
 	PYTHONPATH=$(PYTHONPATH_REPO) \
 	$(PYTHON) $(TARGET_PY) \
 	  --load \
@@ -85,24 +94,25 @@ load:
 	  $(OPTIONS)
 
 term:
-	@echo "[term] port=$(PORT)"
-	source $(LITEX_VENV)/bin/activate && \
+	@printf '[term] port=%s\n' "$(PORT)"
+	@source $(LITEX_VENV)/bin/activate && \
 	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
 	if [ -z "$${KERNEL_PATH}" ]; then \
 	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
 	  exit 1; \
 	fi; \
+	printf '  - kernel: %s\n' "$${KERNEL_PATH}"; \
 	litex_term $(PORT) --kernel="$${KERNEL_PATH}"
 
 # ----------------------------
 # Cleaning
 # ----------------------------
 clean-gateware:
-	@echo "[clean] removing gateware build output"
-	rm -rf $(BUILD_DIR)/build/$(BOARD)
+	@printf '[clean-gateware] %s\n' "$(BUILD_DIR)/build/$(BOARD)"
+	@rm -rf $(BUILD_DIR)/build/$(BOARD)
 
 clean:
-	@echo "[clean] removing build + logs + temp"
-	rm -rf $(BUILD_DIR)/build/$(BOARD)
-	rm -f $(SERVER_PID)
-	rm -f $(BUILD_DIR)/litex_server.log
+	@printf '[clean] removing build artifacts\n'
+	@rm -rf $(BUILD_DIR)/build/$(BOARD)
+	@rm -f $(SERVER_PID)
+	@rm -f $(BUILD_DIR)/litex_server.log

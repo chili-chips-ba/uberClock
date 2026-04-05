@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-void helloc(void);
-void helloc(void) {
+void hello_c_run(void);
+void hello_c_run(void) {
   printf("C: Hello, world!\n");
 }

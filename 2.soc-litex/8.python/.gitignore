@@ -1,0 +1,12 @@
+# IDE
+.idea/
+
+# Python packaging/build artifacts
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+
+# Generated documentation
+docs/build/
