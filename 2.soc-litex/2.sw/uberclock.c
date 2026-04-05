@@ -239,10 +239,141 @@ static unsigned dsp_pump_step(unsigned max_in, unsigned max_out);
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
-static uint32_t fft_fs_hz = 1000000u;
+static uint32_t fft_fs_hz = 10000u;
+
+#define TRACK3_RF_FS_HZ            65000000u
+#define TRACK3_DEFAULT_STEP_HZ     5u
+#define TRACK3_DEFAULT_MAX_STEPS   400u
+#define TRACK3_DEFAULT_N           2048u
+#define TRACK3_DEFAULT_SETTLE      1024u
+#define TRACK3_DEFAULT_CENTER_HZ   1000u
+#define TRACK3_DEFAULT_DELTA_HZ    20u
+#define TRACK3_DEFAULT_BAND_BINS   1u
+#define TRACK3_FIFO_WAIT_POLLS     1000000u
+#define TRACK3_SIDE_MIN_PCT        2u
+#define TRACK3_SIDE_MAX_PCT        95u
+#define TRACK3_SIDE_BALANCE_PCT    40u
 
 static inline int is_pow2_u(unsigned x) {
     return (x != 0u) && ((x & (x - 1u)) == 0u);
+}
+
+static uint32_t uc_phase_inc_from_hz(uint32_t f_hz, uint32_t fs_hz) {
+    return (uint32_t)((((uint64_t)f_hz << 26) + (fs_hz / 2u)) / (uint64_t)fs_hz);
+}
+
+static uint32_t uc_phase_inc_to_hz(uint32_t phase_inc, uint32_t fs_hz) {
+    return (uint32_t)((((uint64_t)phase_inc * (uint64_t)fs_hz) + (1u << 25)) >> 26);
+}
+
+static void track3_service_background(void) {
+    if (!ce_event) {
+        return;
+    }
+
+    sig3_push_one();
+    mag = (int16_t)(main_magnitude_read() & 0xffff);
+    ce_event = 0;
+    evm_pending_write(1);
+    evm_enable_write(1);
+}
+
+static int track3_wait_ds_fifo(const char *phase, unsigned sample_idx, unsigned total) {
+    unsigned stall = 0;
+
+    while ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+        track3_service_background();
+        if (++stall >= TRACK3_FIFO_WAIT_POLLS) {
+            printf("track3 %s timeout at sample %u/%u after %u polls\n",
+                   phase, sample_idx, total, stall);
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
+static int capture_ds_fft_ch1(unsigned n, unsigned settle) {
+    for (unsigned i = 0; i < settle; i++) {
+        if (!track3_wait_ds_fifo("settle", i, settle)) {
+            return 0;
+        }
+        main_ds_fifo_pop_write(1);
+        (void)main_ds_fifo_x_read();
+        (void)main_ds_fifo_y_read();
+        (void)main_ds_fifo_x_read();
+        (void)main_ds_fifo_y_read();
+    }
+
+    for (unsigned i = 0; i < n; i++) {
+        int16_t sx;
+
+        if (!track3_wait_ds_fifo("capture", i, n)) {
+            return 0;
+        }
+        main_ds_fifo_pop_write(1);
+
+        /* Match the DS FIFO read sequence used by the working FFT/debug paths. */
+        (void)main_ds_fifo_x_read();
+        (void)main_ds_fifo_y_read();
+        sx = (int16_t)(main_ds_fifo_x_read() & 0xffffu);
+        (void)main_ds_fifo_y_read();
+
+        fft_in[i].r = (kiss_fft_scalar)sx;
+        fft_in[i].i = (kiss_fft_scalar)0;
+    }
+
+    return 1;
+}
+
+static uint64_t fft_bin_power_at(unsigned k) {
+    int32_t re = (int32_t)fft_out[k].r;
+    int32_t im = (int32_t)fft_out[k].i;
+    return (uint64_t)((int64_t)re * re) + (uint64_t)((int64_t)im * im);
+}
+
+static uint64_t fft_band_power_at(unsigned k, unsigned half_bins, unsigned n) {
+    uint64_t pwr = 0;
+    unsigned start = (k > half_bins) ? (k - half_bins) : 0u;
+    unsigned stop = k + half_bins;
+    unsigned bins = n / 2u;
+
+    if (stop >= bins) {
+        stop = bins - 1u;
+    }
+
+    for (unsigned i = start; i <= stop; i++) {
+        pwr += fft_bin_power_at(i);
+    }
+
+    return pwr;
+}
+
+static int track3_triplet_match(uint64_t left_pwr, uint64_t center_pwr, uint64_t right_pwr) {
+    uint64_t min_side;
+    uint64_t max_side;
+
+    if (center_pwr <= left_pwr || center_pwr <= right_pwr) {
+        return 0;
+    }
+    if (left_pwr == 0u || right_pwr == 0u) {
+        return 0;
+    }
+
+    min_side = (left_pwr < right_pwr) ? left_pwr : right_pwr;
+    max_side = (left_pwr > right_pwr) ? left_pwr : right_pwr;
+
+    if ((min_side * 100u) < (center_pwr * TRACK3_SIDE_MIN_PCT)) {
+        return 0;
+    }
+    if ((max_side * 100u) > (center_pwr * TRACK3_SIDE_MAX_PCT)) {
+        return 0;
+    }
+    if ((min_side * 100u) < (max_side * TRACK3_SIDE_BALANCE_PCT)) {
+        return 0;
+    }
+
+    return 1;
 }
 static void cmd_fft64_peak(char *args) {
     (void)args;
@@ -385,6 +516,8 @@ static void uc_help(char *args) {
     puts("  dsp_run <0|1>               (enable/disable non-blocking DSP pump)");
     puts("  fft_ds [N]                  (FFT over DS FIFO IQ samples, N=8/16/32)");
     puts("  fft_fs <Hz>                 (set DS sample rate used for fft_ds Hz print)");
+    puts("  track3 <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
+    puts("                              (sweep phase_down_1 until center tone dominates)");
 
     puts("  cap_arm              (pulse arm capture)");
     puts("  cap_done             (read cap_done)");
@@ -862,6 +995,155 @@ static void cmd_fft_ds(char *args) {
     }
 }
 
+static void cmd_track3(char *args) {
+    char *tok_start  = strtok(args, " \t");
+    char *tok_step   = strtok(NULL, " \t");
+    char *tok_steps  = strtok(NULL, " \t");
+    char *tok_n      = strtok(NULL, " \t");
+    char *tok_center = strtok(NULL, " \t");
+    char *tok_delta  = strtok(NULL, " \t");
+    uint32_t start_hz;
+    uint32_t step_hz;
+    unsigned max_steps;
+    unsigned n;
+    uint32_t center_hz;
+    uint32_t delta_hz;
+    unsigned band_bins = TRACK3_DEFAULT_BAND_BINS;
+    unsigned settle = TRACK3_DEFAULT_SETTLE;
+    uint32_t original_phase_inc;
+    uint32_t sweep_hz;
+    int prev_run;
+    size_t cfg_need = 0;
+    size_t cfg_len;
+    kiss_fft_cfg cfg;
+
+    if (!tok_start) {
+        puts("Usage: track3 <start_phase_down_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
+        return;
+    }
+
+    start_hz   = (uint32_t)strtoul(tok_start, NULL, 0);
+    step_hz    = tok_step   ? (uint32_t)strtoul(tok_step, NULL, 0) : TRACK3_DEFAULT_STEP_HZ;
+    max_steps  = tok_steps  ? (unsigned)strtoul(tok_steps, NULL, 0) : TRACK3_DEFAULT_MAX_STEPS;
+    n          = tok_n      ? (unsigned)strtoul(tok_n, NULL, 0) : TRACK3_DEFAULT_N;
+    center_hz  = tok_center ? (uint32_t)strtoul(tok_center, NULL, 0) : TRACK3_DEFAULT_CENTER_HZ;
+    delta_hz   = tok_delta  ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACK3_DEFAULT_DELTA_HZ;
+
+    if (step_hz == 0u || max_steps == 0u) {
+        puts("track3 requires step_hz > 0 and max_steps > 0");
+        return;
+    }
+    if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
+        printf("track3 requires N to be power-of-2 and <= %u\n", FFT_MAX_N);
+        return;
+    }
+    if (fft_fs_hz == 0u) {
+        puts("track3 requires fft_fs > 0");
+        return;
+    }
+    if (center_hz <= delta_hz) {
+        puts("track3 requires center_hz > delta_hz");
+        return;
+    }
+
+    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    if (cfg_need > (size_t)FFT_CFG_MAX_BYTES) {
+        printf("track3 fft cfg too big: need %lu bytes (max %u)\n",
+               (unsigned long)cfg_need, FFT_CFG_MAX_BYTES);
+        return;
+    }
+
+    cfg_len = (size_t)FFT_CFG_MAX_BYTES;
+    cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    if (!cfg) {
+        puts("track3 kiss_fft_alloc failed");
+        return;
+    }
+
+    original_phase_inc = main_phase_inc_down_1_read();
+    sweep_hz = start_hz;
+    prev_run = (int)dsp_pump_enable;
+    dsp_pump_enable = 0;
+
+    printf("track3: start=%lu Hz step=%lu Hz max_steps=%u N=%u center=%lu Hz delta=%lu Hz Fs=%lu Hz\n",
+           (unsigned long)start_hz,
+           (unsigned long)step_hz,
+           max_steps,
+           n,
+           (unsigned long)center_hz,
+           (unsigned long)delta_hz,
+           (unsigned long)fft_fs_hz);
+
+    for (unsigned step = 0; step < max_steps; step++) {
+        uint32_t phase_inc = uc_phase_inc_from_hz(sweep_hz, TRACK3_RF_FS_HZ);
+        unsigned left_k;
+        unsigned center_k;
+        unsigned right_k;
+        uint64_t left_pwr;
+        uint64_t center_pwr;
+        uint64_t right_pwr;
+
+        main_phase_inc_down_1_write(phase_inc);
+        uc_commit();
+
+        if (!capture_ds_fft_ch1(n, settle)) {
+            main_phase_inc_down_1_write(original_phase_inc);
+            uc_commit();
+            dsp_pump_enable = prev_run ? 1 : 0;
+            return;
+        }
+
+        kiss_fft(cfg, fft_in, fft_out);
+
+        left_k   = (unsigned)((((uint64_t)(center_hz - delta_hz) * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
+        center_k = (unsigned)((((uint64_t)center_hz             * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
+        right_k  = (unsigned)((((uint64_t)(center_hz + delta_hz) * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
+
+        if (right_k >= (n / 2u)) {
+            puts("track3 expected bins exceed FFT Nyquist range");
+            main_phase_inc_down_1_write(original_phase_inc);
+            uc_commit();
+            dsp_pump_enable = prev_run ? 1 : 0;
+            return;
+        }
+
+        left_pwr   = fft_band_power_at(left_k,   band_bins, n);
+        center_pwr = fft_band_power_at(center_k, band_bins, n);
+        right_pwr  = fft_band_power_at(right_k,  band_bins, n);
+
+        printf("track3 step=%u phase_down_1=%lu Hz inc=%lu bins={%u,%u,%u} pwr={%llu,%llu,%llu}\n",
+               step,
+               (unsigned long)sweep_hz,
+               (unsigned long)phase_inc,
+               left_k,
+               center_k,
+               right_k,
+               (unsigned long long)left_pwr,
+               (unsigned long long)center_pwr,
+               (unsigned long long)right_pwr);
+
+        if (track3_triplet_match(left_pwr, center_pwr, right_pwr)) {
+            printf("track3 lock: phase_down_1=%lu Hz inc=%lu center=%lu left=%lu right=%lu\n",
+                   (unsigned long)sweep_hz,
+                   (unsigned long)phase_inc,
+                   (unsigned long)center_hz,
+                   (unsigned long)(center_hz - delta_hz),
+                   (unsigned long)(center_hz + delta_hz));
+            dsp_pump_enable = prev_run ? 1 : 0;
+            return;
+        }
+
+        sweep_hz += step_hz;
+    }
+
+    main_phase_inc_down_1_write(original_phase_inc);
+    uc_commit();
+    dsp_pump_enable = prev_run ? 1 : 0;
+    printf("track3 no lock found in %u steps; restored phase_down_1=%lu Hz\n",
+           max_steps,
+           (unsigned long)uc_phase_inc_to_hz(original_phase_inc, TRACK3_RF_FS_HZ));
+}
+
 static void cmd_cap_arm_pulse(char *a) {
     (void)a;
 
@@ -1252,7 +1534,8 @@ static const struct cmd_entry uc_tbl[] = {
     {"dsp_test",             cmd_dsp_test,            "Run DSP loop over FIFO samples (optional N)"},
     {"dsp_run",              cmd_dsp_run,             "Enable/disable non-blocking DSP pump"},
     {"fft_fs",               cmd_fft_fs,              "Set DS sample rate (Hz) used by fft_ds"},
-    {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples"},
+    {"fft_ds",               cmd_fft_ds,              "Run FFT over DS FIFO IQ samples"},
+    {"track3",               cmd_track3,              "Sweep phase_down_1 until 3-tone pattern is found"},
 
     {"gain1",                cmd_gain1,               "Set gain1"},
     {"gain2",                cmd_gain2,               "Set gain2"},
