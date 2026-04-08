@@ -3,7 +3,7 @@
 Clocks can be extracted from GPS satellite signals, or locally generated with MEMS oscillators, SAW resonators, quartz crystal (XTAL, XO) or piezo resonators, often set in “ovens” (TCXO, OCXO), derived from atomic properties (like Cesium Beam, Hydrogen Maser, Rubidium, Strontium or Ytterbium), or obtained in another way.
 
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://chili-chips-ba.github.io/uberClock/)
-[![Read the Docs](https://img.shields.io/readthedocs/uberclock)](https://uberclock.readthedocs.io/en/latest/)
+[![Read the Docs](https://img.shields.io/badge/docs-Read%20the%20Docs-blue)](https://uberclock.readthedocs.io/en/latest/)
 [![License](https://img.shields.io/github/license/chili-chips-ba/uberClock)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/chili-chips-ba/uberClock?style=social)](https://github.com/chili-chips-ba/uberClock/stargazers)
 
