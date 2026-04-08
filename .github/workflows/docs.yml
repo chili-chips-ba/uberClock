@@ -30,7 +30,8 @@ jobs:
           python-version: "3.11"
 
       - name: Install documentation dependencies
-        run: pip install -r 0.doc/docs/requirements.txt
+        working-directory: 0.doc/docs
+        run: pip install -r requirements.txt
 
       - name: Build HTML documentation
         working-directory: 0.doc/docs
