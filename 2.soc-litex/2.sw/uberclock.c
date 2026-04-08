@@ -422,6 +422,29 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
     return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
 }
 
+static uint64_t track_band_power_at_hz(uint32_t f_hz, unsigned n) {
+    uint32_t df_hz;
+    uint64_t center_pwr;
+    uint64_t lower_pwr;
+    uint64_t upper_pwr;
+
+    center_pwr = track_power_at_hz(f_hz, n);
+    if (fft_fs_hz == 0u || n == 0u) {
+        return center_pwr;
+    }
+
+    df_hz = (uint32_t)((((uint64_t)fft_fs_hz) + (n / 2u)) / (uint64_t)n);
+    if (df_hz == 0u) {
+        return center_pwr;
+    }
+
+    lower_pwr = track_power_at_hz((f_hz > df_hz) ? (f_hz - df_hz) : 0u, n);
+    upper_pwr = track_power_at_hz(f_hz + df_hz, n);
+
+    /* Narrow 3-bin band: center + 0.5*(lower + upper). */
+    return center_pwr + ((lower_pwr + upper_pwr) >> 1);
+}
+
 static int track3_triplet_match(uint64_t left_pwr, uint64_t center_pwr, uint64_t right_pwr) {
     uint64_t min_side;
     uint64_t max_side;
@@ -515,9 +538,9 @@ static void trackq_step(void) {
         return;
     }
 
-    left_pwr = track_power_at_hz(trackq.center_hz - trackq.delta_hz, trackq.n);
-    center_pwr = track_power_at_hz(trackq.center_hz, trackq.n);
-    right_pwr = track_power_at_hz(trackq.center_hz + trackq.delta_hz, trackq.n);
+    left_pwr = track_band_power_at_hz(trackq.center_hz - trackq.delta_hz, trackq.n);
+    center_pwr = track_band_power_at_hz(trackq.center_hz, trackq.n);
+    right_pwr = track_band_power_at_hz(trackq.center_hz + trackq.delta_hz, trackq.n);
 
     center_hz_milli = (int64_t)trackq.center_hz * 1000ll;
     vertex_hz_milli = center_hz_milli;
@@ -735,6 +758,8 @@ static void uc_help(char *args) {
     puts("                              (sweep phase_down_1 until center tone dominates)");
     puts("  trackq_start [N] [center_hz] [delta_hz]");
     puts("                              (start 3-point quadratic tracking every 1 s)");
+    puts("  trackq_probe [N] [center_hz] [delta_hz]");
+    puts("                              (capture one 3-point power snapshot)");
     puts("  trackq_stop                 (stop 3-point quadratic tracking)");
 
     puts("  cap_arm              (pulse arm capture)");
@@ -1358,6 +1383,72 @@ static void cmd_trackq_start(char *args) {
            (unsigned long)delta_hz);
 }
 
+static void cmd_trackq_probe(char *args) {
+    char *tok_n      = strtok(args, " \t");
+    char *tok_center = strtok(NULL, " \t");
+    char *tok_delta  = strtok(NULL, " \t");
+    unsigned n = tok_n ? (unsigned)strtoul(tok_n, NULL, 0) : TRACK3_DEFAULT_N;
+    uint32_t center_hz = tok_center ? (uint32_t)strtoul(tok_center, NULL, 0) : TRACK3_DEFAULT_CENTER_HZ;
+    uint32_t delta_hz = tok_delta ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACKQ_DEFAULT_DELTA_HZ;
+    uint64_t left_pwr;
+    uint64_t center_pwr;
+    uint64_t right_pwr;
+    int64_t num;
+    int64_t den;
+    int64_t center_hz_milli;
+    int64_t h_hz_milli;
+    int64_t vertex_hz_milli;
+
+    if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
+        printf("trackq_probe requires N to be power-of-2 and <= %u\n", FFT_MAX_N);
+        return;
+    }
+    if (center_hz <= delta_hz) {
+        puts("trackq_probe requires center_hz > delta_hz");
+        return;
+    }
+    if (fft_fs_hz == 0u) {
+        puts("trackq_probe requires fft_fs > 0");
+        return;
+    }
+
+    /* Drop stale samples after manual LO changes, then wait for a fresh window. */
+    main_ds_fifo_clear_write(1);
+    (void)ds_fifo_flush_all(n + TRACK3_DEFAULT_SETTLE);
+    track3_wait_ticks(n + TRACK3_DEFAULT_SETTLE);
+
+    if (!capture_ds_fft_ch1(n, TRACK3_DEFAULT_SETTLE)) {
+        puts("trackq_probe capture failed");
+        return;
+    }
+
+    left_pwr = track_band_power_at_hz(center_hz - delta_hz, n);
+    center_pwr = track_band_power_at_hz(center_hz, n);
+    right_pwr = track_band_power_at_hz(center_hz + delta_hz, n);
+
+    center_hz_milli = (int64_t)center_hz * 1000ll;
+    vertex_hz_milli = center_hz_milli;
+    if (track3_triplet_match(left_pwr, center_pwr, right_pwr)) {
+        num = (int64_t)left_pwr - (int64_t)right_pwr;
+        den = 2ll * ((int64_t)left_pwr - (2ll * (int64_t)center_pwr) + (int64_t)right_pwr);
+        if (den < 0ll) {
+            h_hz_milli = (int64_t)delta_hz * 1000ll;
+            vertex_hz_milli = center_hz_milli + ((h_hz_milli * num) / den);
+        }
+    }
+
+    printf("trackq_probe: phase_down_1=%lu Hz N=%u center=%lu Hz delta=%lu Hz pwr={%llu,%llu,%llu} vertex=%ld.%03ldHz\n",
+           (unsigned long)uc_phase_inc_to_hz(main_phase_inc_down_1_read(), TRACK3_RF_FS_HZ),
+           n,
+           (unsigned long)center_hz,
+           (unsigned long)delta_hz,
+           (unsigned long long)left_pwr,
+           (unsigned long long)center_pwr,
+           (unsigned long long)right_pwr,
+           (long)(vertex_hz_milli / 1000ll),
+           (long)labs(vertex_hz_milli % 1000ll));
+}
+
 static void cmd_trackq_stop(char *args) {
     (void)args;
     trackq.enabled = 0;
@@ -1756,6 +1847,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"fft_ds",               cmd_fft_ds,              "Run FFT over DS FIFO IQ samples"},
     {"track3",               cmd_track3,              "Sweep phase_down_1 until 3-tone pattern is found"},
     {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking"},
+    {"trackq_probe",         cmd_trackq_probe,        "Capture one 3-point tracking snapshot"},
     {"trackq_stop",          cmd_trackq_stop,         "Stop 3-point quadratic tracking"},
 
     {"gain1",                cmd_gain1,               "Set gain1"},
