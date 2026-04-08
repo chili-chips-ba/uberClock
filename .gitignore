@@ -9,7 +9,7 @@
 
 # ignore the LiteX build output
 2.soc-litex/3.build/build/
-2.soc-litex/2.sw/uberClock
+2.soc-litex/2.sw/uberClock/
 2.soc-litex/3.build/analyzer.csv
 2.soc-litex/3.build/dump.vcd
 2.soc-litex/3.build/vivado.jou
@@ -17,9 +17,21 @@
 #*impl*
 *temp*
 
-*\#*\#
-*\#*
-../.vscode/
+*.jou
 .vscode/
-# Ignore Vivado backup journals
-*.backup.jou
+2.soc-litex/3.build/
+*.bin
+*.txt
+!0.doc/docs/requirements.txt
+*.o
+*.d
+*.elf
+*.bin
+*.fbi
+*.map
+*.elf
+*.map
+*.fbi
+
+__pycache__/
+*.pyc
