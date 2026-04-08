@@ -35,3 +35,6 @@
 
 __pycache__/
 *.pyc
+
+# Sphinx build output
+0.doc/docs/build/
