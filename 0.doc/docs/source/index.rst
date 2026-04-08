@@ -1,22 +1,25 @@
-.. uberClock documentation master file, created by
-   sphinx-quickstart on Wed Apr 8 20:22:30 2026.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+uberClock Documentation
+=======================
 
-Uberclock documentation
-========================================
-
-This documentation covers the uberClock project
-
-.. include:: project_overview.rst
+This site collects the project overview, hardware notes, software notes,
+simulation notes, and supporting references for uberClock.
 
 Quick links
 -----------
 
+- :doc:`project_overview` - Project background, goals, hardware platform, and status
 - :doc:`build_docs` — Build and publish this documentation
 
 Documentation Sections
 ----------------------
+
+The documentation is organized into a small set of topic areas:
+
+- ``Project Overview`` for goals, hardware platform, and project status.
+- ``SoC LiteX`` for the CPU-controlled SoC structure and workflow.
+- ``DSP`` for block-level DSP notes and experiments.
+- ``Miniac`` for the acquisition prototype, build flow, and simulation support.
+- ``References`` for external material and board documentation links.
 
 .. toctree::
    :maxdepth: 2
