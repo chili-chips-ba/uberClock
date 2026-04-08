@@ -242,7 +242,8 @@ static uint32_t fft_fs_hz = 10000u;
 #define TRACKQ_CORR_SHIFT          10u
 #define TRACKQ_MAX_STEP_HZ         2
 #define TRACKQ_FALLBACK_STEP_HZ    1
-#define TRACKQ_DIR_DEADBAND_PCT    12u
+#define TRACKQ_DIR_DEADBAND_PCT    18u
+#define TRACKQ_DIR_CONFIRM_VOTES   3u
 #define TRACK3_FIFO_WAIT_POLLS     1000000u
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
@@ -255,6 +256,8 @@ struct trackq_state {
     uint32_t center_hz;
     uint32_t delta_hz;
     uint32_t next_tick;
+    int pending_dir;
+    unsigned pending_votes;
 };
 
 static struct trackq_state trackq = {
@@ -263,6 +266,8 @@ static struct trackq_state trackq = {
     TRACK3_DEFAULT_SETTLE,
     TRACK3_DEFAULT_CENTER_HZ,
     TRACKQ_DEFAULT_DELTA_HZ,
+    0u,
+    0,
     0u
 };
 
@@ -534,14 +539,41 @@ static void trackq_step(void) {
     if (correction_hz == 0) {
         side_bias = trackq_side_bias(left_pwr, right_pwr);
         if (side_bias > 0) {
-            correction_hz = TRACKQ_FALLBACK_STEP_HZ;
-            mode = "dir+";
+            if (trackq.pending_dir == side_bias) {
+                trackq.pending_votes++;
+            } else {
+                trackq.pending_dir = side_bias;
+                trackq.pending_votes = 1u;
+            }
+            if (trackq.pending_votes >= TRACKQ_DIR_CONFIRM_VOTES) {
+                correction_hz = TRACKQ_FALLBACK_STEP_HZ;
+                mode = "dir+";
+                trackq.pending_votes = 0u;
+            } else {
+                mode = "wait+";
+            }
         } else if (side_bias < 0) {
-            correction_hz = -TRACKQ_FALLBACK_STEP_HZ;
-            mode = "dir-";
+            if (trackq.pending_dir == side_bias) {
+                trackq.pending_votes++;
+            } else {
+                trackq.pending_dir = side_bias;
+                trackq.pending_votes = 1u;
+            }
+            if (trackq.pending_votes >= TRACKQ_DIR_CONFIRM_VOTES) {
+                correction_hz = -TRACKQ_FALLBACK_STEP_HZ;
+                mode = "dir-";
+                trackq.pending_votes = 0u;
+            } else {
+                mode = "wait-";
+            }
         } else {
+            trackq.pending_dir = 0;
+            trackq.pending_votes = 0u;
             mode = "hold";
         }
+    } else {
+        trackq.pending_dir = 0;
+        trackq.pending_votes = 0u;
     }
 
     phase_inc = main_phase_inc_down_1_read();
@@ -1316,6 +1348,8 @@ static void cmd_trackq_start(char *args) {
     trackq.center_hz = center_hz;
     trackq.delta_hz = delta_hz;
     trackq.next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
+    trackq.pending_dir = 0;
+    trackq.pending_votes = 0u;
 
     printf("trackq_start: phase_down_1=%lu Hz N=%u center=%lu Hz delta=%lu Hz interval=1 s\n",
            (unsigned long)uc_phase_inc_to_hz(main_phase_inc_down_1_read(), TRACK3_RF_FS_HZ),
