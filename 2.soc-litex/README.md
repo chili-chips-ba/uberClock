@@ -1,157 +1,116 @@
-# LiteX-based SOC Architecture
+# SoC-Based Control with LiteX & VexRiscV
 
-## High Speed Memory Debug Architecture
+This project uses [LiteX](https://github.com/enjoy-digital/litex) as the FPGA framework and instantiates a [VexRiscV](https://github.com/SpinalHDL/VexRiscv) soft-core to control all of the ADC → DSP → DAC flow. While the bulk of the digital signal processing pipeline lives in parameterized Verilog modules (ADCs, filters, CORDIC NCOs, DACs), the CPU handles all of the configuration and data movement at run-time via a simple UART console interface.
 
-<img width="1766" height="885" alt="debug drawio" src="https://github.com/user-attachments/assets/04a752bc-5896-459f-857c-83a84d601659" />
+## Workflow Overview
+Next up, let’s dive into the 2.soc-litex folder and walk through its structure so you can see how each component fits together and how the overall data-path control flow comes together.
 
+### 1.hw
+In the [1.hw](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/1.hw) folder you'll find every Verilog block organized into its own respective subdirectory. Each piece—ADC, CORDIC, CIC filters, DAC—has been individually tested and simulated, and they’re all built to plug right into a larger module. We won’t dig into the nitty-gritty of each hardware implementation here; instead, we will be focused on how LiteX brings it all together and puts you in control of the whole data path.
 
-## High Speed Debug Captures
+### 2.sw
 
-<img width="1500" height="600" alt="try1" src="https://github.com/user-attachments/assets/910a435e-bfb2-4fce-8741-27b30802a760" />
+In the [2.sw](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/1.hw) is a modified version of the [LiteX Demo Application](https://github.com/enjoy-digital/litex/tree/master/litex/soc/software/demo) that includes the generated csr from the project build in the `main.c` function. There lie the control function for the datapath in bare-metal C.
+The uart console is built upon the official demo application.
 
-## Parameters
+### 3.build
 
-### Clocking
+Here in the [3.build](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/3.build) folder we have the [Makefile](https://github.com/chili-chips-ba/uberClock/blob/main/2.soc-litex/3.build/Makefile) that tries to ease the LiteX workflow into different parts. Running `make help` gives pretty self-exmplanatory commands:
 
-| Parameter                     | Value          | Notes                                       |
-|------------------------------|----------------|---------------------------------------------|
-| Input board clock            | 200 MHz        | Differential `clk200_p/n`                   |
-| System clock domain          | 100 MHz        | `cd_sys` (CPU, CSR, DDR controller side)    |
-| UberClock clock domain       | 65 MHz         | `cd_uc` (UberClock DSP core)                |
-| DDR3 PHY clock               | 400 MHz        | `cd_ub_4x` (DDR internal)                   |
-| DDR3 DQS clock               | 400 MHz (+90°) | `cd_ub_4x_dqs` (DQS, phase shifted by 90°)  |
-| IDELAY control domain        | 200 MHz        | `cd_idelay` via BUFG                        |
-| MMCM speedgrade              | -2             | For S7MMCM PLLs                             |
-| `create_clkout` margin       | 1e-2           | LiteX MMCM margin parameter                 |
+```
+$ make help
+Usage:
+  make open-target    file=<name>
+  make open-example   file=<proj>
+  make build-board    [FREQ=..] [OPTIONS='..']
+  make load           [FREQ=..] [OPTIONS='..']
+  make term                [PORT=..]
+  make build-sw            [DEMO_FLAGS='..']
+  make sim
+  make view-sim
+  make clean-sim
+  make setup-ethernet      [ETH_IFACE=..] [STATIC_IP=..]
+  make start-server
+  make stop-server
+  make litescope
+  make clean
+  make copy-migen
+```
 
----
+The most important ones are:
 
-### UberDDR3
+* `make build-board` which runs the build process using Vivado(later openXC7 will be used instead). The command has parameters `FREQ` and `OPTIONS` which can be overloaded, but running it without any parameters is going to include `--with-etherbone` and `--with-uberclock` with a frequency of `65MHz`.
 
-| Parameter            | Value     | Notes                                                |
-|----------------------|-----------|------------------------------------------------------|
-| `sys_clk_hz`         | 100e6     | System/controller clock frequency                    |
-| `ddr_ck_hz`          | 400e6     | DDR3 CK frequency                                   |
-| `ctrl_ps`            | 10000 ps  | `round(1e12 / 100e6)` – controller clock period      |
-| `ddr_ps`             | 2500 ps   | `round(1e12 / 400e6)` – DDR clock period             |
-| `row_bits`           | 15        | Row address bits                                    |
-| `col_bits`           | 10        | Column address bits                                 |
-| `ba_bits`            | 3         | Bank address bits                                   |
-| `byte_lanes`         | 4         | 4 lanes × 16-bit = 64-bit external DDR data bus     |
-| `dual_rank`          | 0         | Single-rank DIMM                                     |
-| `speed_bin`          | 3         | DDR3 speed-bin index                                 |
-| `sdram_capacity`     | 5         | Design-specific SDRAM size encoding                  |
-| `dll_off`            | 0         | DLL enabled                                          |
-| `odelay_supported`   | 0         | No ODELAY support (in this config)                  |
-| `bist_mode`          | 0         | BIST disabled                                        |
-| `p_DIC`              | 0b01      | Output drive impedance setting                       |
-| `p_RTT_NOM`          | 0b001     | Nominal on-die termination                           |
-| `p_AUX_WIDTH`        | 4         | Auxiliary bus width                                  |
-| INTERNAL_VREF        | 0.75 V    | DDR IO bank internal reference voltage              |
-| `ub_dw`              | 256 bits  | Internal wide data bus (`64 × byte_lanes`)          |
-| `serdes_ratio`       | 4         | SERDES ratio inside controller                       |
-| `wb_addr_bits`       | 25        | `15 + 10 + 3 − log₂(8) + 0 = 25`                     |
+* `make build-sw` which compiles the bare-metal C application. The imporant note to add is to run the command after the build finishes because the compiler depends of the generated files in the `3.build/build` folder.
 
----
+* `make load` simply loads the bitstream onto the FPGA via the JTAG programmer
 
-### Bus widths & addresses
+* `make term` opens up the serial console in the terminal to control the datapth signals. The default port is `/dev/ttyUSB0` while that can be simply changed with `PORT`.
 
-| Parameter                  | Value              | Notes                                                       |
-|----------------------------|--------------------|-------------------------------------------------------------|
-| CPU-side WB width          | 32 bits            | `self.wb`: classic Wishbone slave on LiteX bus             |
-| Wide WB width              | 256 bits           | `wb_wide.data_width = ub_dw`                               |
-| Wide WB address width      | SoC-dependent      | `wb_wide.adr_width` from LiteX                             |
-| Pipelined WB address width | `AW`               | `AW = len(self.c2p.m_adr)`                                 |
-| Pipelined WB data width    | `DW = 256 bits`    | Same as `ub_dw`                                            |
-| Crossbar masters (`NM`)    | 2                  | Master 0 = CPU, Master 1 = DMA                             |
-| Crossbar slaves (`NS`)     | 1                  | Slave 0 = DDR3 controller                                  |
-| `p_LGMAXBURST`             | 6                  | Maximum burst = 2⁶ beats                                   |
-| `p_OPT_TIMEOUT`            | 0                  | Timeout disabled                                           |
-| `p_OPT_STARVATION_TIMEOUT` | 0                  | Starvation timeout disabled                                |
-| `p_OPT_DBLBUFFER`          | 0                  | Double-buffering disabled                                  |
-| `p_OPT_LOWPOWER`           | 1                  | Low-power mode enabled                                     |
-| `WBLSB`                    | 5                  | `log₂(DW/8) = log₂(256/8) = log₂(32) = 5`                  |
-| `ADDR_WIDTH_FOR_DMA`       | `AW + 5`           | Byte address width for DMA (counts bytes, not bus words)   |
+**NOTE**: Run `make term` in a seperate terminal before running `make load`
 
----
+### 5.docker
+[5.docker](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/5.docker) is still in development. The tough part is adding Vivado into the Docker container.
 
-### 2.4 Capture / stream parameters
+### 6.migen
+The [6.migen](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/6.migen) folder contains two subfolders:
+* [platforms](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/6.migen/platforms) which has the specific platform file that specifies the pins of the Alinx AX7203 board.
+* [targets](https://github.com/chili-chips-ba/uberClock/tree/main/2.soc-litex/6.migen/targets) has the target file that specifies all of the important parts of the CPU design and instantiates the SoC with the used Verilog files.
 
-| Block             | Parameter      | Value         | Notes                                                  |
-|-------------------|----------------|---------------|--------------------------------------------------------|
-| **RampSource**    | `dw`           | 256 bits      | Stream data width                                      |
-|                   | `length`       | 256 beats     | Number of beats per capture                           |
-|                   | `lanes`        | 16            | `dw / 16` → 16 lanes of 16-bit values per beat         |
-|                   | Samples/run    | 4096          | `256 beats × 16 lanes` (16-bit test ramp)             |
-| **SampleStream**  | `sample_width` | 12 bits       | Captured input (`cap_sample`)                         |
-|                   | `dw`           | 256 bits      | Stream data width                                      |
-|                   | `beats`        | 256           | Beats per run                                         |
-|                   | `lanes`        | 16            | 16 samples per beat                                   |
-|                   | Samples/run    | 4096          | `256 × 16` 12-bit samples                             |
-| **UCStreamSource**| `dw`           | 256 bits      | Same as above                                         |
-|                   | `length`       | 256 beats     | Matches Ramp/SampleStream length                      |
-|                   | `use_external` | 0/1           | 0 = ramp, 1 = external `SampleStream`                 |
-| **AsyncFIFO (uc→sys)** | `bytes_width` | `len(s_bytes)` | Enough to encode `DW/8` bytes                    |
-|                   | `fifo_width`   | `DW + bytes_width + 1` | Data + bytes + last flag                    |
-|                   | `depth`        | 4             | UC-to-SYS stream FIFO depth                           |
-| **zipdma_s2mm**   | `p_ADDRESS_WIDTH` | `ADDR_WIDTH_FOR_DMA` | DMA byte address width                     |
-|                   | `p_BUS_WIDTH`  | 256 bits      | Bus width for writes to DDR                           |
-|                   | `p_OPT_LITTLE_ENDIAN` | 1      | Little-endian                                         |
-|                   | `p_LGPIPE`     | 10            | Internal pipeline depth configuration                 |
-
----
-
-### 2.5 CSR / configuration parameters
-
-#### MainCSRs
-
-| Field                  | Width | Notes                                        |
-|------------------------|-------|----------------------------------------------|
-| `phase_inc_nco`        | 19    | NCO phase increment                          |
-| `phase_inc_down_1..5`  | 19    | Phase increments for downsamplers 1–5       |
-| `phase_inc_cpu`        | 19    | CPU-side phase increment                     |
-| `input_select`         | 2     | Input routing select                         |
-| `output_select_ch1`    | 2     | Output routing for channel 1                 |
-| `output_select_ch2`    | 2     | Output routing for channel 2                 |
-| `upsampler_input_mux`  | 2     | Upsampler input selection                    |
-| `gain1..5`             | 32    | 32-bit fixed-point gains                     |
-| `upsampler_input_x`    | 16    | Direct upsampler input (I)                   |
-| `upsampler_input_y`    | 16    | Direct upsampler input (Q)                   |
-| `final_shift`          | 3     | Output scaling/shift                         |
-| `cap_enable`           | 1     | `1 = capture design`, `0 = internal ramp`    |
-
-#### CSRConfigAFIFO
-
-| Parameter     | Value | Notes                                                     |
-|---------------|-------|-----------------------------------------------------------|
-| `fifo_depth`  | 4     | Config frames buffered (sys→uc)                           |
-| `total_w`     | –     | Sum of all config field widths (packed frame)            |
-| `level` width | 8     | Status CSR; bit0 = readable, bit1 = writable             |
-
-#### DMA CSRs
-
-| CSR         | Width | Notes                                                  |
-|-------------|-------|--------------------------------------------------------|
-| `dma_req`   | 1     | Edge-triggered start request                           |
-| `dma_busy`  | 1     | DMA busy status                                        |
-| `dma_err`   | 1     | DMA error status                                       |
-| `dma_inc`   | 1     | Address increment enable (default = 1)                |
-| `dma_size`  | 2     | `00=bus, 01=32b, 10=16b, 11=byte`                      |
-| `dma_addr0` | 32    | Lower 32 bits of DMA address                           |
-| `dma_addr1` | 32    | Upper 32 bits of DMA address                           |
-
----
-
-### 2.6 Memory map / SoC
-
-| Item                     | Value          | Notes                                        |
-|--------------------------|----------------|----------------------------------------------|
-| UberDDR3 base address    | `0xA000_0000`  | `ub_base` – start of side DDR3 region        |
-| UberDDR3 size            | `0x1000_0000`  | 256 MiB (`ub_size`)                          |
-| UberDDR3 region flags    | `cached=False` | `linker=False`                               |
-| Firmware constant        | `UBDDR3_MEM_BASE` | Exported to C firmware                    |
-| Integrated main RAM size | 64 KiB         | Default `integrated_main_ram_size`           |
-| SoC ident string         | `"AX7203 UberClock65 UberDDR3 with S2MM via wbxbar"` | Printed at boot |
+**NOTE**: The target and platform files so far haven't been added to the offical LiteX repository. The plaform files will eventually be added while the target file will be added but without the uberClock project specific parts of course. Right now you need to copy these subfolders with the files manually in your LiteX installation folder in `litex/litex_board/litex-boards`. Or go to the `Makefile` and run `make copy-migen` but keep in mind to specify the `LITEX_PATH` to your path in the `Makefile`.
 
 
-#### End-of-Document
+What is also important to add with the workflow is the use of [Litescope](https://github.com/chili-chips-ba/uberClock/tree/main/1.dsp) to see and debug signals in real time. The use of this will be explained under a different README.
+
+## CPU-Driven Data-Path Control
+
+Using the CPU with the UART console, we can dynamically steer every stage of the signal chain without touching the FPGA bitstream.
+Running the `help` command in the UART console gives the following output:
+```
+Available commands:
+  help                  - Show this command
+  reboot                - Reboot CPU
+  phase_nco <val>      - Set input CORDIC NCO phase increment (0–524287)
+  phase_down <val>     - Set downconversion CORDIC phase increment (0–524287)
+  output_select_ch1 <val>  - Choose DAC1 (channel 1) output source:
+                           0 = downsampledY
+                           1 = upsampledX
+                           2 = y_downconverted
+                           3 = y_upconverted
+  output_select_ch2 <val>  - Choose DAC2 (channel 2) output source:
+                           0 = upsampledY
+                           1 = filter_in
+                           2 = nco_cos
+                           3 = upsampledY
+  input_select <val>   - Set main input select register (0=ADC, 1=NCO)
+  gain1 <val>           - Set Gain1 register (Q format value)
+  gain2 <val>           - Set Gain2 register (Q format value)
+```
+The commands are explained further below:
+
+* `input_select` : choose between the external ADC → DSP → DAC path or an internally generated sinewave from the CORDIC NCO.
+* `phase_nco` and `phase_down` : adjust the CORDIC phase increment on-the-fly
+* `output_select_ch1` and `output_select_ch2` : remap any internal node (down-converted, down-sampled, up-converted, etc.) to either DAC channel at run-time.
+* `gain1` and `gain2` sets the gain values the the specific channels.
+**NOTE**: Right now only one channel is viable while we are working on making a modular N-channel module so we can instantate N-channels.
+
+What was done without the UART console is to read samples from the downsampler into the CPU, apply custom processing (e.g. scaling or math), then feed them back into the upsampler path. Three polling methods were evaluated and the specific details on the implementations in LiteX will be explained in another README:
+
+* Simple while-loop that blocks the UART and is deemed undesirable
+
+* Periodic timer (10 kHz) (works, but adds fixed latency)
+
+* Event-driven interrupt (triggers exactly on new data—optimal)
+
+Here we can see two pictures that show the event-driven interrupt where the CPU doubles the amplitude of the signal(downsampled/upsampled) that it recieves.
+
+<img width="1024" height="630" alt="twox0" src="https://github.com/user-attachments/assets/24d399f1-58c5-441e-a952-37cd817eb073" />
+
+The first picture above shows the downsampled signal that is read by the CPU in yellow while in blue it shows the doubled signal that is passed to the DAC to show that the data is being read and modified by the CPU.
+
+<img width="1024" height="630" alt="inouttenmhz0" src="https://github.com/user-attachments/assets/172b477b-097d-47bf-a1a7-ae6d325b1343" />
+
+The second picture shows the same but for the signal that is being sent by the CPU to the upsampler. It is also being doubled in the CPU to show that it is being read and manipulated accordingly.
+
+
+In the process of making this top level uberclock module we have evaluated the specific Verilog modules and their simulations extensively and that part is going to be described in [1.dsp](https://github.com/chili-chips-ba/uberClock/tree/main/1.dsp).

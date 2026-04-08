@@ -1,7 +1,8 @@
 Build the Documentation
 =======================
 
-This section explains how to build the DV Power OS documentation locally.
+This section explains how to build the uberClock documentation locally and how
+it is configured for Read the Docs.
 
 Prerequisites
 -------------
@@ -10,11 +11,8 @@ Make sure the following tools are installed on your system:
 
 - Python 3
 - ``venv`` (Python virtual environments)
-- Sphinx and required extensions:
-  - ``sphinx``
-  - ``furo`` (theme)
-  - ``sphinx-copybutton``
-  - ``sphinx-rtd-theme`` (optional)
+- ``make``
+- Sphinx
 
 Setup a Virtual Environment
 ---------------------------
@@ -38,7 +36,7 @@ Install the required Python packages:
 
 .. code-block:: bash
 
-   pip install -U sphinx sphinx-rtd-theme furo sphinx-copybutton
+   pip install -r 0.doc/docs/requirements.txt
 
 Build the HTML Documentation
 ----------------------------
@@ -54,14 +52,33 @@ Build the HTML documentation using Sphinx:
 
 .. code-block:: bash
 
+   cd 0.doc/docs
    make html
 
 After the build finishes, open the generated documentation:
 
 .. code-block:: bash
 
-   xdg-open build/html/index.html
+   xdg-open 0.doc/docs/build/html/index.html
 
 .. note::
 
    The output HTML files are generated inside the ``build/html`` directory.
+
+Read the Docs
+-------------
+
+The repository includes a ``.readthedocs.yaml`` file at the repository root.
+Read the Docs uses it to:
+
+- build on Ubuntu 22.04
+- use Python 3.11
+- load the Sphinx configuration from ``0.doc/docs/source/conf.py``
+- install dependencies from ``0.doc/docs/requirements.txt``
+
+After importing the repository into Read the Docs, the hosted documentation
+will be available at a URL like:
+
+.. code-block:: text
+
+   https://<project-name>.readthedocs.io/
