@@ -3,5 +3,4 @@
 #include <stdlib.h>
 
 void fsm_init(void);
-void tran();
-
+void tran(void);

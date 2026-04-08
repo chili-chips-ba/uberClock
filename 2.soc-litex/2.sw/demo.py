@@ -8,9 +8,31 @@
 
 import os
 import sys
+import shlex
+import glob
 import argparse
+import subprocess
 
 from litex.build.tools import replace_in_file
+
+
+def log_step(step, detail):
+    print(f"[demo.py] {step}: {detail}", flush=True)
+
+
+def run_cmd(cmd, *, cwd=None, env=None, step):
+    location = cwd or os.getcwd()
+    log_step(step, f"cwd={location}")
+    print(f"[demo.py] $ {shlex.join(cmd)}", flush=True)
+    subprocess.run(cmd, cwd=cwd, env=env, check=True)
+
+
+def remove_patterns(root_dir, patterns, *, step):
+    log_step(step, f"removing generated files from {root_dir}")
+    for pattern in patterns:
+        for path in glob.glob(os.path.join(root_dir, pattern)):
+            if os.path.isfile(path):
+                os.remove(path)
 
 def main():
     parser = argparse.ArgumentParser(description="LiteX Bare Metal UberClock App.")
@@ -44,15 +66,47 @@ def main():
     app_dir = args.app_dir
 
     # 1) Create demo directory
+    log_step("prepare", f"creating app directory {app_dir}")
     os.makedirs(app_dir, exist_ok=True)
 
     # 2) Copy contents (recursive!) to demo directory
     src_dir = os.path.abspath(os.path.dirname(__file__))
-
-    os.system(f'rsync -a --delete --exclude "{app_dir}/" "{src_dir}/" "{app_dir}/"')
-    os.system(f'chmod -R u+w "{app_dir}"')
+    rsync_cmd = [
+        "rsync",
+        "-a",
+        "--delete",
+        f"--exclude={app_dir}/",
+        "--exclude=*.o",
+        "--exclude=*.d",
+        "--exclude=*.elf",
+        "--exclude=*.elf.map",
+        "--exclude=*.bin",
+        "--exclude=*.fbi",
+        "--exclude=__pycache__/",
+        f"{src_dir}/",
+        f"{app_dir}/",
+    ]
+    run_cmd(
+        rsync_cmd,
+        step="sync",
+    )
+    run_cmd(["chmod", "-R", "u+w", app_dir], step="permissions")
+    remove_patterns(
+        app_dir,
+        [
+            "*.o",
+            "*.d",
+            "*.elf",
+            "*.elf.map",
+            "*.bin",
+            "*.fbi",
+            ".*.swp",
+        ],
+        step="cleanup",
+    )
 
     # 3) Update memory region in linker script
+    log_step("patch", f"updating linker memory regions in {app_dir}/linker.ld")
     replace_in_file(f"{app_dir}/linker.ld", "main_ram", args.mem)
     replace_in_file(f"{app_dir}/linker.ld", "data_ram", args.data_mem)
 
@@ -74,21 +128,34 @@ def main():
         if os.path.isabs(args.build_path)
         else os.path.join("..", args.build_path)
     )
-    cxx_env = "export WITH_CXX=1 && " if args.with_cxx else ""
-    os.system(
-        f"export BUILD_DIR={build_path} && "
-        f"{cxx_env}cd {app_dir} && make"
-    )
+    build_env = os.environ.copy()
+    build_env["BUILD_DIR"] = build_path
+    if args.with_cxx:
+        build_env["WITH_CXX"] = "1"
+    run_cmd(["make", "--no-print-directory"], cwd=app_dir, env=build_env, step="build")
 
     # 6) Copy demo.bin back to top‐level
-    os.system(f"cp {app_dir}/demo.bin ./")
+    run_cmd(["cp", f"{app_dir}/demo.bin", "./"], step="copy")
 
     # 7) Generate flash boot image
     python3_exe = sys.executable or "python3"
-    os.system(
-        f"{python3_exe} -m litex.soc.software.crcfbigen "
-        "demo.bin -o demo.fbi --fbi --little"
+    run_cmd(
+        [
+            python3_exe,
+            "-m",
+            "litex.soc.software.crcfbigen",
+            "demo.bin",
+            "-o",
+            "demo.fbi",
+            "--fbi",
+            "--little",
+        ],
+        step="pack",
     )
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except subprocess.CalledProcessError as exc:
+        print(f"[demo.py] failed: command exited with status {exc.returncode}", file=sys.stderr, flush=True)
+        sys.exit(exc.returncode)

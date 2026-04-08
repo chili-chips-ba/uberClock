@@ -13,6 +13,7 @@ from migen.genlib.fifo import AsyncFIFO
 from .wishbone import ClassicToPipelinedWishboneBridge, PipelinedWishboneXbar2M1S
 from .streams import UCStreamMux, SamplePackerStream
 from .rtl_sources import add_sources
+from .rtl_filelist import UBERDDR3_RTL_FILES
 
 
 # =============================================================================
@@ -359,16 +360,7 @@ class UberDDR3(LiteXModule):
         # ------------------------------------------------------------------
         # RTL sources + Vivado properties
         # ------------------------------------------------------------------
-        add_sources(platform, [
-            "memory/ddr3_top.v",
-            "memory/ddr3_controller.v",
-            "memory/ddr3_phy.v",
-            "memory/wbc2pipeline.v",
-            "memory/wbxbar.v",
-            "memory/skidbuffer.v",
-            "memory/addrdecode.v",
-            "memory/zipdma_s2mm.v",
-        ])
+        add_sources(platform, UBERDDR3_RTL_FILES)
 
         platform.add_platform_command(
             "set_property INTERNAL_VREF 0.75 "

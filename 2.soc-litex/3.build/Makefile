@@ -13,8 +13,8 @@ BAUD          ?= 115200
 PORT          ?= /dev/ttyUSB0
 
 # LiteX install
-LITEX_PATH    ?= $(HOME)/litex
-LITEX_VENV    ?= $(HOME)/litex-venv
+LITEX_PATH    ?= $(HOME)/FPGA/Tools/litex-hub/litex
+LITEX_VENV    ?= $(LITEX_PATH)/litex-venv
 PYTHON        := python3
 
 # Board/target
@@ -30,6 +30,14 @@ OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
 
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
+
+define print_section
+	@printf "\n[%s]\n" "$(1)"
+endef
+
+define print_kv
+	@printf "  %-12s %s\n" "$(1)" "$(2)"
+endef
 
 .PHONY: help build-board build-sw load term \
         clean clean-gateware
@@ -59,14 +67,17 @@ build-board:
 #  Build & run software example under 2.sw/
 # ——————————————————————————————————————————————————————————————
 build-sw:
-	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
-	@echo "→ Executing demo.py in $(SW_DIR)"
-	source $(LITEX_VENV)/bin/activate && \
+	$(call print_section,software build)
+	$(call print_kv,workdir,$(SW_DIR))
+	$(call print_kv,venv,$(LITEX_VENV)/bin/activate)
+	$(call print_kv,flags,$(if $(strip $(DEMO_FLAGS)),$(DEMO_FLAGS),<none>))
+	$(call print_kv,command,./demo.py --build-path=$(BUILD_DIR)/build/$(BOARD) --mem=main_ram --data-mem=main_ram $(DEMO_FLAGS))
+	@source $(LITEX_VENV)/bin/activate && \
 	cd $(SW_DIR) && \
 	./demo.py \
 	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
 	  --mem=main_ram \
-	  --data-mem=main_ram\
+	  --data-mem=main_ram \
 	  $(DEMO_FLAGS)
 
 load:

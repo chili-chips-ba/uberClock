@@ -227,11 +227,6 @@ class UberClockCSRBank(LiteXModule):
             description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
         )
 
-        self.ds_fifo_clear = CSRStorage(
-            1,
-            description="Write (strobe) to clear downsample FIFO overflow/underflow flags."
-        )
-
         self.ds_fifo_flags = CSRStatus(
             8,
             description=(
@@ -267,11 +262,6 @@ class UberClockCSRBank(LiteXModule):
         self.ups_fifo_underflow = CSRStatus(
             1,
             description="Sticky: upsampler FIFO underflow (UC read while empty)."
-        )
-
-        self.ups_fifo_clear = CSRStorage(
-            1,
-            description="Write (strobe) to clear upsampler FIFO overflow/underflow flags."
         )
 
         self.ups_fifo_clear = CSRStorage(
