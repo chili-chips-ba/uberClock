@@ -1,7 +1,7 @@
 RV32 ISS Model Integration
 ==========================
 
-This page summarizes ``3.miniac/4.sim/models/rv32/README.md``.
+This page summarizes ``4.miniac/4.sim/models/rv32/README.md``.
 
 Overview
 --------

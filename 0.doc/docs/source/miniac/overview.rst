@@ -19,7 +19,7 @@ improve effective acquisition rate.
 Hardware Setup
 --------------
 
-.. image:: ../../../../3.miniac/0.doc/setUp.jpg
+.. image:: ../../../../4.miniac/0.doc/setUp.jpg
    :width: 600
    :align: center
 
@@ -47,7 +47,7 @@ first collected by the on-board RISC-V CPU into DMEM and then transferred in
 batches. The PC-side software reconstructs the waveform and performs FFT-based
 analysis.
 
-.. image:: ../../../../3.miniac/0.doc/miniac.png
+.. image:: ../../../../4.miniac/0.doc/miniac.png
    :width: 900
    :align: center
 
@@ -55,7 +55,7 @@ Direct Snooping Method
 ----------------------
 
 The direct method uses
-`PlotDataADC.py <https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/PlotDataADC.py>`_.
+`PlotDataADC.py <https://github.com/chili-chips-ba/uberClock/blob/main/4.miniac/5.test/PlotDataADC.py>`_.
 It polls ADC samples continuously over UART, estimates the actual sampling
 frequency, and plots both the time-domain signal and FFT.
 
@@ -66,19 +66,19 @@ Examples from the original README:
 
 - 50 Hz direct acquisition
 
-.. image:: ../../../../3.miniac/0.doc/PlotDataADC_50Hz.png
+.. image:: ../../../../4.miniac/0.doc/PlotDataADC_50Hz.png
    :width: 600
    :align: center
 
 - 100 Hz direct acquisition
 
-.. image:: ../../../../3.miniac/0.doc/PlotDataADC_100Hz.png
+.. image:: ../../../../4.miniac/0.doc/PlotDataADC_100Hz.png
    :width: 600
    :align: center
 
 - 120 Hz direct acquisition
 
-.. image:: ../../../../3.miniac/0.doc/PlotDataADC_120Hz.png
+.. image:: ../../../../4.miniac/0.doc/PlotDataADC_120Hz.png
    :width: 600
    :align: center
 
@@ -86,7 +86,7 @@ Indirect Snooping Method
 ------------------------
 
 The indirect method uses
-`CPUSnooping.py <https://github.com/chili-chips-ba/uberClock/blob/main/3.miniac/5.test/CPUSnooping.py>`_.
+`CPUSnooping.py <https://github.com/chili-chips-ba/uberClock/blob/main/4.miniac/5.test/CPUSnooping.py>`_.
 This script reads buffered blocks of 1024 pre-sampled values from the FPGA over
 UART, extracts the ADC samples, reconstructs the waveform, and performs FFT
 analysis.
@@ -99,18 +99,18 @@ Examples from the original README:
 
 - 100 kHz indirect acquisition
 
-.. image:: ../../../../3.miniac/0.doc/CPUSnooping_100kHz.png
+.. image:: ../../../../4.miniac/0.doc/CPUSnooping_100kHz.png
    :width: 600
    :align: center
 
 - 200 kHz indirect acquisition
 
-.. image:: ../../../../3.miniac/0.doc/CPUSnooping_200kHz.png
+.. image:: ../../../../4.miniac/0.doc/CPUSnooping_200kHz.png
    :width: 600
    :align: center
 
 - 250 kHz indirect acquisition
 
-.. image:: ../../../../3.miniac/0.doc/CPUSnooping_250kHz.png
+.. image:: ../../../../4.miniac/0.doc/CPUSnooping_250kHz.png
    :width: 600
    :align: center

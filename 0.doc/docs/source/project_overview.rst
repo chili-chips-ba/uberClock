@@ -1,4 +1,4 @@
-uberClock Project Overview
+Project Overview
 ==========================
 
 Clocks can be extracted from GPS satellite signals, or locally generated with

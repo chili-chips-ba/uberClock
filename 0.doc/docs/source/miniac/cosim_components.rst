@@ -1,7 +1,7 @@
 VProc and mem_model Co-simulation Components
 ============================================
 
-This page summarizes ``3.miniac/4.sim/models/cosim/README.md``.
+This page summarizes ``4.miniac/4.sim/models/cosim/README.md``.
 
 Overview
 --------

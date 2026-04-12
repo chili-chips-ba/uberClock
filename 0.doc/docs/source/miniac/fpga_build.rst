@@ -1,7 +1,7 @@
 FPGA Build
 ==========
 
-This section corresponds to ``3.miniac/3.build``.
+This section corresponds to ``4.miniac/3.build``.
 
 The current build documentation was inherited from the Wireguard-FPGA project
 and still needs uberClock-specific adaptation. It nonetheless describes the
