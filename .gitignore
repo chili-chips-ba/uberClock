@@ -19,7 +19,6 @@
 
 *.jou
 .vscode/
-3.build/
 *.bin
 *.txt
 !0.doc/docs/requirements.txt
