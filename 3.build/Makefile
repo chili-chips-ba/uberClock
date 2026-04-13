@@ -1,0 +1,114 @@
+SHELL := /bin/bash
+
+MAKEFILE_DIR  := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+REPO_ROOT     := $(realpath $(MAKEFILE_DIR)/..)
+SOC_ROOT      := $(REPO_ROOT)/2.soc
+
+DOC_DIR       := $(REPO_ROOT)/0.doc
+DSP_DIR       := $(REPO_ROOT)/1.dsp
+HW_DIR        := $(SOC_ROOT)/1.hw
+SW_DIR        := $(SOC_ROOT)/2.sw
+BUILD_DIR     := $(REPO_ROOT)/3.build
+SCRIPTS_DIR   := $(BUILD_DIR)/scripts
+SIM_DIR       := $(SOC_ROOT)/4.sim
+PYTHON_PKG_DIR := $(SOC_ROOT)/8.python
+
+BAUD          ?= 115200
+PORT          ?= /dev/ttyUSB0
+
+# Python / environment selection
+DEFAULT_VENV  := $(firstword $(wildcard $(REPO_ROOT)/.venv $(HOME)/litex-venv))
+PYTHON        ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV)/bin/python3,$(if $(DEFAULT_VENV),$(DEFAULT_VENV)/bin/python3,python3))
+PYTHONPATH_REPO ?= $(PYTHON_PKG_DIR)/src
+SOC_MODULE    ?= uberclock_soc
+
+# Board/target
+BOARD         := alinx_ax7203
+
+# Defaults
+FREQ          ?= 100e6
+OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
+
+SERVER_PID    := $(BUILD_DIR)/litex_server.pid
+CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
+
+.PHONY: help build-board build-sw load term \
+        clean clean-gateware install-python print-python
+
+help:
+	@echo "Targets:"
+	@echo "  make build-board [FREQ=100e6] [OPTIONS='...']"
+	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
+	@echo "  make term        [PORT=/dev/ttyUSB0]"
+	@echo "  make build-sw    [DEMO_FLAGS='..']"
+	@echo "  make install-python   (editable install of 8.python into $(PYTHON))"
+	@echo "  make print-python     (show which interpreter will be used)"
+	@echo "  make clean-gateware   (delete build output only)"
+	@echo "  make clean            (delete build + logs + temp)"
+	@echo ""
+	@echo "Helper scripts live under $(SCRIPTS_DIR)"
+
+print-python:
+	@echo "PYTHON=$(PYTHON)"
+	@echo "PIP=$(PYTHON) -m pip"
+	@echo "PYTHONPATH_REPO=$(PYTHONPATH_REPO)"
+
+install-python:
+	$(PYTHON) -m pip install -e $(PYTHON_PKG_DIR)
+
+# ----------------------------
+# Build / Load using your repo target
+# ----------------------------
+build-board:
+	@echo "[build] module=$(SOC_MODULE)"
+	@echo "[build] python=$(PYTHON)"
+	@echo "[build] sys_clk=$(FREQ) options=$(OPTIONS)"
+	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
+	$(PYTHON) -m $(SOC_MODULE) \
+	  --build \
+	  --sys-clk-freq=$(FREQ) \
+	  $(OPTIONS)
+# ——————————————————————————————————————————————————————————————
+#  Build & run software example under 2.sw/
+# ——————————————————————————————————————————————————————————————
+build-sw:
+	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
+	@echo "→ Executing demo.py in $(SW_DIR)"
+	cd $(SW_DIR) && \
+	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
+	$(PYTHON) ./demo.py \
+	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
+	  --mem=main_ram \
+	  --data-mem=main_ram\
+	  $(DEMO_FLAGS)
+
+load:
+	@echo "[load] module=$(SOC_MODULE)"
+	@echo "[load] python=$(PYTHON)"
+	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
+	$(PYTHON) -m $(SOC_MODULE) \
+	  --load \
+	  --sys-clk-freq=$(FREQ) \
+	  $(OPTIONS)
+
+term:
+	@echo "[term] port=$(PORT)"
+	KERNEL_PATH=$$(find $(SW_DIR) -maxdepth 1 -type f -name '*.bin' | head -n1); \
+	if [ -z "$${KERNEL_PATH}" ]; then \
+	  echo "Error: no .bin found in $(SW_DIR)" >&2; \
+	  exit 1; \
+	fi; \
+	$(PYTHON) -m litex.tools.litex_term $(PORT) --kernel="$${KERNEL_PATH}"
+
+# ----------------------------
+# Cleaning
+# ----------------------------
+clean-gateware:
+	@echo "[clean] removing gateware build output"
+	rm -rf $(BUILD_DIR)/build/$(BOARD)
+
+clean:
+	@echo "[clean] removing build + logs + temp"
+	rm -rf $(BUILD_DIR)/build/$(BOARD)
+	rm -f $(SERVER_PID)
+	rm -f $(BUILD_DIR)/litex_server.log
