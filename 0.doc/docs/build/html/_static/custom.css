@@ -1,0 +1,121 @@
+/*
+ * Main documentation accent overrides for sphinx_rtd_theme.
+ * Swaps the default blue accents for a quartz/lab-inspired green palette.
+ */
+
+:root {
+    --uc-accent: #3d6b5a;
+    --uc-accent-dark: #28483d;
+    --uc-accent-soft: #dfeae5;
+    --uc-ink: #f7faf8;
+    --uc-sidebar: #22342d;
+    --uc-sidebar-active: #2d4a3f;
+    --uc-border: #c7d9d1;
+}
+
+.wy-side-nav-search,
+.wy-nav-top {
+    background: var(--uc-accent);
+    color: var(--uc-ink);
+}
+
+.wy-side-nav-search input[type="text"] {
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.wy-side-nav-search a,
+.wy-side-nav-search a:visited,
+.wy-nav-top a,
+.wy-nav-top a:visited {
+    color: var(--uc-ink);
+}
+
+.wy-nav-side {
+    background: var(--uc-sidebar);
+}
+
+.wy-menu-vertical header,
+.wy-menu-vertical p.caption {
+    color: #d7e5df;
+    letter-spacing: 0.03em;
+}
+
+.wy-menu-vertical a {
+    color: #e6efeb;
+}
+
+.wy-menu-vertical li.toctree-l1.current > a,
+.wy-menu-vertical li.toctree-l2.current > a,
+.wy-menu-vertical li.toctree-l3.current > a,
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.current > a:visited,
+.wy-menu-vertical li.current a,
+.wy-menu-vertical li.current a:visited {
+    color: #f7faf8;
+}
+
+.wy-menu-vertical li.current {
+    background: var(--uc-sidebar-active);
+}
+
+.wy-menu-vertical a:hover,
+.wy-menu-vertical a:focus,
+.wy-menu-vertical li.current > a,
+.wy-menu-vertical li.current > a:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+}
+
+.wy-menu-vertical li.current ul li a {
+    color: #eef5f1;
+}
+
+.wy-menu-vertical li.current ul li a:hover,
+.wy-menu-vertical li.current ul li a:focus {
+    color: #ffffff;
+}
+
+a,
+a:visited {
+    color: var(--uc-accent);
+}
+
+a:hover {
+    color: var(--uc-accent-dark);
+}
+
+.wy-body-for-nav {
+    background: #f5f7f5;
+}
+
+.wy-nav-content {
+    max-width: 980px;
+    border-left: 1px solid var(--uc-border);
+}
+
+.rst-content h1,
+.rst-content h2,
+.rst-content h3 {
+    color: var(--uc-accent-dark);
+}
+
+.rst-content code,
+.rst-content tt,
+.rst-content dl:not(.docutils) dt,
+.rst-content code.literal,
+.rst-content tt.literal {
+    background: var(--uc-accent-soft);
+    border: 1px solid var(--uc-border);
+    border-radius: 3px;
+}
+
+.rst-content .viewcode-link,
+.rst-content .viewcode-back {
+    color: var(--uc-accent-dark);
+}
+
+.rst-content .admonition,
+.rst-content .note,
+.rst-content .warning {
+    border-left: 4px solid var(--uc-accent);
+}

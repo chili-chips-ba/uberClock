@@ -72,6 +72,10 @@ build-sw:
 	$(call print_kv,venv,$(LITEX_VENV)/bin/activate)
 	$(call print_kv,flags,$(if $(strip $(DEMO_FLAGS)),$(DEMO_FLAGS),<none>))
 	$(call print_kv,command,./demo.py --build-path=$(BUILD_DIR)/build/$(BOARD) --mem=main_ram --data-mem=main_ram $(DEMO_FLAGS))
+	@if [ ! -f "$(BUILD_DIR)/build/$(BOARD)/software/include/generated/variables.mak" ]; then \
+	  echo "[software build] missing LiteX software tree for $(BOARD); running build-board first"; \
+	  $(MAKE) --no-print-directory build-board; \
+	fi
 	@source $(LITEX_VENV)/bin/activate && \
 	cd $(SW_DIR) && \
 	./demo.py \

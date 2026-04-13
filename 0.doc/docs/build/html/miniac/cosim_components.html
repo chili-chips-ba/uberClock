@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VProc and mem_model Co-simulation Components &mdash; uberClock 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=ce43d37c" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RV32 ISS Model Integration" href="rv32_iss_integration.html" />
+    <link rel="prev" title="Simulation Test Bench" href="simulation_test_bench.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/uberclock.logo-no-bg.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../dsp/index.html">DSP Blocks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../soc_litex/index.html">SoC Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../build/index.html">Build</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Miniac</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="overview.html">Miniac Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hardware_architecture.html">Hardware Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="software_architecture.html">Software Architecture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fpga_build.html">FPGA Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="simulation_test_bench.html">Simulation Test Bench</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">VProc and mem_model Co-simulation Components</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#vproc">VProc</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mem-model">mem_model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#integration-notes">Integration Notes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-information">More Information</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rv32_iss_integration.html">RV32 ISS Model Integration</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../references/index.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">uberClock</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Miniac</a></li>
+      <li class="breadcrumb-item active">VProc and mem_model Co-simulation Components</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/miniac/cosim_components.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="vproc-and-mem-model-co-simulation-components">
+<h1>VProc and mem_model Co-simulation Components<a class="headerlink" href="#vproc-and-mem-model-co-simulation-components" title="Link to this heading"></a></h1>
+<p>This page summarizes <code class="docutils literal notranslate"><span class="pre">4.miniac/4.sim/models/cosim/README.md</span></code>.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h2>
+<p>The VProc virtual processor and mem_model sparse memory model form the core of
+the co-simulation environment for the Wireguard FPGA top-level test bench. The
+<code class="docutils literal notranslate"><span class="pre">soc_cpu.VProc</span></code> instance runs user code against the simulated design, while
+the memory model provides shared sparse memory that can be accessed from both
+software and HDL.</p>
+</section>
+<section id="vproc">
+<h2>VProc<a class="headerlink" href="#vproc" title="Link to this heading"></a></h2>
+<p>VProc is a co-simulation component that allows a natively compiled user program
+to run against an HDL processor component. It exposes C and C++ APIs for bus
+transactions and for advancing simulation time.</p>
+<p>The documented integration uses a local <code class="docutils literal notranslate"><span class="pre">soc_if</span></code> interface rather than a
+standard interconnect such as AXI or Avalon. Multiple VProc instances can be
+instantiated, each with its own node number.</p>
+<p>The original README also references several architecture diagrams and API
+illustrations:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/user-attachments/assets/b272d61c-fa97-4ba2-a609-307ed4d0840c">VProc overview diagram</a></p></li>
+<li><p><a class="reference external" href="https://github.com/user-attachments/assets/f8dd88fe-ed63-4a6c-a0eb-55a13d0f845d">VProc API illustration</a></p></li>
+<li><p><a class="reference external" href="https://github.com/user-attachments/assets/a5b03827-e882-42d5-8765-c9cc3128b31a">Simple VProc program illustration</a></p></li>
+</ul>
+</section>
+<section id="mem-model">
+<h2>mem_model<a class="headerlink" href="#mem-model" title="Link to this heading"></a></h2>
+<p>The test bench also uses the
+<a class="reference external" href="https://github.com/wyvernSemi/mem_model">mem_model</a> co-simulation component.
+It provides a sparse C memory model together with HDL access components and a
+software API.</p>
+<p>The API exposes read and write functions over shared address spaces and allows
+both HDL logic and multiple VProc instances to interact with the same memory.</p>
+<p>The original README references additional diagrams:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/user-attachments/assets/06278e89-e718-4396-9a05-d8c9cbb51efa">mem_model API illustration</a></p></li>
+<li><p><a class="reference external" href="https://github.com/user-attachments/assets/e991b49b-8b50-4e8f-bf7d-caa96992a680">mem_model HDL integration diagram</a></p></li>
+</ul>
+</section>
+<section id="integration-notes">
+<h2>Integration Notes<a class="headerlink" href="#integration-notes" title="Link to this heading"></a></h2>
+<p>The directory contains HDL wrapper modules such as <code class="docutils literal notranslate"><span class="pre">f_VProc.sv</span></code> and
+<code class="docutils literal notranslate"><span class="pre">mem_model.sv</span></code> plus the supporting Verilog headers and prebuilt host
+libraries. For native simulation code:</p>
+<ul class="simple">
+<li><p>Include <code class="docutils literal notranslate"><span class="pre">VProcClass.h</span></code> for the C++ VProc API or <code class="docutils literal notranslate"><span class="pre">VUser.h</span></code> for the C API.</p></li>
+<li><p>Include <code class="docutils literal notranslate"><span class="pre">mem.h</span></code> for the memory model API.</p></li>
+<li><p>When compiling as C++, wrap the C headers in <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code>.</p></li>
+</ul>
+<p>Example:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">extern</span><span class="w"> </span><span class="s">&quot;C&quot;</span><span class="w"> </span><span class="p">{</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;VUser.h&quot;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;mem.h&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="more-information">
+<h2>More Information<a class="headerlink" href="#more-information" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/wyvernSemi/vproc/blob/master/doc/VProc.pdf">VProc manual</a></p></li>
+<li><p><a class="reference external" href="https://github.com/wyvernSemi/mem_model/blob/main/doc/mem_model_manual.pdf">mem_model manual</a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="simulation_test_bench.html" class="btn btn-neutral float-left" title="Simulation Test Bench" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rv32_iss_integration.html" class="btn btn-neutral float-right" title="RV32 ISS Model Integration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chili-chips.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
