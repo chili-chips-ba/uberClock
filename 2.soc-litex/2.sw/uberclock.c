@@ -241,9 +241,14 @@ static uint32_t fft_fs_hz = 10000u;
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
 #define TRACKQ_MAX_STEP_HZ         2
-#define TRACKQ_FALLBACK_STEP_HZ    1
-#define TRACKQ_DIR_DEADBAND_PCT    18u
-#define TRACKQ_DIR_CONFIRM_VOTES   3u
+#define TRACKQ_ERR_ALPHA_NUM       1
+#define TRACKQ_ERR_ALPHA_DEN       4
+#define TRACKQ_KP_NUM              1
+#define TRACKQ_KP_DEN              4
+#define TRACKQ_MIN_CONF_PCT        5u
+#define TRACKQ_WEAK_DEADBAND_PCT   10u
+#define TRACKQ_WEAK_GAIN_DEN       4
+#define TRACKQ_WEAK_MAX_ERR_MHZ    750
 #define TRACK3_FIFO_WAIT_POLLS     1000000u
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
@@ -256,8 +261,8 @@ struct trackq_state {
     uint32_t center_hz;
     uint32_t delta_hz;
     uint32_t next_tick;
-    int pending_dir;
-    unsigned pending_votes;
+    int32_t filt_error_mhz;
+    int32_t step_accum_mhz;
 };
 
 static struct trackq_state trackq = {
@@ -268,7 +273,7 @@ static struct trackq_state trackq = {
     TRACKQ_DEFAULT_DELTA_HZ,
     0u,
     0,
-    0u
+    0
 };
 
 static inline int is_pow2_u(unsigned x) {
@@ -482,22 +487,52 @@ static int32_t trackq_clamp_step_hz(int32_t correction_hz) {
     return correction_hz;
 }
 
-static int trackq_side_bias(uint64_t left_pwr, uint64_t right_pwr) {
-    uint64_t diff;
-    uint64_t max_side;
+static int32_t trackq_clamp_weak_step_hz(int32_t correction_hz) {
+    if (correction_hz > 1) {
+        return 1;
+    }
+    if (correction_hz < -1) {
+        return -1;
+    }
+    return correction_hz;
+}
 
-    if (left_pwr == right_pwr) {
+static int trackq_vertex_confident(uint64_t left_pwr, uint64_t center_pwr, uint64_t right_pwr) {
+    uint64_t side_span;
+
+    if (!track3_triplet_match(left_pwr, center_pwr, right_pwr)) {
         return 0;
     }
 
-    diff = (left_pwr > right_pwr) ? (left_pwr - right_pwr) : (right_pwr - left_pwr);
-    max_side = (left_pwr > right_pwr) ? left_pwr : right_pwr;
+    side_span = (left_pwr > right_pwr) ? (left_pwr - right_pwr) : (right_pwr - left_pwr);
+    return ((side_span * 100u) >= (center_pwr * TRACKQ_MIN_CONF_PCT));
+}
 
-    if ((diff * 100u) < (max_side * TRACKQ_DIR_DEADBAND_PCT)) {
+static int32_t trackq_side_error_mhz(uint64_t left_pwr, uint64_t right_pwr, uint32_t delta_hz) {
+    int64_t diff;
+    uint64_t sum;
+    uint64_t mag;
+
+    sum = left_pwr + right_pwr;
+    if (sum == 0u) {
         return 0;
     }
 
-    return (right_pwr > left_pwr) ? 1 : -1;
+    diff = (int64_t)right_pwr - (int64_t)left_pwr;
+    mag = (diff < 0ll) ? (uint64_t)(-diff) : (uint64_t)diff;
+    if ((mag * 100u) < (sum * TRACKQ_WEAK_DEADBAND_PCT)) {
+        return 0;
+    }
+
+    diff = diff / TRACKQ_WEAK_GAIN_DEN;
+    diff = (diff * (int64_t)delta_hz * 1000ll) / (int64_t)sum;
+    if (diff > TRACKQ_WEAK_MAX_ERR_MHZ) {
+        return TRACKQ_WEAK_MAX_ERR_MHZ;
+    }
+    if (diff < -TRACKQ_WEAK_MAX_ERR_MHZ) {
+        return -TRACKQ_WEAK_MAX_ERR_MHZ;
+    }
+    return (int32_t)diff;
 }
 
 static void trackq_step(void) {
@@ -513,8 +548,12 @@ static void trackq_step(void) {
     int32_t applied_hz;
     uint32_t phase_inc;
     uint32_t phase_hz;
-    int side_bias;
     const char *mode;
+    int32_t error_mhz;
+    int64_t filt_delta_mhz;
+    int64_t ctrl_mhz;
+    int confident;
+    int weak_mode;
 
     if (!trackq.enabled) {
         return;
@@ -545,59 +584,42 @@ static void trackq_step(void) {
     center_hz_milli = (int64_t)trackq.center_hz * 1000ll;
     vertex_hz_milli = center_hz_milli;
     correction_hz = 0;
+    error_mhz = 0;
     mode = "hold";
+    weak_mode = 0;
 
-    if (track3_triplet_match(left_pwr, center_pwr, right_pwr)) {
+    confident = trackq_vertex_confident(left_pwr, center_pwr, right_pwr);
+    if (confident) {
         num = (int64_t)left_pwr - (int64_t)right_pwr;
         den = 2ll * ((int64_t)left_pwr - (2ll * (int64_t)center_pwr) + (int64_t)right_pwr);
         if (den < 0ll) {
             h_hz_milli = (int64_t)trackq.delta_hz * 1000ll;
             vertex_hz_milli = center_hz_milli + ((h_hz_milli * num) / den);
-            correction_hz = (int32_t)((vertex_hz_milli - center_hz_milli) / 1000ll);
-            correction_hz = trackq_clamp_step_hz(correction_hz);
-            mode = "quad";
+            error_mhz = (int32_t)(vertex_hz_milli - center_hz_milli);
+            mode = "reg";
+        }
+    } else {
+        error_mhz = trackq_side_error_mhz(left_pwr, right_pwr, trackq.delta_hz);
+        if (error_mhz > 0) {
+            mode = "weak+";
+            weak_mode = 1;
+        } else if (error_mhz < 0) {
+            mode = "weak-";
+            weak_mode = 1;
+        } else {
+            trackq.filt_error_mhz = (trackq.filt_error_mhz * (TRACKQ_ERR_ALPHA_DEN - TRACKQ_ERR_ALPHA_NUM)) / TRACKQ_ERR_ALPHA_DEN;
+            mode = "weak";
         }
     }
 
-    if (correction_hz == 0) {
-        side_bias = trackq_side_bias(left_pwr, right_pwr);
-        if (side_bias > 0) {
-            if (trackq.pending_dir == side_bias) {
-                trackq.pending_votes++;
-            } else {
-                trackq.pending_dir = side_bias;
-                trackq.pending_votes = 1u;
-            }
-            if (trackq.pending_votes >= TRACKQ_DIR_CONFIRM_VOTES) {
-                correction_hz = TRACKQ_FALLBACK_STEP_HZ;
-                mode = "dir+";
-                trackq.pending_votes = 0u;
-            } else {
-                mode = "wait+";
-            }
-        } else if (side_bias < 0) {
-            if (trackq.pending_dir == side_bias) {
-                trackq.pending_votes++;
-            } else {
-                trackq.pending_dir = side_bias;
-                trackq.pending_votes = 1u;
-            }
-            if (trackq.pending_votes >= TRACKQ_DIR_CONFIRM_VOTES) {
-                correction_hz = -TRACKQ_FALLBACK_STEP_HZ;
-                mode = "dir-";
-                trackq.pending_votes = 0u;
-            } else {
-                mode = "wait-";
-            }
-        } else {
-            trackq.pending_dir = 0;
-            trackq.pending_votes = 0u;
-            mode = "hold";
-        }
-    } else {
-        trackq.pending_dir = 0;
-        trackq.pending_votes = 0u;
-    }
+    filt_delta_mhz = ((int64_t)(error_mhz - trackq.filt_error_mhz) * (int64_t)TRACKQ_ERR_ALPHA_NUM) / (int64_t)TRACKQ_ERR_ALPHA_DEN;
+    trackq.filt_error_mhz += (int32_t)filt_delta_mhz;
+
+    ctrl_mhz = ((int64_t)trackq.filt_error_mhz * (int64_t)TRACKQ_KP_NUM) / (int64_t)TRACKQ_KP_DEN;
+    trackq.step_accum_mhz += (int32_t)ctrl_mhz;
+    correction_hz = trackq.step_accum_mhz / 1000;
+    correction_hz = weak_mode ? trackq_clamp_weak_step_hz(correction_hz) : trackq_clamp_step_hz(correction_hz);
+    trackq.step_accum_mhz -= correction_hz * 1000;
 
     phase_inc = main_phase_inc_down_1_read();
     phase_hz = uc_phase_inc_to_hz(phase_inc, TRACK3_RF_FS_HZ);
@@ -1373,8 +1395,8 @@ static void cmd_trackq_start(char *args) {
     trackq.center_hz = center_hz;
     trackq.delta_hz = delta_hz;
     trackq.next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
-    trackq.pending_dir = 0;
-    trackq.pending_votes = 0u;
+    trackq.filt_error_mhz = 0;
+    trackq.step_accum_mhz = 0;
 
     printf("trackq_start: phase_down_1=%lu Hz N=%u center=%lu Hz delta=%lu Hz interval=1 s\n",
            (unsigned long)uc_phase_inc_to_hz(main_phase_inc_down_1_read(), TRACK3_RF_FS_HZ),
