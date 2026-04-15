@@ -1,17 +1,29 @@
+/**
+ * @file uberclock.h
+ * @brief Top-level firmware control interface.
+ *
+ * @defgroup core Core Runtime
+ * @{
+ */
 #ifndef UBERCLOCK_H
 #define UBERCLOCK_H
 
 #ifdef __cplusplus
 extern "C" {
-    #endif
+#endif
 
-    void uberclock_register_cmds(void);
-    void uberclock_init(void);
-    void uberclock_poll(void);
+/** Register all firmware commands */
+void uberclock_register_cmds(void);
 
-    #ifdef __cplusplus
+/** Initialize firmware runtime */
+void uberclock_init(void);
+
+/** Main polling loop hook */
+void uberclock_poll(void);
+
+#ifdef __cplusplus
 }
 #endif
 
 #endif
-
+/** @} */

@@ -5,6 +5,7 @@ REPO_ROOT     := $(realpath $(MAKEFILE_DIR)/..)
 SOC_ROOT      := $(REPO_ROOT)/2.soc
 
 DOC_DIR       := $(REPO_ROOT)/0.doc
+DOXYFILE      := $(DOC_DIR)/Doxyfile
 DOCS_DIR      := $(DOC_DIR)/docs
 DSP_DIR       := $(REPO_ROOT)/1.dsp
 HW_DIR        := $(SOC_ROOT)/1.hw
@@ -112,6 +113,9 @@ term:
 # Docs
 # ----------------------------
 docs:
+	@echo "[docs] generating doxygen XML"
+	cd $(DOC_DIR) && doxygen Doxyfile
+
 	@echo "[docs] building Sphinx documentation"
 	cd $(DOCS_DIR) && \
 	LC_ALL=C.UTF-8 LANG=C.UTF-8 LANGUAGE=C.UTF-8 \

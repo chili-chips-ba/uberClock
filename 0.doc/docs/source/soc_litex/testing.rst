@@ -26,12 +26,6 @@ Examples currently kept there include:
 - ``ledmem``
 - ``input-mux``
 
-What does not belong here
--------------------------
-
-- reusable DSP blocks that belong in ``1.dsp/rtl``
-- active SoC-specific RTL that belongs in ``2.soc/1.hw``
-- build scripts and host tools that belong in ``3.build``
 
 Why this section exists
 -----------------------
@@ -40,8 +34,3 @@ Without a documented testing area, legacy experiments look like active parts of
 the design. Keeping them under ``testing`` and documenting that boundary makes
 the active SoC easier to understand.
 
-See also
---------
-
-- :doc:`verilog_ip`
-- :doc:`firmware`

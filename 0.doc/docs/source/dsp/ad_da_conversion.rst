@@ -7,7 +7,7 @@ Overview
 This section documents the RTL used to interface the AX7203 FPGA board with
 the AN9238 ADC and AN9767 DAC modules.
 
-.. image:: ../../../../1.dsp/AD_DA_conversion/0.doc/AD_DA_system.jpg
+.. image:: ../../../../1.dsp/ad_da_conversion/0.doc/AD_DA_system.jpg
    :align: center
 
 Implementation
@@ -28,5 +28,5 @@ target of acceptable sine and square-wave generation at 10 MHz.
 The figure below shows the sampled signal in yellow and the generated signal in
 blue.
 
-.. image:: ../../../../1.dsp/AD_DA_conversion/0.doc/osc_adc_fpga_dac_osc.png
+.. image:: ../../../../1.dsp/ad_da_conversion/0.doc/osc_adc_fpga_dac_osc.png
    :align: center

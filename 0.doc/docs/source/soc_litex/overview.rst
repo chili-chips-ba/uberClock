@@ -1,51 +1,96 @@
-SoC-Based Control with LiteX and VexRiscV
-=========================================
+SoC Integration with LiteX
+==========================
 
 This project uses `LiteX <https://github.com/enjoy-digital/litex>`_ as the FPGA
-framework and instantiates a
-`VexRiscV <https://github.com/SpinalHDL/VexRiscv>`_ soft-core to control the ADC
-to DSP to DAC flow. The bulk of the signal-processing pipeline lives in
-parameterized Verilog modules, while the CPU handles configuration and data
-movement at run time through a UART console.
+integration framework and instantiates a
+`VexRiscV <https://github.com/SpinalHDL/VexRiscv>`_ soft-core CPU to control
+the ADC → DSP → DAC signal path.
 
-Workflow Overview
------------------
+The signal-processing pipeline is implemented in reusable Verilog modules,
+while the CPU provides runtime configuration, control, and data interaction
+through memory-mapped registers and a UART console.
 
-The ``2.soc`` directory is structured around the hardware design,
-software control path, build flow, and the LiteX integration files.
+Overview
+--------
 
-1.hw
-~~~~
+The system is divided into two main domains:
 
-The ``1.hw`` directory contains Verilog blocks organized into subdirectories.
-ADC, CORDIC, CIC filter, and DAC modules are developed and tested there before
-being integrated into the larger design.
+- **Hardware datapath**: ADC, DSP, and DAC blocks implemented in Verilog
+- **Software control**: CPU-driven configuration and monitoring via LiteX CSRs
 
-2.sw
-~~~~
+The CPU interacts with the datapath through memory-mapped registers, enabling
+dynamic reconfiguration without requiring FPGA resynthesis.
 
-The ``2.sw`` directory contains a modified version of the LiteX demo
-application. It integrates the generated CSR definitions into ``main.c`` and
-provides the bare-metal control interface for the datapath.
+Directory Structure
+-------------------
 
-5.docker
+The ``2.soc`` directory organizes the design into hardware, software, and
+integration layers:
+
+``1.hw``
 ~~~~~~~~
 
-The ``5.docker`` directory is still under development. Integrating Vivado into
-the container is the main unresolved part.
+Contains the SoC-side hardware RTL used to integrate and connect the DSP
+pipeline within the system.
 
-6.migen
-~~~~~~~
+- Top-level design (``uberclock.v``) and channel modules
+- Memory, DMA, FIFO, and interconnect infrastructure
+- Standalone test designs for subsystem validation
 
-The ``6.migen`` directory contains:
+This directory represents the bridge between reusable DSP blocks
+(``1.dsp/rtl``) and the LiteX-based SoC.
 
-- ``platforms`` for board pin definitions for the Alinx AX7203.
-- ``targets`` for the top-level LiteX target that instantiates the SoC and
-  project-specific Verilog blocks.
-
-8.python
+``2.sw``
 ~~~~~~~~
 
-The ``8.python`` directory contains the entire SoC code and litex-api.
+Contains the embedded software running on the VexRiscV CPU.
 
+- Based on a modified LiteX demo application
+- Integrates generated CSR definitions into ``main.c``
+- Provides a UART-driven interface for configuring and controlling the datapath
 
+``5.docker``
+~~~~~~~~~~~~
+
+Contains containerization support for the build environment.
+
+- Intended to provide a reproducible FPGA toolchain setup
+- Integration of Vivado is currently under development
+
+``6.migen``
+~~~~~~~~~~~
+
+Contains the LiteX/Migen-based SoC integration code.
+
+- ``platforms``: board definitions (e.g., Alinx AX7203 pin mappings)
+- ``targets``: top-level SoC configurations combining CPU, memory, and custom RTL
+
+``8.python``
+~~~~~~~~~~~~
+
+Contains Python-side SoC construction and control utilities.
+
+- LiteX-based SoC generation code
+- APIs for interacting with the hardware design
+
+System Interaction
+------------------
+
+At runtime, the system operates as follows:
+
+- The CPU configures DSP blocks via CSRs
+- Input data flows from the ADC through the DSP pipeline
+- Processed data is sent to the DAC
+- The UART console provides user interaction and debugging access
+
+Conceptually:
+
+.. code-block:: text
+
+   ADC → DSP → DAC
+          ↑
+        CSRs
+          ↑
+     VexRiscV CPU
+          ↑
+          UART

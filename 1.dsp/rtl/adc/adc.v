@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic Tarik Hamedovic
 // SPDX-License-Identifier: CC-BY-SA-4.0
 
 `timescale 1ns/1ps

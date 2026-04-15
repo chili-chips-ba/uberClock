@@ -24,7 +24,14 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    "breathe",
 ]
+
+breathe_projects = {
+    "uberclock": "../../build/doxygen/xml"
+}
+
+breathe_default_project = "uberclock"
 
 autosummary_generate = True
 

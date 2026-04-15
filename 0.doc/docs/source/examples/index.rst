@@ -9,6 +9,7 @@ reference.
    :maxdepth: 1
    :caption: Data Movement and Algorithms
 
-   Capture Samples into DDR3 <capture_ddr3>
+   High speed capture over DDR3 <capture_high_speed_ddr3>
+   Low speed capture using BRAM <capture_low_speed>
    Export DDR3 Data over UDP <stream_udp>
    Tracking Workflow <tracking_algorithm>

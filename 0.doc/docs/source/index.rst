@@ -11,7 +11,8 @@ The documentation is organized into a small set of topic areas:
 - ``Project Overview`` for goals, hardware platform, and project status.
 - ``DSP Blocks`` for the reusable RTL datapath building blocks.
 - ``SoC Platform`` for the system structure, software layers, and API surface.
-- ``Examples`` for concrete capture, transfer, and algorithm workflows.
+- ``Firmware`` for the firmware written in C.
+- ``Examples`` for capture, transfer, and algorithm workflows.
 - ``Build`` for setup and repeatable build procedures.
 - ``Miniac`` for the acquisition prototype, build flow, and simulation support.
 - ``References`` for external material and board documentation links.
@@ -23,6 +24,7 @@ The documentation is organized into a small set of topic areas:
    Project Overview <project_overview>
    DSP Blocks <dsp/index>
    SoC Platform <soc_litex/index>
+   Firmware <firmware/index>
    Examples <examples/index>
    Build <build/index>
    Miniac <miniac/index>

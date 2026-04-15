@@ -49,12 +49,16 @@ __pycache__/
 3.build/build/alinx_ax7203/*
 
 # =========================
+# Doxygen and sphinx generated build
+# =========================
+0.doc/build/*
+0.doc/docs/build/*
+
+# =========================
 # KEEP THESE (IMPORTANT)
 # =========================
 
 # Generated headers
-!3.build/build/alinx_ax7203/software/
-!3.build/build/alinx_ax7203/software/include/
 !3.build/build/alinx_ax7203/software/include/generated/**
 
 # Gateware (all for now)
