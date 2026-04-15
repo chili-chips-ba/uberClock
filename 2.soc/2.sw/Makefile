@@ -2,13 +2,15 @@ PYTHON ?= python3
 BUILD_DIR ?= ../build/
 APP_BUILD_DIR ?= $(CURDIR)/build
 CODE_MEM ?= main_ram
-DATA_MEM ?= sram
+DATA_MEM ?= main_ram
 
 include $(BUILD_DIR)/software/include/generated/variables.mak
 
 LITEX_DIRECTORY ?= $(shell $(PYTHON) -c 'import os, litex; print(os.path.dirname(litex.__file__))')
 COMMON_MAK := $(if $(SOC_DIRECTORY),$(SOC_DIRECTORY)/software/common.mak,$(LITEX_DIRECTORY)/soc/software/common.mak)
 include $(COMMON_MAK)
+
+.DEFAULT_GOAL := all
 
 # ------------------------------------------------------------------------------
 # Paths
@@ -26,11 +28,13 @@ LINKER_SCRIPT := $(APP_BUILD_DIR)/linker.ld
 # ------------------------------------------------------------------------------
 # Sources
 # ------------------------------------------------------------------------------
-APP_C_SOURCES := \
+TOP_C_SOURCES := \
 	$(CURDIR)/console.c \
 	$(CURDIR)/donut.c \
 	$(CURDIR)/helloc.c \
-	$(CURDIR)/ubddr3.c \
+	$(CURDIR)/ubddr3.c
+
+UBERCLOCK_C_SOURCES := \
 	$(SRC_DIR)/main.c \
 	$(SRC_DIR)/uberclock_channels.c \
 	$(SRC_DIR)/uberclock_commands.c \
@@ -40,11 +44,12 @@ APP_C_SOURCES := \
 	$(SRC_DIR)/uberclock_hw.c \
 	$(SRC_DIR)/uberclock_parse.c \
 	$(SRC_DIR)/uberclock_siggen.c \
-	$(SRC_DIR)/uberclock_track.c \
+	$(SRC_DIR)/uberclock_track.c
+
+KISSFFT_C_SOURCES := \
 	$(KISSFFT_DIR)/kiss_fft.c
 
 APP_CPP_SOURCES :=
-APP_ASM_SOURCES := $(CURDIR)/crt0.S
 
 ifdef WITH_CXX
 APP_CPP_SOURCES += $(CURDIR)/hellocpp.cpp
@@ -55,11 +60,10 @@ endif
 # Objects
 # ------------------------------------------------------------------------------
 OBJECTS := \
-	$(patsubst $(CURDIR)/%.c,$(OBJ_DIR)/%.o,$(filter $(CURDIR)/%.c,$(APP_C_SOURCES))) \
-	$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/uberclock/src/%.o,$(filter $(SRC_DIR)/%.c,$(APP_C_SOURCES))) \
-	$(patsubst $(KISSFFT_DIR)/%.c,$(OBJ_DIR)/uberclock/kissfft/%.o,$(filter $(KISSFFT_DIR)/%.c,$(APP_C_SOURCES))) \
-	$(patsubst $(CURDIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_CPP_SOURCES)) \
-	$(patsubst $(CURDIR)/%.S,$(OBJ_DIR)/%.o,$(APP_ASM_SOURCES))
+	$(patsubst $(CURDIR)/%.c,$(OBJ_DIR)/%.o,$(TOP_C_SOURCES)) \
+	$(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/uberclock/src/%.o,$(UBERCLOCK_C_SOURCES)) \
+	$(patsubst $(KISSFFT_DIR)/%.c,$(OBJ_DIR)/uberclock/kissfft/%.o,$(KISSFFT_C_SOURCES)) \
+	$(patsubst $(CURDIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_CPP_SOURCES))
 
 DEPFILES := $(OBJECTS:.o=.d)
 
@@ -76,12 +80,12 @@ $(OBJ_DIR)/donut.o: CFLAGS += -w
 # ------------------------------------------------------------------------------
 # Targets
 # ------------------------------------------------------------------------------
-all: demo.bin
+all: $(BIN)
 
 demo.bin: $(BIN)
 	cp $< $@
 
-$(BIN): $(ELF)
+$(BIN): $(ELF) | $(APP_BUILD_DIR)
 	$(OBJCOPY) -O binary $< $@
 ifneq ($(OS),Windows_NT)
 	chmod -x $@
@@ -109,19 +113,19 @@ $(APP_BUILD_DIR):
 	mkdir -p $@
 
 # ------------------------------------------------------------------------------
-# Explicit compile rules
+# Compile rules
 # ------------------------------------------------------------------------------
 $(OBJ_DIR)/%.o: $(CURDIR)/%.c | $(APP_BUILD_DIR)
 	@mkdir -p $(dir $@)
 	@echo " CC       $@"
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(OBJ_DIR)/uberClock/src/%.o: $(SRC_DIR)/%.c | $(APP_BUILD_DIR)
+$(OBJ_DIR)/uberclock/src/%.o: $(SRC_DIR)/%.c | $(APP_BUILD_DIR)
 	@mkdir -p $(dir $@)
 	@echo " CC       $@"
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
-$(OBJ_DIR)/uberClock/kissfft/%.o: $(KISSFFT_DIR)/%.c | $(APP_BUILD_DIR)
+$(OBJ_DIR)/uberclock/kissfft/%.o: $(KISSFFT_DIR)/%.c | $(APP_BUILD_DIR)
 	@mkdir -p $(dir $@)
 	@echo " CC       $@"
 	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
@@ -131,15 +135,9 @@ $(OBJ_DIR)/%.o: $(CURDIR)/%.cpp | $(APP_BUILD_DIR)
 	@echo " CXX      $@"
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
-$(OBJ_DIR)/%.o: $(CURDIR)/%.S | $(APP_BUILD_DIR)
-	@mkdir -p $(dir $@)
-	@echo " AS       $@"
-	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
-
 -include $(DEPFILES)
 
 clean:
-	$(RM) demo.bin demo.fbi
-	rm -rf $(APP_BUILD_DIR)
+	rm -rf $(APP_BUILD_DIR) demo.bin demo.elf demo.fbi
 
 .PHONY: all clean

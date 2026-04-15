@@ -1,4 +1,6 @@
-// cordic_logic.v
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 // Encapsulates phase accumulator, CORDIC pipeline, and scaling (no mux)
 `timescale 1 ns / 1 ns
 `default_nettype none

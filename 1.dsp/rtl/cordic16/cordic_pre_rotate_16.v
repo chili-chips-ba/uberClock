@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 module cordic_pre_rotate_16 #(
     parameter IW = 12,
     parameter WW = 15,

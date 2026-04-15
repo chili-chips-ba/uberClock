@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 // ============================================================================
 //  cordic_nco.v
 //    A simple NCO that uses your existing `cordic` core to generate sine/cosine.

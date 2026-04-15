@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 `timescale 1ns/1ps
 `default_nettype none
 

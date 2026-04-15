@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 module cordic_pipeline_stage #(
     parameter STAGE        = 0,
     parameter WW           = 22,

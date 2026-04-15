@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 module cordic_round #(
    parameter WW = 15,
    parameter OW = 12

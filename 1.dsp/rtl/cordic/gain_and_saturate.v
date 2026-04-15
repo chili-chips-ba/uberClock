@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 `timescale 1 ns / 1 ns
 `default_nettype none
 module gain_and_saturate #(
