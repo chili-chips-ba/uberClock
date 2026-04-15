@@ -1,36 +1,65 @@
+# =========================
+# General junk
+# =========================
 *~
 *.bak
 *.bkp
 *.log
-
+*.jou
+*.idea
+*temp*
 *xOLD*
-
 *output*
 
-# ignore the LiteX build output
+.vscode/
+
+# =========================
+# Build artifacts (global)
+# =========================
+*.o
+*.d
+*.elf
+*.bin
+*.map
+*.fbi
+*.txt
+
+__pycache__/
+*.pyc
+
+# =========================
+# LiteX specific ignores
+# =========================
 2.soc-litex/3.build/build/
 2.soc-litex/2.sw/uberClock/
 2.soc-litex/3.build/analyzer.csv
 2.soc-litex/3.build/dump.vcd
 2.soc-litex/3.build/vivado.jou
 2.soc-litex/3.build/vivado_*.str
-#*impl*
-*temp*
 
-*.jou
-.vscode/
-3.build/build/
-*.bin
-*.txt
-*.o
-*.d
-*.elf
-*.bin
-*.fbi
-*.map
-*.elf
-*.map
-*.fbi
+# =========================
+# Main build folder (IGNORE EVERYTHING)
+# =========================
+3.build/build/*
 
-__pycache__/
-*.pyc
+# Allow board directory
+!3.build/build/alinx_ax7203/
+
+# Reset ignore inside it
+3.build/build/alinx_ax7203/*
+
+# =========================
+# KEEP THESE (IMPORTANT)
+# =========================
+
+# Generated headers
+!3.build/build/alinx_ax7203/software/
+!3.build/build/alinx_ax7203/software/include/
+!3.build/build/alinx_ax7203/software/include/generated/**
+
+# Gateware (all for now)
+!3.build/build/alinx_ax7203/gateware/**
+
+# CSR files
+!3.build/build/alinx_ax7203/csr.json
+!3.build/build/alinx_ax7203/csr.csv
