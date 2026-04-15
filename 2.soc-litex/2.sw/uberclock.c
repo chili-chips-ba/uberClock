@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamovic
+// SPDX-License-Identifier: CC-BY-SA-4.0
+
 // uberclock.c
 #include <stdio.h>
 #include <stdlib.h>
@@ -157,9 +160,13 @@ static void cmd_fft32_ds_y(char *args) {
 #define SIG3_ENABLE_DEFAULT 1
 #define SIG3_CHANNELS 5
 #define SIG3_TONES    3
+#define TRACKQ_CHANNELS 3
+#define TRACKQ_CH1_START_HZ 10002950u
+#define TRACKQ_CH2_START_HZ 3386370u
+#define TRACKQ_CH3_START_HZ 3727990u
 
 static volatile int sig3_enable = 0;
-static uint8_t sig3_channel_enable[SIG3_CHANNELS] = {1u, 0u, 0u, 0u, 0u};
+static uint8_t sig3_channel_enable[SIG3_CHANNELS] = {1u, 1u, 1u, 0u, 0u};
 
 /* 32-bit DDS phase accumulators/increments for 5 channels x 3 tones. */
 static uint32_t sig3_phase[SIG3_CHANNELS][SIG3_TONES];
@@ -173,7 +180,7 @@ static uint32_t sig3_freq_hz[SIG3_CHANNELS][SIG3_TONES] = {
 };
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp = 3000;
+static int16_t sig3_amp[SIG3_CHANNELS] = {3000, 10000, 10000, 3000, 3000};
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -216,13 +223,13 @@ static void sig3_start(void) {
     memset(sig3_phase, 0, sizeof(sig3_phase));
     sig3_update_increments();
     sig3_channel_enable[0] = 1u;
-    sig3_channel_enable[1] = 0u;
-    sig3_channel_enable[2] = 0u;
+    sig3_channel_enable[1] = 1u;
+    sig3_channel_enable[2] = 1u;
     sig3_channel_enable[3] = 0u;
     sig3_channel_enable[4] = 0u;
 
     sig3_enable = 1;
-    puts("sig3 enabled on ch1 only");
+    puts("sig3 enabled on ch1..ch3");
 }
 
 static void sig3_stop(void) {
@@ -268,7 +275,7 @@ static int sig3_step(iq5_frame_t *frame) {
 
         for (tone = 0; tone < SIG3_TONES; tone++) {
             sig3_phase[ch][tone] += sig3_inc[ch][tone];
-            acc += ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_phase[ch][tone])) / 32767;
+            acc += ((int32_t)sig3_amp[ch] * (int32_t)sig3_sin_u32(sig3_phase[ch][tone])) / 32767;
         }
 
         frame->x[ch] = sig3_clamp_s16(acc);
@@ -323,9 +330,11 @@ static void sig3_push_one(void) {
 }
 static void cmd_sig3_amp(char *a) {
     int v = parse_s(a, 1, 10000, "sig3_amp");
+    unsigned ch;
     if (v < 1 || v > 10000) return;
-    sig3_amp = (int16_t)v;
-    printf("sig3 amplitude per tone = %d\n", sig3_amp);
+    for (ch = 0; ch < SIG3_CHANNELS; ch++)
+        sig3_amp[ch] = (int16_t)v;
+    printf("sig3 amplitude per tone = %d for all channels\n", v);
 }
 
 static void cmd_sig3_freqs(char *args) {
@@ -443,6 +452,8 @@ static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
 static uint32_t fft_fs_hz = 10000u;
+static volatile uint32_t ce_ticks = 0;
+static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
 
 #define TRACK3_RF_FS_HZ            65000000u
 #define TRACK3_DEFAULT_STEP_HZ     5u
@@ -451,6 +462,7 @@ static uint32_t fft_fs_hz = 10000u;
 #define TRACK3_DEFAULT_SETTLE      256u
 #define TRACK3_DEFAULT_CENTER_HZ   1000u
 #define TRACK3_DEFAULT_DELTA_HZ    10u
+#define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
@@ -470,6 +482,7 @@ static uint32_t fft_fs_hz = 10000u;
 
 struct trackq_state {
     int enabled;
+    unsigned channel;
     unsigned n;
     unsigned settle;
     uint32_t center_hz;
@@ -479,15 +492,10 @@ struct trackq_state {
     int32_t step_accum_mhz;
 };
 
-static struct trackq_state trackq = {
-    0,
-    TRACK3_DEFAULT_N,
-    TRACK3_DEFAULT_SETTLE,
-    TRACK3_DEFAULT_CENTER_HZ,
-    TRACKQ_DEFAULT_DELTA_HZ,
-    0u,
-    0,
-    0
+static struct trackq_state trackq[TRACKQ_CHANNELS] = {
+    {0, 0u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
+    {0, 1u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
+    {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
 };
 
 static inline int is_pow2_u(unsigned x) {
@@ -502,40 +510,22 @@ static uint32_t uc_phase_inc_to_hz(uint32_t phase_inc, uint32_t fs_hz) {
     return (uint32_t)((((uint64_t)phase_inc * (uint64_t)fs_hz) + (1u << 25)) >> 26);
 }
 
-static int ds_wait_readable(unsigned limit) {
-    while (limit--) {
-        if ((main_ds_fifo_flags_read() & 0x1u) != 0u)
-            return 1;
+static uint32_t phase_down_read(unsigned channel) {
+    switch (channel) {
+        case 0: return main_phase_inc_down_1_read();
+        case 1: return main_phase_inc_down_2_read();
+        case 2: return main_phase_inc_down_3_read();
+        default: return 0u;
     }
-    return 0;
 }
 
-static int capture_ds_fft_ch1(unsigned n, unsigned settle) {
-    unsigned i;
-
-    main_ds_fifo_clear_write(1);
-
-    for (i = 0; i < settle; i++) {
-        iq5_frame_t frame;
-        if (!ds_wait_readable(200000u)) {
-            printf("capture_ds_fft_ch1 settle timeout at sample %u/%u\n", i, settle);
-            return 0;
-        }
-        ds_fifo_read_frame(&frame);
+static void phase_down_write(unsigned channel, uint32_t phase_inc) {
+    switch (channel) {
+        case 0: main_phase_inc_down_1_write(phase_inc); break;
+        case 1: main_phase_inc_down_2_write(phase_inc); break;
+        case 2: main_phase_inc_down_3_write(phase_inc); break;
+        default: break;
     }
-
-    for (i = 0; i < n; i++) {
-        iq5_frame_t frame;
-        if (!ds_wait_readable(200000u)) {
-            printf("capture_ds_fft_ch1 capture timeout at sample %u/%u\n", i, n);
-            return 0;
-        }
-        ds_fifo_read_frame(&frame);
-        fft_in[i].r = (kiss_fft_scalar)frame.x[0];
-        fft_in[i].i = (kiss_fft_scalar)frame.y[0];
-    }
-
-    return 1;
 }
 
 static uint64_t fft_bin_power(unsigned k) {
@@ -566,48 +556,53 @@ static void service_one_ce_event(void) {
     evm_enable_write(1);
 }
 
-static void track_service_background(void) {
-    if (ce_event == 0u)
+static void track3_service_background(void) {
+    if (ce_event == 0u) {
         return;
+    }
+
     ce_event--;
     service_one_ce_event();
 }
 
-static void track_service_background_budget(unsigned budget) {
+static void track3_service_background_budget(unsigned budget) {
     while (budget-- && ce_event) {
         ce_event--;
         service_one_ce_event();
     }
 }
 
-static void track_wait_ticks(uint32_t wait_ticks) {
+static void track3_wait_ticks(uint32_t wait_ticks) {
     uint32_t start_tick = ce_ticks;
 
-    while ((uint32_t)(ce_ticks - start_tick) < wait_ticks)
-        track_service_background();
+    while ((uint32_t)(ce_ticks - start_tick) < wait_ticks) {
+        track3_service_background();
+    }
 }
 
 static unsigned ds_fifo_flush_all(unsigned max_samples) {
     unsigned flushed = 0;
 
     while (flushed < max_samples && (main_ds_fifo_flags_read() & 0x1u)) {
-        iq5_frame_t frame;
-        ds_fifo_read_frame(&frame);
+        /* Track/FFT are for channel 1 on this SoC, so consume the ch1 sample. */
+        main_ds_fifo_pop_write(1);
+        (void)main_ds_fifo_x1_read();
+        (void)main_ds_fifo_y1_read();
         flushed++;
-        track_service_background_budget(4);
+        track3_service_background_budget(4);
     }
 
     return flushed;
 }
 
-static int track_wait_ds_fifo(const char *phase_name, unsigned sample_idx, unsigned total) {
+static int track3_wait_ds_fifo(const char *phase, unsigned sample_idx, unsigned total) {
     unsigned stall = 0;
 
     while ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
-        track_service_background();
+        track3_service_background();
         if (++stall >= TRACK3_FIFO_WAIT_POLLS) {
             printf("track3 %s timeout at sample %u/%u after %u polls\n",
-                   phase_name, sample_idx, total, stall);
+                   phase, sample_idx, total, stall);
             return 0;
         }
     }
@@ -615,27 +610,59 @@ static int track_wait_ds_fifo(const char *phase_name, unsigned sample_idx, unsig
     return 1;
 }
 
-static int capture_ds_track_ch1(unsigned n, unsigned settle) {
-    unsigned i;
+static int capture_ds_fft_ch1(unsigned n, unsigned settle) {
+    for (unsigned i = 0; i < settle; i++) {
+        if (!track3_wait_ds_fifo("settle", i, settle)) {
+            return 0;
+        }
+        main_ds_fifo_pop_write(1);
+        (void)main_ds_fifo_x1_read();
+        (void)main_ds_fifo_y1_read();
+        track3_service_background_budget(4);
+    }
 
-    main_ds_fifo_clear_write(1);
+    for (unsigned i = 0; i < n; i++) {
+        int16_t sx;
+
+        if (!track3_wait_ds_fifo("capture", i, n)) {
+            return 0;
+        }
+        main_ds_fifo_pop_write(1);
+
+        /* Channel 1 tracking uses the ch1 DS FIFO lane on this SoC. */
+        sx = (int16_t)(main_ds_fifo_x1_read() & 0xffffu);
+        (void)main_ds_fifo_y1_read();
+
+        fft_in[i].r = (kiss_fft_scalar)sx;
+        fft_in[i].i = (kiss_fft_scalar)0;
+        track3_service_background_budget(4);
+    }
+
+    return 1;
+}
+
+static int capture_ds_track_multi(unsigned n, unsigned settle) {
+    unsigned i;
 
     for (i = 0; i < settle; i++) {
         iq5_frame_t frame;
-        if (!track_wait_ds_fifo("settle", i, settle))
+
+        if (!track3_wait_ds_fifo("settle", i, settle))
             return 0;
         ds_fifo_read_frame(&frame);
-        track_service_background_budget(4);
+        track3_service_background_budget(4);
     }
 
     for (i = 0; i < n; i++) {
         iq5_frame_t frame;
-        if (!track_wait_ds_fifo("capture", i, n))
+
+        if (!track3_wait_ds_fifo("capture", i, n))
             return 0;
         ds_fifo_read_frame(&frame);
-        fft_in[i].r = (kiss_fft_scalar)frame.x[0];
-        fft_in[i].i = (kiss_fft_scalar)0;
-        track_service_background_budget(4);
+        track_samples[0][i] = frame.x[0];
+        track_samples[1][i] = frame.x[1];
+        track_samples[2][i] = frame.x[2];
+        track3_service_background_budget(4);
     }
 
     return 1;
@@ -683,21 +710,67 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
     return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
 }
 
+static uint64_t track_power_at_hz_samples(const int16_t *samples, uint32_t f_hz, unsigned n) {
+    uint32_t phase_acc = 0u;
+    uint32_t phase_inc = sig3_phase_inc(f_hz, fft_fs_hz);
+    int64_t acc_i = 0;
+    int64_t acc_q = 0;
+    unsigned i;
+
+    for (i = 0; i < n; i++) {
+        int32_t sample = (int32_t)samples[i];
+        int32_t cos_q15 = (int32_t)sig3_sin_u32(phase_acc + 0x40000000u);
+        int32_t sin_q15 = (int32_t)sig3_sin_u32(phase_acc);
+
+        acc_i += ((int64_t)sample * (int64_t)cos_q15) >> TRACKQ_CORR_SHIFT;
+        acc_q -= ((int64_t)sample * (int64_t)sin_q15) >> TRACKQ_CORR_SHIFT;
+        phase_acc += phase_inc;
+    }
+
+    return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
+}
+
 static uint64_t track_band_power_at_hz(uint32_t f_hz, unsigned n) {
     uint32_t df_hz;
-    uint64_t center_pwr = track_power_at_hz(f_hz, n);
+    uint64_t center_pwr;
     uint64_t lower_pwr;
     uint64_t upper_pwr;
 
-    if (fft_fs_hz == 0u || n == 0u)
+    center_pwr = track_power_at_hz(f_hz, n);
+    if (fft_fs_hz == 0u || n == 0u) {
         return center_pwr;
+    }
 
     df_hz = (uint32_t)((((uint64_t)fft_fs_hz) + (n / 2u)) / (uint64_t)n);
-    if (df_hz == 0u)
+    if (df_hz == 0u) {
         return center_pwr;
+    }
 
     lower_pwr = track_power_at_hz((f_hz > df_hz) ? (f_hz - df_hz) : 0u, n);
     upper_pwr = track_power_at_hz(f_hz + df_hz, n);
+
+    /* Narrow 3-bin band: center + 0.5*(lower + upper). */
+    return center_pwr + ((lower_pwr + upper_pwr) >> 1);
+}
+
+static uint64_t track_band_power_at_hz_samples(const int16_t *samples, uint32_t f_hz, unsigned n) {
+    uint32_t df_hz;
+    uint64_t center_pwr;
+    uint64_t lower_pwr;
+    uint64_t upper_pwr;
+
+    center_pwr = track_power_at_hz_samples(samples, f_hz, n);
+    if (fft_fs_hz == 0u || n == 0u) {
+        return center_pwr;
+    }
+
+    df_hz = (uint32_t)((((uint64_t)fft_fs_hz) + (n / 2u)) / (uint64_t)n);
+    if (df_hz == 0u) {
+        return center_pwr;
+    }
+
+    lower_pwr = track_power_at_hz_samples(samples, (f_hz > df_hz) ? (f_hz - df_hz) : 0u, n);
+    upper_pwr = track_power_at_hz_samples(samples, f_hz + df_hz, n);
 
     return center_pwr + ((lower_pwr + upper_pwr) >> 1);
 }
@@ -753,15 +826,15 @@ static int trackq_vertex_confident(uint64_t left_pwr, uint64_t center_pwr, uint6
 static int32_t trackq_side_error_mhz(uint64_t left_pwr, uint64_t right_pwr, uint32_t delta_hz) {
     int64_t diff;
     uint64_t sum;
-    uint64_t mag_abs;
+    uint64_t mag;
 
     sum = left_pwr + right_pwr;
     if (sum == 0u)
         return 0;
 
     diff = (int64_t)right_pwr - (int64_t)left_pwr;
-    mag_abs = (diff < 0ll) ? (uint64_t)(-diff) : (uint64_t)diff;
-    if ((mag_abs * 100u) < (sum * TRACKQ_WEAK_DEADBAND_PCT))
+    mag = (diff < 0ll) ? (uint64_t)(-diff) : (uint64_t)diff;
+    if ((mag * 100u) < (sum * TRACKQ_WEAK_DEADBAND_PCT))
         return 0;
 
     diff = diff / TRACKQ_WEAK_GAIN_DEN;
@@ -774,115 +847,120 @@ static int32_t trackq_side_error_mhz(uint64_t left_pwr, uint64_t right_pwr, uint
 }
 
 static void trackq_step(void) {
-    uint64_t left_pwr;
-    uint64_t center_pwr;
-    uint64_t right_pwr;
-    int64_t num;
-    int64_t den;
-    int64_t center_hz_milli;
-    int64_t h_hz_milli;
-    int64_t vertex_hz_milli;
-    int32_t correction_hz;
-    int32_t applied_hz;
-    uint32_t phase_inc;
-    uint32_t phase_hz;
-    const char *mode;
-    int32_t error_mhz;
-    int64_t filt_delta_mhz;
-    int64_t ctrl_mhz;
-    int confident;
-    int weak_mode;
-    unsigned prev_run;
+    unsigned i;
+    unsigned capture_n = 0u;
+    unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
+    int any_due = 0;
+    int any_enabled = 0;
+    uint32_t phase_hz_log[TRACKQ_CHANNELS];
 
-    if (!trackq.enabled)
-        return;
-    if (fft_fs_hz == 0u) {
-        puts("trackq stopped: fft_fs must be > 0");
-        trackq.enabled = 0;
-        return;
-    }
-    if (ce_ticks < trackq.next_tick)
-        return;
-    if (trackq.center_hz <= trackq.delta_hz) {
-        puts("trackq stopped: center_hz must exceed delta_hz");
-        trackq.enabled = 0;
-        return;
-    }
-
-    prev_run = (unsigned)dsp_pump_enable;
-    dsp_pump_enable = 0;
-
-    if (!capture_ds_track_ch1(trackq.n, trackq.settle)) {
-        trackq.enabled = 0;
-        dsp_pump_enable = prev_run ? 1 : 0;
-        return;
-    }
-
-    left_pwr = track_band_power_at_hz(trackq.center_hz - trackq.delta_hz, trackq.n);
-    center_pwr = track_band_power_at_hz(trackq.center_hz, trackq.n);
-    right_pwr = track_band_power_at_hz(trackq.center_hz + trackq.delta_hz, trackq.n);
-
-    center_hz_milli = (int64_t)trackq.center_hz * 1000ll;
-    vertex_hz_milli = center_hz_milli;
-    correction_hz = 0;
-    error_mhz = 0;
-    mode = "hold";
-    weak_mode = 0;
-
-    confident = trackq_vertex_confident(left_pwr, center_pwr, right_pwr);
-    if (confident) {
-        num = (int64_t)left_pwr - (int64_t)right_pwr;
-        den = 2ll * ((int64_t)left_pwr - (2ll * (int64_t)center_pwr) + (int64_t)right_pwr);
-        if (den < 0ll) {
-            h_hz_milli = (int64_t)trackq.delta_hz * 1000ll;
-            vertex_hz_milli = center_hz_milli + ((h_hz_milli * num) / den);
-            error_mhz = (int32_t)(vertex_hz_milli - center_hz_milli);
-            mode = "reg";
+    for (i = 0; i < TRACKQ_CHANNELS; i++) {
+        if (!trackq[i].enabled)
+            continue;
+        any_enabled = 1;
+        if (fft_fs_hz == 0u) {
+            puts("trackq stopped: fft_fs must be > 0");
+            trackq[i].enabled = 0;
+            continue;
         }
-    } else {
-        error_mhz = trackq_side_error_mhz(left_pwr, right_pwr, trackq.delta_hz);
-        if (error_mhz > 0) {
-            mode = "weak+";
-            weak_mode = 1;
-        } else if (error_mhz < 0) {
-            mode = "weak-";
-            weak_mode = 1;
+        if (trackq[i].center_hz <= trackq[i].delta_hz) {
+            puts("trackq stopped: center_hz must exceed delta_hz");
+            trackq[i].enabled = 0;
+            continue;
+        }
+        if (ce_ticks >= trackq[i].next_tick) {
+            any_due = 1;
+            if (capture_n == 0u) {
+                capture_n = trackq[i].n;
+                capture_settle = trackq[i].settle;
+            }
+        }
+    }
+
+    if (!any_enabled || !any_due)
+        return;
+
+    if (!capture_ds_track_multi(capture_n, capture_settle)) {
+        for (i = 0; i < TRACKQ_CHANNELS; i++)
+            trackq[i].enabled = 0;
+        return;
+    }
+
+    for (i = 0; i < TRACKQ_CHANNELS; i++) {
+        uint64_t left_pwr;
+        uint64_t center_pwr;
+        uint64_t right_pwr;
+        int64_t num;
+        int64_t den;
+        int64_t center_hz_milli;
+        int64_t h_hz_milli;
+        int64_t vertex_hz_milli;
+        int32_t correction_hz;
+        int32_t applied_hz;
+        uint32_t phase_inc;
+        uint32_t phase_hz;
+        int32_t error_mhz;
+        int64_t filt_delta_mhz;
+        int64_t ctrl_mhz;
+        int confident;
+        int weak_mode;
+
+        phase_hz_log[i] = uc_phase_inc_to_hz(phase_down_read(i), TRACK3_RF_FS_HZ);
+        if (!trackq[i].enabled || ce_ticks < trackq[i].next_tick)
+            continue;
+
+        left_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz - trackq[i].delta_hz, trackq[i].n);
+        center_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz, trackq[i].n);
+        right_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz + trackq[i].delta_hz, trackq[i].n);
+
+        center_hz_milli = (int64_t)trackq[i].center_hz * 1000ll;
+        vertex_hz_milli = center_hz_milli;
+        correction_hz = 0;
+        error_mhz = 0;
+        weak_mode = 0;
+
+        confident = trackq_vertex_confident(left_pwr, center_pwr, right_pwr);
+        if (confident) {
+            num = (int64_t)left_pwr - (int64_t)right_pwr;
+            den = 2ll * ((int64_t)left_pwr - (2ll * (int64_t)center_pwr) + (int64_t)right_pwr);
+            if (den < 0ll) {
+                h_hz_milli = (int64_t)trackq[i].delta_hz * 1000ll;
+                vertex_hz_milli = center_hz_milli + ((h_hz_milli * num) / den);
+                error_mhz = (int32_t)(vertex_hz_milli - center_hz_milli);
+            }
         } else {
-            trackq.filt_error_mhz =
-                (trackq.filt_error_mhz * (TRACKQ_ERR_ALPHA_DEN - TRACKQ_ERR_ALPHA_NUM)) / TRACKQ_ERR_ALPHA_DEN;
-            mode = "weak";
+            error_mhz = trackq_side_error_mhz(left_pwr, right_pwr, trackq[i].delta_hz);
+            if (error_mhz != 0)
+                weak_mode = 1;
+            else
+                trackq[i].filt_error_mhz =
+                    (trackq[i].filt_error_mhz * (TRACKQ_ERR_ALPHA_DEN - TRACKQ_ERR_ALPHA_NUM)) / TRACKQ_ERR_ALPHA_DEN;
         }
+
+        filt_delta_mhz = ((int64_t)(error_mhz - trackq[i].filt_error_mhz) * (int64_t)TRACKQ_ERR_ALPHA_NUM) /
+                         (int64_t)TRACKQ_ERR_ALPHA_DEN;
+        trackq[i].filt_error_mhz += (int32_t)filt_delta_mhz;
+
+        ctrl_mhz = ((int64_t)trackq[i].filt_error_mhz * (int64_t)TRACKQ_KP_NUM) / (int64_t)TRACKQ_KP_DEN;
+        trackq[i].step_accum_mhz += (int32_t)ctrl_mhz;
+        correction_hz = trackq[i].step_accum_mhz / 1000;
+        correction_hz = weak_mode ? trackq_clamp_weak_step_hz(correction_hz) : trackq_clamp_step_hz(correction_hz);
+        trackq[i].step_accum_mhz -= correction_hz * 1000;
+
+        phase_inc = phase_down_read(i);
+        phase_hz = uc_phase_inc_to_hz(phase_inc, TRACK3_RF_FS_HZ);
+        applied_hz = correction_hz;
+        phase_hz = (uint32_t)((int32_t)phase_hz + applied_hz);
+        phase_down_write(i, uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ));
+        phase_hz_log[i] = phase_hz;
+        trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
     }
 
-    filt_delta_mhz = ((int64_t)(error_mhz - trackq.filt_error_mhz) * (int64_t)TRACKQ_ERR_ALPHA_NUM) /
-                     (int64_t)TRACKQ_ERR_ALPHA_DEN;
-    trackq.filt_error_mhz += (int32_t)filt_delta_mhz;
-
-    ctrl_mhz = ((int64_t)trackq.filt_error_mhz * (int64_t)TRACKQ_KP_NUM) / (int64_t)TRACKQ_KP_DEN;
-    trackq.step_accum_mhz += (int32_t)ctrl_mhz;
-    correction_hz = trackq.step_accum_mhz / 1000;
-    correction_hz = weak_mode ? trackq_clamp_weak_step_hz(correction_hz) : trackq_clamp_step_hz(correction_hz);
-    trackq.step_accum_mhz -= correction_hz * 1000;
-
-    phase_inc = main_phase_inc_down_1_read();
-    phase_hz = uc_phase_inc_to_hz(phase_inc, TRACK3_RF_FS_HZ);
-    applied_hz = correction_hz;
-    phase_hz = (uint32_t)((int32_t)phase_hz + applied_hz);
-    main_phase_inc_down_1_write(uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ));
     uc_commit();
-
-    printf("trackq: pwr={%llu,%llu,%llu} vertex=%ld.%03ldHz corr=%ldHz mode=%s phase_down_1=%luHz\n",
-           (unsigned long long)left_pwr,
-           (unsigned long long)center_pwr,
-           (unsigned long long)right_pwr,
-           (long)(vertex_hz_milli / 1000ll),
-           (long)labs(vertex_hz_milli % 1000ll),
-           (long)applied_hz,
-           mode,
-           (unsigned long)phase_hz);
-
-    trackq.next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
-    dsp_pump_enable = prev_run ? 1 : 0;
+    printf("trackq: ch1=%luHz ch2=%luHz ch3=%luHz\n",
+           (unsigned long)phase_hz_log[0],
+           (unsigned long)phase_hz_log[1],
+           (unsigned long)phase_hz_log[2]);
 }
 
 static void cmd_track3(char *args) {
@@ -898,15 +976,13 @@ static void cmd_track3(char *args) {
     unsigned n;
     uint32_t center_hz;
     uint32_t delta_hz;
-    unsigned band_bins = 1u;
+    unsigned band_bins = TRACK3_DEFAULT_BAND_BINS;
     unsigned settle = TRACK3_DEFAULT_SETTLE;
     uint32_t original_phase_inc;
     uint32_t sweep_hz;
     size_t cfg_need = 0;
     size_t cfg_len;
     kiss_fft_cfg cfg;
-    unsigned prev_run;
-    unsigned step;
 
     if (!tok_start) {
         puts("Usage: track3 <start_phase_down_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
@@ -951,9 +1027,6 @@ static void cmd_track3(char *args) {
         return;
     }
 
-    prev_run = (unsigned)dsp_pump_enable;
-    dsp_pump_enable = 0;
-
     original_phase_inc = main_phase_inc_down_1_read();
     sweep_hz = start_hz;
     printf("track3: start=%lu Hz step=%lu Hz max_steps=%u N=%u center=%lu Hz delta=%lu Hz Fs=%lu Hz\n",
@@ -965,7 +1038,7 @@ static void cmd_track3(char *args) {
            (unsigned long)delta_hz,
            (unsigned long)fft_fs_hz);
 
-    for (step = 0; step < max_steps; step++) {
+    for (unsigned step = 0; step < max_steps; step++) {
         uint32_t phase_inc = uc_phase_inc_from_hz(sweep_hz, TRACK3_RF_FS_HZ);
         unsigned left_k;
         unsigned center_k;
@@ -977,10 +1050,9 @@ static void cmd_track3(char *args) {
         main_phase_inc_down_1_write(phase_inc);
         uc_commit();
 
-        if (!capture_ds_track_ch1(n, settle)) {
+        if (!capture_ds_fft_ch1(n, settle)) {
             main_phase_inc_down_1_write(original_phase_inc);
             uc_commit();
-            dsp_pump_enable = prev_run ? 1 : 0;
             return;
         }
 
@@ -994,7 +1066,6 @@ static void cmd_track3(char *args) {
             puts("track3 expected bins exceed FFT Nyquist range");
             main_phase_inc_down_1_write(original_phase_inc);
             uc_commit();
-            dsp_pump_enable = prev_run ? 1 : 0;
             return;
         }
 
@@ -1020,11 +1091,10 @@ static void cmd_track3(char *args) {
                    (unsigned long)center_hz,
                    (unsigned long)(center_hz - delta_hz),
                    (unsigned long)(center_hz + delta_hz));
-            dsp_pump_enable = prev_run ? 1 : 0;
             return;
         }
 
-        track_wait_ticks(TRACKQ_INTERVAL_TICKS);
+        track3_wait_ticks(TRACKQ_INTERVAL_TICKS);
         sweep_hz += step_hz;
     }
 
@@ -1033,13 +1103,18 @@ static void cmd_track3(char *args) {
     printf("track3 no lock found in %u steps; restored phase_down_1=%lu Hz\n",
            max_steps,
            (unsigned long)uc_phase_inc_to_hz(original_phase_inc, TRACK3_RF_FS_HZ));
-    dsp_pump_enable = prev_run ? 1 : 0;
 }
 
 static void cmd_trackq_start(char *args) {
-    char *tok_n      = strtok(args, " \t");
+    char *tok_f1     = strtok(args, " \t");
+    char *tok_f2     = strtok(NULL, " \t");
+    char *tok_f3     = strtok(NULL, " \t");
+    char *tok_n      = strtok(NULL, " \t");
     char *tok_center = strtok(NULL, " \t");
     char *tok_delta  = strtok(NULL, " \t");
+    uint32_t f1_hz = tok_f1 ? (uint32_t)strtoul(tok_f1, NULL, 0) : 0u;
+    uint32_t f2_hz = tok_f2 ? (uint32_t)strtoul(tok_f2, NULL, 0) : 0u;
+    uint32_t f3_hz = tok_f3 ? (uint32_t)strtoul(tok_f3, NULL, 0) : 0u;
     unsigned n = tok_n ? (unsigned)strtoul(tok_n, NULL, 0) : TRACK3_DEFAULT_N;
     uint32_t center_hz = tok_center ? (uint32_t)strtoul(tok_center, NULL, 0) : TRACK3_DEFAULT_CENTER_HZ;
     uint32_t delta_hz = tok_delta ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACKQ_DEFAULT_DELTA_HZ;
@@ -1057,17 +1132,27 @@ static void cmd_trackq_start(char *args) {
         return;
     }
 
-    trackq.enabled = 1;
-    trackq.n = n;
-    trackq.settle = TRACK3_DEFAULT_SETTLE;
-    trackq.center_hz = center_hz;
-    trackq.delta_hz = delta_hz;
-    trackq.next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
-    trackq.filt_error_mhz = 0;
-    trackq.step_accum_mhz = 0;
+    if (f1_hz) phase_down_write(0, uc_phase_inc_from_hz(f1_hz, TRACK3_RF_FS_HZ));
+    if (f2_hz) phase_down_write(1, uc_phase_inc_from_hz(f2_hz, TRACK3_RF_FS_HZ));
+    if (f3_hz) phase_down_write(2, uc_phase_inc_from_hz(f3_hz, TRACK3_RF_FS_HZ));
+    if (f1_hz || f2_hz || f3_hz)
+        uc_commit();
 
-    printf("trackq_start: phase_down_1=%lu Hz N=%u center=%lu Hz delta=%lu Hz interval=1 s\n",
-           (unsigned long)uc_phase_inc_to_hz(main_phase_inc_down_1_read(), TRACK3_RF_FS_HZ),
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; i++) {
+        trackq[i].enabled = 1;
+        trackq[i].n = n;
+        trackq[i].settle = TRACK3_DEFAULT_SETTLE;
+        trackq[i].center_hz = center_hz;
+        trackq[i].delta_hz = delta_hz;
+        trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
+        trackq[i].filt_error_mhz = 0;
+        trackq[i].step_accum_mhz = 0;
+    }
+
+    printf("trackq_start: ch1=%lu Hz ch2=%lu Hz ch3=%lu Hz N=%u center=%lu Hz delta=%lu Hz interval=1 s\n",
+           (unsigned long)uc_phase_inc_to_hz(phase_down_read(0), TRACK3_RF_FS_HZ),
+           (unsigned long)uc_phase_inc_to_hz(phase_down_read(1), TRACK3_RF_FS_HZ),
+           (unsigned long)uc_phase_inc_to_hz(phase_down_read(2), TRACK3_RF_FS_HZ),
            n,
            (unsigned long)center_hz,
            (unsigned long)delta_hz);
@@ -1088,8 +1173,6 @@ static void cmd_trackq_probe(char *args) {
     int64_t center_hz_milli;
     int64_t h_hz_milli;
     int64_t vertex_hz_milli;
-    unsigned prev_run;
-
     if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
         printf("trackq_probe requires N to be power-of-2 and <= %u\n", FFT_MAX_N);
         return;
@@ -1103,16 +1186,13 @@ static void cmd_trackq_probe(char *args) {
         return;
     }
 
-    prev_run = (unsigned)dsp_pump_enable;
-    dsp_pump_enable = 0;
-
+    /* Drop stale samples after manual LO changes, then wait for a fresh window. */
     main_ds_fifo_clear_write(1);
     (void)ds_fifo_flush_all(n + TRACK3_DEFAULT_SETTLE);
-    track_wait_ticks(n + TRACK3_DEFAULT_SETTLE);
+    track3_wait_ticks(n + TRACK3_DEFAULT_SETTLE);
 
-    if (!capture_ds_track_ch1(n, TRACK3_DEFAULT_SETTLE)) {
+    if (!capture_ds_fft_ch1(n, TRACK3_DEFAULT_SETTLE)) {
         puts("trackq_probe capture failed");
-        dsp_pump_enable = prev_run ? 1 : 0;
         return;
     }
 
@@ -1141,14 +1221,13 @@ static void cmd_trackq_probe(char *args) {
            (unsigned long long)right_pwr,
            (long)(vertex_hz_milli / 1000ll),
            (long)labs(vertex_hz_milli % 1000ll));
-
-    dsp_pump_enable = prev_run ? 1 : 0;
 }
 
 static void cmd_trackq_stop(char *args) {
     (void)args;
-    trackq.enabled = 0;
-    puts("trackq_stop: quadratic tracking disabled");
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; i++)
+        trackq[i].enabled = 0;
+    puts("trackq_stop: quadratic tracking disabled on ch1..ch3");
 }
 static void cmd_fft64_peak(char *args) {
     (void)args;
@@ -1232,15 +1311,11 @@ static inline void uc_commit(void) {
     cfg_link_commit_write(1);
 }
 
-static volatile uint32_t ce_ticks = 0; 
 /* ---- ISR ---- */
 static void ce_down_isr(void) {
     evm_pending_write(1);
     evm_enable_write(0);
-    if (dsp_pump_enable) {
-        if (dsp_work_tokens < 1024u) dsp_work_tokens++;
-    }
-    if (ce_event < 1024u) ce_event++;
+    if (ce_event < 0xffffffffu) ce_event++;
     ce_ticks++;
 }
 
@@ -1295,7 +1370,7 @@ static void uc_help(char *args) {
     puts("  fft_ds_peak [N]             (FFT over DS FIFO IQ samples, N=8..2048, peak only)");
     puts("  fft_fs <Hz>                 (set DS sample rate used for fft_ds Hz print)");
     puts("  track3 <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
-    puts("  trackq_start [N] [center_hz] [delta_hz]");
+    puts("  trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_hz]");
     puts("  trackq_probe [N] [center_hz] [delta_hz]");
     puts("  trackq_stop                 (stop 3-point quadratic tracking)");
 
@@ -2190,7 +2265,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples and print bins"},
     {"fft_ds_peak",          cmd_fft_ds_peak,         "Run FFT over downsample FIFO IQ samples and print peak only"},
     {"track3",               cmd_track3,              "Sweep phase_down_1 until the 3-tone pattern is found"},
-    {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking on phase_down_1"},
+    {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking on ch1/ch2/ch3: trackq_start <f1> <f2> <f3>"},
     {"trackq_probe",         cmd_trackq_probe,        "Capture one 3-point tracking snapshot"},
     {"trackq_stop",          cmd_trackq_stop,         "Stop 3-point quadratic tracking"},
 
@@ -2307,9 +2382,9 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10327476);
-    main_phase_inc_down_2_write(80652);
-    main_phase_inc_down_3_write(80648);
+    main_phase_inc_down_1_write(uc_phase_inc_from_hz(TRACKQ_CH1_START_HZ, TRACK3_RF_FS_HZ));
+    main_phase_inc_down_2_write(uc_phase_inc_from_hz(TRACKQ_CH2_START_HZ, TRACK3_RF_FS_HZ));
+    main_phase_inc_down_3_write(uc_phase_inc_from_hz(TRACKQ_CH3_START_HZ, TRACK3_RF_FS_HZ));
     main_phase_inc_down_4_write(80644);
     main_phase_inc_down_5_write(80640);
 
@@ -2333,15 +2408,15 @@ void uberclock_init(void) {
     main_upsampler_input_mux_write(1);
 
     main_gain1_write(0x40000000);
-    main_gain2_write(0x00000000);
-    main_gain3_write(0x00000000);
+    main_gain2_write(0x40000000);
+    main_gain3_write(0x40000000);
     main_gain4_write(0x00000000);
     main_gain5_write(0x00000000);
 
-    main_output_select_ch1_write(5);
+    main_output_select_ch1_write(14);
     main_output_select_ch2_write(0);
 
-    main_final_shift_write(0);
+    main_final_shift_write(2);
 
     main_lowspeed_dbg_select_write(5);
     main_highspeed_dbg_select_write(0);
@@ -2370,21 +2445,10 @@ void uberclock_init(void) {
 }
 
 void uberclock_poll(void) {
-    if (dsp_pump_enable) {
-        unsigned budget = 32u;
-        while (budget && dsp_work_tokens) {
-            (void)dsp_pump_step(1, 1);
-            dsp_work_tokens--;
-            budget--;
-        }
-    }
-
     trackq_step();
 
     while (ce_event) {
         ce_event--;
         service_one_ce_event();
     }
-    // tran();
-
 }

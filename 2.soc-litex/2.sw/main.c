@@ -4,7 +4,7 @@
 #include "console.h"
 #include "uberclock.h"
 #include "ubddr3.h"
-#include "fsm_algorithm.h"
+
 
 extern void donut(void);
 extern void helloc(void);
