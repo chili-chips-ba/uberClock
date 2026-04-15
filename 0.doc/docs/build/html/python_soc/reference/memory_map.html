@@ -1,0 +1,169 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Memory Map &mdash; uberClock 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=ce43d37c" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Examples" href="../../examples/index.html" />
+    <link rel="prev" title="CSR Map" href="csr_map.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/uberclock.logo-no-bg.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsp/index.html">DSP Blocks</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../soc_litex/index.html">SoC Platform</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../../soc_litex/overview.html">SoC-Based Control with LiteX and VexRiscV</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../soc_litex/verilog_ip.html">Hardware RTL Boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../soc_litex/firmware.html">Firmware and C Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html">Python Integration and API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../soc_litex/testing.html">Testing and Experiments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="csr_map.html">CSR Map</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Memory Map</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#main-ram">Main RAM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ddr3-capture-area">DDR3 capture area</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#operational-implications">Operational implications</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build/index.html">Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../miniac/index.html">Miniac</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references/index.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">uberClock</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../soc_litex/index.html">SoC Platform</a></li>
+      <li class="breadcrumb-item active">Memory Map</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/python_soc/reference/memory_map.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="memory-map">
+<h1>Memory Map<a class="headerlink" href="#memory-map" title="Link to this heading"></a></h1>
+<p>The most important memory distinction in this design is between the standard
+LiteX <code class="docutils literal notranslate"><span class="pre">main_ram</span></code> path and the optional UberDDR3 side-memory path.</p>
+<section id="main-ram">
+<h2>Main RAM<a class="headerlink" href="#main-ram" title="Link to this heading"></a></h2>
+<p>Depending on build configuration, main RAM is either:</p>
+<ul class="simple">
+<li><p>LiteX integrated RAM inside the SoC, or</p></li>
+<li><p>external LiteDRAM if integrated RAM is disabled and UberDDR3 is not used.</p></li>
+</ul>
+</section>
+<section id="ddr3-capture-area">
+<h2>DDR3 capture area<a class="headerlink" href="#ddr3-capture-area" title="Link to this heading"></a></h2>
+<p>Typical capture base:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">0xA0000000</span></code> (example)</p></li>
+</ul>
+<p>In <code class="docutils literal notranslate"><span class="pre">soc.py</span></code>, UberDDR3 is mapped as a side-memory region:</p>
+<ul class="simple">
+<li><p>base: <code class="docutils literal notranslate"><span class="pre">0xA0000000</span></code></p></li>
+<li><p>size: <code class="docutils literal notranslate"><span class="pre">0x10000000</span></code></p></li>
+</ul>
+</section>
+<section id="operational-implications">
+<h2>Operational implications<a class="headerlink" href="#operational-implications" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>firmware link scripts should not accidentally overlap ordinary program memory
+with the capture window,</p></li>
+<li><p>host tools should treat this region as capture/storage space rather than
+executable RAM,</p></li>
+<li><p>DMA destination addresses should stay within the mapped side-memory aperture.</p></li>
+</ul>
+<p>Make sure your firmware, CSR tooling, and host-side dump/UDP scripts agree on
+the DDR window.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="csr_map.html" class="btn btn-neutral float-left" title="CSR Map" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../examples/index.html" class="btn btn-neutral float-right" title="Examples" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chili-chips.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

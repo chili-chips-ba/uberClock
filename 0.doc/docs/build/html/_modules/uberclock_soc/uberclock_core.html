@@ -1,0 +1,587 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>uberclock_soc.uberclock_core &mdash; uberClock 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=ce43d37c" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/uberclock.logo-no-bg.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsp/index.html">DSP Blocks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../soc_litex/index.html">SoC Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build/index.html">Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../miniac/index.html">Miniac</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references/index.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">uberClock</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">uberclock_soc.uberclock_core</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for uberclock_soc.uberclock_core</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">uberclock_block.py</span>
+
+<span class="sd">Use-case</span>
+<span class="sd">--------</span>
+<span class="sd">This file integrates the Verilog top-level `uberclock` DSP core into a LiteX SoC.</span>
+
+<span class="sd">It does four things:</span>
+
+<span class="sd">1) Adds all required RTL sources (.v + .mem) to the LiteX build.</span>
+<span class="sd">2) Exposes the UberClock configuration surface as CSRs in the SYS clock domain.</span>
+<span class="sd">3) Transfers configuration snapshots atomically SYS-&gt;UC via an Async FIFO</span>
+<span class="sd">   (so the UC domain sees stable/consistent configuration updates).</span>
+<span class="sd">4) Bridges UC-&gt;SYS events/data:</span>
+<span class="sd">   - `ce_down` pulse becomes a LiteX interrupt (EventManager) in SYS.</span>
+<span class="sd">   - optional low-speed capture readback returns to SYS CSRs</span>
+<span class="sd">   - optional high-speed capture sample is wired into UberDDR3 (if present)</span>
+
+<span class="sd">Expected SoC conventions</span>
+<span class="sd">------------------------</span>
+<span class="sd">- SoC provides clock domains:</span>
+<span class="sd">    * sys : CPU/CSR domain</span>
+<span class="sd">    * uc  : UberClock domain (e.g. exact 65 MHz)</span>
+<span class="sd">- The platform defines IOs:</span>
+<span class="sd">    * adc_clk_ch0/1, adc_data_ch0/1</span>
+<span class="sd">    * da1_clk/da1_wrt/da1_data and da2_clk/da2_wrt/da2_data</span>
+<span class="sd">    * user_led (or you pass a Cat(...) of pads via `leds`)</span>
+<span class="sd">- `uberclock.v` matches the port names wired in `ports` below.</span>
+
+<span class="sd">Notes</span>
+<span class="sd">-----</span>
+<span class="sd">- `CSRConfigAFIFO` produces UC-domain signals named `out_&lt;field&gt;_uc`.</span>
+<span class="sd">  This module simply maps those to the Verilog instance inputs.</span>
+<span class="sd">- All logic and signal wiring is unchanged from your current implementation;</span>
+<span class="sd">  this is a readability + correctness refactor (e.g. `platform` defined, consistent naming).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiteXModule</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.soc.interconnect.csr_eventmanager</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventManager</span><span class="p">,</span> <span class="n">EventSourcePulse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen.genlib.cdc</span><span class="w"> </span><span class="kn">import</span> <span class="n">PulseSynchronizer</span><span class="p">,</span> <span class="n">MultiReg</span><span class="p">,</span> <span class="n">ClockDomainsRenamer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen.genlib.fifo</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncFIFO</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.uberclock_csrs</span><span class="w"> </span><span class="kn">import</span> <span class="n">UberClockCSRBank</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.csr_snapshot_fifo</span><span class="w"> </span><span class="kn">import</span> <span class="n">CsrConfigSnapshotFIFO</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rtl_filelist</span><span class="w"> </span><span class="kn">import</span> <span class="n">UBERCLOCK_RTL_FILES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rtl_sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_sources</span>
+
+
+<div class="viewcode-block" id="add_uberclock_fullrate">
+<a class="viewcode-back" href="../../python_soc/api/uberclock_core.html#uberclock_soc.uberclock_core.add_uberclock_fullrate">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_uberclock_fullrate</span><span class="p">(</span><span class="n">soc</span><span class="p">,</span> <span class="n">leds</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Integrate UberClock into the SoC (UC domain).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    soc:</span>
+<span class="sd">        LiteX SoC instance (must have `platform`, `irq`, `add_csr`, and clock domains).</span>
+<span class="sd">    leds:</span>
+<span class="sd">        A Cat(...) of LED pads (or any signal vector) used for optional activity indicator.</span>
+
+<span class="sd">    Side effects</span>
+<span class="sd">    ------------</span>
+<span class="sd">    - Adds RTL sources</span>
+<span class="sd">    - Adds CSRs:</span>
+<span class="sd">        * main      : UberClock configuration &amp; capture controls</span>
+<span class="sd">        * evm       : interrupt source (ce_down)</span>
+<span class="sd">        * cfg_link  : CSR snapshot commit FIFO</span>
+<span class="sd">    - Instantiates the Verilog `uberclock` module.</span>
+<span class="sd">    - Optionally wires high-speed capture into `soc.ubddr3` if it exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">platform</span> <span class="o">=</span> <span class="n">soc</span><span class="o">.</span><span class="n">platform</span>
+
+
+    <span class="n">add_sources</span><span class="p">(</span><span class="n">platform</span><span class="p">,</span> <span class="n">UBERCLOCK_RTL_FILES</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Pads</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">adc_clk_ch0</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;adc_clk_ch0&quot;</span><span class="p">)</span>
+    <span class="n">adc_clk_ch1</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;adc_clk_ch1&quot;</span><span class="p">)</span>
+    <span class="n">adc_data_ch0</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;adc_data_ch0&quot;</span><span class="p">)</span>
+    <span class="n">adc_data_ch1</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;adc_data_ch1&quot;</span><span class="p">)</span>
+
+    <span class="n">da1_clk</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da1_clk&quot;</span><span class="p">)</span>
+    <span class="n">da1_wrt</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da1_wrt&quot;</span><span class="p">)</span>
+    <span class="n">da1_data</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da1_data&quot;</span><span class="p">)</span>
+
+    <span class="n">da2_clk</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da2_clk&quot;</span><span class="p">)</span>
+    <span class="n">da2_wrt</span>  <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da2_wrt&quot;</span><span class="p">)</span>
+    <span class="n">da2_data</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;da2_data&quot;</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># CSRs: UberClock configuration surface (SYS domain)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">main</span> <span class="o">=</span> <span class="n">UberClockCSRBank</span><span class="p">()</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">add_csr</span><span class="p">(</span><span class="s2">&quot;main&quot;</span><span class="p">)</span>
+    <span class="n">m</span> <span class="o">=</span> <span class="n">soc</span><span class="o">.</span><span class="n">main</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># EventManager: UC-&gt;SYS `ce_down` pulse becomes a LiteX interrupt</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">evm</span> <span class="o">=</span> <span class="n">EventManager</span><span class="p">()</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">evm</span><span class="o">.</span><span class="n">ce_down</span> <span class="o">=</span> <span class="n">EventSourcePulse</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Downsample ready pulse (uc-&gt;sys).&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">evm</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">irq</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s2">&quot;evm&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">add_csr</span><span class="p">(</span><span class="s2">&quot;evm&quot;</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># SYS-&gt;UC configuration snapshot FIFO</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Each dictionary entry becomes an `out_&lt;name&gt;_uc` Signal in UC domain.</span>
+    <span class="n">cfg_sys</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1"># Muxing / IO routing</span>
+        <span class="s2">&quot;input_select&quot;</span><span class="p">:</span>         <span class="n">m</span><span class="o">.</span><span class="n">input_select</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;output_sel_ch1&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">output_select_ch1</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;output_sel_ch2&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">output_select_ch2</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;upsampler_input_mux&quot;</span><span class="p">:</span>  <span class="n">m</span><span class="o">.</span><span class="n">upsampler_input_mux</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># Main NCO (shared)</span>
+        <span class="s2">&quot;phase_inc_nco&quot;</span><span class="p">:</span>        <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_nco</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;nco_mag&quot;</span><span class="p">:</span>              <span class="n">m</span><span class="o">.</span><span class="n">nco_mag</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># Downsample NCOs</span>
+        <span class="s2">&quot;phase_inc_down_1&quot;</span><span class="p">:</span>     <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_1</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_down_2&quot;</span><span class="p">:</span>     <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_2</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_down_3&quot;</span><span class="p">:</span>     <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_3</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_down_4&quot;</span><span class="p">:</span>     <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_4</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_down_5&quot;</span><span class="p">:</span>     <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_5</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_down_ref&quot;</span><span class="p">:</span>   <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_down_ref</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># CPU-driven NCOs (per-channel)</span>
+        <span class="s2">&quot;phase_inc_cpu1&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_cpu1</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_cpu2&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_cpu2</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_cpu3&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_cpu3</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_cpu4&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_cpu4</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;phase_inc_cpu5&quot;</span><span class="p">:</span>       <span class="n">m</span><span class="o">.</span><span class="n">phase_inc_cpu5</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="s2">&quot;mag_cpu1&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">mag_cpu1</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;mag_cpu2&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">mag_cpu2</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;mag_cpu3&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">mag_cpu3</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;mag_cpu4&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">mag_cpu4</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;mag_cpu5&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">mag_cpu5</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># Debug selection</span>
+        <span class="s2">&quot;lowspeed_dbg_select&quot;</span><span class="p">:</span>  <span class="n">m</span><span class="o">.</span><span class="n">lowspeed_dbg_select</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;highspeed_dbg_select&quot;</span><span class="p">:</span> <span class="n">m</span><span class="o">.</span><span class="n">highspeed_dbg_select</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># DSP gains</span>
+        <span class="s2">&quot;gain1&quot;</span><span class="p">:</span>                <span class="n">m</span><span class="o">.</span><span class="n">gain1</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;gain2&quot;</span><span class="p">:</span>                <span class="n">m</span><span class="o">.</span><span class="n">gain2</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;gain3&quot;</span><span class="p">:</span>                <span class="n">m</span><span class="o">.</span><span class="n">gain3</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;gain4&quot;</span><span class="p">:</span>                <span class="n">m</span><span class="o">.</span><span class="n">gain4</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;gain5&quot;</span><span class="p">:</span>                <span class="n">m</span><span class="o">.</span><span class="n">gain5</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># CPU-fed upsampler injection</span>
+        <span class="s2">&quot;ups_in_x&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">upsampler_input_x</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;ups_in_y&quot;</span><span class="p">:</span>             <span class="n">m</span><span class="o">.</span><span class="n">upsampler_input_y</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;final_shift&quot;</span><span class="p">:</span>          <span class="n">m</span><span class="o">.</span><span class="n">final_shift</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># High-speed DDR capture control (used if soc.ubddr3 exists)</span>
+        <span class="s2">&quot;cap_enable&quot;</span><span class="p">:</span>           <span class="n">m</span><span class="o">.</span><span class="n">cap_enable</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;cap_beats&quot;</span><span class="p">:</span>            <span class="n">m</span><span class="o">.</span><span class="n">cap_beats</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+
+        <span class="c1"># Low-speed capture RAM control (if present in uberclock.v)</span>
+        <span class="s2">&quot;cap_arm&quot;</span><span class="p">:</span>              <span class="n">m</span><span class="o">.</span><span class="n">cap_arm</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+        <span class="s2">&quot;cap_idx&quot;</span><span class="p">:</span>              <span class="n">m</span><span class="o">.</span><span class="n">cap_idx</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">cfg_link</span> <span class="o">=</span> <span class="n">CsrConfigSnapshotFIFO</span><span class="p">(</span><span class="n">cfg_sys</span><span class="p">,</span> <span class="n">cd_write</span><span class="o">=</span><span class="s2">&quot;sys&quot;</span><span class="p">,</span> <span class="n">cd_read</span><span class="o">=</span><span class="s2">&quot;uc&quot;</span><span class="p">,</span> <span class="n">fifo_depth</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">add_csr</span><span class="p">(</span><span class="s2">&quot;cfg_link&quot;</span><span class="p">)</span>
+    <span class="n">uc</span> <span class="o">=</span> <span class="n">soc</span><span class="o">.</span><span class="n">cfg_link</span>  <span class="c1"># convenience alias</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># UC-&gt;SYS: `ce_down` pulse crossing to trigger EventManager</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">ce_down_uc</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ce_down_uc&quot;</span><span class="p">)</span>
+    <span class="n">ce_down_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ce_down_sys&quot;</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ps_down</span> <span class="o">=</span> <span class="n">PulseSynchronizer</span><span class="p">(</span><span class="s2">&quot;uc&quot;</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">soc</span><span class="o">.</span><span class="n">ps_down</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_down_uc</span><span class="p">),</span>
+        <span class="n">ce_down_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">soc</span><span class="o">.</span><span class="n">ps_down</span><span class="o">.</span><span class="n">o</span><span class="p">),</span>
+        <span class="n">soc</span><span class="o">.</span><span class="n">evm</span><span class="o">.</span><span class="n">ce_down</span><span class="o">.</span><span class="n">trigger</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_down_sys</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">mag_uc</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;magnitude_uc&quot;</span><span class="p">)</span>
+    <span class="n">phase_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;phase_uc&quot;</span><span class="p">)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># UberClock instance (UC domain)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">ds_x_uc</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;downsampled_x_uc&quot;</span><span class="p">)</span>
+    <span class="n">ds_y_uc</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;downsampled_y_uc&quot;</span><span class="p">)</span>
+    <span class="n">cap_sel_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cap_selected_uc&quot;</span><span class="p">)</span>  <span class="c1"># selected sample for HS capture</span>
+
+    <span class="c1"># UC-domain upsampler FIFO hold registers</span>
+    <span class="n">ups_x_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upsampler_fifo_x_uc&quot;</span><span class="p">)</span>
+    <span class="n">ups_y_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upsampler_fifo_y_uc&quot;</span><span class="p">)</span>
+    <span class="n">ups_have_sample_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;upsampler_fifo_has_sample_uc&quot;</span><span class="p">)</span>
+    <span class="n">ups_in_x_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upsampler_in_x_uc&quot;</span><span class="p">)</span>
+    <span class="n">ups_in_y_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;upsampler_in_y_uc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Low-speed capture outputs (UC domain)</span>
+    <span class="n">cap_done_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ls_cap_done_uc&quot;</span><span class="p">)</span>
+    <span class="n">cap_data_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ls_cap_data_uc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Small helper for nicer attribute errors if a field name changes</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_uc_out</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">uc</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;cfg_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_uc&quot;</span><span class="p">)</span>
+
+    <span class="n">ports</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="c1"># Clock/reset (UC domain)</span>
+        <span class="n">i_sys_clk</span><span class="o">=</span><span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;uc&quot;</span><span class="p">),</span>
+        <span class="n">i_rst</span><span class="o">=</span><span class="n">ResetSignal</span><span class="p">(</span><span class="s2">&quot;uc&quot;</span><span class="p">),</span>
+
+        <span class="c1"># ADC IO</span>
+        <span class="n">o_adc_clk_ch0</span><span class="o">=</span><span class="n">adc_clk_ch0</span><span class="p">,</span>
+        <span class="n">o_adc_clk_ch1</span><span class="o">=</span><span class="n">adc_clk_ch1</span><span class="p">,</span>
+        <span class="n">i_adc_data_ch0</span><span class="o">=</span><span class="n">adc_data_ch0</span><span class="p">,</span>
+        <span class="n">i_adc_data_ch1</span><span class="o">=</span><span class="n">adc_data_ch1</span><span class="p">,</span>
+
+        <span class="c1"># DAC IO</span>
+        <span class="n">o_da1_clk</span><span class="o">=</span><span class="n">da1_clk</span><span class="p">,</span>
+        <span class="n">o_da1_wrt</span><span class="o">=</span><span class="n">da1_wrt</span><span class="p">,</span>
+        <span class="n">o_da1_data</span><span class="o">=</span><span class="n">da1_data</span><span class="p">,</span>
+
+        <span class="n">o_da2_clk</span><span class="o">=</span><span class="n">da2_clk</span><span class="p">,</span>
+        <span class="n">o_da2_wrt</span><span class="o">=</span><span class="n">da2_wrt</span><span class="p">,</span>
+        <span class="n">o_da2_data</span><span class="o">=</span><span class="n">da2_data</span><span class="p">,</span>
+
+        <span class="c1"># Config / control (UC domain snapshot outputs)</span>
+        <span class="n">i_input_select</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;input_select&quot;</span><span class="p">),</span>
+        <span class="n">i_output_select_ch1</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;output_sel_ch1&quot;</span><span class="p">),</span>
+        <span class="n">i_output_select_ch2</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;output_sel_ch2&quot;</span><span class="p">),</span>
+        <span class="n">i_upsampler_input_mux</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;upsampler_input_mux&quot;</span><span class="p">),</span>
+
+        <span class="n">i_phase_inc_nco</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_nco&quot;</span><span class="p">),</span>
+        <span class="n">i_nco_mag</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;nco_mag&quot;</span><span class="p">),</span>
+
+        <span class="n">i_phase_inc_down_1</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_1&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_down_2</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_2&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_down_3</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_3&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_down_4</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_4&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_down_5</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_5&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_down_ref</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_down_ref&quot;</span><span class="p">),</span>
+
+        <span class="n">i_phase_inc_cpu1</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_cpu1&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_cpu2</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_cpu2&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_cpu3</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_cpu3&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_cpu4</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_cpu4&quot;</span><span class="p">),</span>
+        <span class="n">i_phase_inc_cpu5</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;phase_inc_cpu5&quot;</span><span class="p">),</span>
+
+        <span class="n">i_mag_cpu1</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;mag_cpu1&quot;</span><span class="p">),</span>
+        <span class="n">i_mag_cpu2</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;mag_cpu2&quot;</span><span class="p">),</span>
+        <span class="n">i_mag_cpu3</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;mag_cpu3&quot;</span><span class="p">),</span>
+        <span class="n">i_mag_cpu4</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;mag_cpu4&quot;</span><span class="p">),</span>
+        <span class="n">i_mag_cpu5</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;mag_cpu5&quot;</span><span class="p">),</span>
+
+        <span class="n">i_lowspeed_dbg_select</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;lowspeed_dbg_select&quot;</span><span class="p">),</span>
+        <span class="n">i_highspeed_dbg_select</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;highspeed_dbg_select&quot;</span><span class="p">),</span>
+
+        <span class="n">i_gain1</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;gain1&quot;</span><span class="p">),</span>
+        <span class="n">i_gain2</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;gain2&quot;</span><span class="p">),</span>
+        <span class="n">i_gain3</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;gain3&quot;</span><span class="p">),</span>
+        <span class="n">i_gain4</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;gain4&quot;</span><span class="p">),</span>
+        <span class="n">i_gain5</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;gain5&quot;</span><span class="p">),</span>
+
+        <span class="n">i_upsampler_input_x</span><span class="o">=</span><span class="n">ups_in_x_uc</span><span class="p">,</span>
+        <span class="n">i_upsampler_input_y</span><span class="o">=</span><span class="n">ups_in_y_uc</span><span class="p">,</span>
+        <span class="n">i_final_shift</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;final_shift&quot;</span><span class="p">),</span>
+
+        <span class="c1"># Outputs</span>
+        <span class="n">o_ce_down</span><span class="o">=</span><span class="n">ce_down_uc</span><span class="p">,</span>
+        <span class="n">o_downsampled_data_x</span><span class="o">=</span><span class="n">ds_x_uc</span><span class="p">,</span>
+        <span class="n">o_downsampled_data_y</span><span class="o">=</span><span class="n">ds_y_uc</span><span class="p">,</span>
+
+        <span class="c1"># High-speed capture sample out</span>
+        <span class="n">o_cap_selected_input</span><span class="o">=</span><span class="n">cap_sel_uc</span><span class="p">,</span>
+
+        <span class="c1"># Low-speed capture RAM control + readback</span>
+        <span class="n">i_cap_arm</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;cap_arm&quot;</span><span class="p">),</span>
+        <span class="n">i_cap_idx</span><span class="o">=</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;cap_idx&quot;</span><span class="p">),</span>
+        <span class="n">o_cap_done</span><span class="o">=</span><span class="n">cap_done_uc</span><span class="p">,</span>
+        <span class="n">o_cap_data</span><span class="o">=</span><span class="n">cap_data_uc</span><span class="p">,</span>
+        <span class="n">o_magnitude</span><span class="o">=</span><span class="n">mag_uc</span><span class="p">,</span>
+        <span class="n">o_phase</span><span class="o">=</span><span class="n">phase_uc</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">Instance</span><span class="p">(</span><span class="s2">&quot;uberclock&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">ports</span><span class="p">)</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># UC-&gt;SYS: low-speed capture readback into CSRs (safe CDC)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">cap_done_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ls_cap_done_sys&quot;</span><span class="p">)</span>
+    <span class="n">cap_data_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ls_cap_data_sys&quot;</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">cap_done_uc</span><span class="p">,</span> <span class="n">cap_done_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">cap_data_uc</span><span class="p">,</span> <span class="n">cap_data_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">cap_done</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">cap_done_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">cap_data</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">cap_data_sys</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="n">mag_sys</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;magnitude_sys&quot;</span><span class="p">)</span>
+    <span class="n">phase_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">25</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;phase_sys&quot;</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">mag_uc</span><span class="p">,</span> <span class="n">mag_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">phase_uc</span><span class="p">,</span> <span class="n">phase_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">magnitude</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">mag_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">phase</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">phase_sys</span><span class="p">),</span>
+    <span class="p">]</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># UC-&gt;SYS: downsampled data async FIFO (for CPU readback)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">DS_FIFO_DEPTH</span> <span class="o">=</span> <span class="mi">16384</span>
+
+    <span class="n">ds_fifo_width</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">ds_fifo</span> <span class="o">=</span> <span class="n">AsyncFIFO</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">ds_fifo_width</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">DS_FIFO_DEPTH</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ds_fifo</span> <span class="o">=</span> <span class="n">ClockDomainsRenamer</span><span class="p">({</span><span class="s2">&quot;write&quot;</span><span class="p">:</span> <span class="s2">&quot;uc&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">:</span> <span class="s2">&quot;sys&quot;</span><span class="p">})(</span><span class="n">ds_fifo</span><span class="p">)</span>
+
+    <span class="n">ds_overflow_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_overflow_uc&quot;</span><span class="p">)</span>
+    <span class="n">ds_overflow_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_overflow_sys&quot;</span><span class="p">)</span>
+    <span class="n">ds_underflow_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_underflow_sys&quot;</span><span class="p">)</span>
+    <span class="n">ds_clear_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_clear_uc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># UC write-side: push on ce_down</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">ds_fifo</span><span class="o">.</span><span class="n">din</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="n">ds_x_uc</span><span class="p">,</span> <span class="n">ds_y_uc</span><span class="p">)),</span>
+        <span class="n">ds_fifo</span><span class="o">.</span><span class="n">we</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_down_uc</span> <span class="o">&amp;</span> <span class="n">ds_fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># SYS-&gt;UC clear pulse</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ds_clear_ps</span> <span class="o">=</span> <span class="n">PulseSynchronizer</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">,</span> <span class="s2">&quot;uc&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">soc</span><span class="o">.</span><span class="n">ds_clear_ps</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_clear</span><span class="o">.</span><span class="n">re</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ds_clear_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">soc</span><span class="o">.</span><span class="n">ds_clear_ps</span><span class="o">.</span><span class="n">o</span><span class="p">)</span>
+
+    <span class="c1"># UC overflow sticky</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">uc</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ce_down_uc</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">ds_fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span>
+            <span class="n">ds_overflow_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ds_clear_uc</span><span class="p">,</span>
+            <span class="n">ds_overflow_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">ds_overflow_uc</span><span class="p">,</span> <span class="n">ds_overflow_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+
+    <span class="c1"># SYS read-side: pop on CPU strobe</span>
+    <span class="n">ds_data_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">ds_fifo_width</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_data_sys&quot;</span><span class="p">)</span>
+    <span class="n">ds_pop_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ds_fifo_pop_sys&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ds_pop_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_pop</span><span class="o">.</span><span class="n">re</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ds_fifo</span><span class="o">.</span><span class="n">re</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_pop_sys</span> <span class="o">&amp;</span> <span class="n">ds_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">sys</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ds_pop_sys</span> <span class="o">&amp;</span> <span class="n">ds_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">,</span>
+            <span class="n">ds_data_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_fifo</span><span class="o">.</span><span class="n">dout</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ds_pop_sys</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">ds_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">,</span>
+            <span class="n">ds_underflow_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_clear</span><span class="o">.</span><span class="n">re</span><span class="p">,</span>
+            <span class="n">ds_underflow_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_x</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_data_sys</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_y</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_data_sys</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">32</span><span class="p">]),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_overflow</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_overflow_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_underflow</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ds_underflow_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ds_fifo_flags</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="n">ds_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">,</span> <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">))),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># SYS-&gt;UC: upsampler input async FIFO (CPU injection)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">UPS_FIFO_DEPTH</span> <span class="o">=</span> <span class="mi">16384</span>
+
+    <span class="n">ups_fifo_width</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">ups_fifo</span> <span class="o">=</span> <span class="n">AsyncFIFO</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">ups_fifo_width</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="n">UPS_FIFO_DEPTH</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ups_fifo</span> <span class="o">=</span> <span class="n">ClockDomainsRenamer</span><span class="p">({</span><span class="s2">&quot;write&quot;</span><span class="p">:</span> <span class="s2">&quot;sys&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">:</span> <span class="s2">&quot;uc&quot;</span><span class="p">})(</span><span class="n">ups_fifo</span><span class="p">)</span>
+
+    <span class="n">ups_overflow_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ups_fifo_overflow_sys&quot;</span><span class="p">)</span>
+    <span class="n">ups_underflow_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ups_fifo_underflow_uc&quot;</span><span class="p">)</span>
+    <span class="n">ups_underflow_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ups_fifo_underflow_sys&quot;</span><span class="p">)</span>
+    <span class="n">ups_clear_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ups_fifo_clear_uc&quot;</span><span class="p">)</span>
+
+    <span class="c1"># SYS write-side: push on CPU strobe</span>
+    <span class="n">ups_push_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;ups_fifo_push_sys&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ups_push_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_push</span><span class="o">.</span><span class="n">re</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">ups_fifo</span><span class="o">.</span><span class="n">din</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_x</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_y</span><span class="o">.</span><span class="n">storage</span><span class="p">)),</span>
+        <span class="n">ups_fifo</span><span class="o">.</span><span class="n">we</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ups_push_sys</span> <span class="o">&amp;</span> <span class="n">ups_fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">sys</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ups_push_sys</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">ups_fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span>
+            <span class="n">ups_overflow_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_clear</span><span class="o">.</span><span class="n">re</span><span class="p">,</span>
+            <span class="n">ups_overflow_sys</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_overflow</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ups_overflow_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_underflow</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ups_underflow_sys</span><span class="p">),</span>
+        <span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_flags</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">ups_fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">,</span> <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">))),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># UC read-side: pop on ce_down, hold last sample</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ups_fifo</span><span class="o">.</span><span class="n">re</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_down_uc</span> <span class="o">&amp;</span> <span class="n">ups_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">uc</span> <span class="o">+=</span> <span class="n">If</span><span class="p">(</span><span class="n">ce_down_uc</span> <span class="o">&amp;</span> <span class="n">ups_fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">,</span>
+        <span class="n">ups_x_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ups_fifo</span><span class="o">.</span><span class="n">dout</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">16</span><span class="p">]),</span>
+        <span class="n">ups_y_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ups_fifo</span><span class="o">.</span><span class="n">dout</span><span class="p">[</span><span class="mi">16</span><span class="p">:</span><span class="mi">32</span><span class="p">]),</span>
+        <span class="n">ups_have_sample_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">uc</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ce_down_uc</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">ups_fifo</span><span class="o">.</span><span class="n">readable</span> <span class="o">&amp;</span> <span class="n">ups_have_sample_uc</span><span class="p">,</span>
+            <span class="n">ups_underflow_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="p">),</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ups_clear_uc</span><span class="p">,</span>
+            <span class="n">ups_underflow_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="p">),</span>
+    <span class="p">]</span>
+
+    <span class="n">soc</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">MultiReg</span><span class="p">(</span><span class="n">ups_underflow_uc</span><span class="p">,</span> <span class="n">ups_underflow_sys</span><span class="p">,</span> <span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+
+    <span class="c1"># SYS-&gt;UC clear pulse</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ups_clear_ps</span> <span class="o">=</span> <span class="n">PulseSynchronizer</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">,</span> <span class="s2">&quot;uc&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">soc</span><span class="o">.</span><span class="n">ups_clear_ps</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">ups_fifo_clear</span><span class="o">.</span><span class="n">re</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">ups_clear_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">soc</span><span class="o">.</span><span class="n">ups_clear_ps</span><span class="o">.</span><span class="n">o</span><span class="p">)</span>
+
+    <span class="c1"># Upsampler input always comes from FIFO; before first sample, drive zero.</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">ups_in_x_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Mux</span><span class="p">(</span><span class="n">ups_have_sample_uc</span><span class="p">,</span> <span class="n">ups_x_uc</span><span class="p">,</span> <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">))),</span>
+        <span class="n">ups_in_y_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Mux</span><span class="p">(</span><span class="n">ups_have_sample_uc</span><span class="p">,</span> <span class="n">ups_y_uc</span><span class="p">,</span> <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span><span class="p">))),</span>
+    <span class="p">]</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Optional: wire high-speed capture sample into UberDDR3 (if present)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">soc</span><span class="p">,</span> <span class="s2">&quot;ubddr3&quot;</span><span class="p">):</span>
+        <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">soc</span><span class="o">.</span><span class="n">ubddr3</span><span class="o">.</span><span class="n">cap_sample</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">cap_sel_uc</span><span class="p">),</span>
+            <span class="n">soc</span><span class="o">.</span><span class="n">ubddr3</span><span class="o">.</span><span class="n">cap_enable_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;cap_enable&quot;</span><span class="p">)),</span>
+            <span class="n">soc</span><span class="o">.</span><span class="n">ubddr3</span><span class="o">.</span><span class="n">cap_beats_uc</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">_uc_out</span><span class="p">(</span><span class="s2">&quot;cap_beats&quot;</span><span class="p">)),</span>
+        <span class="p">]</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="c1"># Optional: LED activity indicator (ce_down pulse stretched in SYS domain)</span>
+    <span class="c1"># -------------------------------------------------------------------------</span>
+    <span class="n">ce_stretch</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ce_down_led_stretch&quot;</span><span class="p">)</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">sync</span><span class="o">.</span><span class="n">sys</span> <span class="o">+=</span> <span class="p">[</span>
+        <span class="n">If</span><span class="p">(</span><span class="n">ce_down_sys</span><span class="p">,</span>
+            <span class="n">ce_stretch</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mh">0xFF</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">Elif</span><span class="p">(</span><span class="n">ce_stretch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">ce_stretch</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_stretch</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+    <span class="n">soc</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">leds</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">ce_stretch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chili-chips.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

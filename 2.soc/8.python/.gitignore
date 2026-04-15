@@ -1,0 +1,4 @@
+.idea/
+docs/build/
+src/uberclock_soc.egg-info/
+src/uberclock_soc/__pycache__/

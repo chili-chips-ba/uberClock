@@ -1,0 +1,36 @@
+#==========================================================================
+# List of file to make 'top.sv' design module
+#==========================================================================
+
+#---Target-specific components
+${HW_SRC}/fpgatech_lib/XILINX/fpga_pll_80M.sv
+
+#---Common packages and interfaces
+${HW_SRC}/ip.infra/soc_pkg.sv
+${HW_SRC}/ip.infra/soc_if.sv
+
+#---PeakRDL-generated CSR + SOC CSR wrapper
+${BLD_DIR}/csr_build/generated-files/csr_pkg.sv
+${BLD_DIR}/csr_build/generated-files/csr.sv
+${HW_SRC}/ip.infra/soc_csr.sv
+
+#---Common infrastructure components
+${HW_SRC}/ip.infra/soc_ram.sv
+${HW_SRC}/ip.infra/soc_fabric.sv
+${HW_SRC}/ip.infra/clk_rst_gen.sv
+${HW_SRC}/ip.infra/uart.sv
+#${HW_SRC}/ip.infra/debounce.sv
+${HW_SRC}/ip.infra/sync_fifo_ram.sv
+#${HW_SRC}/ip.infra/sync_fifo_srl.sv
+
+#---CPU
++incdir+${BLD_DIR}/sw_build
+
+# PicoRV32
+
+#---TOP
+${HW_SRC}/top.sv
+
+#==========================================================================
+# End-of-File
+#==========================================================================

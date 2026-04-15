@@ -1,0 +1,21 @@
+#!/bin/sh
+CONFIGURE=$1
+DIR=$2
+shift
+shift
+
+for p in /opt/*/bin; do
+    PATH="$p":$PATH
+done
+
+mkdir $DIR
+cd $DIR
+../scripts/$CONFIGURE -Dwerror=true "$@"
+case $? in
+    77)
+	echo 'Configuration skipped'
+	exit 0
+	;;
+esac
+cat meson-logs/*
+ninja

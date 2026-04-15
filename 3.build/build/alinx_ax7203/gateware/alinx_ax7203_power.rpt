@@ -1,0 +1,358 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+-------------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version     : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date             : Mon Apr 13 20:02:24 2026
+| Host             : ahmed running 64-bit Ubuntu 24.04.3 LTS
+| Command          : report_power -file alinx_ax7203_power.rpt
+| Design           : alinx_ax7203
+| Device           : xc7a200tfbg484-2
+| Design State     : routed
+| Grade            : commercial
+| Process          : typical
+| Characterization : Production
+-------------------------------------------------------------------------------------------------------------------------------------------------
+
+Power Report
+
+Table of Contents
+-----------------
+1. Summary
+1.1 On-Chip Components
+1.2 Power Supply Summary
+1.3 Confidence Level
+2. Settings
+2.1 Environment
+2.2 Clock Constraints
+3. Detailed Reports
+3.1 By Hierarchy
+
+1. Summary
+----------
+
++--------------------------+--------------+
+| Total On-Chip Power (W)  | 3.093        |
+| Design Power Budget (W)  | Unspecified* |
+| Power Budget Margin (W)  | NA           |
+| Dynamic (W)              | 2.926        |
+| Device Static (W)        | 0.167        |
+| Effective TJA (C/W)      | 2.5          |
+| Max Ambient (C)          | 77.4         |
+| Junction Temperature (C) | 32.6         |
+| Confidence Level         | Low          |
+| Setting File             | ---          |
+| Simulation Activity File | ---          |
+| Design Nets Matched      | NA           |
++--------------------------+--------------+
+* Specify Design Power Budget using, set_operating_conditions -design_power_budget <value in Watts>
+
+
+1.1 On-Chip Components
+----------------------
+
++--------------------------+-----------+----------+-----------+-----------------+
+| On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
++--------------------------+-----------+----------+-----------+-----------------+
+| Clocks                   |     0.205 |       14 |       --- |             --- |
+| Slice Logic              |     0.353 |   198786 |       --- |             --- |
+|   LUT as Logic           |     0.289 |    67689 |    133800 |           50.59 |
+|   CARRY4                 |     0.038 |     9967 |     33450 |           29.80 |
+|   Register               |     0.023 |   104597 |    267600 |           39.09 |
+|   F7/F8 Muxes            |     0.002 |     9726 |    133800 |            7.27 |
+|   LUT as Shift Register  |    <0.001 |       36 |     46200 |            0.08 |
+|   LUT as Distributed RAM |    <0.001 |      638 |     46200 |            1.38 |
+|   Others                 |     0.000 |     1038 |       --- |             --- |
+| Signals                  |     0.573 |   142696 |       --- |             --- |
+| Block RAM                |     0.263 |      157 |       365 |           43.01 |
+| MMCM                     |     0.242 |        2 |        10 |           20.00 |
+| PLL                      |     0.136 |        1 |        10 |           10.00 |
+| DSPs                     |     0.076 |      116 |       740 |           15.68 |
+| I/O                      |     1.079 |      151 |       285 |           52.98 |
+| Static Power             |     0.167 |          |           |                 |
+| Total                    |     3.093 |          |           |                 |
++--------------------------+-----------+----------+-----------+-----------------+
+
+
+1.2 Power Supply Summary
+------------------------
+
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+| Vccint    |       1.000 |     1.542 |       1.497 |      0.045 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.397 |       0.366 |      0.032 |       NA    | Unspecified | NA         |
+| Vcco33    |       3.300 |     0.076 |       0.071 |      0.005 |       NA    | Unspecified | NA         |
+| Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco15    |       1.500 |     0.348 |       0.343 |      0.005 |       NA    | Unspecified | NA         |
+| Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.025 |       0.020 |      0.005 |       NA    | Unspecified | NA         |
+| MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
+| Vccadc    |       1.800 |     0.020 |       0.000 |      0.020 |       NA    | Unspecified | NA         |
++-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
+
+
+1.3 Confidence Level
+--------------------
+
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| User Input Data             | Confidence | Details                                                | Action                                                                                                     |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+| Design implementation state | High       | Design is routed                                       |                                                                                                            |
+| Clock nodes activity        | High       | User specified more than 95% of clocks                 |                                                                                                            |
+| I/O nodes activity          | Low        | More than 75% of inputs are missing user specification | Provide missing input activity with simulation results or by editing the "By Resource Type -> I/Os" view   |
+| Internal nodes activity     | Medium     | User specified less than 25% of internal nodes         | Provide missing internal nodes activity with simulation results or by editing the "By Resource Type" views |
+| Device models               | High       | Device models are Production                           |                                                                                                            |
+|                             |            |                                                        |                                                                                                            |
+| Overall confidence level    | Low        |                                                        |                                                                                                            |
++-----------------------------+------------+--------------------------------------------------------+------------------------------------------------------------------------------------------------------------+
+
+
+2. Settings
+-----------
+
+2.1 Environment
+---------------
+
++-----------------------+--------------------------+
+| Ambient Temp (C)      | 25.0                     |
+| ThetaJA (C/W)         | 2.5                      |
+| Airflow (LFM)         | 250                      |
+| Heat Sink             | medium (Medium Profile)  |
+| ThetaSA (C/W)         | 4.2                      |
+| Board Selection       | medium (10"x10")         |
+| # of Board Layers     | 12to15 (12 to 15 Layers) |
+| Board Temperature (C) | 25.0                     |
++-----------------------+--------------------------+
+
+
+2.2 Clock Constraints
+---------------------
+
++-----------------+-----------------+-----------------+
+| Clock           | Domain          | Constraint (ns) |
++-----------------+-----------------+-----------------+
+| clk200_p        | clk200_p        |             5.0 |
+| eth_rx_clk      | eth_rx_clk      |             8.0 |
+| eth_tx_clk      | eth_tx_clk      |             8.0 |
+| ethphy_clkout0  | ethphy_clkout0  |             8.0 |
+| ethphy_clkout1  | ethphy_clkout1  |             8.0 |
+| pll_fb          | pll_fb          |             8.0 |
+| s7mmcm0_clkout0 | s7mmcm0_clkout0 |            10.0 |
+| s7mmcm0_clkout1 | s7mmcm0_clkout1 |             2.5 |
+| s7mmcm0_clkout2 | s7mmcm0_clkout2 |             2.5 |
+| s7mmcm0_mmcm_fb | s7mmcm0_mmcm_fb |             5.0 |
+| s7mmcm1_clkout  | s7mmcm1_clkout  |            15.4 |
+| s7mmcm1_mmcm_fb | s7mmcm1_mmcm_fb |            10.0 |
++-----------------+-----------------+-----------------+
+
+
+3. Detailed Reports
+-------------------
+
+3.1 By Hierarchy
+----------------
+
++------------------------------------+-----------+
+| Name                               | Power (W) |
++------------------------------------+-----------+
+| alinx_ax7203                       |     2.926 |
+|   VexRiscv                         |     0.038 |
+|     IBusCachedPlugin_cache         |     0.007 |
+|     dataCache_1                    |     0.005 |
+|   ddr3_top                         |     0.822 |
+|     ddr3_controller_inst           |     0.052 |
+|     ddr3_phy_inst                  |     0.771 |
+|       OBUFDS_inst                  |     0.020 |
+|       genblk5[0].IOBUF_data        |     0.015 |
+|       genblk5[10].IOBUF_data       |     0.015 |
+|       genblk5[11].IOBUF_data       |     0.015 |
+|       genblk5[12].IOBUF_data       |     0.015 |
+|       genblk5[13].IOBUF_data       |     0.015 |
+|       genblk5[14].IOBUF_data       |     0.015 |
+|       genblk5[15].IOBUF_data       |     0.015 |
+|       genblk5[16].IOBUF_data       |     0.015 |
+|       genblk5[17].IOBUF_data       |     0.015 |
+|       genblk5[18].IOBUF_data       |     0.015 |
+|       genblk5[19].IOBUF_data       |     0.015 |
+|       genblk5[1].IOBUF_data        |     0.015 |
+|       genblk5[20].IOBUF_data       |     0.015 |
+|       genblk5[21].IOBUF_data       |     0.015 |
+|       genblk5[22].IOBUF_data       |     0.015 |
+|       genblk5[23].IOBUF_data       |     0.015 |
+|       genblk5[24].IOBUF_data       |     0.015 |
+|       genblk5[25].IOBUF_data       |     0.015 |
+|       genblk5[26].IOBUF_data       |     0.015 |
+|       genblk5[27].IOBUF_data       |     0.015 |
+|       genblk5[28].IOBUF_data       |     0.015 |
+|       genblk5[29].IOBUF_data       |     0.015 |
+|       genblk5[2].IOBUF_data        |     0.015 |
+|       genblk5[30].IOBUF_data       |     0.015 |
+|       genblk5[31].IOBUF_data       |     0.015 |
+|       genblk5[3].IOBUF_data        |     0.015 |
+|       genblk5[4].IOBUF_data        |     0.015 |
+|       genblk5[5].IOBUF_data        |     0.015 |
+|       genblk5[6].IOBUF_data        |     0.015 |
+|       genblk5[7].IOBUF_data        |     0.015 |
+|       genblk5[8].IOBUF_data        |     0.015 |
+|       genblk5[9].IOBUF_data        |     0.015 |
+|       genblk7[0].IOBUFDS_dqs       |     0.026 |
+|       genblk7[1].IOBUFDS_dqs       |     0.026 |
+|       genblk7[2].IOBUFDS_dqs       |     0.026 |
+|       genblk7[3].IOBUFDS_dqs       |     0.026 |
+|   uberclock                        |     1.014 |
+|     cordic_cpu1                    |     0.164 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.140 |
+|     cordic_cpu2                    |     0.033 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.009 |
+|     cordic_cpu3                    |     0.033 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.009 |
+|     cordic_cpu4                    |     0.033 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.009 |
+|     cordic_cpu5                    |     0.033 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.009 |
+|     cordic_nco                     |     0.033 |
+|       cordic_stages[0].stage_inst  |     0.001 |
+|       cordic_stages[10].stage_inst |     0.001 |
+|       cordic_stages[11].stage_inst |     0.001 |
+|       cordic_stages[12].stage_inst |     0.001 |
+|       cordic_stages[13].stage_inst |     0.001 |
+|       cordic_stages[14].stage_inst |     0.001 |
+|       cordic_stages[15].stage_inst |     0.001 |
+|       cordic_stages[16].stage_inst |     0.001 |
+|       cordic_stages[17].stage_inst |     0.001 |
+|       cordic_stages[18].stage_inst |     0.001 |
+|       cordic_stages[19].stage_inst |     0.001 |
+|       cordic_stages[1].stage_inst  |     0.001 |
+|       cordic_stages[2].stage_inst  |     0.001 |
+|       cordic_stages[3].stage_inst  |     0.001 |
+|       cordic_stages[4].stage_inst  |     0.001 |
+|       cordic_stages[5].stage_inst  |     0.001 |
+|       cordic_stages[6].stage_inst  |     0.001 |
+|       cordic_stages[7].stage_inst  |     0.001 |
+|       cordic_stages[8].stage_inst  |     0.001 |
+|       cordic_stages[9].stage_inst  |     0.001 |
+|       gain_sat_inst                |     0.006 |
+|       pre_stage                    |     0.001 |
+|     rx_1                           |     0.053 |
+|       arctan                       |     0.003 |
+|       cordic_down                  |     0.033 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     rx_2                           |     0.050 |
+|       cordic_down                  |     0.033 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     rx_3                           |     0.049 |
+|       cordic_down                  |     0.032 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     rx_4                           |     0.050 |
+|       cordic_down                  |     0.034 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     rx_5                           |     0.050 |
+|       cordic_down                  |     0.033 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     tx_1                           |     0.059 |
+|       cordic_up                    |     0.023 |
+|       up_x                         |     0.019 |
+|       up_y                         |     0.017 |
+|     tx_2                           |     0.060 |
+|       cordic_up                    |     0.023 |
+|       up_x                         |     0.020 |
+|       up_y                         |     0.018 |
+|     tx_3                           |     0.058 |
+|       cordic_up                    |     0.023 |
+|       up_x                         |     0.018 |
+|       up_y                         |     0.017 |
+|     tx_4                           |     0.058 |
+|       cordic_up                    |     0.023 |
+|       up_x                         |     0.018 |
+|       up_y                         |     0.017 |
+|     tx_5                           |     0.058 |
+|       cordic_up                    |     0.022 |
+|       up_x                         |     0.018 |
+|       up_y                         |     0.018 |
+|     u_dac                          |     0.001 |
+|   wbc2pipeline                     |     0.001 |
+|   wbxbar                           |     0.005 |
+|     DECODE_REQUEST[0].iskid        |     0.002 |
+|     DECODE_REQUEST[1].iskid        |     0.002 |
+|   zipdma_s2mm                      |     0.008 |
++------------------------------------+-----------+
+
+

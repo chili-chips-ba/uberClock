@@ -1,0 +1,35 @@
+{
+  "host": {
+    "system": "unknown",
+    "cpu_family": "riscv",
+    "cpu": "vexriscv",
+    "endian": "little",
+    "kernel": null,
+    "subsystem": null,
+    "is_64_bit": false,
+    "exe_suffix": "",
+    "object_suffix": "o"
+  },
+  "build": {
+    "system": "linux",
+    "cpu_family": "x86_64",
+    "cpu": "x86_64",
+    "endian": "little",
+    "kernel": "linux",
+    "subsystem": "linux",
+    "is_64_bit": true,
+    "exe_suffix": "",
+    "object_suffix": "o"
+  },
+  "target": {
+    "system": "unknown",
+    "cpu_family": "riscv",
+    "cpu": "vexriscv",
+    "endian": "little",
+    "kernel": null,
+    "subsystem": null,
+    "is_64_bit": false,
+    "exe_suffix": "",
+    "object_suffix": "o"
+  }
+}

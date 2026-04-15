@@ -1,0 +1,10 @@
+{
+  "version": "1.7.9",
+  "descriptive_name": "picolibc",
+  "license": [
+    "BSD"
+  ],
+  "license_files": [],
+  "subproject_dir": "subprojects",
+  "subprojects": []
+}

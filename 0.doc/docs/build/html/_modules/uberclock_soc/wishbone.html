@@ -1,0 +1,331 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>uberclock_soc.wishbone &mdash; uberClock 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=ce43d37c" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/uberclock.logo-no-bg.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsp/index.html">DSP Blocks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../soc_litex/index.html">SoC Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build/index.html">Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../miniac/index.html">Miniac</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references/index.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">uberClock</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">uberclock_soc.wishbone</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for uberclock_soc.wishbone</h1><div class="highlight"><pre>
+<span></span><span class="c1"># wishbone.py</span>
+<span class="c1">#</span>
+<span class="c1"># Wishbone Adapter Blocks for UberDDR3 Integration</span>
+<span class="c1"># ===============================================</span>
+<span class="c1"># Glue modules that adapt LiteX/Migen Wishbone busses to the</span>
+<span class="c1"># pipelined wishbone used by the external UberDDR3 controller RTL.</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiteXModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.soc.interconnect</span><span class="w"> </span><span class="kn">import</span> <span class="n">wishbone</span> <span class="k">as</span> <span class="n">wb</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1">#           Classic Wishbone -&gt; Pipelined Wishbone Bridge</span>
+<span class="c1"># =============================================================================</span>
+<div class="viewcode-block" id="ClassicToPipelinedWishboneBridge">
+<a class="viewcode-back" href="../../python_soc/api/wishbone.html#uberclock_soc.wishbone.ClassicToPipelinedWishboneBridge">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ClassicToPipelinedWishboneBridge</span><span class="p">(</span><span class="n">LiteXModule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps the Verilog module `wbc2pipeline.v` to convert a classic Wishbone bus</span>
+<span class="sd">    (LiteX-facing) into a pipelined Wishbone bus (UberDDR3-facing).</span>
+
+<span class="sd">    Interfaces:</span>
+<span class="sd">      - `self.s`     : classic Wishbone *slave* interface (connects to SoC bus).</span>
+<span class="sd">      - `m_*` signals: pipelined Wishbone *master* raw signals (to downstream).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">128</span><span class="p">,</span> <span class="n">adr_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">27</span><span class="p">,</span> <span class="n">clock_domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sys&quot;</span><span class="p">):</span>
+        <span class="n">DATA_WIDTH</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">data_width</span><span class="p">)</span>
+        <span class="n">ADDR_WIDTH</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">adr_width</span><span class="p">)</span>
+        <span class="n">SEL_WIDTH</span>    <span class="o">=</span> <span class="n">DATA_WIDTH</span> <span class="o">//</span> <span class="mi">8</span>
+        <span class="n">CLOCK_DOMAIN</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">clock_domain</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">DATA_WIDTH</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Wishbone data_width must be a multiple of 8.&quot;</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Upstream classic Wishbone interface (LiteX side)</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">data_width</span><span class="o">=</span><span class="n">DATA_WIDTH</span><span class="p">,</span> <span class="n">adr_width</span><span class="o">=</span><span class="n">ADDR_WIDTH</span><span class="p">)</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Downstream pipelined Wishbone raw signals (UberDDR3 side)</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_cyc</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># pipelined WB cycle valid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_stb</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># pipelined WB strobe/request</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_we</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># write enable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_adr</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">ADDR_WIDTH</span><span class="p">)</span>    <span class="c1"># word address</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_dat_w</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>    <span class="c1"># write data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_sel</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SEL_WIDTH</span><span class="p">)</span>     <span class="c1"># byte enables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_stall</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># backpressure from downstream</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_ack</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># acknowledge from downstream</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_dat_r</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>    <span class="c1"># read data</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_err</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>              <span class="c1"># error</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">s_cti</span><span class="p">,</span> <span class="n">s_bte</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">cti</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">bte</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="n">s_cti</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">s_bte</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Verilog instance</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">Instance</span><span class="p">(</span>
+            <span class="s2">&quot;wbc2pipeline&quot;</span><span class="p">,</span>
+            <span class="n">p_AW</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">adr</span><span class="p">),</span>
+            <span class="n">p_DW</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">dat_w</span><span class="p">),</span>
+
+            <span class="n">i_i_clk</span>   <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="n">CLOCK_DOMAIN</span><span class="p">),</span>
+            <span class="n">i_i_reset</span> <span class="o">=</span> <span class="n">ResetSignal</span><span class="p">(</span><span class="n">CLOCK_DOMAIN</span><span class="p">),</span>
+
+            <span class="c1"># Upstream classic WB</span>
+            <span class="n">i_i_scyc</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">cyc</span><span class="p">,</span>
+            <span class="n">i_i_sstb</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">stb</span><span class="p">,</span>
+            <span class="n">i_i_swe</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">we</span><span class="p">,</span>
+            <span class="n">i_i_saddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">adr</span><span class="p">,</span>
+            <span class="n">i_i_sdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">dat_w</span><span class="p">,</span>
+            <span class="n">i_i_ssel</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">sel</span><span class="p">,</span>
+            <span class="n">i_i_scti</span>  <span class="o">=</span> <span class="n">s_cti</span><span class="p">,</span>
+            <span class="n">i_i_sbte</span>  <span class="o">=</span> <span class="n">s_bte</span><span class="p">,</span>
+            <span class="n">o_o_sack</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">ack</span><span class="p">,</span>
+            <span class="n">o_o_sdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">dat_r</span><span class="p">,</span>
+            <span class="n">o_o_serr</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">err</span><span class="p">,</span>
+
+            <span class="c1"># Downstream pipelined WB (raw signals)</span>
+            <span class="n">o_o_mcyc</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_cyc</span><span class="p">,</span>
+            <span class="n">o_o_mstb</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_stb</span><span class="p">,</span>
+            <span class="n">o_o_mwe</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_we</span><span class="p">,</span>
+            <span class="n">o_o_maddr</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_adr</span><span class="p">,</span>
+            <span class="n">o_o_mdata</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_dat_w</span><span class="p">,</span>
+            <span class="n">o_o_msel</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_sel</span><span class="p">,</span>
+            <span class="n">i_i_mstall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_stall</span><span class="p">,</span>
+            <span class="n">i_i_mack</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_ack</span><span class="p">,</span>
+            <span class="n">i_i_mdata</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_dat_r</span><span class="p">,</span>
+            <span class="n">i_i_merr</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">m_err</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1">#              2-Master / 1-Slave Pipelined Wishbone Crossbar</span>
+<span class="c1"># =============================================================================</span>
+<div class="viewcode-block" id="PipelinedWishboneXbar2M1S">
+<a class="viewcode-back" href="../../python_soc/api/wishbone.html#uberclock_soc.wishbone.PipelinedWishboneXbar2M1S">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PipelinedWishboneXbar2M1S</span><span class="p">(</span><span class="n">LiteXModule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps the Verilog module `wbxbar.v` configured as:</span>
+<span class="sd">      - NM = 2 masters</span>
+<span class="sd">      - NS = 1 slave</span>
+
+<span class="sd">    Intended topology for UberDDR3:</span>
+<span class="sd">      - Master 0: CPU access path (classic -&gt; converter -&gt; c2p bridge)</span>
+<span class="sd">      - Master 1: DMA engine (zipdma_s2mm)</span>
+<span class="sd">      - Slave  0: DDR3 controller (ddr3_top)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">AW</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">DW</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">clock_domain</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sys&quot;</span><span class="p">):</span>
+
+        <span class="n">ADDR_WIDTH</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">AW</span><span class="p">)</span>
+        <span class="n">DATA_WIDTH</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">DW</span><span class="p">)</span>
+        <span class="n">SEL_WIDTH</span>    <span class="o">=</span> <span class="n">DATA_WIDTH</span> <span class="o">//</span> <span class="mi">8</span>
+        <span class="n">CLOCK_DOMAIN</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">clock_domain</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="n">DATA_WIDTH</span> <span class="o">%</span> <span class="mi">8</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Wishbone data_width must be a multiple of 8.&quot;</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Master[0] (CPU path)</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_cyc</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_stb</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_we</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_adr</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">ADDR_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_dat_w</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_sel</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SEL_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_stall</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_ack</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_dat_r</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m0_err</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Master[1] (DMA path)</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_cyc</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_stb</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_we</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_adr</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">ADDR_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_dat_w</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_sel</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SEL_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_stall</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_ack</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_dat_r</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m1_err</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Slave[0] (DDR controller)</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_cyc</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_stb</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_we</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_adr</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">ADDR_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_dat_w</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_sel</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">SEL_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_stall</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_ack</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_dat_r</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DATA_WIDTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_err</span>   <span class="o">=</span> <span class="n">Signal</span><span class="p">()</span>
+
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="c1"># Verilog instance</span>
+        <span class="c1"># ---------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">Instance</span><span class="p">(</span>
+            <span class="s2">&quot;wbxbar&quot;</span><span class="p">,</span>
+            <span class="n">p_NM</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">p_NS</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">p_AW</span><span class="o">=</span><span class="n">ADDR_WIDTH</span><span class="p">,</span>
+            <span class="n">p_DW</span><span class="o">=</span><span class="n">DATA_WIDTH</span><span class="p">,</span>
+
+            <span class="c1"># Controller options (keep defaults conservative)</span>
+            <span class="n">p_SLAVE_MASK</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">p_LGMAXBURST</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>
+            <span class="n">p_OPT_TIMEOUT</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">p_OPT_STARVATION_TIMEOUT</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">p_OPT_DBLBUFFER</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">p_OPT_LOWPOWER</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+
+            <span class="n">i_i_clk</span>   <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="n">CLOCK_DOMAIN</span><span class="p">),</span>
+            <span class="n">i_i_reset</span> <span class="o">=</span> <span class="n">ResetSignal</span><span class="p">(</span><span class="n">CLOCK_DOMAIN</span><span class="p">),</span>
+
+            <span class="c1"># Masters packed as [M0, M1]</span>
+            <span class="n">i_i_mcyc</span>  <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_cyc</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">m1_cyc</span><span class="p">),</span>
+            <span class="n">i_i_mstb</span>  <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_stb</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">m1_stb</span><span class="p">),</span>
+            <span class="n">i_i_mwe</span>   <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_we</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">m1_we</span><span class="p">),</span>
+            <span class="n">i_i_maddr</span> <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_adr</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">m1_adr</span><span class="p">),</span>
+            <span class="n">i_i_mdata</span> <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_dat_w</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1_dat_w</span><span class="p">),</span>
+            <span class="n">i_i_msel</span>  <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_sel</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">m1_sel</span><span class="p">),</span>
+
+            <span class="n">o_o_mstall</span> <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_stall</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1_stall</span><span class="p">),</span>
+            <span class="n">o_o_mack</span>   <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_ack</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">m1_ack</span><span class="p">),</span>
+            <span class="n">o_o_mdata</span>  <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_dat_r</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">m1_dat_r</span><span class="p">),</span>
+            <span class="n">o_o_merr</span>   <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">m0_err</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">m1_err</span><span class="p">),</span>
+
+            <span class="c1"># Single slave packed (NS=1)</span>
+            <span class="n">o_o_scyc</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_cyc</span><span class="p">,</span>
+            <span class="n">o_o_sstb</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_stb</span><span class="p">,</span>
+            <span class="n">o_o_swe</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_we</span><span class="p">,</span>
+            <span class="n">o_o_saddr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_adr</span><span class="p">,</span>
+            <span class="n">o_o_sdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_dat_w</span><span class="p">,</span>
+            <span class="n">o_o_ssel</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_sel</span><span class="p">,</span>
+
+            <span class="n">i_i_sstall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_stall</span><span class="p">,</span>
+            <span class="n">i_i_sack</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_ack</span><span class="p">,</span>
+            <span class="n">i_i_sdata</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_dat_r</span><span class="p">,</span>
+            <span class="n">i_i_serr</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_err</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chili-chips.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

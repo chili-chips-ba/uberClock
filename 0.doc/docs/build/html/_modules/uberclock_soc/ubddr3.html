@@ -1,0 +1,491 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>uberclock_soc.ubddr3 &mdash; uberClock 0.0.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=ce43d37c" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=d45e8c67"></script>
+      <script src="../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html">
+            
+              <img src="../../_static/uberclock.logo-no-bg.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../project_overview.html">Project Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../dsp/index.html">DSP Blocks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../soc_litex/index.html">SoC Platform</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../build/index.html">Build</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../miniac/index.html">Miniac</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../references/index.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">uberClock</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">uberclock_soc.ubddr3</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for uberclock_soc.ubddr3</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.gen</span><span class="w"> </span><span class="kn">import</span> <span class="n">LiteXModule</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.soc.interconnect</span><span class="w"> </span><span class="kn">import</span> <span class="n">wishbone</span> <span class="k">as</span> <span class="n">wb</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">litex.soc.interconnect.csr</span><span class="w"> </span><span class="kn">import</span> <span class="n">CSRStorage</span><span class="p">,</span> <span class="n">CSRStatus</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen.genlib.cdc</span><span class="w"> </span><span class="kn">import</span> <span class="n">PulseSynchronizer</span><span class="p">,</span> <span class="n">ClockDomainsRenamer</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">migen.genlib.fifo</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncFIFO</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.wishbone</span><span class="w"> </span><span class="kn">import</span> <span class="n">ClassicToPipelinedWishboneBridge</span><span class="p">,</span> <span class="n">PipelinedWishboneXbar2M1S</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.streams</span><span class="w"> </span><span class="kn">import</span> <span class="n">UCStreamMux</span><span class="p">,</span> <span class="n">SamplePackerStream</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rtl_filelist</span><span class="w"> </span><span class="kn">import</span> <span class="n">UBERDDR3_RTL_FILES</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.rtl_sources</span><span class="w"> </span><span class="kn">import</span> <span class="n">add_sources</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># UberDDR3: DDR3 controller wrapper + DMA writer (UC-&gt;DDR) + CPU WB access</span>
+<span class="c1"># =============================================================================</span>
+<div class="viewcode-block" id="UberDDR3">
+<a class="viewcode-back" href="../../python_soc/api/ubddr3.html#uberclock_soc.ubddr3.UberDDR3">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">UberDDR3</span><span class="p">(</span><span class="n">LiteXModule</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    UberDDR3 top-level integration block.</span>
+
+<span class="sd">    Use-case</span>
+<span class="sd">    --------</span>
+<span class="sd">    This module wires a Verilog DDR3 controller (`ddr3_top`) into a LiteX SoC and</span>
+<span class="sd">    provides TWO ways to write/read DDR:</span>
+
+<span class="sd">    1. CPU / software access (SYS domain)</span>
+
+<span class="sd">       - Classic 32-bit Wishbone (LiteX standard) exposed as ``self.wb``.</span>
+<span class="sd">       - Width-converted up to the DDR bus width (``UB_BUS_WIDTH_BITS``).</span>
+<span class="sd">       - Bridged into pipelined WB signaling used by the controller.</span>
+
+<span class="sd">    2. High-throughput capture / DMA (UC domain -&gt; SYS domain -&gt; DDR)</span>
+
+<span class="sd">       - A UC-domain stream source generates DW-bit beats.</span>
+<span class="sd">       - The source can be either an internal ramp or packed external samples.</span>
+<span class="sd">       - The stream crosses UC-&gt;SYS via ``AsyncFIFO``.</span>
+<span class="sd">       - ``zipdma_s2mm`` writes the stream into DDR through a shared crossbar.</span>
+
+<span class="sd">    Clock domains</span>
+<span class="sd">    -------------</span>
+
+<span class="sd">    - ``sys``: CPU, CSR bus, zipdma_s2mm, Wishbone fabric</span>
+<span class="sd">    - ``uc``: UberClock DSP / sample domain</span>
+<span class="sd">    - ``ub_4x``: DDR3 PHY clock</span>
+<span class="sd">    - ``ub_4x_dqs``: DDR3 PHY clock 90 degrees shifted</span>
+<span class="sd">    - ``idelay``: IDELAYCTRL reference clock</span>
+
+<span class="sd">    External inputs (from SoC)</span>
+<span class="sd">    --------------------------</span>
+
+<span class="sd">    - ``cap_enable_uc``: 1 means capture external design samples, 0 means use ramp</span>
+<span class="sd">    - ``cap_beats_uc``: number of DW-bit beats to write</span>
+<span class="sd">    - ``cap_sample``: selected 12-bit sample in the UC domain</span>
+
+<span class="sd">    CSRs (SYS domain)</span>
+<span class="sd">    -----------------</span>
+
+<span class="sd">    - ``dma_req``: strobe to start DMA write</span>
+<span class="sd">    - ``dma_addr0/1``: 64-bit base address packed from two 32-bit registers</span>
+<span class="sd">    - ``dma_inc``: increment mode for DMA</span>
+<span class="sd">    - ``dma_size``: transfer size encoding used by ``zipdma_s2mm``</span>
+<span class="sd">    - ``dma_busy`` / ``dma_err``: DMA status</span>
+<span class="sd">    - ``calib_done``: DDR controller calibration complete</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># ----------------------------</span>
+    <span class="c1"># Defaults / constants</span>
+    <span class="c1"># ----------------------------</span>
+    <span class="n">DEFAULT_SERDES_RATIO</span> <span class="o">=</span> <span class="mi">4</span>           <span class="c1"># matches your Verilog controller assumptions</span>
+    <span class="n">DEFAULT_CAP_BEATS</span>    <span class="o">=</span> <span class="mi">256</span>
+    <span class="n">DEFAULT_S2MM_FIFO_DEPTH</span> <span class="o">=</span> <span class="mi">256</span>       <span class="c1"># UC-&gt;SYS stream FIFO depth (beats)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">platform</span><span class="p">,</span>
+        <span class="n">pads</span><span class="p">,</span>
+        <span class="n">locked</span><span class="p">:</span> <span class="n">Signal</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">SYS_CLK_HZ</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">100e6</span><span class="p">,</span>
+        <span class="n">DDR_CK_HZ</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">400e6</span><span class="p">,</span>
+        <span class="n">ROW_BITS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span><span class="p">,</span>
+        <span class="n">COL_BITS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">BA_BITS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">BYTE_LANES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">DUAL_RANK</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">SPEED_BIN</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">SDRAM_CAPACITY</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span>
+        <span class="n">DLL_OFF</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">ODELAY_SUPPORTED</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">BIST_MODE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># Derived bus parameters</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">UB_BUS_WIDTH_BITS</span> <span class="o">=</span> <span class="mi">64</span> <span class="o">*</span> <span class="n">BYTE_LANES</span>
+        <span class="n">SERDES_RATIO</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_SERDES_RATIO</span>
+
+        <span class="c1"># Address width used by ddr3_top WB port (word addressing inside controller)</span>
+        <span class="n">WB_ADDR_BITS</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">ROW_BITS</span> <span class="o">+</span> <span class="n">COL_BITS</span> <span class="o">+</span> <span class="n">BA_BITS</span>
+            <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">SERDES_RATIO</span> <span class="o">*</span> <span class="mi">2</span><span class="p">))</span>
+            <span class="o">+</span> <span class="n">DUAL_RANK</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># (1) CPU path: classic 32-bit WB -&gt; wide WB -&gt; pipelined WB -&gt; xbar M0</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wb</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">data_width</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+        <span class="n">wb_wide</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">Interface</span><span class="p">(</span><span class="n">data_width</span><span class="o">=</span><span class="n">UB_BUS_WIDTH_BITS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">wb_up</span> <span class="o">=</span> <span class="n">wb</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wb</span><span class="p">,</span> <span class="n">wb_wide</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">c2p</span> <span class="o">=</span> <span class="n">ClassicToPipelinedWishboneBridge</span><span class="p">(</span>
+            <span class="n">data_width</span><span class="o">=</span><span class="n">wb_wide</span><span class="o">.</span><span class="n">data_width</span><span class="p">,</span>
+            <span class="n">adr_width</span><span class="o">=</span><span class="n">wb_wide</span><span class="o">.</span><span class="n">adr_width</span><span class="p">,</span>
+            <span class="n">clock_domain</span><span class="o">=</span><span class="s2">&quot;sys&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">wb_wide</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="n">AW</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_adr</span><span class="p">)</span>         <span class="c1"># pipelined WB address width (words on wide bus)</span>
+        <span class="n">DW</span> <span class="o">=</span> <span class="n">UB_BUS_WIDTH_BITS</span>           <span class="c1"># wide bus width</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">xbar</span> <span class="o">=</span> <span class="n">PipelinedWishboneXbar2M1S</span><span class="p">(</span><span class="n">AW</span><span class="o">=</span><span class="n">AW</span><span class="p">,</span> <span class="n">DW</span><span class="o">=</span><span class="n">DW</span><span class="p">,</span> <span class="n">clock_domain</span><span class="o">=</span><span class="s2">&quot;sys&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Connect CPU pipelined master -&gt; xbar master0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_cyc</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_cyc</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_stb</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_stb</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_we</span>    <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_we</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_adr</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_adr</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_dat_w</span> <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_dat_w</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_sel</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_sel</span><span class="p">),</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_stall</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_stall</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_ack</span>     <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_ack</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_dat_r</span>   <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_dat_r</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">c2p</span><span class="o">.</span><span class="n">m_err</span>     <span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m0_err</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># (2) DMA writer: zipdma_s2mm is xbar master1</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">WB_LSB_BITS</span>          <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">DW</span> <span class="o">//</span> <span class="mi">8</span><span class="p">))</span>
+        <span class="n">DMA_ADDRESS_WIDTH</span>    <span class="o">=</span> <span class="n">AW</span> <span class="o">+</span> <span class="n">WB_LSB_BITS</span>
+
+        <span class="c1"># UC-domain capture interface (wired from SoC)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap_sample</span>    <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cap_sample_uc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap_enable_uc</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;cap_enable_uc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cap_beats_uc</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_CAP_BEATS</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cap_beats_uc&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Stream into DMA (SYS domain)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_valid</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;s2mm_s_valid&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_ready</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;s2mm_s_ready&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_data</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DW</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;s2mm_s_data&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_bytes</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="nb">max</span><span class="o">=</span><span class="n">DW</span> <span class="o">//</span> <span class="mi">8</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;s2mm_s_bytes&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_last</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;s2mm_s_last&quot;</span><span class="p">)</span>
+
+        <span class="c1"># DMA CSRs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_req</span> <span class="o">=</span> <span class="n">CSRStorage</span><span class="p">(</span>
+            <span class="mi">1</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Write (strobe) to start S2MM DMA write. Uses dma_addr[63:0], dma_inc, dma_size.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_busy</span> <span class="o">=</span> <span class="n">CSRStatus</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA busy flag from zipdma_s2mm.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_err</span>  <span class="o">=</span> <span class="n">CSRStatus</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA error flag from zipdma_s2mm (sticky in the Verilog core).&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_inc</span>  <span class="o">=</span> <span class="n">CSRStorage</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">reset</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA increment enable (1=increment address, 0=fixed).&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_size</span> <span class="o">=</span> <span class="n">CSRStorage</span><span class="p">(</span>
+            <span class="mi">2</span><span class="p">,</span>
+            <span class="n">reset</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA transfer size encoding: 00=bus-width, 01=32-bit, 10=16-bit, 11=8-bit.&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_addr0</span> <span class="o">=</span> <span class="n">CSRStorage</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA base address [31:0].&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dma_addr1</span> <span class="o">=</span> <span class="n">CSRStorage</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DMA base address [63:32].&quot;</span><span class="p">)</span>
+
+        <span class="n">dma_req_pulse</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;dma_req_pulse_sys&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">dma_req_pulse</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dma_req</span><span class="o">.</span><span class="n">re</span><span class="p">)</span>
+
+        <span class="n">dma_addr</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DMA_ADDRESS_WIDTH</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;dma_addr_sys&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="n">dma_addr</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span>
+            <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dma_addr0</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dma_addr1</span><span class="o">.</span><span class="n">storage</span><span class="p">)[:</span><span class="n">DMA_ADDRESS_WIDTH</span><span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">Instance</span><span class="p">(</span>
+            <span class="s2">&quot;zipdma_s2mm&quot;</span><span class="p">,</span>
+            <span class="n">p_ADDRESS_WIDTH</span>     <span class="o">=</span> <span class="n">DMA_ADDRESS_WIDTH</span><span class="p">,</span>
+            <span class="n">p_BUS_WIDTH</span>         <span class="o">=</span> <span class="n">DW</span><span class="p">,</span>
+            <span class="n">p_OPT_LITTLE_ENDIAN</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">p_LGPIPE</span>            <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+
+            <span class="n">i_i_clk</span>   <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">),</span>
+            <span class="n">i_i_reset</span> <span class="o">=</span> <span class="n">ResetSignal</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">),</span>
+
+            <span class="n">i_i_request</span> <span class="o">=</span> <span class="n">dma_req_pulse</span><span class="p">,</span>
+            <span class="n">o_o_busy</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dma_busy</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">o_o_err</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dma_err</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">i_i_inc</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dma_inc</span><span class="o">.</span><span class="n">storage</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="n">i_i_size</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dma_size</span><span class="o">.</span><span class="n">storage</span><span class="p">,</span>
+            <span class="n">i_i_addr</span>    <span class="o">=</span> <span class="n">dma_addr</span><span class="p">,</span>
+
+            <span class="c1"># Input stream (SYS domain side)</span>
+            <span class="n">i_S_VALID</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_valid</span><span class="p">,</span>
+            <span class="n">o_S_READY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_ready</span><span class="p">,</span>
+            <span class="n">i_S_DATA</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_data</span><span class="p">,</span>
+            <span class="n">i_S_BYTES</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_bytes</span><span class="p">,</span>
+            <span class="n">i_S_LAST</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_last</span><span class="p">,</span>
+
+            <span class="c1"># WB write port to DDR through xbar master1</span>
+            <span class="n">o_o_wr_cyc</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_cyc</span><span class="p">,</span>
+            <span class="n">o_o_wr_stb</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_stb</span><span class="p">,</span>
+            <span class="n">o_o_wr_we</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_we</span><span class="p">,</span>
+            <span class="n">o_o_wr_addr</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_adr</span><span class="p">,</span>
+            <span class="n">o_o_wr_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_dat_w</span><span class="p">,</span>
+            <span class="n">o_o_wr_sel</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_sel</span><span class="p">,</span>
+            <span class="n">i_i_wr_stall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_stall</span><span class="p">,</span>
+            <span class="n">i_i_wr_ack</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_ack</span><span class="p">,</span>
+            <span class="n">i_i_wr_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_dat_r</span><span class="p">,</span>
+            <span class="n">i_i_wr_err</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">m1_err</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># UC stream source: ramp OR packed external samples (UC domain)</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">uc_src</span> <span class="o">=</span> <span class="n">ClockDomainsRenamer</span><span class="p">(</span><span class="s2">&quot;uc&quot;</span><span class="p">)(</span>
+            <span class="n">UCStreamMux</span><span class="p">(</span><span class="n">bus_data_width</span><span class="o">=</span><span class="n">DW</span><span class="p">,</span> <span class="n">max_beats</span><span class="o">=</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">23</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">cap_stream</span> <span class="o">=</span> <span class="n">ClockDomainsRenamer</span><span class="p">(</span><span class="s2">&quot;uc&quot;</span><span class="p">)(</span>
+            <span class="n">SamplePackerStream</span><span class="p">(</span><span class="n">sample_width</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">bus_data_width</span><span class="o">=</span><span class="n">DW</span><span class="p">,</span> <span class="n">beat_fifo_depth</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># SYS-&gt;UC: start pulse derived from DMA request</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">ps_start</span> <span class="o">=</span> <span class="n">PulseSynchronizer</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">,</span> <span class="s2">&quot;uc&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ps_start</span><span class="o">.</span><span class="n">i</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">dma_req_pulse</span><span class="p">)</span>
+
+        <span class="c1"># Control / length wiring in UC domain</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">use_external</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_enable_uc</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ramp_length_beats</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_beats_uc</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ps_start</span><span class="o">.</span><span class="n">o</span> <span class="o">&amp;</span> <span class="o">~</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_enable_uc</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ps_start</span><span class="o">.</span><span class="n">o</span> <span class="o">&amp;</span> <span class="bp">self</span><span class="o">.</span><span class="n">cap_enable_uc</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">sample_in</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_sample</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">frames</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_beats_uc</span><span class="p">),</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ext_valid</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">valid</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ext_data</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">data</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ext_bytes</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">bytes</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ext_last</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">last</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cap_stream</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ext_ready</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># UC-&gt;SYS CDC: async FIFO carries {data, bytes, last}</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">bytes_width</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s_bytes</span><span class="p">)</span>
+        <span class="n">fifo_width</span>  <span class="o">=</span> <span class="n">DW</span> <span class="o">+</span> <span class="n">bytes_width</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">fifo</span> <span class="o">=</span> <span class="n">AsyncFIFO</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="n">fifo_width</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">DEFAULT_S2MM_FIFO_DEPTH</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submodules</span><span class="o">.</span><span class="n">s2mm_fifo</span> <span class="o">=</span> <span class="n">ClockDomainsRenamer</span><span class="p">({</span><span class="s2">&quot;write&quot;</span><span class="p">:</span> <span class="s2">&quot;uc&quot;</span><span class="p">,</span> <span class="s2">&quot;read&quot;</span><span class="p">:</span> <span class="s2">&quot;sys&quot;</span><span class="p">})(</span><span class="n">fifo</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">fifo</span><span class="o">.</span><span class="n">din</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">bytes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">last</span><span class="p">)),</span>
+            <span class="n">fifo</span><span class="o">.</span><span class="n">we</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">valid</span> <span class="o">&amp;</span> <span class="n">fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">uc_src</span><span class="o">.</span><span class="n">ready</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">fifo</span><span class="o">.</span><span class="n">writable</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="n">data_sys</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">DW</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fifo_data_sys&quot;</span><span class="p">)</span>
+        <span class="n">bytes_sys</span> <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">bytes_width</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;fifo_bytes_sys&quot;</span><span class="p">)</span>
+        <span class="n">last_sys</span>  <span class="o">=</span> <span class="n">Signal</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;fifo_last_sys&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">comb</span> <span class="o">+=</span> <span class="p">[</span>
+            <span class="n">Cat</span><span class="p">(</span><span class="n">data_sys</span><span class="p">,</span> <span class="n">bytes_sys</span><span class="p">,</span> <span class="n">last_sys</span><span class="p">)</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">fifo</span><span class="o">.</span><span class="n">dout</span><span class="p">),</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_valid</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_data</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">data_sys</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_bytes</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">bytes_sys</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">s_last</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">last_sys</span><span class="p">),</span>
+
+            <span class="n">fifo</span><span class="o">.</span><span class="n">re</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">s_ready</span> <span class="o">&amp;</span> <span class="n">fifo</span><span class="o">.</span><span class="n">readable</span><span class="p">),</span>
+        <span class="p">]</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># DDR3 controller (xbar slave0)</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">calib_done</span> <span class="o">=</span> <span class="n">CSRStatus</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;DDR3 controller calibration complete.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">specials</span> <span class="o">+=</span> <span class="n">Instance</span><span class="p">(</span>
+            <span class="s2">&quot;ddr3_top&quot;</span><span class="p">,</span>
+            <span class="n">p_CONTROLLER_CLK_PERIOD</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">1e12</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">SYS_CLK_HZ</span><span class="p">))),</span>
+            <span class="n">p_DDR3_CLK_PERIOD</span>       <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="mf">1e12</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="n">DDR_CK_HZ</span><span class="p">))),</span>
+            <span class="n">p_ROW_BITS</span>              <span class="o">=</span> <span class="n">ROW_BITS</span><span class="p">,</span>
+            <span class="n">p_COL_BITS</span>              <span class="o">=</span> <span class="n">COL_BITS</span><span class="p">,</span>
+            <span class="n">p_BA_BITS</span>               <span class="o">=</span> <span class="n">BA_BITS</span><span class="p">,</span>
+            <span class="n">p_BYTE_LANES</span>            <span class="o">=</span> <span class="n">BYTE_LANES</span><span class="p">,</span>
+            <span class="n">p_DUAL_RANK_DIMM</span>        <span class="o">=</span> <span class="n">DUAL_RANK</span><span class="p">,</span>
+            <span class="n">p_SPEED_BIN</span>             <span class="o">=</span> <span class="n">SPEED_BIN</span><span class="p">,</span>
+            <span class="n">p_SDRAM_CAPACITY</span>        <span class="o">=</span> <span class="n">SDRAM_CAPACITY</span><span class="p">,</span>
+            <span class="n">p_DLL_OFF</span>               <span class="o">=</span> <span class="n">DLL_OFF</span><span class="p">,</span>
+            <span class="n">p_ODELAY_SUPPORTED</span>      <span class="o">=</span> <span class="n">ODELAY_SUPPORTED</span><span class="p">,</span>
+            <span class="n">p_BIST_MODE</span>             <span class="o">=</span> <span class="n">BIST_MODE</span><span class="p">,</span>
+            <span class="n">p_DIC</span>                   <span class="o">=</span> <span class="mb">0b01</span><span class="p">,</span>
+            <span class="n">p_RTT_NOM</span>               <span class="o">=</span> <span class="mb">0b001</span><span class="p">,</span>
+            <span class="n">p_AUX_WIDTH</span>             <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+
+            <span class="n">i_i_controller_clk</span> <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">),</span>
+            <span class="n">i_i_ddr3_clk</span>       <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;ub_4x&quot;</span><span class="p">),</span>
+            <span class="n">i_i_ddr3_clk_90</span>    <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;ub_4x_dqs&quot;</span><span class="p">),</span>
+            <span class="n">i_i_ref_clk</span>        <span class="o">=</span> <span class="n">ClockSignal</span><span class="p">(</span><span class="s2">&quot;idelay&quot;</span><span class="p">),</span>
+            <span class="n">i_i_rst_n</span>          <span class="o">=</span> <span class="n">locked</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">ResetSignal</span><span class="p">(</span><span class="s2">&quot;sys&quot;</span><span class="p">),</span>
+
+            <span class="c1"># Pipelined Wishbone slave interface from xbar</span>
+            <span class="n">i_i_wb_cyc</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_cyc</span><span class="p">,</span>
+            <span class="n">i_i_wb_stb</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_stb</span><span class="p">,</span>
+            <span class="n">i_i_wb_we</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_we</span><span class="p">,</span>
+            <span class="n">i_i_wb_addr</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_adr</span><span class="p">[:</span><span class="n">WB_ADDR_BITS</span><span class="p">],</span>
+            <span class="n">i_i_wb_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_dat_w</span><span class="p">,</span>
+            <span class="n">i_i_wb_sel</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_sel</span><span class="p">,</span>
+            <span class="n">o_o_wb_stall</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_stall</span><span class="p">,</span>
+            <span class="n">o_o_wb_ack</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_ack</span><span class="p">,</span>
+            <span class="n">o_o_wb_err</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_err</span><span class="p">,</span>
+            <span class="n">o_o_wb_data</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_dat_r</span><span class="p">,</span>
+
+            <span class="n">i_i_aux</span> <span class="o">=</span> <span class="n">Cat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xbar</span><span class="o">.</span><span class="n">s_we</span><span class="p">,</span> <span class="n">C</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+            <span class="n">o_o_aux</span> <span class="o">=</span> <span class="n">Open</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+
+            <span class="c1"># Second WB port disabled</span>
+            <span class="n">i_i_wb2_cyc</span>   <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">i_i_wb2_stb</span>   <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">i_i_wb2_we</span>    <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">i_i_wb2_addr</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">i_i_wb2_data</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">i_i_wb2_sel</span>   <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">o_o_wb2_stall</span> <span class="o">=</span> <span class="n">Open</span><span class="p">(),</span>
+            <span class="n">o_o_wb2_ack</span>   <span class="o">=</span> <span class="n">Open</span><span class="p">(),</span>
+            <span class="n">o_o_wb2_data</span>  <span class="o">=</span> <span class="n">Open</span><span class="p">(),</span>
+
+            <span class="c1"># DDR3 pads</span>
+            <span class="n">o_o_ddr3_clk_p</span>   <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">clk_p</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_clk_n</span>   <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">clk_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_reset_n</span> <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">reset_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_cke</span>     <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">cke</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_cs_n</span>    <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">cs_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_ras_n</span>   <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">ras_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_cas_n</span>   <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">cas_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_we_n</span>    <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">we_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_addr</span>    <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">a</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_ba_addr</span> <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">ba</span><span class="p">,</span>
+            <span class="n">io_io_ddr3_dq</span>    <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">dq</span><span class="p">,</span>
+            <span class="n">io_io_ddr3_dqs</span>   <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">dqs_p</span><span class="p">,</span>
+            <span class="n">io_io_ddr3_dqs_n</span> <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">dqs_n</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_dm</span>      <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">dm</span><span class="p">,</span>
+            <span class="n">o_o_ddr3_odt</span>     <span class="o">=</span> <span class="n">pads</span><span class="o">.</span><span class="n">odt</span><span class="p">,</span>
+
+            <span class="n">o_o_calib_complete</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calib_done</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+            <span class="n">o_o_debug1</span>            <span class="o">=</span> <span class="n">Open</span><span class="p">(),</span>
+            <span class="n">i_i_user_self_refresh</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="n">o_uart_tx</span>             <span class="o">=</span> <span class="n">Open</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="c1"># RTL sources + Vivado properties</span>
+        <span class="c1"># ------------------------------------------------------------------</span>
+        <span class="n">add_sources</span><span class="p">(</span><span class="n">platform</span><span class="p">,</span> <span class="n">UBERDDR3_RTL_FILES</span><span class="p">)</span>
+
+        <span class="n">platform</span><span class="o">.</span><span class="n">add_platform_command</span><span class="p">(</span>
+            <span class="s2">&quot;set_property INTERNAL_VREF 0.75 &quot;</span>
+            <span class="s2">&quot;[get_iobanks -of_objects [get_ports {{ddram_dq[*] ddram_dqs_p[*] ddram_dqs_n[*]}}]]&quot;</span>
+        <span class="p">)</span>
+        <span class="n">platform</span><span class="o">.</span><span class="n">add_platform_command</span><span class="p">(</span>
+            <span class="s2">&quot;set_property BITSTREAM.STARTUP.MATCH_CYCLE 6 [current_design]&quot;</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Chili-chips.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
