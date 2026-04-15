@@ -602,11 +602,10 @@
         "config_cpu_name": "vexriscv",
         "config_cpu_human_name": "vexriscv",
         "config_cpu_nop": "nop",
-        "config_identifier": "ax7203: sys@100mhz uc@65mhz optional uberddr3 + uberclock 2026-04-13 19:47:39",
+        "config_identifier": "ax7203: sys@100mhz uc@65mhz optional uberddr3 + uberclock 2026-04-15 18:32:05",
         "ubddr3_mem_base": 2684354560,
         "config_csr_data_width": 32,
         "config_csr_alignment": 32,
-        "config_csr_ordering_big": null,
         "config_bus_standard": "wishbone",
         "config_bus_data_width": 32,
         "config_bus_address_width": 32,
@@ -644,34 +643,22 @@
         "ethmac": {
             "base": 2147483648,
             "size": 8192,
-            "type": "io+linker"
+            "type": "io"
         },
         "ethmac_rx": {
             "base": 2147483648,
             "size": 4096,
-            "type": "io"
+            "type": "io+linker"
         },
         "ethmac_tx": {
             "base": 2147487744,
             "size": 4096,
-            "type": "io"
+            "type": "io+linker"
         },
         "csr": {
             "base": 4026531840,
             "size": 65536,
             "type": "io"
         }
-    },
-    "cores": {
-        "timer1": "Timer",
-        "ubddr3": "UberDDR3",
-        "main": "UberClockCSRBank",
-        "evm": "EventManager",
-        "cfg_link": "CsrConfigSnapshotFIFO",
-        "ctrl": "SoCController",
-        "ethmac": "LiteEthMAC",
-        "ethphy": "LiteEthPHYRGMII",
-        "timer0": "Timer",
-        "uart": "UART"
     }
 }

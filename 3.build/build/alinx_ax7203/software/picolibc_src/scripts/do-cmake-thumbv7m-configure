@@ -1,2 +1,0 @@
-#!/bin/sh
-cmake -G Ninja -DTESTS=ON -DCMAKE_TOOLCHAIN_FILE="$(dirname $0)/../cmake/TC-arm-none-eabi.cmake" "$(dirname $0)/.." "$@"

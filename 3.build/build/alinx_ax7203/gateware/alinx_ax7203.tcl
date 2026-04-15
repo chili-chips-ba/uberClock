@@ -9,54 +9,42 @@ set_msg_config -id {Common 17-55} -new_severity {Warning}
 
 # Add Sources
 
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/ddr3_top.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/ddr3_controller.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/ddr3_phy.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/wbc2pipeline.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/wbxbar.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/skidbuffer.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/addrdecode.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/memory/zipdma_s2mm.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/uberclock/uberclock.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/uberclock/rx_channel.v}
-read_verilog {/home/ahmed/ws/uberClock/2.soc/1.hw/uberclock/tx_channel.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/adc/adc.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/dac/dac.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/cic.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/cic_comp_down_mac.v}
-add_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/comp_down_coeffs.mem}
-if {[string equal [file extension /home/ahmed/ws/uberClock/1.dsp/rtl/filters/comp_down_coeffs.mem] ".h"]} {
-set_property is_global_include true [get_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/comp_down_coeffs.mem}]
-}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/hb_down_mac.v}
-add_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/hb_down_coeffs.mem}
-if {[string equal [file extension /home/ahmed/ws/uberClock/1.dsp/rtl/filters/hb_down_coeffs.mem] ".h"]} {
-set_property is_global_include true [get_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/hb_down_coeffs.mem}]
-}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/downsamplerFilter.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/upsamplerFilter.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/hb_up_mac.v}
-add_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs.mem}
-if {[string equal [file extension /home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs.mem] ".h"]} {
-set_property is_global_include true [get_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs.mem}]
-}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/cic_comp_up_mac.v}
-add_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs_comp.mem}
-if {[string equal [file extension /home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs_comp.mem] ".h"]} {
-set_property is_global_include true [get_files {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/coeffs_comp.mem}]
-}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/filters/cic_int.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/to_polar/to_polar.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/cordic_pre_rotate.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/cordic_pipeline_stage.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/cordic_round.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/cordic.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/cordic_logic.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic/gain_and_saturate.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic16/cordic16.v}
-read_verilog {/home/ahmed/ws/uberClock/1.dsp/rtl/cordic16/cordic_pre_rotate_16.v}
-read_verilog {/home/ahmed/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v}
-read_verilog {/home/ahmed/ws/uberClock/3.build/build/alinx_ax7203/gateware/alinx_ax7203.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/ddr3_top.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/ddr3_controller.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/ddr3_phy.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/wbc2pipeline.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/wbxbar.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/skidbuffer.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/addrdecode.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/memory/zipdma_s2mm.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/uberclock/uberclock.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/uberclock/rx_channel.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/2.soc/1.hw/uberclock/tx_channel.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/adc/adc.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/dac/dac.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/cic.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/cic_comp_down_mac.v}
+add_files {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/comp_down_coeffs.mem}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/hb_down_mac.v}
+add_files {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/hb_down_coeffs.mem}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/downsamplerFilter.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/upsamplerFilter.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/hb_up_mac.v}
+add_files {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/coeffs.mem}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/cic_comp_up_mac.v}
+add_files {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/coeffs_comp.mem}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/filters/cic_int.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/to_polar/to_polar.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/cordic_pre_rotate.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/cordic_pipeline_stage.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/cordic_round.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/cordic.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/cordic_logic.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic/gain_and_saturate.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic16/cordic16.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/1.dsp/rtl/cordic16/cordic_pre_rotate_16.v}
+read_verilog {/home/hamed/FPGA/Tools/litex-hub/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v}
+read_verilog {/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/3.build/build/alinx_ax7203/gateware/alinx_ax7203.v}
 
 # Add EDIFs
 

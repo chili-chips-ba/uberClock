@@ -4,10 +4,10 @@
 <!-- Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.                   -->
 <!-- Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.   -->
 
-<Project Product="Vivado" Version="7" Minor="68" Path="/home/ahmed/ws/uberClock/3.build/build/alinx_ax7203/gateware/alinx_ax7203.xpr">
+<Project Product="Vivado" Version="7" Minor="68" Path="/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock-docs/3.build/build/alinx_ax7203/gateware/alinx_ax7203.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
-    <Option Name="Id" Val="2a85be0b2dd7494d98bcab79feb9504f"/>
+    <Option Name="Id" Val="ad7fe7baa37846458d9f8be06e7f4997"/>
     <Option Name="Part" Val="xc7a200tfbg484-2"/>
     <Option Name="CompiledLibDir" Val="$PCACHEDIR/compile_simlib"/>
     <Option Name="CompiledLibDirXSim" Val=""/>
@@ -323,7 +323,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../../../../../../litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v">
+      <File Path="$PPRDIR/../../../../../../../Tools/litex-hub/litex/pythondata-cpu-vexriscv/pythondata_cpu_vexriscv/verilog/VexRiscv.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

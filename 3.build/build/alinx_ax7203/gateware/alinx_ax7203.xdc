@@ -765,11 +765,9 @@ set_max_delay 2 -quiet -from [get_pins -filter {REF_PIN_NAME == C} -of_objects [
 
 set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -asynchronous
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_dqs_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -asynchronous
 
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets eth_tx_clk]] -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -asynchronous
+set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -asynchronous
 
 set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets eth_rx_clk]] -asynchronous
 
@@ -778,15 +776,3 @@ set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_
 set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -asynchronous
 
 set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets uc_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm1_clkin]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_dqs_clk]] -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm1_clkin]] -group [get_clocks -include_generated_clocks -of [get_nets uc_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -group [get_clocks -include_generated_clocks -of [get_nets sys_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_clk]] -asynchronous
-
-set_clock_groups -group [get_clocks -include_generated_clocks -of [get_nets s7mmcm0_clkin]] -group [get_clocks -include_generated_clocks -of [get_nets ub_4x_dqs_clk]] -asynchronous

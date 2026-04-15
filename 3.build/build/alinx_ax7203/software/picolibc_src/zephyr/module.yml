@@ -1,4 +1,0 @@
-name: picolibc
-build:
-  cmake: .
-  kconfig: zephyr/Kconfig

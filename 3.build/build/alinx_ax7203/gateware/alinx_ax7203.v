@@ -8,8 +8,8 @@
 //
 // Filename   : alinx_ax7203.v
 // Device     : xc7a200tfbg484-2
-// LiteX sha1 : 4452113fa
-// Date       : 2026-04-13 19:47:46
+// LiteX sha1 : dd54d77db
+// Date       : 2026-04-15 18:32:19
 //------------------------------------------------------------------------------
 
 `timescale 1ns / 1ps
@@ -98,8 +98,8 @@ BaseSoC
 │    │    └─── [BUFG]
 │    └─── idelayctrl (S7IDELAYCTRL)
 │    │    └─── [IDELAYCTRL]
-│    └─── [IBUFDS]
 │    └─── [BUFG]
+│    └─── [IBUFDS]
 └─── bus (SoCBusHandler)
 │    └─── _interconnect (InterconnectShared)
 │    │    └─── arbiter (Arbiter)
@@ -116,17 +116,17 @@ BaseSoC
 └─── sram (SRAM)
 └─── main_ram (SRAM)
 └─── identifier (Identifier)
+└─── uart_phy (RS232PHY)
+│    └─── tx (RS232PHYTX)
+│    │    └─── clk_phase_accum (RS232ClkPhaseAccum)
+│    │    └─── fsm (FSM)
+│    └─── rx (RS232PHYRX)
+│    │    └─── clk_phase_accum (RS232ClkPhaseAccum)
+│    │    └─── fsm (FSM)
 └─── uart (UART)
 │    └─── ev (EventManager)
-│    │    └─── eventsourcelevel_0* (EventSourceLevel)
-│    │    └─── eventsourcelevel_1* (EventSourceLevel)
-│    └─── phy (RS232PHY)
-│    │    └─── tx (RS232PHYTX)
-│    │    │    └─── clk_phase_accum (RS232ClkPhaseAccum)
-│    │    │    └─── fsm (FSM)
-│    │    └─── rx (RS232PHYRX)
-│    │    │    └─── clk_phase_accum (RS232ClkPhaseAccum)
-│    │    │    └─── fsm (FSM)
+│    │    └─── eventsourceprocess_0* (EventSourceProcess)
+│    │    └─── eventsourceprocess_1* (EventSourceProcess)
 │    └─── tx_fifo (SyncFIFO)
 │    │    └─── fifo (SyncFIFOBuffered)
 │    │    │    └─── fifo (SyncFIFO)
@@ -171,17 +171,17 @@ BaseSoC
 │    │    │    └─── [BUFG]
 │    │    │    └─── [BUFG]
 │    │    └─── hw_reset (LiteEthPHYHWReset)
-│    │    └─── [ODDR]
 │    │    └─── [IBUF]
 │    │    └─── [BUFG]
+│    │    └─── [ODDR]
 │    │    └─── [OBUF]
 │    └─── tx (LiteEthPHYRGMIITX)
-│    │    └─── [OBUF]
 │    │    └─── [ODDR]
 │    │    └─── [OBUF]
 │    │    └─── [ODDR]
 │    │    └─── [OBUF]
 │    │    └─── [ODDR]
+│    │    └─── [OBUF]
 │    │    └─── [ODDR]
 │    │    └─── [OBUF]
 │    │    └─── [ODDR]
@@ -189,19 +189,19 @@ BaseSoC
 │    └─── rx (LiteEthPHYRGMIIRX)
 │    │    └─── [IBUF]
 │    │    └─── [IDELAYE2]
-│    │    └─── [IBUF]
 │    │    └─── [IDDR]
 │    │    └─── [IBUF]
 │    │    └─── [IDELAYE2]
 │    │    └─── [IDDR]
-│    │    └─── [IDELAYE2]
-│    │    └─── [IDDR]
-│    │    └─── [IBUF]
-│    │    └─── [IDDR]
 │    │    └─── [IBUF]
 │    │    └─── [IDELAYE2]
 │    │    └─── [IDDR]
+│    │    └─── [IBUF]
 │    │    └─── [IDELAYE2]
+│    │    └─── [IDDR]
+│    │    └─── [IBUF]
+│    │    └─── [IDELAYE2]
+│    │    └─── [IDDR]
 │    └─── mdio (LiteEthPHYMDIO)
 └─── ethmac (LiteEthMAC)
 │    └─── core (LiteEthMACCore)
@@ -236,8 +236,8 @@ BaseSoC
 │    │    │    │    └─── fsm (FSM)
 │    │    │    └─── pulsesynchronizer_0* (PulseSynchronizer)
 │    │    │    └─── liteethmaccrc32checker_0* (LiteEthMACCRC32Checker)
-│    │    │    │    └─── crc (LiteEthMACCRC32Check)
-│    │    │    │    │    └─── engine (LiteEthMACCRCEngine)
+│    │    │    │    └─── crc (LiteEthMACCRC32)
+│    │    │    │    │    └─── liteethmaccrcengine_0* (LiteEthMACCRCEngine)
 │    │    │    │    └─── fifo (SyncFIFO)
 │    │    │    │    │    └─── fifo (SyncFIFO)
 │    │    │    │    └─── fsm (FSM)
@@ -783,13 +783,14 @@ reg           basesoc_core_liteethmaccrc32checker_crc_ce = 1'd0;
 reg    [31:0] basesoc_core_liteethmaccrc32checker_crc_crc_next = 32'd0;
 wire   [31:0] basesoc_core_liteethmaccrc32checker_crc_crc_prev;
 wire    [7:0] basesoc_core_liteethmaccrc32checker_crc_data0;
-reg     [7:0] basesoc_core_liteethmaccrc32checker_crc_data1 = 8'd0;
+wire    [7:0] basesoc_core_liteethmaccrc32checker_crc_data1;
 reg           basesoc_core_liteethmaccrc32checker_crc_error0 = 1'd0;
 reg           basesoc_core_liteethmaccrc32checker_crc_error1 = 1'd0;
 reg           basesoc_core_liteethmaccrc32checker_crc_error1_next_value1 = 1'd0;
 reg           basesoc_core_liteethmaccrc32checker_crc_error1_next_value_ce1 = 1'd0;
 reg    [31:0] basesoc_core_liteethmaccrc32checker_crc_reg = 32'd4294967295;
 reg           basesoc_core_liteethmaccrc32checker_crc_reset = 1'd0;
+reg    [31:0] basesoc_core_liteethmaccrc32checker_crc_value = 32'd0;
 reg           basesoc_core_liteethmaccrc32checker_error = 1'd0;
 wire          basesoc_core_liteethmaccrc32checker_fifo_full;
 wire          basesoc_core_liteethmaccrc32checker_fifo_in;
@@ -978,8 +979,6 @@ wire          basesoc_core_rx_last_be_source_payload_error;
 reg           basesoc_core_rx_last_be_source_payload_last_be = 1'd0;
 wire          basesoc_core_rx_last_be_source_ready;
 wire          basesoc_core_rx_last_be_source_valid;
-reg    [10:0] basesoc_core_rx_padding_length = 11'd0;
-reg     [3:0] basesoc_core_rx_padding_length_inc = 4'd0;
 wire          basesoc_core_rx_padding_sink_first;
 wire          basesoc_core_rx_padding_sink_last;
 wire    [7:0] basesoc_core_rx_padding_sink_payload_data;
@@ -990,7 +989,7 @@ wire          basesoc_core_rx_padding_sink_valid;
 wire          basesoc_core_rx_padding_source_first;
 wire          basesoc_core_rx_padding_source_last;
 wire    [7:0] basesoc_core_rx_padding_source_payload_data;
-reg           basesoc_core_rx_padding_source_payload_error = 1'd0;
+wire          basesoc_core_rx_padding_source_payload_error;
 wire          basesoc_core_rx_padding_source_payload_last_be;
 wire          basesoc_core_rx_padding_source_ready;
 wire          basesoc_core_rx_padding_source_valid;
@@ -1127,18 +1126,18 @@ reg           basesoc_core_tx_crc_ce = 1'd0;
 reg     [1:0] basesoc_core_tx_crc_cnt = 2'd3;
 wire          basesoc_core_tx_crc_cnt_done;
 reg    [31:0] basesoc_core_tx_crc_crc_next = 32'd0;
-reg    [31:0] basesoc_core_tx_crc_crc_packet = 32'd0;
-reg    [31:0] basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value0 = 32'd0;
-reg           basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value_ce0 = 1'd0;
 wire   [31:0] basesoc_core_tx_crc_crc_prev;
 wire    [7:0] basesoc_core_tx_crc_data0;
 wire    [7:0] basesoc_core_tx_crc_data1;
+reg    [31:0] basesoc_core_tx_crc_description = 32'd0;
+reg    [31:0] basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value0 = 32'd0;
+reg           basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value_ce0 = 1'd0;
 reg           basesoc_core_tx_crc_error = 1'd0;
-reg           basesoc_core_tx_crc_is_ongoing0 = 1'd0;
-reg           basesoc_core_tx_crc_is_ongoing1 = 1'd0;
-reg           basesoc_core_tx_crc_last_be = 1'd0;
-reg           basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value1 = 1'd0;
-reg           basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value_ce1 = 1'd0;
+reg           basesoc_core_tx_crc_fsm = 1'd0;
+reg           basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value1 = 1'd0;
+reg           basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value_ce1 = 1'd0;
+reg           basesoc_core_tx_crc_fsm_is_ongoing0 = 1'd0;
+reg           basesoc_core_tx_crc_fsm_is_ongoing1 = 1'd0;
 wire          basesoc_core_tx_crc_pipe_valid_sink_first;
 wire          basesoc_core_tx_crc_pipe_valid_sink_last;
 wire    [7:0] basesoc_core_tx_crc_pipe_valid_sink_payload_data;
@@ -1450,9 +1449,10 @@ reg     [3:0] basesoc_uart_rx_fifo_wrport_adr = 4'd0;
 wire    [9:0] basesoc_uart_rx_fifo_wrport_dat_r;
 wire    [9:0] basesoc_uart_rx_fifo_wrport_dat_w;
 wire          basesoc_uart_rx_fifo_wrport_we;
-wire          basesoc_uart_rx_pending;
+reg           basesoc_uart_rx_pending = 1'd0;
 wire          basesoc_uart_rx_status;
 wire          basesoc_uart_rx_trigger;
+reg           basesoc_uart_rx_trigger_d = 1'd0;
 reg           basesoc_uart_rxempty_re = 1'd0;
 wire          basesoc_uart_rxempty_status;
 wire          basesoc_uart_rxempty_we;
@@ -1507,9 +1507,10 @@ reg     [3:0] basesoc_uart_tx_fifo_wrport_adr = 4'd0;
 wire    [9:0] basesoc_uart_tx_fifo_wrport_dat_r;
 wire    [9:0] basesoc_uart_tx_fifo_wrport_dat_w;
 wire          basesoc_uart_tx_fifo_wrport_we;
-wire          basesoc_uart_tx_pending;
+reg           basesoc_uart_tx_pending = 1'd0;
 wire          basesoc_uart_tx_status;
 wire          basesoc_uart_tx_trigger;
+reg           basesoc_uart_tx_trigger_d = 1'd0;
 reg           basesoc_uart_txempty_re = 1'd0;
 wire          basesoc_uart_txempty_status;
 wire          basesoc_uart_txempty_we;
@@ -1736,13 +1737,13 @@ reg           basesoc_wishbone_interface_writer_length_liteethmacsramwriter_t_ne
 reg           basesoc_wishbone_interface_writer_length_re = 1'd0;
 wire   [10:0] basesoc_wishbone_interface_writer_length_status;
 wire          basesoc_wishbone_interface_writer_length_we;
-wire    [8:0] basesoc_wishbone_interface_writer_memory0_adr;
+reg     [8:0] basesoc_wishbone_interface_writer_memory0_adr = 9'd0;
 wire   [31:0] basesoc_wishbone_interface_writer_memory0_dat_r;
-wire   [31:0] basesoc_wishbone_interface_writer_memory0_dat_w;
+reg    [31:0] basesoc_wishbone_interface_writer_memory0_dat_w = 32'd0;
 reg           basesoc_wishbone_interface_writer_memory0_we = 1'd0;
-wire    [8:0] basesoc_wishbone_interface_writer_memory1_adr;
+reg     [8:0] basesoc_wishbone_interface_writer_memory1_adr = 9'd0;
 wire   [31:0] basesoc_wishbone_interface_writer_memory1_dat_r;
-wire   [31:0] basesoc_wishbone_interface_writer_memory1_dat_w;
+reg    [31:0] basesoc_wishbone_interface_writer_memory1_dat_w = 32'd0;
 reg           basesoc_wishbone_interface_writer_memory1_we = 1'd0;
 reg           basesoc_wishbone_interface_writer_pending_r = 1'd0;
 reg           basesoc_wishbone_interface_writer_pending_re = 1'd0;
@@ -2805,13 +2806,13 @@ wire          uberddr3_xbar_s_we;
 wire          uc_clk;
 reg           uc_rst = 1'd0;
 wire          wait_1;
-wire          xilinxasyncresetsynchronizerimpl0_async_reset;
+wire          xilinxasyncresetsynchronizerimpl0;
 wire          xilinxasyncresetsynchronizerimpl0_rst_meta;
-wire          xilinxasyncresetsynchronizerimpl1_async_reset;
+wire          xilinxasyncresetsynchronizerimpl1;
 wire          xilinxasyncresetsynchronizerimpl1_rst_meta;
-wire          xilinxasyncresetsynchronizerimpl2_async_reset;
+wire          xilinxasyncresetsynchronizerimpl2;
 wire          xilinxasyncresetsynchronizerimpl2_rst_meta;
-wire          xilinxasyncresetsynchronizerimpl3_async_reset;
+wire          xilinxasyncresetsynchronizerimpl3;
 wire          xilinxasyncresetsynchronizerimpl3_expr;
 wire          xilinxasyncresetsynchronizerimpl3_rst_meta;
 wire          xilinxasyncresetsynchronizerimpl4_rst_meta;
@@ -3105,57 +3106,6 @@ end
 assign basesoc_sram1_adr = basesoc_interface1_ram_bus_adr[15:0];
 assign basesoc_interface1_ram_bus_dat_r = basesoc_sram1_dat_r;
 assign basesoc_sram1_dat_w = basesoc_interface1_ram_bus_dat_w;
-assign basesoc_uart_uart_sink_valid = basesoc_rx_source_valid;
-assign basesoc_rx_source_ready = basesoc_uart_uart_sink_ready;
-assign basesoc_uart_uart_sink_first = basesoc_rx_source_first;
-assign basesoc_uart_uart_sink_last = basesoc_rx_source_last;
-assign basesoc_uart_uart_sink_payload_data = basesoc_rx_source_payload_data;
-assign basesoc_tx_sink_valid = basesoc_uart_uart_source_valid;
-assign basesoc_uart_uart_source_ready = basesoc_tx_sink_ready;
-assign basesoc_tx_sink_first = basesoc_uart_uart_source_first;
-assign basesoc_tx_sink_last = basesoc_uart_uart_source_last;
-assign basesoc_tx_sink_payload_data = basesoc_uart_uart_source_payload_data;
-assign basesoc_uart_tx_fifo_sink_valid = basesoc_uart_rxtx_re;
-assign basesoc_uart_tx_fifo_sink_payload_data = basesoc_uart_rxtx_r;
-assign basesoc_uart_uart_source_valid = basesoc_uart_tx_fifo_source_valid;
-assign basesoc_uart_tx_fifo_source_ready = basesoc_uart_uart_source_ready;
-assign basesoc_uart_uart_source_first = basesoc_uart_tx_fifo_source_first;
-assign basesoc_uart_uart_source_last = basesoc_uart_tx_fifo_source_last;
-assign basesoc_uart_uart_source_payload_data = basesoc_uart_tx_fifo_source_payload_data;
-assign basesoc_uart_txfull_status = (~basesoc_uart_tx_fifo_sink_ready);
-assign basesoc_uart_txempty_status = (~basesoc_uart_tx_fifo_source_valid);
-assign basesoc_uart_tx_trigger = basesoc_uart_tx_fifo_sink_ready;
-assign basesoc_uart_rx_fifo_sink_valid = basesoc_uart_uart_sink_valid;
-assign basesoc_uart_uart_sink_ready = basesoc_uart_rx_fifo_sink_ready;
-assign basesoc_uart_rx_fifo_sink_first = basesoc_uart_uart_sink_first;
-assign basesoc_uart_rx_fifo_sink_last = basesoc_uart_uart_sink_last;
-assign basesoc_uart_rx_fifo_sink_payload_data = basesoc_uart_uart_sink_payload_data;
-assign basesoc_uart_rxtx_w = basesoc_uart_rx_fifo_source_payload_data;
-assign basesoc_uart_rx_fifo_source_ready = basesoc_uart_rx_clear;
-assign basesoc_uart_rxempty_status = (~basesoc_uart_rx_fifo_source_valid);
-assign basesoc_uart_rxfull_status = (~basesoc_uart_rx_fifo_sink_ready);
-assign basesoc_uart_rx_trigger = basesoc_uart_rx_fifo_source_valid;
-assign basesoc_uart_tx0 = basesoc_uart_tx_status;
-assign basesoc_uart_tx1 = basesoc_uart_tx_pending;
-always @(*) begin
-    basesoc_uart_tx_clear <= 1'd0;
-    if ((basesoc_uart_pending_re & basesoc_uart_pending_r[0])) begin
-        basesoc_uart_tx_clear <= 1'd1;
-    end
-end
-assign basesoc_uart_rx0 = basesoc_uart_rx_status;
-assign basesoc_uart_rx1 = basesoc_uart_rx_pending;
-always @(*) begin
-    basesoc_uart_rx_clear <= 1'd0;
-    if ((basesoc_uart_pending_re & basesoc_uart_pending_r[1])) begin
-        basesoc_uart_rx_clear <= 1'd1;
-    end
-end
-assign basesoc_uart_irq = ((basesoc_uart_pending_status[0] & basesoc_uart_enable_storage[0]) | (basesoc_uart_pending_status[1] & basesoc_uart_enable_storage[1]));
-assign basesoc_uart_tx_status = basesoc_uart_tx_trigger;
-assign basesoc_uart_tx_pending = basesoc_uart_tx_trigger;
-assign basesoc_uart_rx_status = basesoc_uart_rx_trigger;
-assign basesoc_uart_rx_pending = basesoc_uart_rx_trigger;
 always @(*) begin
     basesoc_serial_tx_rs232phytx_next_value1 <= 1'd0;
     basesoc_serial_tx_rs232phytx_next_value_ce1 <= 1'd0;
@@ -3171,7 +3121,7 @@ always @(*) begin
         1'd1: begin
             basesoc_tx_enable <= 1'd1;
             if (basesoc_tx_tick) begin
-                basesoc_serial_tx_rs232phytx_next_value1 <= basesoc_tx_data[0];
+                basesoc_serial_tx_rs232phytx_next_value1 <= basesoc_tx_data;
                 basesoc_serial_tx_rs232phytx_next_value_ce1 <= 1'd1;
                 basesoc_tx_count_rs232phytx_next_value0 <= (basesoc_tx_count + 1'd1);
                 basesoc_tx_count_rs232phytx_next_value_ce0 <= 1'd1;
@@ -3232,6 +3182,55 @@ always @(*) begin
         end
     endcase
 end
+assign basesoc_uart_uart_sink_valid = basesoc_rx_source_valid;
+assign basesoc_rx_source_ready = basesoc_uart_uart_sink_ready;
+assign basesoc_uart_uart_sink_first = basesoc_rx_source_first;
+assign basesoc_uart_uart_sink_last = basesoc_rx_source_last;
+assign basesoc_uart_uart_sink_payload_data = basesoc_rx_source_payload_data;
+assign basesoc_tx_sink_valid = basesoc_uart_uart_source_valid;
+assign basesoc_uart_uart_source_ready = basesoc_tx_sink_ready;
+assign basesoc_tx_sink_first = basesoc_uart_uart_source_first;
+assign basesoc_tx_sink_last = basesoc_uart_uart_source_last;
+assign basesoc_tx_sink_payload_data = basesoc_uart_uart_source_payload_data;
+assign basesoc_uart_tx_fifo_sink_valid = basesoc_uart_rxtx_re;
+assign basesoc_uart_tx_fifo_sink_payload_data = basesoc_uart_rxtx_r;
+assign basesoc_uart_uart_source_valid = basesoc_uart_tx_fifo_source_valid;
+assign basesoc_uart_tx_fifo_source_ready = basesoc_uart_uart_source_ready;
+assign basesoc_uart_uart_source_first = basesoc_uart_tx_fifo_source_first;
+assign basesoc_uart_uart_source_last = basesoc_uart_tx_fifo_source_last;
+assign basesoc_uart_uart_source_payload_data = basesoc_uart_tx_fifo_source_payload_data;
+assign basesoc_uart_txfull_status = (~basesoc_uart_tx_fifo_sink_ready);
+assign basesoc_uart_txempty_status = (~basesoc_uart_tx_fifo_source_valid);
+assign basesoc_uart_tx_trigger = basesoc_uart_tx_fifo_sink_ready;
+assign basesoc_uart_rx_fifo_sink_valid = basesoc_uart_uart_sink_valid;
+assign basesoc_uart_uart_sink_ready = basesoc_uart_rx_fifo_sink_ready;
+assign basesoc_uart_rx_fifo_sink_first = basesoc_uart_uart_sink_first;
+assign basesoc_uart_rx_fifo_sink_last = basesoc_uart_uart_sink_last;
+assign basesoc_uart_rx_fifo_sink_payload_data = basesoc_uart_uart_sink_payload_data;
+assign basesoc_uart_rxtx_w = basesoc_uart_rx_fifo_source_payload_data;
+assign basesoc_uart_rx_fifo_source_ready = (basesoc_uart_rx_clear | (1'd0 & basesoc_uart_rxtx_we));
+assign basesoc_uart_rxempty_status = (~basesoc_uart_rx_fifo_source_valid);
+assign basesoc_uart_rxfull_status = (~basesoc_uart_rx_fifo_sink_ready);
+assign basesoc_uart_rx_trigger = basesoc_uart_rx_fifo_source_valid;
+assign basesoc_uart_tx0 = basesoc_uart_tx_status;
+assign basesoc_uart_tx1 = basesoc_uart_tx_pending;
+always @(*) begin
+    basesoc_uart_tx_clear <= 1'd0;
+    if ((basesoc_uart_pending_re & basesoc_uart_pending_r[0])) begin
+        basesoc_uart_tx_clear <= 1'd1;
+    end
+end
+assign basesoc_uart_rx0 = basesoc_uart_rx_status;
+assign basesoc_uart_rx1 = basesoc_uart_rx_pending;
+always @(*) begin
+    basesoc_uart_rx_clear <= 1'd0;
+    if ((basesoc_uart_pending_re & basesoc_uart_pending_r[1])) begin
+        basesoc_uart_rx_clear <= 1'd1;
+    end
+end
+assign basesoc_uart_irq = ((basesoc_uart_pending_status[0] & basesoc_uart_enable_storage[0]) | (basesoc_uart_pending_status[1] & basesoc_uart_enable_storage[1]));
+assign basesoc_uart_tx_status = basesoc_uart_tx_trigger;
+assign basesoc_uart_rx_status = basesoc_uart_rx_trigger;
 assign basesoc_uart_tx_fifo_syncfifo_din = {basesoc_uart_tx_fifo_fifo_in_last, basesoc_uart_tx_fifo_fifo_in_first, basesoc_uart_tx_fifo_fifo_in_payload_data};
 assign {basesoc_uart_tx_fifo_fifo_out_last, basesoc_uart_tx_fifo_fifo_out_first, basesoc_uart_tx_fifo_fifo_out_payload_data} = basesoc_uart_tx_fifo_syncfifo_dout;
 assign basesoc_uart_tx_fifo_sink_ready = basesoc_uart_tx_fifo_syncfifo_writable;
@@ -3857,12 +3856,12 @@ always @(*) begin
 end
 always @(*) begin
     basesoc_core_tx_crc_ce <= 1'd0;
-    basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value0 <= 32'd0;
-    basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value_ce0 <= 1'd0;
-    basesoc_core_tx_crc_is_ongoing0 <= 1'd0;
-    basesoc_core_tx_crc_is_ongoing1 <= 1'd0;
-    basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value1 <= 1'd0;
-    basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value_ce1 <= 1'd0;
+    basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value0 <= 32'd0;
+    basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value_ce0 <= 1'd0;
+    basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value1 <= 1'd0;
+    basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value_ce1 <= 1'd0;
+    basesoc_core_tx_crc_fsm_is_ongoing0 <= 1'd0;
+    basesoc_core_tx_crc_fsm_is_ongoing1 <= 1'd0;
     basesoc_core_tx_crc_reset <= 1'd0;
     basesoc_core_tx_crc_sink_ready <= 1'd0;
     basesoc_core_tx_crc_source_first <= 1'd0;
@@ -3898,14 +3897,14 @@ always @(*) begin
                 if ((1'd0 & (basesoc_core_tx_crc_sink_payload_last_be <= 4'd15))) begin
                     txdatapath_bufferizeendpoints_next_state <= 1'd0;
                 end else begin
-                    basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value0 <= basesoc_core_tx_crc_value;
-                    basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value_ce0 <= 1'd1;
+                    basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value0 <= basesoc_core_tx_crc_value;
+                    basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value_ce0 <= 1'd1;
                     if (1'd0) begin
-                        basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value1 <= (basesoc_core_tx_crc_sink_payload_last_be >>> 3'd4);
-                        basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
+                        basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value1 <= (basesoc_core_tx_crc_sink_payload_last_be >>> 3'd4);
+                        basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
                     end else begin
-                        basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value1 <= basesoc_core_tx_crc_sink_payload_last_be;
-                        basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
+                        basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value1 <= basesoc_core_tx_crc_sink_payload_last_be;
+                        basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value_ce1 <= 1'd1;
                     end
                     txdatapath_bufferizeendpoints_next_state <= 2'd2;
                 end
@@ -3915,16 +3914,16 @@ always @(*) begin
             basesoc_core_tx_crc_source_valid <= 1'd1;
             case (basesoc_core_tx_crc_cnt)
                 1'd0: begin
-                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_crc_packet[31:24];
+                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_description[31:24];
                 end
                 1'd1: begin
-                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_crc_packet[23:16];
+                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_description[23:16];
                 end
                 2'd2: begin
-                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_crc_packet[15:8];
+                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_description[15:8];
                 end
                 default: begin
-                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_crc_packet[7:0];
+                    basesoc_core_tx_crc_source_payload_data <= basesoc_core_tx_crc_description[7:0];
                 end
             endcase
             if (basesoc_core_tx_crc_cnt_done) begin
@@ -3933,7 +3932,7 @@ always @(*) begin
                     txdatapath_bufferizeendpoints_next_state <= 1'd0;
                 end
             end
-            basesoc_core_tx_crc_is_ongoing1 <= 1'd1;
+            basesoc_core_tx_crc_fsm_is_ongoing1 <= 1'd1;
         end
         default: begin
             basesoc_core_tx_crc_reset <= 1'd1;
@@ -3942,7 +3941,7 @@ always @(*) begin
                 basesoc_core_tx_crc_sink_ready <= 1'd0;
                 txdatapath_bufferizeendpoints_next_state <= 1'd1;
             end
-            basesoc_core_tx_crc_is_ongoing0 <= 1'd1;
+            basesoc_core_tx_crc_fsm_is_ongoing0 <= 1'd1;
         end
     endcase
 end
@@ -4190,13 +4189,13 @@ assign basesoc_core_liteethmaccrc32checker_sink_sink_last = basesoc_core_bufferi
 assign basesoc_core_liteethmaccrc32checker_sink_sink_payload_data = basesoc_core_bufferizeendpoints_source_source_payload_data;
 assign basesoc_core_liteethmaccrc32checker_sink_sink_payload_last_be = basesoc_core_bufferizeendpoints_source_source_payload_last_be;
 assign basesoc_core_liteethmaccrc32checker_sink_sink_payload_error = basesoc_core_bufferizeendpoints_source_source_payload_error;
+assign basesoc_core_liteethmaccrc32checker_crc_data1 = basesoc_core_liteethmaccrc32checker_crc_data0;
 assign basesoc_core_liteethmaccrc32checker_crc_crc_prev = basesoc_core_liteethmaccrc32checker_crc_reg;
 always @(*) begin
-    basesoc_core_liteethmaccrc32checker_crc_data1 <= 8'd0;
     basesoc_core_liteethmaccrc32checker_crc_error0 <= 1'd0;
-    basesoc_core_liteethmaccrc32checker_crc_data1 <= basesoc_core_liteethmaccrc32checker_crc_data0;
+    basesoc_core_liteethmaccrc32checker_crc_value <= 32'd0;
     if (basesoc_core_liteethmaccrc32checker_crc_be) begin
-        basesoc_core_liteethmaccrc32checker_crc_data1 <= (basesoc_core_liteethmaccrc32checker_crc_data0 & 8'd255);
+        basesoc_core_liteethmaccrc32checker_crc_value <= ({basesoc_core_liteethmaccrc32checker_crc_crc_next[0], basesoc_core_liteethmaccrc32checker_crc_crc_next[1], basesoc_core_liteethmaccrc32checker_crc_crc_next[2], basesoc_core_liteethmaccrc32checker_crc_crc_next[3], basesoc_core_liteethmaccrc32checker_crc_crc_next[4], basesoc_core_liteethmaccrc32checker_crc_crc_next[5], basesoc_core_liteethmaccrc32checker_crc_crc_next[6], basesoc_core_liteethmaccrc32checker_crc_crc_next[7], basesoc_core_liteethmaccrc32checker_crc_crc_next[8], basesoc_core_liteethmaccrc32checker_crc_crc_next[9], basesoc_core_liteethmaccrc32checker_crc_crc_next[10], basesoc_core_liteethmaccrc32checker_crc_crc_next[11], basesoc_core_liteethmaccrc32checker_crc_crc_next[12], basesoc_core_liteethmaccrc32checker_crc_crc_next[13], basesoc_core_liteethmaccrc32checker_crc_crc_next[14], basesoc_core_liteethmaccrc32checker_crc_crc_next[15], basesoc_core_liteethmaccrc32checker_crc_crc_next[16], basesoc_core_liteethmaccrc32checker_crc_crc_next[17], basesoc_core_liteethmaccrc32checker_crc_crc_next[18], basesoc_core_liteethmaccrc32checker_crc_crc_next[19], basesoc_core_liteethmaccrc32checker_crc_crc_next[20], basesoc_core_liteethmaccrc32checker_crc_crc_next[21], basesoc_core_liteethmaccrc32checker_crc_crc_next[22], basesoc_core_liteethmaccrc32checker_crc_crc_next[23], basesoc_core_liteethmaccrc32checker_crc_crc_next[24], basesoc_core_liteethmaccrc32checker_crc_crc_next[25], basesoc_core_liteethmaccrc32checker_crc_crc_next[26], basesoc_core_liteethmaccrc32checker_crc_crc_next[27], basesoc_core_liteethmaccrc32checker_crc_crc_next[28], basesoc_core_liteethmaccrc32checker_crc_crc_next[29], basesoc_core_liteethmaccrc32checker_crc_crc_next[30], basesoc_core_liteethmaccrc32checker_crc_crc_next[31]} ^ 32'd4294967295);
         basesoc_core_liteethmaccrc32checker_crc_error0 <= (basesoc_core_liteethmaccrc32checker_crc_crc_next != 32'd3338984827);
     end
 end
@@ -4353,49 +4352,13 @@ assign basesoc_core_bufferizeendpoints_source_source_payload_data = basesoc_core
 assign basesoc_core_bufferizeendpoints_source_source_payload_last_be = basesoc_core_bufferizeendpoints_pipe_valid_source_payload_last_be;
 assign basesoc_core_bufferizeendpoints_source_source_payload_error = basesoc_core_bufferizeendpoints_pipe_valid_source_payload_error;
 assign basesoc_core_pulsesynchronizer1_o = (basesoc_core_pulsesynchronizer1_toggle_o ^ basesoc_core_pulsesynchronizer1_toggle_o_r);
-always @(*) begin
-    basesoc_core_rx_padding_length_inc <= 4'd0;
-    case (basesoc_core_rx_padding_sink_payload_last_be)
-        1'd1: begin
-            basesoc_core_rx_padding_length_inc <= 1'd1;
-        end
-        2'd2: begin
-            basesoc_core_rx_padding_length_inc <= 2'd2;
-        end
-        3'd4: begin
-            basesoc_core_rx_padding_length_inc <= 2'd3;
-        end
-        4'd8: begin
-            basesoc_core_rx_padding_length_inc <= 3'd4;
-        end
-        5'd16: begin
-            basesoc_core_rx_padding_length_inc <= 3'd5;
-        end
-        6'd32: begin
-            basesoc_core_rx_padding_length_inc <= 3'd6;
-        end
-        7'd64: begin
-            basesoc_core_rx_padding_length_inc <= 3'd7;
-        end
-        default: begin
-            basesoc_core_rx_padding_length_inc <= 1'd1;
-        end
-    endcase
-end
 assign basesoc_core_rx_padding_source_valid = basesoc_core_rx_padding_sink_valid;
 assign basesoc_core_rx_padding_sink_ready = basesoc_core_rx_padding_source_ready;
 assign basesoc_core_rx_padding_source_first = basesoc_core_rx_padding_sink_first;
 assign basesoc_core_rx_padding_source_last = basesoc_core_rx_padding_sink_last;
 assign basesoc_core_rx_padding_source_payload_data = basesoc_core_rx_padding_sink_payload_data;
 assign basesoc_core_rx_padding_source_payload_last_be = basesoc_core_rx_padding_sink_payload_last_be;
-always @(*) begin
-    basesoc_core_rx_padding_source_payload_error <= 1'd0;
-    if (((basesoc_core_rx_padding_sink_valid & basesoc_core_rx_padding_sink_last) & ((basesoc_core_rx_padding_length + basesoc_core_rx_padding_length_inc) < 6'd60))) begin
-        basesoc_core_rx_padding_source_payload_error <= {1{1'd1}};
-    end else begin
-        basesoc_core_rx_padding_source_payload_error <= basesoc_core_rx_padding_sink_payload_error;
-    end
-end
+assign basesoc_core_rx_padding_source_payload_error = basesoc_core_rx_padding_sink_payload_error;
 assign basesoc_core_rx_last_be_source_valid = basesoc_core_rx_last_be_sink_valid;
 assign basesoc_core_rx_last_be_sink_ready = basesoc_core_rx_last_be_source_ready;
 assign basesoc_core_rx_last_be_source_first = basesoc_core_rx_last_be_sink_first;
@@ -4601,23 +4564,29 @@ assign basesoc_wishbone_interface_writer_available_trigger = basesoc_wishbone_in
 assign basesoc_wishbone_interface_writer_slot_status = basesoc_wishbone_interface_writer_stat_fifo_source_payload_slot;
 assign basesoc_wishbone_interface_writer_length_status = basesoc_wishbone_interface_writer_stat_fifo_source_payload_length;
 assign basesoc_wishbone_interface_writer_wr_data = basesoc_wishbone_interface_writer_sink_sink_payload_data;
-assign basesoc_wishbone_interface_writer_memory0_adr = basesoc_wishbone_interface_writer_length[10:2];
-assign basesoc_wishbone_interface_writer_memory0_dat_w = basesoc_wishbone_interface_writer_wr_data;
-assign basesoc_wishbone_interface_writer_memory1_adr = basesoc_wishbone_interface_writer_length[10:2];
-assign basesoc_wishbone_interface_writer_memory1_dat_w = basesoc_wishbone_interface_writer_wr_data;
 always @(*) begin
+    basesoc_wishbone_interface_writer_memory0_adr <= 9'd0;
+    basesoc_wishbone_interface_writer_memory0_dat_w <= 32'd0;
     basesoc_wishbone_interface_writer_memory0_we <= 1'd0;
+    basesoc_wishbone_interface_writer_memory1_adr <= 9'd0;
+    basesoc_wishbone_interface_writer_memory1_dat_w <= 32'd0;
     basesoc_wishbone_interface_writer_memory1_we <= 1'd0;
-    if ((basesoc_wishbone_interface_writer_sink_sink_valid & basesoc_wishbone_interface_writer_write)) begin
-        case (basesoc_wishbone_interface_writer_slot)
-            1'd0: begin
+    case (basesoc_wishbone_interface_writer_slot)
+        1'd0: begin
+            basesoc_wishbone_interface_writer_memory0_adr <= basesoc_wishbone_interface_writer_length[10:2];
+            basesoc_wishbone_interface_writer_memory0_dat_w <= basesoc_wishbone_interface_writer_wr_data;
+            if ((basesoc_wishbone_interface_writer_sink_sink_valid & basesoc_wishbone_interface_writer_write)) begin
                 basesoc_wishbone_interface_writer_memory0_we <= 1'd1;
             end
-            1'd1: begin
+        end
+        1'd1: begin
+            basesoc_wishbone_interface_writer_memory1_adr <= basesoc_wishbone_interface_writer_length[10:2];
+            basesoc_wishbone_interface_writer_memory1_dat_w <= basesoc_wishbone_interface_writer_wr_data;
+            if ((basesoc_wishbone_interface_writer_sink_sink_valid & basesoc_wishbone_interface_writer_write)) begin
                 basesoc_wishbone_interface_writer_memory1_we <= 1'd1;
             end
-        endcase
-    end
+        end
+    endcase
 end
 assign basesoc_wishbone_interface_writer_available0 = basesoc_wishbone_interface_writer_available_status;
 assign basesoc_wishbone_interface_writer_available1 = basesoc_wishbone_interface_writer_available_pending;
@@ -6489,14 +6458,14 @@ always @(*) begin
         end
     endcase
 end
-assign xilinxasyncresetsynchronizerimpl0_async_reset = (~pll0_locked);
-assign xilinxasyncresetsynchronizerimpl1_async_reset = (~pll0_locked);
-assign xilinxasyncresetsynchronizerimpl2_async_reset = (~pll0_locked);
+assign xilinxasyncresetsynchronizerimpl0 = (~pll0_locked);
+assign xilinxasyncresetsynchronizerimpl1 = (~pll0_locked);
+assign xilinxasyncresetsynchronizerimpl2 = (~pll0_locked);
 assign basesoc_rx_rx = xilinxmultiregimpl0_regs1;
 assign uberddr3_toggle_o = xilinxmultiregimpl1_regs1;
 assign uberddr3_fifo_produce_rdomain = xilinxmultiregimpl2_regs1;
 assign uberddr3_fifo_consume_wdomain = xilinxmultiregimpl3_regs1;
-assign xilinxasyncresetsynchronizerimpl3_async_reset = (~ethphy_pll_locked);
+assign xilinxasyncresetsynchronizerimpl3 = (~ethphy_pll_locked);
 always @(*) begin
     ethphy__r_status <= 1'd0;
     ethphy__r_status <= ethphy_r;
@@ -6589,13 +6558,6 @@ always @(posedge eth_rx_clk) begin
     if (basesoc_core_pulsesynchronizer1_i) begin
         basesoc_core_pulsesynchronizer1_toggle_i <= (~basesoc_core_pulsesynchronizer1_toggle_i);
     end
-    if ((basesoc_core_rx_padding_sink_valid & basesoc_core_rx_padding_sink_ready)) begin
-        if (basesoc_core_rx_padding_sink_last) begin
-            basesoc_core_rx_padding_length <= 1'd0;
-        end else begin
-            basesoc_core_rx_padding_length <= (basesoc_core_rx_padding_length + basesoc_core_rx_padding_length_inc);
-        end
-    end
     if (basesoc_core_rx_converter_converter_source_ready) begin
         basesoc_core_rx_converter_converter_strobe_all <= 1'd0;
     end
@@ -6656,7 +6618,6 @@ always @(posedge eth_rx_clk) begin
         basesoc_core_bufferizeendpoints_pipe_valid_source_payload_data <= 8'd0;
         basesoc_core_bufferizeendpoints_pipe_valid_source_payload_last_be <= 1'd0;
         basesoc_core_bufferizeendpoints_pipe_valid_source_payload_error <= 1'd0;
-        basesoc_core_rx_padding_length <= 11'd0;
         basesoc_core_rx_converter_converter_source_payload_data <= 40'd0;
         basesoc_core_rx_converter_converter_source_payload_valid_token_count <= 3'd0;
         basesoc_core_rx_converter_converter_demux <= 2'd0;
@@ -6685,10 +6646,10 @@ always @(posedge eth_tx_clk) begin
     if (basesoc_core_tx_padding_counter_clockdomainsrenamer0_next_value_ce) begin
         basesoc_core_tx_padding_counter <= basesoc_core_tx_padding_counter_clockdomainsrenamer0_next_value;
     end
-    if (basesoc_core_tx_crc_is_ongoing0) begin
+    if (basesoc_core_tx_crc_fsm_is_ongoing0) begin
         basesoc_core_tx_crc_cnt <= 2'd3;
     end else begin
-        if ((basesoc_core_tx_crc_is_ongoing1 & (~basesoc_core_tx_crc_cnt_done))) begin
+        if ((basesoc_core_tx_crc_fsm_is_ongoing1 & (~basesoc_core_tx_crc_cnt_done))) begin
             basesoc_core_tx_crc_cnt <= (basesoc_core_tx_crc_cnt - basesoc_core_tx_crc_source_ready);
         end
     end
@@ -6699,11 +6660,11 @@ always @(posedge eth_tx_clk) begin
         basesoc_core_tx_crc_reg <= 32'd4294967295;
     end
     txdatapath_bufferizeendpoints_state <= txdatapath_bufferizeendpoints_next_state;
-    if (basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value_ce0) begin
-        basesoc_core_tx_crc_crc_packet <= basesoc_core_tx_crc_crc_packet_clockdomainsrenamer1_next_value0;
+    if (basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value_ce0) begin
+        basesoc_core_tx_crc_description <= basesoc_core_tx_crc_description_clockdomainsrenamer1_next_value0;
     end
-    if (basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value_ce1) begin
-        basesoc_core_tx_crc_last_be <= basesoc_core_tx_crc_last_be_clockdomainsrenamer1_next_value1;
+    if (basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value_ce1) begin
+        basesoc_core_tx_crc_fsm <= basesoc_core_tx_crc_fsm_clockdomainsrenamer1_next_value1;
     end
     if (((~basesoc_core_tx_crc_pipe_valid_source_valid) | basesoc_core_tx_crc_pipe_valid_source_ready)) begin
         basesoc_core_tx_crc_pipe_valid_source_valid <= basesoc_core_tx_crc_pipe_valid_sink_valid;
@@ -6844,6 +6805,20 @@ always @(posedge sys_clk) begin
     end
     if (basesoc_rx_data_rs232phyrx_next_value_ce1) begin
         basesoc_rx_data <= basesoc_rx_data_rs232phyrx_next_value1;
+    end
+    if (basesoc_uart_tx_clear) begin
+        basesoc_uart_tx_pending <= 1'd0;
+    end
+    basesoc_uart_tx_trigger_d <= basesoc_uart_tx_trigger;
+    if ((basesoc_uart_tx_trigger & (~basesoc_uart_tx_trigger_d))) begin
+        basesoc_uart_tx_pending <= 1'd1;
+    end
+    if (basesoc_uart_rx_clear) begin
+        basesoc_uart_rx_pending <= 1'd0;
+    end
+    basesoc_uart_rx_trigger_d <= basesoc_uart_rx_trigger;
+    if ((basesoc_uart_rx_trigger & (~basesoc_uart_rx_trigger_d))) begin
+        basesoc_uart_rx_pending <= 1'd1;
     end
     if (basesoc_uart_tx_fifo_syncfifo_re) begin
         basesoc_uart_tx_fifo_readable <= 1'd1;
@@ -7785,6 +7760,10 @@ always @(posedge sys_clk) begin
         basesoc_rx_rx_d <= 1'd0;
         basesoc_uart_txfull_re <= 1'd0;
         basesoc_uart_rxempty_re <= 1'd0;
+        basesoc_uart_tx_pending <= 1'd0;
+        basesoc_uart_tx_trigger_d <= 1'd0;
+        basesoc_uart_rx_pending <= 1'd0;
+        basesoc_uart_rx_trigger_d <= 1'd0;
         basesoc_uart_status_re <= 1'd0;
         basesoc_uart_pending_re <= 1'd0;
         basesoc_uart_pending_r <= 2'd0;
@@ -8594,10 +8573,10 @@ IDELAYCTRL IDELAYCTRL(
 );
 
 //------------------------------------------------------------------------------
-// Memory rom: 8558-words x 32-bit
+// Memory rom: 8109-words x 32-bit
 //------------------------------------------------------------------------------
 // Port 0 | Read: Sync  | Write: ---- | 
-reg [31:0] rom[0:8557];
+reg [31:0] rom[0:8108];
 initial begin
 	$readmemh("alinx_ax7203_rom.init", rom);
 end
@@ -8611,17 +8590,21 @@ assign basesoc_dat_r = rom_dat0;
 //------------------------------------------------------------------------------
 // Memory sram: 2048-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8 
 reg [31:0] sram[0:2047];
 initial begin
 	$readmemh("alinx_ax7203_sram.init", sram);
 end
 reg [10:0] sram_adr0;
-always @(posedge sys_clk) begin : mem_write_block
-	integer we_index;
-	for(we_index = 0; we_index < 4; we_index=we_index+1)
-		if (basesoc_sram0_we[we_index])
-			sram[basesoc_sram0_adr][we_index*8 +: 8] <= basesoc_sram0_dat_w[we_index*8 +: 8];
+always @(posedge sys_clk) begin
+	if (basesoc_sram0_we[0])
+		sram[basesoc_sram0_adr][7:0] <= basesoc_sram0_dat_w[7:0];
+	if (basesoc_sram0_we[1])
+		sram[basesoc_sram0_adr][15:8] <= basesoc_sram0_dat_w[15:8];
+	if (basesoc_sram0_we[2])
+		sram[basesoc_sram0_adr][23:16] <= basesoc_sram0_dat_w[23:16];
+	if (basesoc_sram0_we[3])
+		sram[basesoc_sram0_adr][31:24] <= basesoc_sram0_dat_w[31:24];
 	sram_adr0 <= basesoc_sram0_adr;
 end
 assign basesoc_sram0_dat_r = sram[sram_adr0];
@@ -8630,17 +8613,21 @@ assign basesoc_sram0_dat_r = sram[sram_adr0];
 //------------------------------------------------------------------------------
 // Memory main_ram: 65536-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8 
 reg [31:0] main_ram[0:65535];
 initial begin
 	$readmemh("alinx_ax7203_main_ram.init", main_ram);
 end
 reg [15:0] main_ram_adr0;
-always @(posedge sys_clk) begin : mem_write_block_1
-	integer we_index_1;
-	for(we_index_1 = 0; we_index_1 < 4; we_index_1=we_index_1+1)
-		if (basesoc_sram1_we[we_index_1])
-			main_ram[basesoc_sram1_adr][we_index_1*8 +: 8] <= basesoc_sram1_dat_w[we_index_1*8 +: 8];
+always @(posedge sys_clk) begin
+	if (basesoc_sram1_we[0])
+		main_ram[basesoc_sram1_adr][7:0] <= basesoc_sram1_dat_w[7:0];
+	if (basesoc_sram1_we[1])
+		main_ram[basesoc_sram1_adr][15:8] <= basesoc_sram1_dat_w[15:8];
+	if (basesoc_sram1_we[2])
+		main_ram[basesoc_sram1_adr][23:16] <= basesoc_sram1_dat_w[23:16];
+	if (basesoc_sram1_we[3])
+		main_ram[basesoc_sram1_adr][31:24] <= basesoc_sram1_dat_w[31:24];
 	main_ram_adr0 <= basesoc_sram1_adr;
 end
 assign basesoc_sram1_dat_r = main_ram[main_ram_adr0];
@@ -8664,7 +8651,7 @@ assign csr_bankarray_dat_r = mem[mem_adr0];
 //------------------------------------------------------------------------------
 // Memory storage: 16-words x 10-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 10 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [9:0] storage[0:15];
 reg [9:0] storage_dat0;
@@ -8685,7 +8672,7 @@ assign basesoc_uart_tx_fifo_rdport_dat_r = storage_dat1;
 //------------------------------------------------------------------------------
 // Memory storage_1: 16-words x 10-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 10 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [9:0] storage_1[0:15];
 reg [9:0] storage_1_dat0;
@@ -8823,7 +8810,7 @@ zipdma_s2mm #(
 //------------------------------------------------------------------------------
 // Memory storage_2: 2048-words x 256-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 256 
 // Port 1 | Read: Async | Write: ---- | 
 reg [255:0] storage_2[0:2047];
 reg [255:0] storage_2_dat0;
@@ -8841,7 +8828,7 @@ assign uberddr3_samplepackerstream_rdport_dat_r = storage_2[uberddr3_samplepacke
 //------------------------------------------------------------------------------
 // Memory storage_3: 256-words x 263-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 263 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [262:0] storage_3[0:255];
 reg [262:0] storage_3_dat0;
@@ -9416,7 +9403,7 @@ assign ethphy_data_r = eth_mdio;
 //------------------------------------------------------------------------------
 // Memory storage_4: 32-words x 42-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 42 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [41:0] storage_4[0:31];
 reg [41:0] storage_4_dat0;
@@ -9436,7 +9423,7 @@ assign basesoc_core_tx_cdc_cdc_rdport_dat_r = storage_4_dat1;
 //------------------------------------------------------------------------------
 // Memory storage_5: 5-words x 12-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 12 
 // Port 1 | Read: Async | Write: ---- | 
 reg [11:0] storage_5[0:4];
 reg [11:0] storage_5_dat0;
@@ -9454,7 +9441,7 @@ assign basesoc_core_liteethmaccrc32checker_syncfifo_rdport_dat_r = storage_5[bas
 //------------------------------------------------------------------------------
 // Memory storage_6: 32-words x 42-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 42 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [41:0] storage_6[0:31];
 reg [41:0] storage_6_dat0;
@@ -9474,7 +9461,7 @@ assign basesoc_core_rx_cdc_cdc_rdport_dat_r = storage_6_dat1;
 //------------------------------------------------------------------------------
 // Memory storage_7: 2-words x 14-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 14 
 // Port 1 | Read: Async | Write: ---- | 
 reg [13:0] storage_7[0:1];
 reg [13:0] storage_7_dat0;
@@ -9490,49 +9477,49 @@ assign basesoc_wishbone_interface_writer_stat_fifo_rdport_dat_r = storage_7[base
 
 
 //------------------------------------------------------------------------------
-// Memory mac_sram_writer_slot0: 383-words x 32-bit
+// Memory mem_1: 383-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 32 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [31:0] mac_sram_writer_slot0[0:382];
-reg [8:0] mac_sram_writer_slot0_adr0;
-reg [31:0] mac_sram_writer_slot0_dat1;
+reg [31:0] mem_1[0:382];
+reg [8:0] mem_1_adr0;
+reg [31:0] mem_1_dat1;
 always @(posedge sys_clk) begin
 	if (basesoc_wishbone_interface_writer_memory0_we)
-		mac_sram_writer_slot0[basesoc_wishbone_interface_writer_memory0_adr] <= basesoc_wishbone_interface_writer_memory0_dat_w;
-	mac_sram_writer_slot0_adr0 <= basesoc_wishbone_interface_writer_memory0_adr;
+		mem_1[basesoc_wishbone_interface_writer_memory0_adr] <= basesoc_wishbone_interface_writer_memory0_dat_w;
+	mem_1_adr0 <= basesoc_wishbone_interface_writer_memory0_adr;
 end
 always @(posedge sys_clk) begin
-	mac_sram_writer_slot0_dat1 <= mac_sram_writer_slot0[basesoc_wishbone_interface_sram0_adr];
+	mem_1_dat1 <= mem_1[basesoc_wishbone_interface_sram0_adr];
 end
-assign basesoc_wishbone_interface_writer_memory0_dat_r = mac_sram_writer_slot0[mac_sram_writer_slot0_adr0];
-assign basesoc_wishbone_interface_sram0_dat_r = mac_sram_writer_slot0_dat1;
+assign basesoc_wishbone_interface_writer_memory0_dat_r = mem_1[mem_1_adr0];
+assign basesoc_wishbone_interface_sram0_dat_r = mem_1_dat1;
 
 
 //------------------------------------------------------------------------------
-// Memory mac_sram_writer_slot1: 383-words x 32-bit
+// Memory mem_2: 383-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First
+// Port 0 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 32 
 // Port 1 | Read: Sync  | Write: ---- | 
-reg [31:0] mac_sram_writer_slot1[0:382];
-reg [8:0] mac_sram_writer_slot1_adr0;
-reg [31:0] mac_sram_writer_slot1_dat1;
+reg [31:0] mem_2[0:382];
+reg [8:0] mem_2_adr0;
+reg [31:0] mem_2_dat1;
 always @(posedge sys_clk) begin
 	if (basesoc_wishbone_interface_writer_memory1_we)
-		mac_sram_writer_slot1[basesoc_wishbone_interface_writer_memory1_adr] <= basesoc_wishbone_interface_writer_memory1_dat_w;
-	mac_sram_writer_slot1_adr0 <= basesoc_wishbone_interface_writer_memory1_adr;
+		mem_2[basesoc_wishbone_interface_writer_memory1_adr] <= basesoc_wishbone_interface_writer_memory1_dat_w;
+	mem_2_adr0 <= basesoc_wishbone_interface_writer_memory1_adr;
 end
 always @(posedge sys_clk) begin
-	mac_sram_writer_slot1_dat1 <= mac_sram_writer_slot1[basesoc_wishbone_interface_sram1_adr];
+	mem_2_dat1 <= mem_2[basesoc_wishbone_interface_sram1_adr];
 end
-assign basesoc_wishbone_interface_writer_memory1_dat_r = mac_sram_writer_slot1[mac_sram_writer_slot1_adr0];
-assign basesoc_wishbone_interface_sram1_dat_r = mac_sram_writer_slot1_dat1;
+assign basesoc_wishbone_interface_writer_memory1_dat_r = mem_2[mem_2_adr0];
+assign basesoc_wishbone_interface_sram1_dat_r = mem_2_dat1;
 
 
 //------------------------------------------------------------------------------
 // Memory storage_8: 2-words x 14-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 14 
 // Port 1 | Read: Async | Write: ---- | 
 reg [13:0] storage_8[0:1];
 reg [13:0] storage_8_dat0;
@@ -9548,55 +9535,63 @@ assign basesoc_wishbone_interface_reader_cmd_fifo_rdport_dat_r = storage_8[bases
 
 
 //------------------------------------------------------------------------------
-// Memory mac_sram_reader_slot0: 383-words x 32-bit
+// Memory mem_3: 383-words x 32-bit
 //------------------------------------------------------------------------------
 // Port 0 | Read: Sync  | Write: ---- | 
-// Port 1 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8
-reg [31:0] mac_sram_reader_slot0[0:382];
-reg [31:0] mac_sram_reader_slot0_dat0;
-reg [8:0] mac_sram_reader_slot0_adr1;
+// Port 1 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8 
+reg [31:0] mem_3[0:382];
+reg [31:0] mem_3_dat0;
+reg [8:0] mem_3_adr1;
 always @(posedge sys_clk) begin
 	if (basesoc_wishbone_interface_reader_memory0_re)
-		mac_sram_reader_slot0_dat0 <= mac_sram_reader_slot0[basesoc_wishbone_interface_reader_memory0_adr];
+		mem_3_dat0 <= mem_3[basesoc_wishbone_interface_reader_memory0_adr];
 end
-always @(posedge sys_clk) begin : mem_write_block_2
-	integer we_index_2;
-	for(we_index_2 = 0; we_index_2 < 4; we_index_2=we_index_2+1)
-		if (basesoc_wishbone_interface_sram2_we[we_index_2])
-			mac_sram_reader_slot0[basesoc_wishbone_interface_sram2_adr][we_index_2*8 +: 8] <= basesoc_wishbone_interface_sram2_dat_w[we_index_2*8 +: 8];
-	mac_sram_reader_slot0_adr1 <= basesoc_wishbone_interface_sram2_adr;
+always @(posedge sys_clk) begin
+	if (basesoc_wishbone_interface_sram2_we[0])
+		mem_3[basesoc_wishbone_interface_sram2_adr][7:0] <= basesoc_wishbone_interface_sram2_dat_w[7:0];
+	if (basesoc_wishbone_interface_sram2_we[1])
+		mem_3[basesoc_wishbone_interface_sram2_adr][15:8] <= basesoc_wishbone_interface_sram2_dat_w[15:8];
+	if (basesoc_wishbone_interface_sram2_we[2])
+		mem_3[basesoc_wishbone_interface_sram2_adr][23:16] <= basesoc_wishbone_interface_sram2_dat_w[23:16];
+	if (basesoc_wishbone_interface_sram2_we[3])
+		mem_3[basesoc_wishbone_interface_sram2_adr][31:24] <= basesoc_wishbone_interface_sram2_dat_w[31:24];
+	mem_3_adr1 <= basesoc_wishbone_interface_sram2_adr;
 end
-assign basesoc_wishbone_interface_reader_memory0_dat_r = mac_sram_reader_slot0_dat0;
-assign basesoc_wishbone_interface_sram2_dat_r = mac_sram_reader_slot0[mac_sram_reader_slot0_adr1];
+assign basesoc_wishbone_interface_reader_memory0_dat_r = mem_3_dat0;
+assign basesoc_wishbone_interface_sram2_dat_r = mem_3[mem_3_adr1];
 
 
 //------------------------------------------------------------------------------
-// Memory mac_sram_reader_slot1: 383-words x 32-bit
+// Memory mem_4: 383-words x 32-bit
 //------------------------------------------------------------------------------
 // Port 0 | Read: Sync  | Write: ---- | 
-// Port 1 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8
-reg [31:0] mac_sram_reader_slot1[0:382];
-reg [31:0] mac_sram_reader_slot1_dat0;
-reg [8:0] mac_sram_reader_slot1_adr1;
+// Port 1 | Read: Sync  | Write: Sync | Mode: Write-First | Write-Granularity: 8 
+reg [31:0] mem_4[0:382];
+reg [31:0] mem_4_dat0;
+reg [8:0] mem_4_adr1;
 always @(posedge sys_clk) begin
 	if (basesoc_wishbone_interface_reader_memory1_re)
-		mac_sram_reader_slot1_dat0 <= mac_sram_reader_slot1[basesoc_wishbone_interface_reader_memory1_adr];
+		mem_4_dat0 <= mem_4[basesoc_wishbone_interface_reader_memory1_adr];
 end
-always @(posedge sys_clk) begin : mem_write_block_3
-	integer we_index_3;
-	for(we_index_3 = 0; we_index_3 < 4; we_index_3=we_index_3+1)
-		if (basesoc_wishbone_interface_sram3_we[we_index_3])
-			mac_sram_reader_slot1[basesoc_wishbone_interface_sram3_adr][we_index_3*8 +: 8] <= basesoc_wishbone_interface_sram3_dat_w[we_index_3*8 +: 8];
-	mac_sram_reader_slot1_adr1 <= basesoc_wishbone_interface_sram3_adr;
+always @(posedge sys_clk) begin
+	if (basesoc_wishbone_interface_sram3_we[0])
+		mem_4[basesoc_wishbone_interface_sram3_adr][7:0] <= basesoc_wishbone_interface_sram3_dat_w[7:0];
+	if (basesoc_wishbone_interface_sram3_we[1])
+		mem_4[basesoc_wishbone_interface_sram3_adr][15:8] <= basesoc_wishbone_interface_sram3_dat_w[15:8];
+	if (basesoc_wishbone_interface_sram3_we[2])
+		mem_4[basesoc_wishbone_interface_sram3_adr][23:16] <= basesoc_wishbone_interface_sram3_dat_w[23:16];
+	if (basesoc_wishbone_interface_sram3_we[3])
+		mem_4[basesoc_wishbone_interface_sram3_adr][31:24] <= basesoc_wishbone_interface_sram3_dat_w[31:24];
+	mem_4_adr1 <= basesoc_wishbone_interface_sram3_adr;
 end
-assign basesoc_wishbone_interface_reader_memory1_dat_r = mac_sram_reader_slot1_dat0;
-assign basesoc_wishbone_interface_sram3_dat_r = mac_sram_reader_slot1[mac_sram_reader_slot1_adr1];
+assign basesoc_wishbone_interface_reader_memory1_dat_r = mem_4_dat0;
+assign basesoc_wishbone_interface_sram3_dat_r = mem_4[mem_4_adr1];
 
 
 //------------------------------------------------------------------------------
 // Memory storage_9: 4-words x 647-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 647 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [646:0] storage_9[0:3];
 reg [646:0] storage_9_dat0;
@@ -9679,7 +9674,7 @@ uberclock uberclock(
 //------------------------------------------------------------------------------
 // Memory storage_10: 16384-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 32 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [31:0] storage_10[0:16383];
 reg [31:0] storage_10_dat0;
@@ -9699,7 +9694,7 @@ assign add_uberclock_fullrate_ds_fifo_rdport_dat_r = storage_10_dat1;
 //------------------------------------------------------------------------------
 // Memory storage_11: 16384-words x 32-bit
 //------------------------------------------------------------------------------
-// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First 
+// Port 0 | Read: Sync  | Write: Sync | Mode: Read-First  | Write-Granularity: 32 
 // Port 1 | Read: Sync  | Write: ---- | 
 reg [31:0] storage_11[0:16383];
 reg [31:0] storage_11_dat0;
@@ -10185,7 +10180,7 @@ FDPE #(
 	.C   (sys_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (xilinxasyncresetsynchronizerimpl0_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl0),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl0_rst_meta)
@@ -10203,7 +10198,7 @@ FDPE #(
 	.C   (sys_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl0_rst_meta),
-	.PRE (xilinxasyncresetsynchronizerimpl0_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl0),
 
 	// Outputs.
 	.Q   (sys_rst)
@@ -10221,7 +10216,7 @@ FDPE #(
 	.C   (ub_4x_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (xilinxasyncresetsynchronizerimpl1_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl1),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl1_rst_meta)
@@ -10239,7 +10234,7 @@ FDPE #(
 	.C   (ub_4x_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl1_rst_meta),
-	.PRE (xilinxasyncresetsynchronizerimpl1_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl1),
 
 	// Outputs.
 	.Q   (ub_4x_rst)
@@ -10257,7 +10252,7 @@ FDPE #(
 	.C   (ub_4x_dqs_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (xilinxasyncresetsynchronizerimpl2_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl2),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl2_rst_meta)
@@ -10275,7 +10270,7 @@ FDPE #(
 	.C   (ub_4x_dqs_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl2_rst_meta),
-	.PRE (xilinxasyncresetsynchronizerimpl2_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl2),
 
 	// Outputs.
 	.Q   (ub_4x_dqs_rst)
@@ -10293,7 +10288,7 @@ FDPE #(
 	.C   (eth_tx_delayed_clk),
 	.CE  (1'd1),
 	.D   (1'd0),
-	.PRE (xilinxasyncresetsynchronizerimpl3_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl3),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl3_rst_meta)
@@ -10311,7 +10306,7 @@ FDPE #(
 	.C   (eth_tx_delayed_clk),
 	.CE  (1'd1),
 	.D   (xilinxasyncresetsynchronizerimpl3_rst_meta),
-	.PRE (xilinxasyncresetsynchronizerimpl3_async_reset),
+	.PRE (xilinxasyncresetsynchronizerimpl3),
 
 	// Outputs.
 	.Q   (xilinxasyncresetsynchronizerimpl3_expr)
@@ -10392,5 +10387,5 @@ FDPE #(
 endmodule
 
 // -----------------------------------------------------------------------------
-//  Auto-Generated by LiteX on 2026-04-13 19:47:46.
+//  Auto-Generated by LiteX on 2026-04-15 18:32:19.
 //------------------------------------------------------------------------------

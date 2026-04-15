@@ -1,3 +1,0 @@
-#!/bin/bash
-here=`dirname "$0"`
-"$here"/do-zephyr "$here"/do-build "$@"

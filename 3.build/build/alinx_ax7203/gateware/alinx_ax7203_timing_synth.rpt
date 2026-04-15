@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Mon Apr 13 19:51:55 2026
-| Host         : ahmed running 64-bit Ubuntu 24.04.3 LTS
+| Date         : Wed Apr 15 18:41:48 2026
+| Host         : archlinux running 64-bit Arch Linux
 | Command      : report_timing_summary -file alinx_ax7203_timing_synth.rpt
 | Design       : alinx_ax7203
 | Device       : 7a200t-fbg484
@@ -138,7 +138,7 @@ Table of Contents
 
     WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
     -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
-      0.096        0.000                      0               203677       -0.189      -12.276                     65               203677        0.264        0.000                       0                106128  
+      0.096        0.000                      0               203514       -0.189      -12.276                     65               203514        0.264        0.000                       0                106108  
 
 
 Timing constraints are not met.
@@ -173,13 +173,13 @@ eth_tx_clk         {0.000 4.000}        8.000           125.000
 Clock                  WNS(ns)      TNS(ns)  TNS Failing Endpoints  TNS Total Endpoints      WHS(ns)      THS(ns)  THS Failing Endpoints  THS Total Endpoints     WPWS(ns)     TPWS(ns)  TPWS Failing Endpoints  TPWS Total Endpoints  
 -----                  -------      -------  ---------------------  -------------------      -------      -------  ---------------------  -------------------     --------     --------  ----------------------  --------------------  
 clk200_p                 3.023        0.000                      0                   23        0.127        0.000                      0                   23        0.264        0.000                       0                    27  
-  s7mmcm0_clkout0        0.096        0.000                      0                27341       -0.189      -12.276                     65                27341        3.870        0.000                       0                  9289  
+  s7mmcm0_clkout0        0.096        0.000                      0                27231       -0.189      -12.276                     65                27231        3.870        0.000                       0                  9286  
   s7mmcm0_clkout1                                                                                                                                                    0.908        0.000                       0                   103  
   s7mmcm0_clkout2                                                                                                                                                    0.908        0.000                       0                    38  
   s7mmcm0_mmcm_fb                                                                                                                                                    3.751        0.000                       0                     2  
-  s7mmcm1_clkout         7.435        0.000                      0               175609        0.040        0.000                      0               175609        6.562        0.000                       0                 96387  
+  s7mmcm1_clkout         7.435        0.000                      0               175605        0.040        0.000                      0               175605        6.562        0.000                       0                 96385  
   s7mmcm1_mmcm_fb                                                                                                                                                    8.751        0.000                       0                     2  
-eth_rx_clk               1.232        0.000                      0                  367        0.029        0.000                      0                  367        2.000        0.000                       0                   132  
+eth_rx_clk               1.232        0.000                      0                  318        0.029        0.000                      0                  318        2.000        0.000                       0                   117  
   ethphy_clkout0                                                                                                                                                     6.408        0.000                       0                     2  
   ethphy_clkout1                                                                                                                                                     6.408        0.000                       0                     3  
   pll_fb                                                                                                                                                             6.751        0.000                       0                     2  
@@ -400,7 +400,7 @@ Slack (MET) :             0.096ns  (required time - arrival time)
                                                       0.077     2.230 r  MMCME2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.646     2.876    s7mmcm0_clkout0
                          BUFG (Prop_bufg_I_O)         0.081     2.957 r  BUFG/O
-                         net (fo=9287, unplaced)      0.646     3.603    ddr3_top/ddr3_controller_inst/i_controller_clk
+                         net (fo=9284, unplaced)      0.646     3.603    ddr3_top/ddr3_controller_inst/i_controller_clk
                          FDRE                                         r  ddr3_top/ddr3_controller_inst/bank_active_row_q_reg[7][3]/C
   -------------------------------------------------------------------    -------------------
                          FDRE (Prop_fdre_C_Q)         0.379     3.982 r  ddr3_top/ddr3_controller_inst/bank_active_row_q_reg[7][3]/Q
@@ -460,7 +460,7 @@ Slack (MET) :             0.096ns  (required time - arrival time)
                                                       0.073    12.007 r  MMCME2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.613    12.621    s7mmcm0_clkout0
                          BUFG (Prop_bufg_I_O)         0.077    12.698 r  BUFG/O
-                         net (fo=9287, unplaced)      0.501    13.198    ddr3_top/ddr3_controller_inst/i_controller_clk
+                         net (fo=9284, unplaced)      0.501    13.198    ddr3_top/ddr3_controller_inst/i_controller_clk
                          FDRE                                         r  ddr3_top/ddr3_controller_inst/o_wb_stall_calib_reg/C
                          clock pessimism              0.259    13.458    
                          clock uncertainty           -0.064    13.394    
@@ -506,7 +506,7 @@ Slack (VIOLATED) :        -0.189ns  (arrival time - required time)
                                                       0.050     0.871 r  MMCME2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.320     1.191    s7mmcm0_clkout0
                          BUFG (Prop_bufg_I_O)         0.026     1.217 r  BUFG/O
-                         net (fo=9287, unplaced)      0.192     1.409    ddr3_top/ddr3_phy_inst/out
+                         net (fo=9284, unplaced)      0.192     1.409    ddr3_top/ddr3_phy_inst/out
                          FDSE                                         r  ddr3_top/ddr3_phy_inst/sync_rst_reg/C
   -------------------------------------------------------------------    -------------------
                          FDSE (Prop_fdse_C_Q)         0.141     1.550 r  ddr3_top/ddr3_phy_inst/sync_rst_reg/Q
@@ -526,7 +526,7 @@ Slack (VIOLATED) :        -0.189ns  (arrival time - required time)
                                                       0.053     1.070 r  MMCME2_ADV/CLKOUT0
                          net (fo=1, unplaced)         0.337     1.407    s7mmcm0_clkout0
                          BUFG (Prop_bufg_I_O)         0.029     1.436 r  BUFG/O
-                         net (fo=9287, unplaced)      0.337     1.773    ddr3_top/ddr3_phy_inst/out
+                         net (fo=9284, unplaced)      0.337     1.773    ddr3_top/ddr3_phy_inst/out
     OLOGIC_X1Y127        OSERDESE2                                    r  ddr3_top/ddr3_phy_inst/genblk1[0].OSERDESE2_cmd/CLKDIV
                          clock pessimism             -0.219     1.554    
     OLOGIC_X1Y127        OSERDESE2 (Hold_oserdese2_CLKDIV_RST)
@@ -549,7 +549,7 @@ Period(ns):         10.000
 Sources:            { MMCME2_ADV/CLKOUT0 }
 
 Check Type        Corner  Lib Pin             Reference Pin  Required(ns)  Actual(ns)  Slack(ns)  Location  Pin
-Min Period        n/a     RAMB18E1/CLKARDCLK  n/a            2.472         10.000      7.528                mac_sram_writer_slot0_reg/CLKARDCLK
+Min Period        n/a     RAMB18E1/CLKARDCLK  n/a            2.472         10.000      7.528                mem_1_reg/CLKARDCLK
 Max Period        n/a     MMCME2_ADV/CLKOUT0  n/a            213.360       10.000      203.360              MMCME2_ADV/CLKOUT0
 Low Pulse Width   Slow    RAMD32/CLK          n/a            1.130         5.000       3.870                storage_1_reg_0_15_0_5/RAMA/CLK
 High Pulse Width  Slow    RAMD32/CLK          n/a            1.130         5.000       3.870                storage_1_reg_0_15_0_5/RAMA/CLK
@@ -672,7 +672,7 @@ Slack (MET) :             7.435ns  (required time - arrival time)
                                                       0.077     2.919 r  MMCME2_ADV_1/CLKOUT0
                          net (fo=1, unplaced)         0.646     3.565    s7mmcm1_clkout
                          BUFG (Prop_bufg_I_O)         0.081     3.646 r  BUFG_3/O
-                         net (fo=96441, unplaced)     0.646     4.292    uberclock/rx_1/down_x/hb_down_inst/out
+                         net (fo=96439, unplaced)     0.646     4.292    uberclock/rx_1/down_x/hb_down_inst/out
                          FDRE                                         r  uberclock/rx_1/down_x/hb_down_inst/filter_out_reg_reg[15]/C
   -------------------------------------------------------------------    -------------------
                          FDRE (Prop_fdre_C_Q)         0.379     4.671 r  uberclock/rx_1/down_x/hb_down_inst/filter_out_reg_reg[15]/Q
@@ -710,7 +710,7 @@ Slack (MET) :             7.435ns  (required time - arrival time)
                                                       0.073    17.915 r  MMCME2_ADV_1/CLKOUT0
                          net (fo=1, unplaced)         0.613    18.528    s7mmcm1_clkout
                          BUFG (Prop_bufg_I_O)         0.077    18.605 r  BUFG_3/O
-                         net (fo=96441, unplaced)     0.501    19.106    uberclock/out
+                         net (fo=96439, unplaced)     0.501    19.106    uberclock/out
                          FDRE                                         r  uberclock/dac1_data_reg_reg[13]/C
                          clock pessimism              0.425    19.531    
                          clock uncertainty           -0.068    19.463    
@@ -758,7 +758,7 @@ Slack (MET) :             0.040ns  (arrival time - required time)
                                                       0.050     1.030 r  MMCME2_ADV_1/CLKOUT0
                          net (fo=1, unplaced)         0.320     1.350    s7mmcm1_clkout
                          BUFG (Prop_bufg_I_O)         0.026     1.376 r  BUFG_3/O
-                         net (fo=96441, unplaced)     0.192     1.568    uberclock/rx_1/down_x/cic_inst/out
+                         net (fo=96439, unplaced)     0.192     1.568    uberclock/rx_1/down_x/cic_inst/out
                          FDRE                                         r  uberclock/rx_1/down_x/cic_inst/comb8_reg[43]/C
   -------------------------------------------------------------------    -------------------
                          FDRE (Prop_fdre_C_Q)         0.147     1.715 r  uberclock/rx_1/down_x/cic_inst/comb8_reg[43]/Q
@@ -780,7 +780,7 @@ Slack (MET) :             0.040ns  (arrival time - required time)
                                                       0.053     1.385 r  MMCME2_ADV_1/CLKOUT0
                          net (fo=1, unplaced)         0.337     1.722    s7mmcm1_clkout
                          BUFG (Prop_bufg_I_O)         0.029     1.751 r  BUFG_3/O
-                         net (fo=96441, unplaced)     0.337     2.088    uberclock/rx_1/down_x/cic_comp_down_inst/mem0_reg_0_31_0_5/WCLK
+                         net (fo=96439, unplaced)     0.337     2.088    uberclock/rx_1/down_x/cic_comp_down_inst/mem0_reg_0_31_0_5/WCLK
                          RAMD32                                       r  uberclock/rx_1/down_x/cic_comp_down_inst/mem0_reg_0_31_0_5/RAMA/CLK
                          clock pessimism             -0.375     1.713    
                          RAMD32 (Hold_ramd32_CLK_I)
@@ -871,7 +871,7 @@ Slack (MET) :             1.232ns  (required time - arrival time)
                          (clock eth_rx_clk rise edge)
                                                       0.000     0.000 r  
                          BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=132, unplaced)       0.646     0.646    eth_rx_clk
+                         net (fo=117, unplaced)       0.646     0.646    eth_rx_clk
                          FDPE                                         r  FDPE_10/C
   -------------------------------------------------------------------    -------------------
                          FDPE (Prop_fdpe_C_Q)         0.397     1.043 r  FDPE_10/Q
@@ -881,7 +881,7 @@ Slack (MET) :             1.232ns  (required time - arrival time)
 
                          max delay                    2.000     2.000    
                          BUFG                         0.000     2.000 r  BUFG_5/O
-                         net (fo=132, unplaced)       0.501     2.501    eth_rx_clk
+                         net (fo=117, unplaced)       0.501     2.501    eth_rx_clk
                          FDPE                                         r  FDPE_11/C
                          clock pessimism              0.000     2.501    
                          clock uncertainty           -0.035     2.465    
@@ -918,7 +918,7 @@ Slack (MET) :             0.029ns  (arrival time - required time)
                          (clock eth_rx_clk rise edge)
                                                       0.000     0.000 r  
                          BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=132, unplaced)       0.192     0.192    eth_rx_clk
+                         net (fo=117, unplaced)       0.192     0.192    eth_rx_clk
                          FDRE                                         r  basesoc_core_bufferizeendpoints_pipe_valid_source_payload_data_reg[0]/C
   -------------------------------------------------------------------    -------------------
                          FDRE (Prop_fdre_C_Q)         0.141     0.333 r  basesoc_core_bufferizeendpoints_pipe_valid_source_payload_data_reg[0]/Q
@@ -929,7 +929,7 @@ Slack (MET) :             0.029ns  (arrival time - required time)
                          (clock eth_rx_clk rise edge)
                                                       0.000     0.000 r  
                          BUFG                         0.000     0.000 r  BUFG_5/O
-                         net (fo=132, unplaced)       0.337     0.337    storage_5_reg_0_7_0_5/WCLK
+                         net (fo=117, unplaced)       0.337     0.337    storage_5_reg_0_7_0_5/WCLK
                          RAMD32                                       r  storage_5_reg_0_7_0_5/RAMA/CLK
                          clock pessimism              0.000     0.337    
                          RAMD32 (Hold_ramd32_CLK_I)

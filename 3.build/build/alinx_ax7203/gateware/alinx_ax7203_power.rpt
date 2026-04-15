@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date             : Mon Apr 13 20:02:24 2026
-| Host             : ahmed running 64-bit Ubuntu 24.04.3 LTS
+| Date             : Wed Apr 15 18:54:47 2026
+| Host             : archlinux running 64-bit Arch Linux
 | Command          : report_power -file alinx_ax7203_power.rpt
 | Design           : alinx_ax7203
 | Device           : xc7a200tfbg484-2
@@ -30,10 +30,10 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 3.093        |
+| Total On-Chip Power (W)  | 3.082        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
-| Dynamic (W)              | 2.926        |
+| Dynamic (W)              | 2.916        |
 | Device Static (W)        | 0.167        |
 | Effective TJA (C/W)      | 2.5          |
 | Max Ambient (C)          | 77.4         |
@@ -52,23 +52,23 @@ Table of Contents
 +--------------------------+-----------+----------+-----------+-----------------+
 | On-Chip                  | Power (W) | Used     | Available | Utilization (%) |
 +--------------------------+-----------+----------+-----------+-----------------+
-| Clocks                   |     0.205 |       14 |       --- |             --- |
-| Slice Logic              |     0.353 |   198786 |       --- |             --- |
-|   LUT as Logic           |     0.289 |    67689 |    133800 |           50.59 |
+| Clocks                   |     0.206 |       14 |       --- |             --- |
+| Slice Logic              |     0.352 |   198833 |       --- |             --- |
+|   LUT as Logic           |     0.289 |    67873 |    133800 |           50.73 |
 |   CARRY4                 |     0.038 |     9967 |     33450 |           29.80 |
-|   Register               |     0.023 |   104597 |    267600 |           39.09 |
+|   Register               |     0.023 |   104585 |    267600 |           39.08 |
 |   F7/F8 Muxes            |     0.002 |     9726 |    133800 |            7.27 |
 |   LUT as Shift Register  |    <0.001 |       36 |     46200 |            0.08 |
 |   LUT as Distributed RAM |    <0.001 |      638 |     46200 |            1.38 |
 |   Others                 |     0.000 |     1038 |       --- |             --- |
-| Signals                  |     0.573 |   142696 |       --- |             --- |
-| Block RAM                |     0.263 |      157 |       365 |           43.01 |
+| Signals                  |     0.576 |   142715 |       --- |             --- |
+| Block RAM                |     0.249 |      149 |       365 |           40.82 |
 | MMCM                     |     0.242 |        2 |        10 |           20.00 |
 | PLL                      |     0.136 |        1 |        10 |           10.00 |
 | DSPs                     |     0.076 |      116 |       740 |           15.68 |
 | I/O                      |     1.079 |      151 |       285 |           52.98 |
 | Static Power             |     0.167 |          |           |                 |
-| Total                    |     3.093 |          |           |                 |
+| Total                    |     3.082 |          |           |                 |
 +--------------------------+-----------+----------+-----------+-----------------+
 
 
@@ -78,7 +78,7 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     1.542 |       1.497 |      0.045 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     1.532 |       1.488 |      0.045 |       NA    | Unspecified | NA         |
 | Vccaux    |       1.800 |     0.397 |       0.366 |      0.032 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.076 |       0.071 |      0.005 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -87,7 +87,7 @@ Table of Contents
 | Vcco135   |       1.350 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco12    |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vccaux_io |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
-| Vccbram   |       1.000 |     0.025 |       0.020 |      0.005 |       NA    | Unspecified | NA         |
+| Vccbram   |       1.000 |     0.024 |       0.019 |      0.005 |       NA    | Unspecified | NA         |
 | MGTAVcc   |       1.000 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | MGTAVtt   |       1.200 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vccadc    |       1.800 |     0.020 |       0.000 |      0.020 |       NA    | Unspecified | NA         |
@@ -158,11 +158,11 @@ Table of Contents
 +------------------------------------+-----------+
 | Name                               | Power (W) |
 +------------------------------------+-----------+
-| alinx_ax7203                       |     2.926 |
-|   VexRiscv                         |     0.038 |
+| alinx_ax7203                       |     2.916 |
+|   VexRiscv                         |     0.037 |
 |     IBusCachedPlugin_cache         |     0.007 |
-|     dataCache_1                    |     0.005 |
-|   ddr3_top                         |     0.822 |
+|     dataCache_1                    |     0.004 |
+|   ddr3_top                         |     0.823 |
 |     ddr3_controller_inst           |     0.052 |
 |     ddr3_phy_inst                  |     0.771 |
 |       OBUFDS_inst                  |     0.020 |
@@ -202,8 +202,8 @@ Table of Contents
 |       genblk7[1].IOBUFDS_dqs       |     0.026 |
 |       genblk7[2].IOBUFDS_dqs       |     0.026 |
 |       genblk7[3].IOBUFDS_dqs       |     0.026 |
-|   uberclock                        |     1.014 |
-|     cordic_cpu1                    |     0.164 |
+|   uberclock                        |     1.015 |
+|     cordic_cpu1                    |     0.169 |
 |       cordic_stages[10].stage_inst |     0.001 |
 |       cordic_stages[11].stage_inst |     0.001 |
 |       cordic_stages[12].stage_inst |     0.001 |
@@ -218,8 +218,8 @@ Table of Contents
 |       cordic_stages[7].stage_inst  |     0.001 |
 |       cordic_stages[8].stage_inst  |     0.001 |
 |       cordic_stages[9].stage_inst  |     0.001 |
-|       gain_sat_inst                |     0.140 |
-|     cordic_cpu2                    |     0.033 |
+|       gain_sat_inst                |     0.145 |
+|     cordic_cpu2                    |     0.032 |
 |       cordic_stages[10].stage_inst |     0.001 |
 |       cordic_stages[11].stage_inst |     0.001 |
 |       cordic_stages[12].stage_inst |     0.001 |
@@ -251,7 +251,7 @@ Table of Contents
 |       cordic_stages[8].stage_inst  |     0.001 |
 |       cordic_stages[9].stage_inst  |     0.001 |
 |       gain_sat_inst                |     0.009 |
-|     cordic_cpu4                    |     0.033 |
+|     cordic_cpu4                    |     0.032 |
 |       cordic_stages[10].stage_inst |     0.001 |
 |       cordic_stages[11].stage_inst |     0.001 |
 |       cordic_stages[12].stage_inst |     0.001 |
@@ -267,7 +267,7 @@ Table of Contents
 |       cordic_stages[8].stage_inst  |     0.001 |
 |       cordic_stages[9].stage_inst  |     0.001 |
 |       gain_sat_inst                |     0.009 |
-|     cordic_cpu5                    |     0.033 |
+|     cordic_cpu5                    |     0.032 |
 |       cordic_stages[10].stage_inst |     0.001 |
 |       cordic_stages[11].stage_inst |     0.001 |
 |       cordic_stages[12].stage_inst |     0.001 |
@@ -278,11 +278,10 @@ Table of Contents
 |       cordic_stages[17].stage_inst |     0.001 |
 |       cordic_stages[18].stage_inst |     0.001 |
 |       cordic_stages[19].stage_inst |     0.001 |
-|       cordic_stages[6].stage_inst  |     0.001 |
 |       cordic_stages[7].stage_inst  |     0.001 |
 |       cordic_stages[8].stage_inst  |     0.001 |
 |       cordic_stages[9].stage_inst  |     0.001 |
-|       gain_sat_inst                |     0.009 |
+|       gain_sat_inst                |     0.008 |
 |     cordic_nco                     |     0.033 |
 |       cordic_stages[0].stage_inst  |     0.001 |
 |       cordic_stages[10].stage_inst |     0.001 |
@@ -304,49 +303,49 @@ Table of Contents
 |       cordic_stages[7].stage_inst  |     0.001 |
 |       cordic_stages[8].stage_inst  |     0.001 |
 |       cordic_stages[9].stage_inst  |     0.001 |
-|       gain_sat_inst                |     0.006 |
+|       gain_sat_inst                |     0.005 |
 |       pre_stage                    |     0.001 |
 |     rx_1                           |     0.053 |
 |       arctan                       |     0.003 |
 |       cordic_down                  |     0.033 |
 |       down_x                       |     0.008 |
-|       down_y                       |     0.008 |
+|       down_y                       |     0.009 |
 |     rx_2                           |     0.050 |
 |       cordic_down                  |     0.033 |
 |       down_x                       |     0.008 |
 |       down_y                       |     0.008 |
-|     rx_3                           |     0.049 |
-|       cordic_down                  |     0.032 |
-|       down_x                       |     0.008 |
-|       down_y                       |     0.008 |
-|     rx_4                           |     0.050 |
-|       cordic_down                  |     0.034 |
-|       down_x                       |     0.008 |
-|       down_y                       |     0.008 |
-|     rx_5                           |     0.050 |
+|     rx_3                           |     0.050 |
 |       cordic_down                  |     0.033 |
 |       down_x                       |     0.008 |
 |       down_y                       |     0.008 |
-|     tx_1                           |     0.059 |
-|       cordic_up                    |     0.023 |
-|       up_x                         |     0.019 |
-|       up_y                         |     0.017 |
-|     tx_2                           |     0.060 |
-|       cordic_up                    |     0.023 |
-|       up_x                         |     0.020 |
-|       up_y                         |     0.018 |
-|     tx_3                           |     0.058 |
+|     rx_4                           |     0.050 |
+|       cordic_down                  |     0.033 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     rx_5                           |     0.050 |
+|       cordic_down                  |     0.032 |
+|       down_x                       |     0.008 |
+|       down_y                       |     0.008 |
+|     tx_1                           |     0.058 |
 |       cordic_up                    |     0.023 |
 |       up_x                         |     0.018 |
 |       up_y                         |     0.017 |
-|     tx_4                           |     0.058 |
+|     tx_2                           |     0.057 |
+|       cordic_up                    |     0.022 |
+|       up_x                         |     0.017 |
+|       up_y                         |     0.018 |
+|     tx_3                           |     0.057 |
+|       cordic_up                    |     0.023 |
+|       up_x                         |     0.017 |
+|       up_y                         |     0.017 |
+|     tx_4                           |     0.059 |
 |       cordic_up                    |     0.023 |
 |       up_x                         |     0.018 |
 |       up_y                         |     0.017 |
 |     tx_5                           |     0.058 |
-|       cordic_up                    |     0.022 |
+|       cordic_up                    |     0.023 |
 |       up_x                         |     0.018 |
-|       up_y                         |     0.018 |
+|       up_y                         |     0.017 |
 |     u_dac                          |     0.001 |
 |   wbc2pipeline                     |     0.001 |
 |   wbxbar                           |     0.005 |

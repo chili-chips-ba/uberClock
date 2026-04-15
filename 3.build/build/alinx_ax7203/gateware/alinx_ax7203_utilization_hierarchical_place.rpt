@@ -1,8 +1,8 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
 ---------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
-| Date         : Mon Apr 13 19:56:09 2026
-| Host         : ahmed running 64-bit Ubuntu 24.04.3 LTS
+| Date         : Wed Apr 15 18:46:34 2026
+| Host         : archlinux running 64-bit Arch Linux
 | Command      : report_utilization -hierarchical -file alinx_ax7203_utilization_hierarchical_place.rpt
 | Design       : alinx_ax7203
 | Device       : xc7a200tfbg484-2
@@ -22,18 +22,18 @@ Table of Contents
 +--------------------------------------+--------------------------------------------+------------+------------+---------+------+--------+--------+--------+------------+
 |               Instance               |                   Module                   | Total LUTs | Logic LUTs | LUTRAMs | SRLs |   FFs  | RAMB36 | RAMB18 | DSP Blocks |
 +--------------------------------------+--------------------------------------------+------------+------------+---------+------+--------+--------+--------+------------+
-| alinx_ax7203                         |                                      (top) |      68360 |      67686 |     638 |   36 | 104597 |    146 |     22 |        116 |
-|   (alinx_ax7203)                     |                                      (top) |       1249 |       1211 |      38 |    0 |   3533 |    145 |      4 |          0 |
+| alinx_ax7203                         |                                      (top) |      68531 |      67857 |     638 |   36 | 104585 |    138 |     22 |        116 |
+|   (alinx_ax7203)                     |                                      (top) |       1265 |       1227 |      38 |    0 |   3523 |    137 |      4 |          0 |
 |   VexRiscv                           |                                   VexRiscv |       2974 |       2974 |       0 |    0 |   1280 |      1 |      8 |          4 |
-|     (VexRiscv)                       |                                   VexRiscv |       1129 |       1129 |       0 |    0 |   1118 |      0 |      2 |          4 |
-|     IBusCachedPlugin_cache           |                           InstructionCache |       1440 |       1440 |       0 |    0 |    103 |      1 |      1 |          0 |
-|     dataCache_1                      |                                  DataCache |        428 |        428 |       0 |    0 |     59 |      0 |      5 |          0 |
-|   ddr3_top                           |                                   ddr3_top |       4603 |       4603 |       0 |    0 |   3739 |      0 |      0 |          0 |
+|     (VexRiscv)                       |                                   VexRiscv |       1125 |       1125 |       0 |    0 |   1118 |      0 |      2 |          4 |
+|     IBusCachedPlugin_cache           |                           InstructionCache |       1439 |       1439 |       0 |    0 |    103 |      1 |      1 |          0 |
+|     dataCache_1                      |                                  DataCache |        425 |        425 |       0 |    0 |     59 |      0 |      5 |          0 |
+|   ddr3_top                           |                                   ddr3_top |       4617 |       4617 |       0 |    0 |   3739 |      0 |      0 |          0 |
 |     (ddr3_top)                       |                                   ddr3_top |          3 |          3 |       0 |    0 |      0 |      0 |      0 |          0 |
-|     ddr3_controller_inst             |                            ddr3_controller |       4575 |       4575 |       0 |    0 |   3697 |      0 |      0 |          0 |
+|     ddr3_controller_inst             |                            ddr3_controller |       4588 |       4588 |       0 |    0 |   3697 |      0 |      0 |          0 |
 |     ddr3_phy_inst                    |                                   ddr3_phy |         26 |         26 |       0 |    0 |     42 |      0 |      0 |          0 |
-|   uberclock                          |                                  uberclock |      57563 |      56927 |     600 |   36 |  94195 |      0 |     10 |        112 |
-|     (uberclock)                      |                                  uberclock |       9407 |       9405 |       0 |    2 |  33155 |      0 |      0 |         20 |
+|   uberclock                          |                                  uberclock |      57701 |      57065 |     600 |   36 |  94193 |      0 |     10 |        112 |
+|     (uberclock)                      |                                  uberclock |       9409 |       9407 |       0 |    2 |  33154 |      0 |      0 |         20 |
 |     cordic_cpu1                      |                                     cordic |       1949 |       1947 |       0 |    2 |   1574 |      0 |      0 |          4 |
 |       cordic_round_inst              |                           cordic_round_410 |         20 |         20 |       0 |    0 |      0 |      0 |      0 |          0 |
 |       cordic_stages[0].stage_inst    |                  cordic_pipeline_stage_411 |         58 |         58 |       0 |    0 |     54 |      0 |      0 |          0 |
@@ -190,10 +190,10 @@ Table of Contents
 |       cordic_stages[9].stage_inst    |  cordic_pipeline_stage__parameterized8_307 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
 |       gain_sat_inst                  |                      gain_and_saturate_308 |         66 |         66 |       0 |    0 |     36 |      0 |      0 |          2 |
 |       pre_stage                      |                      cordic_pre_rotate_309 |         89 |         89 |       0 |    0 |     52 |      0 |      0 |          0 |
-|     rx_1                             |                                 rx_channel |       6364 |       6240 |     120 |    4 |   5144 |      0 |      0 |          8 |
+|     rx_1                             |                                 rx_channel |       6489 |       6365 |     120 |    4 |   5144 |      0 |      0 |          8 |
 |       (rx_1)                         |                                 rx_channel |        157 |        157 |       0 |    0 |     26 |      0 |      0 |          0 |
 |       arctan                         |                                   to_polar |       1397 |       1395 |       0 |    2 |   1668 |      0 |      0 |          0 |
-|       cordic_down                    |                                 cordic_251 |       1614 |       1612 |       0 |    2 |   1574 |      0 |      0 |          4 |
+|       cordic_down                    |                                 cordic_251 |       1613 |       1611 |       0 |    2 |   1574 |      0 |      0 |          4 |
 |         cordic_round_inst            |                           cordic_round_260 |         20 |         20 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         cordic_stages[0].stage_inst  |                  cordic_pipeline_stage_261 |         58 |         58 |       0 |    0 |     54 |      0 |      0 |          0 |
 |         cordic_stages[10].stage_inst |  cordic_pipeline_stage__parameterized9_262 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
@@ -220,13 +220,13 @@ Table of Contents
 |         gain_sat_inst                |                      gain_and_saturate_283 |        124 |        124 |       0 |    0 |     72 |      0 |      0 |          4 |
 |         pre_stage                    |                      cordic_pre_rotate_284 |         78 |         78 |       0 |    0 |     52 |      0 |      0 |          0 |
 |       down_x                         |                      downsamplerFilter_252 |        708 |        648 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_257 |         94 |         78 |      16 |    0 |    116 |      0 |      0 |          1 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_257 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_258 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_259 |        214 |        170 |      44 |    0 |    138 |      0 |      0 |          1 |
-|       down_y                         |                      downsamplerFilter_253 |       2533 |       2473 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         hb_down_inst                 |                            hb_down_mac_259 |        213 |        169 |      44 |    0 |    138 |      0 |      0 |          1 |
+|       down_y                         |                      downsamplerFilter_253 |       2659 |       2599 |      60 |    0 |    938 |      0 |      0 |          2 |
 |         cic_comp_down_inst           |                      cic_comp_down_mac_254 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_255 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_256 |       2038 |       1994 |      44 |    0 |    138 |      0 |      0 |          1 |
+|         hb_down_inst                 |                            hb_down_mac_256 |       2165 |       2121 |      44 |    0 |    138 |      0 |      0 |          1 |
 |     rx_2                             |                               rx_channel_6 |       3062 |       2940 |     120 |    2 |   3476 |      0 |      0 |          8 |
 |       (rx_2)                         |                               rx_channel_6 |        157 |        157 |       0 |    0 |     26 |      0 |      0 |          0 |
 |       cordic_down                    |                                 cordic_217 |       1614 |       1612 |       0 |    2 |   1574 |      0 |      0 |          4 |
@@ -255,17 +255,17 @@ Table of Contents
 |         cordic_stages[9].stage_inst  |  cordic_pipeline_stage__parameterized8_248 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
 |         gain_sat_inst                |                      gain_and_saturate_249 |        124 |        124 |       0 |    0 |     72 |      0 |      0 |          4 |
 |         pre_stage                    |                      cordic_pre_rotate_250 |         78 |         78 |       0 |    0 |     52 |      0 |      0 |          0 |
-|       down_x                         |                      downsamplerFilter_218 |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_223 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|       down_x                         |                      downsamplerFilter_218 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_223 |         92 |         76 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_224 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_225 |        151 |        107 |      44 |    0 |    138 |      0 |      0 |          1 |
-|       down_y                         |                      downsamplerFilter_219 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         hb_down_inst                 |                            hb_down_mac_225 |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
+|       down_y                         |                      downsamplerFilter_219 |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
 |         cic_comp_down_inst           |                      cic_comp_down_mac_220 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_221 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_222 |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
-|     rx_3                             |                               rx_channel_7 |       3059 |       2937 |     120 |    2 |   3476 |      0 |      0 |          8 |
+|         hb_down_inst                 |                            hb_down_mac_222 |        151 |        107 |      44 |    0 |    138 |      0 |      0 |          1 |
+|     rx_3                             |                               rx_channel_7 |       3063 |       2941 |     120 |    2 |   3476 |      0 |      0 |          8 |
 |       (rx_3)                         |                               rx_channel_7 |        157 |        157 |       0 |    0 |     26 |      0 |      0 |          0 |
-|       cordic_down                    |                                 cordic_183 |       1613 |       1611 |       0 |    2 |   1574 |      0 |      0 |          4 |
+|       cordic_down                    |                                 cordic_183 |       1614 |       1612 |       0 |    2 |   1574 |      0 |      0 |          4 |
 |         cordic_round_inst            |                           cordic_round_192 |         20 |         20 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         cordic_stages[0].stage_inst  |                  cordic_pipeline_stage_193 |         58 |         58 |       0 |    0 |     54 |      0 |      0 |          0 |
 |         cordic_stages[10].stage_inst |  cordic_pipeline_stage__parameterized9_194 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
@@ -291,15 +291,15 @@ Table of Contents
 |         cordic_stages[9].stage_inst  |  cordic_pipeline_stage__parameterized8_214 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
 |         gain_sat_inst                |                      gain_and_saturate_215 |        124 |        124 |       0 |    0 |     72 |      0 |      0 |          4 |
 |         pre_stage                    |                      cordic_pre_rotate_216 |         78 |         78 |       0 |    0 |     52 |      0 |      0 |          0 |
-|       down_x                         |                      downsamplerFilter_184 |        644 |        584 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_189 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|       down_x                         |                      downsamplerFilter_184 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_189 |         92 |         76 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_190 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_191 |        149 |        105 |      44 |    0 |    138 |      0 |      0 |          1 |
-|       down_y                         |                      downsamplerFilter_185 |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         hb_down_inst                 |                            hb_down_mac_191 |        152 |        108 |      44 |    0 |    138 |      0 |      0 |          1 |
+|       down_y                         |                      downsamplerFilter_185 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
 |         cic_comp_down_inst           |                      cic_comp_down_mac_186 |         92 |         76 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_187 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_188 |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
-|     rx_4                             |                               rx_channel_8 |       3081 |       2959 |     120 |    2 |   3476 |      0 |      0 |          8 |
+|         hb_down_inst                 |                            hb_down_mac_188 |        151 |        107 |      44 |    0 |    138 |      0 |      0 |          1 |
+|     rx_4                             |                               rx_channel_8 |       3082 |       2960 |     120 |    2 |   3476 |      0 |      0 |          8 |
 |       (rx_4)                         |                               rx_channel_8 |        157 |        157 |       0 |    0 |     26 |      0 |      0 |          0 |
 |       cordic_down                    |                                 cordic_149 |       1633 |       1631 |       0 |    2 |   1574 |      0 |      0 |          4 |
 |         cordic_round_inst            |                           cordic_round_158 |         20 |         20 |       0 |    0 |      0 |      0 |      0 |          0 |
@@ -327,15 +327,15 @@ Table of Contents
 |         cordic_stages[9].stage_inst  |  cordic_pipeline_stage__parameterized8_180 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
 |         gain_sat_inst                |                      gain_and_saturate_181 |        124 |        124 |       0 |    0 |     72 |      0 |      0 |          4 |
 |         pre_stage                    |                      cordic_pre_rotate_182 |         97 |         97 |       0 |    0 |     52 |      0 |      0 |          0 |
-|       down_x                         |                      downsamplerFilter_150 |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_155 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|       down_x                         |                      downsamplerFilter_150 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_155 |         94 |         78 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_156 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_157 |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
+|         hb_down_inst                 |                            hb_down_mac_157 |        153 |        109 |      44 |    0 |    138 |      0 |      0 |          1 |
 |       down_y                         |                      downsamplerFilter_151 |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_152 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_152 |         92 |         76 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_153 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
 |         hb_down_inst                 |                            hb_down_mac_154 |        151 |        107 |      44 |    0 |    138 |      0 |      0 |          1 |
-|     rx_5                             |                               rx_channel_9 |       3063 |       2941 |     120 |    2 |   3476 |      0 |      0 |          8 |
+|     rx_5                             |                               rx_channel_9 |       3067 |       2945 |     120 |    2 |   3476 |      0 |      0 |          8 |
 |       (rx_5)                         |                               rx_channel_9 |        157 |        157 |       0 |    0 |     26 |      0 |      0 |          0 |
 |       cordic_down                    |                                 cordic_143 |       1615 |       1613 |       0 |    2 |   1574 |      0 |      0 |          4 |
 |         cordic_round_inst            |                               cordic_round |         20 |         20 |       0 |    0 |      0 |      0 |      0 |          0 |
@@ -363,15 +363,15 @@ Table of Contents
 |         cordic_stages[9].stage_inst  |      cordic_pipeline_stage__parameterized8 |         68 |         68 |       0 |    0 |     70 |      0 |      0 |          0 |
 |         gain_sat_inst                |                          gain_and_saturate |        124 |        124 |       0 |    0 |     72 |      0 |      0 |          4 |
 |         pre_stage                    |                          cordic_pre_rotate |         79 |         79 |       0 |    0 |     52 |      0 |      0 |          0 |
-|       down_x                         |                          downsamplerFilter |        646 |        586 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                      cic_comp_down_mac_145 |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|       down_x                         |                          downsamplerFilter |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         cic_comp_down_inst           |                      cic_comp_down_mac_145 |         92 |         76 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                    cic_146 |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                            hb_down_mac_147 |        152 |        108 |      44 |    0 |    138 |      0 |      0 |          1 |
-|       down_y                         |                      downsamplerFilter_144 |        645 |        585 |      60 |    0 |    938 |      0 |      0 |          2 |
-|         cic_comp_down_inst           |                          cic_comp_down_mac |         93 |         77 |      16 |    0 |    116 |      0 |      0 |          1 |
+|         hb_down_inst                 |                            hb_down_mac_147 |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
+|       down_y                         |                      downsamplerFilter_144 |        650 |        590 |      60 |    0 |    938 |      0 |      0 |          2 |
+|         cic_comp_down_inst           |                          cic_comp_down_mac |         94 |         78 |      16 |    0 |    116 |      0 |      0 |          1 |
 |         cic_inst                     |                                        cic |        404 |        404 |       0 |    0 |    684 |      0 |      0 |          0 |
-|         hb_down_inst                 |                                hb_down_mac |        150 |        106 |      44 |    0 |    138 |      0 |      0 |          1 |
-|     tx_1                             |                                 tx_channel |       3978 |       3976 |       0 |    2 |   6526 |      0 |      2 |          6 |
+|         hb_down_inst                 |                                hb_down_mac |        153 |        109 |      44 |    0 |    138 |      0 |      0 |          1 |
+|     tx_1                             |                                 tx_channel |       3982 |       3980 |       0 |    2 |   6526 |      0 |      2 |          6 |
 |       cordic_up                      |                               cordic16_112 |       1100 |       1098 |       0 |    2 |   1154 |      0 |      0 |          2 |
 |         (cordic_up)                  |                               cordic16_112 |        292 |        292 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         cordic_round_inst1           |           cordic_round__parameterized0_121 |         15 |         15 |       0 |    0 |      0 |      0 |      0 |          0 |
@@ -396,17 +396,17 @@ Table of Contents
 |         cordic_stages[9].stage_inst  | cordic_pipeline_stage__parameterized30_140 |         42 |         42 |       0 |    0 |     61 |      0 |      0 |          0 |
 |         gain_sat_inst                |      gain_and_saturate__parameterized0_141 |         17 |         17 |       0 |    0 |     48 |      0 |      0 |          2 |
 |         pre_stage                    |                   cordic_pre_rotate_16_142 |         42 |         42 |       0 |    0 |     37 |      0 |      0 |          0 |
-|       up_x                           |                        upsamplerFilter_113 |       1439 |       1439 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_x                           |                        upsamplerFilter_113 |       1441 |       1441 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_x)                       |                        upsamplerFilter_113 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         comp_inst                    |                        cic_comp_up_mac_118 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                              hb_up_mac_119 |        419 |        419 |       0 |    0 |   1158 |      0 |      1 |          1 |
+|         hb_inst                      |                              hb_up_mac_119 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                cic_int_120 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
-|       up_y                           |                        upsamplerFilter_114 |       1439 |       1439 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_y                           |                        upsamplerFilter_114 |       1441 |       1441 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_y)                       |                        upsamplerFilter_114 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
-|         comp_inst                    |                        cic_comp_up_mac_115 |        260 |        260 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                              hb_up_mac_116 |        418 |        418 |       0 |    0 |   1158 |      0 |      1 |          1 |
+|         comp_inst                    |                        cic_comp_up_mac_115 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
+|         hb_inst                      |                              hb_up_mac_116 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                cic_int_117 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
-|     tx_2                             |                              tx_channel_10 |       3964 |       3962 |       0 |    2 |   6526 |      0 |      2 |          6 |
+|     tx_2                             |                              tx_channel_10 |       3963 |       3961 |       0 |    2 |   6525 |      0 |      2 |          6 |
 |       cordic_up                      |                                cordic16_81 |       1084 |       1082 |       0 |    2 |   1154 |      0 |      0 |          2 |
 |         (cordic_up)                  |                                cordic16_81 |        292 |        292 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         cordic_round_inst1           |            cordic_round__parameterized0_90 |         15 |         15 |       0 |    0 |      0 |      0 |      0 |          0 |
@@ -431,15 +431,15 @@ Table of Contents
 |         cordic_stages[9].stage_inst  | cordic_pipeline_stage__parameterized30_109 |         42 |         42 |       0 |    0 |     61 |      0 |      0 |          0 |
 |         gain_sat_inst                |      gain_and_saturate__parameterized0_110 |          1 |          1 |       0 |    0 |     48 |      0 |      0 |          2 |
 |         pre_stage                    |                   cordic_pre_rotate_16_111 |         42 |         42 |       0 |    0 |     37 |      0 |      0 |          0 |
-|       up_x                           |                         upsamplerFilter_82 |       1439 |       1439 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_x                           |                         upsamplerFilter_82 |       1442 |       1442 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_x)                       |                         upsamplerFilter_82 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
-|         comp_inst                    |                         cic_comp_up_mac_87 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                               hb_up_mac_88 |        419 |        419 |       0 |    0 |   1158 |      0 |      1 |          1 |
+|         comp_inst                    |                         cic_comp_up_mac_87 |        262 |        262 |       0 |    0 |    626 |      0 |      0 |          1 |
+|         hb_inst                      |                               hb_up_mac_88 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                 cic_int_89 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
-|       up_y                           |                         upsamplerFilter_83 |       1441 |       1441 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_y                           |                         upsamplerFilter_83 |       1437 |       1437 |       0 |    0 |   2685 |      0 |      1 |          2 |
 |         (up_y)                       |                         upsamplerFilter_83 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         comp_inst                    |                         cic_comp_up_mac_84 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                               hb_up_mac_85 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
+|         hb_inst                      |                               hb_up_mac_85 |        417 |        417 |       0 |    0 |   1157 |      0 |      1 |          1 |
 |         u_cic_int                    |                                 cic_int_86 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
 |     tx_3                             |                              tx_channel_11 |       4010 |       4008 |       0 |    2 |   6526 |      0 |      2 |          6 |
 |       cordic_up                      |                                cordic16_50 |       1130 |       1128 |       0 |    2 |   1154 |      0 |      0 |          2 |
@@ -468,12 +468,12 @@ Table of Contents
 |         pre_stage                    |                    cordic_pre_rotate_16_80 |         42 |         42 |       0 |    0 |     37 |      0 |      0 |          0 |
 |       up_x                           |                         upsamplerFilter_51 |       1440 |       1440 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_x)                       |                         upsamplerFilter_51 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
-|         comp_inst                    |                         cic_comp_up_mac_56 |        260 |        260 |       0 |    0 |    626 |      0 |      0 |          1 |
+|         comp_inst                    |                         cic_comp_up_mac_56 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
 |         hb_inst                      |                               hb_up_mac_57 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                 cic_int_58 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
 |       up_y                           |                         upsamplerFilter_52 |       1440 |       1440 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_y)                       |                         upsamplerFilter_52 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
-|         comp_inst                    |                         cic_comp_up_mac_53 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
+|         comp_inst                    |                         cic_comp_up_mac_53 |        260 |        260 |       0 |    0 |    626 |      0 |      0 |          1 |
 |         hb_inst                      |                               hb_up_mac_54 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                 cic_int_55 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
 |     tx_4                             |                              tx_channel_12 |       3976 |       3974 |       0 |    2 |   6526 |      0 |      2 |          6 |
@@ -501,12 +501,12 @@ Table of Contents
 |         cordic_stages[9].stage_inst  |  cordic_pipeline_stage__parameterized30_47 |         42 |         42 |       0 |    0 |     61 |      0 |      0 |          0 |
 |         gain_sat_inst                |       gain_and_saturate__parameterized0_48 |         13 |         13 |       0 |    0 |     48 |      0 |      0 |          2 |
 |         pre_stage                    |                    cordic_pre_rotate_16_49 |         42 |         42 |       0 |    0 |     37 |      0 |      0 |          0 |
-|       up_x                           |                         upsamplerFilter_20 |       1439 |       1439 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_x                           |                         upsamplerFilter_20 |       1440 |       1440 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_x)                       |                         upsamplerFilter_20 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
-|         comp_inst                    |                         cic_comp_up_mac_25 |        260 |        260 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                               hb_up_mac_26 |        419 |        419 |       0 |    0 |   1158 |      0 |      1 |          1 |
+|         comp_inst                    |                         cic_comp_up_mac_25 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
+|         hb_inst                      |                               hb_up_mac_26 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
 |         u_cic_int                    |                                 cic_int_27 |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
-|       up_y                           |                         upsamplerFilter_21 |       1441 |       1441 |       0 |    0 |   2686 |      0 |      1 |          2 |
+|       up_y                           |                         upsamplerFilter_21 |       1440 |       1440 |       0 |    0 |   2686 |      0 |      1 |          2 |
 |         (up_y)                       |                         upsamplerFilter_21 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         comp_inst                    |                         cic_comp_up_mac_22 |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
 |         hb_inst                      |                               hb_up_mac_23 |        420 |        420 |       0 |    0 |   1158 |      0 |      1 |          1 |
@@ -544,7 +544,7 @@ Table of Contents
 |       up_y                           |                         upsamplerFilter_14 |       1439 |       1439 |       0 |    0 |   2685 |      0 |      1 |          2 |
 |         (up_y)                       |                         upsamplerFilter_14 |        708 |        708 |       0 |    0 |      0 |      0 |      0 |          0 |
 |         comp_inst                    |                            cic_comp_up_mac |        261 |        261 |       0 |    0 |    626 |      0 |      0 |          1 |
-|         hb_inst                      |                                  hb_up_mac |        417 |        417 |       0 |    0 |   1157 |      0 |      1 |          1 |
+|         hb_inst                      |                                  hb_up_mac |        418 |        418 |       0 |    0 |   1157 |      0 |      1 |          1 |
 |         u_cic_int                    |                                    cic_int |         55 |         55 |       0 |    0 |    902 |      0 |      0 |          0 |
 |     u_adc                            |                                        adc |          2 |          2 |       0 |    0 |      0 |      0 |      0 |          0 |
 |     u_dac                            |                                        dac |          0 |          0 |       0 |    0 |      0 |      0 |      0 |          0 |

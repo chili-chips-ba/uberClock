@@ -1,4 +1,0 @@
-#!/bin/sh
-dir=`dirname $0`
-export LANG=C
-git ls-files | sort | $dir/find-copyright -
