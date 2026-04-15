@@ -19,7 +19,7 @@
 
 *.jou
 .vscode/
-2.soc-litex/3.build/
+3.build/build
 *.bin
 *.txt
 *.o
