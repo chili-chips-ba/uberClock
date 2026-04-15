@@ -19,7 +19,7 @@
 
 *.jou
 .vscode/
-3.build/build
+3.build/build/
 *.bin
 *.txt
 *.o
