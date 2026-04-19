@@ -966,7 +966,7 @@ class MainCSRs(LiteXModule):
 # SoC
 # =============================================================================
 class BaseSoC(SoCCore):
-    def __init__(self, toolchain="vivado",
+    def __init__(self, toolchain="openxc7",
                  with_hdmi=False, with_ethernet=False, with_etherbone=False,
                  with_spi_flash=False, with_led_chaser=False,
                  with_sdcard=False, with_spi_sdcard=False, with_pcie=False,

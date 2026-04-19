@@ -74,9 +74,9 @@ build-board:
 	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
 	$(PYTHON) -m $(SOC_MODULE) \
 	  --build \
+	  --toolchain=openxc7 \
 	  --sys-clk-freq=$(FREQ) \
 	  $(OPTIONS)
-
 # ----------------------------
 # Build software under 2.sw/
 # ----------------------------
