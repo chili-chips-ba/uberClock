@@ -180,7 +180,7 @@ static uint32_t sig3_freq_hz[SIG3_CHANNELS][SIG3_TONES] = {
 };
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp[SIG3_CHANNELS] = {3000, 10000, 10000, 3000, 3000};
+static int16_t sig3_amp[SIG3_CHANNELS] = {3000, 3000, 3000, 3000, 3000};
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -329,12 +329,37 @@ static void sig3_push_one(void) {
     ups_fifo_write_frame(&frame);
 }
 static void cmd_sig3_amp(char *a) {
-    int v = parse_s(a, 1, 10000, "sig3_amp");
+    char *tok1 = strtok(a, " \t");
+    char *tok2 = strtok(NULL, " \t");
+    char *tok3 = strtok(NULL, " \t");
+    int v;
     unsigned ch;
+
+    if (!tok1 || tok3) {
+        puts("Usage: sig3_amp <val> | sig3_amp <ch:1..5> <val>");
+        return;
+    }
+
+    if (!tok2) {
+        v = parse_s(tok1, 1, 10000, "sig3_amp");
+        if (v < 1 || v > 10000) return;
+        for (ch = 0; ch < SIG3_CHANNELS; ch++)
+            sig3_amp[ch] = (int16_t)v;
+        printf("sig3 amplitude per tone = %d for all channels\n", v);
+        return;
+    }
+
+    ch = (unsigned)strtoul(tok1, NULL, 0);
+    if (ch < 1u || ch > SIG3_CHANNELS) {
+        puts("sig3_amp channel must be 1..5");
+        return;
+    }
+
+    v = parse_s(tok2, 1, 10000, "sig3_amp");
     if (v < 1 || v > 10000) return;
-    for (ch = 0; ch < SIG3_CHANNELS; ch++)
-        sig3_amp[ch] = (int16_t)v;
-    printf("sig3 amplitude per tone = %d for all channels\n", v);
+
+    sig3_amp[ch - 1u] = (int16_t)v;
+    printf("sig3 ch%u amplitude per tone = %d\n", ch, v);
 }
 
 static void cmd_sig3_freqs(char *args) {
@@ -1357,7 +1382,7 @@ static void uc_help(char *args) {
     puts("  upsampler_y          <val>  (signed 16-bit, replicated to ch1..ch5)");
     puts("  sig3_start                  (start 5 independent 3-tone generators)");
     puts("  sig3_stop                   (stop 5 independent 3-tone generators)");
-    puts("  sig3_amp           <val>    (per-tone amplitude, shared by all channels)");
+    puts("  sig3_amp <val> | <ch> <val> (set per-tone amplitude for all or one channel)");
     puts("  sig3_freqs <ch> <f1> <f2> <f3> (set 3-tone frequencies for one channel)");
     puts("  sig3_enable_ch     <ch>     (enable one sig3 channel)");
     puts("  sig3_disable_ch    <ch>     (disable one sig3 channel)");
@@ -2302,7 +2327,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"fft32_ds_y", cmd_fft32_ds_y, "Real FFT of 32 Y samples from DS FIFO"},
     {"sig3_start", cmd_sig3_start, "Start 5 independent 3-tone software generators"},
     {"sig3_stop",  cmd_sig3_stop,  "Stop 5 independent 3-tone software generators"},
-    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude shared by all channels"},
+    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude: sig3_amp <val> | <ch> <val>"},
     {"sig3_freqs", cmd_sig3_freqs, "Set channel 3-tone frequencies: sig3_freqs <ch> <f1> <f2> <f3>"},
     {"sig3_enable_ch",  cmd_sig3_enable_ch,  "Enable one sig3 channel: sig3_enable_ch <ch>"},
     {"sig3_disable_ch", cmd_sig3_disable_ch, "Disable one sig3 channel: sig3_disable_ch <ch>"},
@@ -2390,7 +2415,7 @@ void uberclock_init(void) {
 
     main_phase_inc_down_ref_write(2581110);
 
-    main_nco_mag_write((uint32_t)(500 & 0x0fff));
+    main_nco_mag_write((uint32_t)(300 & 0x0fff));
 
     main_phase_inc_cpu1_write(52429);
     main_phase_inc_cpu2_write(52429);

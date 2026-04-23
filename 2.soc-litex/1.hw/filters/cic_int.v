@@ -104,7 +104,30 @@ module cic_int #(
     // Outputs
     //================================================================
     // truncate / round down from REG_WIDTH to O_WIDTH
-    assign output_tdata = int_reg[N-1] >>> (REG_WIDTH - O_WIDTH -1);
+//    assign output_tdata = int_reg[N-1] >>> (REG_WIDTH - O_WIDTH -1);
     // clk_out is gated version of clk
+  //  assign clk_out      = clk & ce_out;
+
+
+    //================================================================
+    // Outputs
+    //================================================================
+    // truncate / round down from REG_WIDTH to O_WIDTH
+    wire signed [15:0] cic_core = int_reg[N-1] >>> (REG_WIDTH - O_WIDTH -1);
+    // clk_out is gated version of clk
+    localparam signed [31:0] GAIN = 32'sd3413336384;
+    wire signed       [32:0] gain_const_s = {1'b0,GAIN};
+    reg  signed [O_WIDTH+33-1:0]        gain_full_reg;
+    
+    always @(posedge clk) begin
+        if (rst) begin
+            gain_full_reg <= 0;
+        end else if (clk_enable) begin
+            gain_full_reg <= $signed(cic_core) * gain_const_s;
+        end
+    end
+    
+    assign output_tdata = gain_full_reg >>> 31;
+//    assign output_tdata = int_reg[N-1] >>> (REG_WIDTH - O_WIDTH -1);
     assign clk_out      = clk & ce_out;
 endmodule

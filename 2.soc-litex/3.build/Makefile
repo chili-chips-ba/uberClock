@@ -13,8 +13,8 @@ BAUD          ?= 115200
 PORT          ?= /dev/ttyUSB0
 
 # LiteX install
-LITEX_PATH    ?= $(HOME)/FPGA/Tools/litex-hub/litex
-LITEX_VENV    ?= $(LITEX_PATH)/litex-venv
+LITEX_PATH    ?= $(HOME)/litex
+LITEX_VENV    ?= $(HOME)/litex-venv
 PYTHON        := python3
 
 # Board/target
