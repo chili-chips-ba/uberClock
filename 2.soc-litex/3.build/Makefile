@@ -13,8 +13,8 @@ BAUD          ?= 115200
 PORT          ?= /dev/ttyUSB0
 
 # LiteX install
-LITEX_PATH    ?= $(HOME)/FPGA/Tools/litex-hub/litex
-LITEX_VENV    ?= $(LITEX_PATH)/litex-venv
+LITEX_PATH    ?= $(HOME)/litex
+LITEX_VENV    ?= $(HOME)/litex-venv
 PYTHON        := python3
 
 # Board/target
@@ -27,17 +27,11 @@ PYTHONPATH_REPO := $(PROJECT_ROOT)/8.python/src
 # Defaults
 FREQ          ?= 100e6
 OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
+SW_CODE_MEM   ?= main_ram
+SW_DATA_MEM   ?= main_ram
 
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
-
-define print_section
-	@printf "\n[%s]\n" "$(1)"
-endef
-
-define print_kv
-	@printf "  %-12s %s\n" "$(1)" "$(2)"
-endef
 
 .PHONY: help build-board build-sw load term \
         clean clean-gateware
@@ -47,7 +41,7 @@ help:
 	@echo "  make build-board [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make term        [PORT=/dev/ttyUSB0]"
-	@echo "  make build-sw    [DEMO_FLAGS='..']"
+	@echo "  make build-sw    [SW_CODE_MEM=main_ram] [SW_DATA_MEM=main_ram] [WITH_CXX=1]"
 	@echo "  make clean-gateware   (delete build output only)"
 	@echo "  make clean            (delete build + logs + temp)"
 
@@ -67,18 +61,19 @@ build-board:
 #  Build & run software example under 2.sw/
 # ——————————————————————————————————————————————————————————————
 build-sw:
-	$(call print_section,software build)
-	$(call print_kv,workdir,$(SW_DIR))
-	$(call print_kv,venv,$(LITEX_VENV)/bin/activate)
-	$(call print_kv,flags,$(if $(strip $(DEMO_FLAGS)),$(DEMO_FLAGS),<none>))
-	$(call print_kv,command,./demo.py --build-path=$(BUILD_DIR)/build/$(BOARD) --mem=main_ram --data-mem=main_ram $(DEMO_FLAGS))
-	@source $(LITEX_VENV)/bin/activate && \
-	cd $(SW_DIR) && \
-	./demo.py \
-	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
-	  --mem=main_ram \
-	  --data-mem=main_ram \
-	  $(DEMO_FLAGS)
+	@echo "[software build] code_mem=$(SW_CODE_MEM) data_mem=$(SW_DATA_MEM) WITH_CXX=$(WITH_CXX)"
+	@echo "→ Building software in place from $(SW_DIR)"
+	source $(LITEX_VENV)/bin/activate && \
+	export BUILD_DIR=$(BUILD_DIR)/build/$(BOARD) && \
+	export WITH_CXX=$(WITH_CXX) && \
+	tmp_linker=$$(mktemp) && \
+	cp $(SW_DIR)/linker.ld $$tmp_linker && \
+	trap 'cp $$tmp_linker $(SW_DIR)/linker.ld; rm -f $$tmp_linker' EXIT && \
+	sed -i 's/main_ram/$(SW_CODE_MEM)/g; s/data_ram/$(SW_DATA_MEM)/g' $(SW_DIR)/linker.ld && \
+	$(MAKE) -C $(SW_DIR) clean && \
+	$(MAKE) -C $(SW_DIR) && \
+	$(PYTHON) -m litex.soc.software.crcfbigen \
+	  $(SW_DIR)/demo.bin -o $(SW_DIR)/demo.fbi --fbi --little
 
 load:
 	@echo "[load] target=$(TARGET_PY)"

@@ -100,17 +100,17 @@ static void cmd_fft32_ds_y(char *args) {
 static volatile int sig3_enable = 0;
 
 /* 32-bit DDS phase accumulators */
-static uint32_t sig3_ph_940  = 0;
-static uint32_t sig3_ph_1000 = 0;
-static uint32_t sig3_ph_1060 = 0;
+static uint32_t sig3_ph_left   = 0;
+static uint32_t sig3_ph_center = 0;
+static uint32_t sig3_ph_right  = 0;
 
 /* phase increments for Fs = 10 kHz */
-static uint32_t sig3_inc_940  = 0;
-static uint32_t sig3_inc_1000 = 0;
-static uint32_t sig3_inc_1060 = 0;
+static uint32_t sig3_inc_left   = 0;
+static uint32_t sig3_inc_center = 0;
+static uint32_t sig3_inc_right  = 0;
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp = 3000;
+static int16_t sig3_amp = 10000;
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -140,13 +140,13 @@ static inline int16_t sig3_sin_u32(uint32_t ph) {
 }
 
 static void sig3_start(void) {
-    sig3_ph_940  = 0;
-    sig3_ph_1000 = 0;
-    sig3_ph_1060 = 0;
+    sig3_ph_left   = 0;
+    sig3_ph_center = 0;
+    sig3_ph_right  = 0;
 
-    sig3_inc_940  = sig3_phase_inc( 990, 10000);
-    sig3_inc_1000 = sig3_phase_inc(1000, 10000);
-    sig3_inc_1060 = sig3_phase_inc(1010, 10000);
+    sig3_inc_left   = sig3_phase_inc( 970, 10000);
+    sig3_inc_center = sig3_phase_inc(1000, 10000);
+    sig3_inc_right  = sig3_phase_inc(1030, 10000);
 
     sig3_enable = 1;
     puts("3-tone software generator enabled");
@@ -166,13 +166,13 @@ static inline int16_t sig3_clamp_s16(int32_t x) {
 static int sig3_step(int16_t *x, int16_t *y) {
     if (!sig3_enable) return 0;
 
-    sig3_ph_940  += sig3_inc_940;
-    sig3_ph_1000 += sig3_inc_1000;
-    sig3_ph_1060 += sig3_inc_1060;
+    sig3_ph_left   += sig3_inc_left;
+    sig3_ph_center += sig3_inc_center;
+    sig3_ph_right  += sig3_inc_right;
 
-    int32_t s1 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_940))  / 32767;
-    int32_t s2 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1000)) / 32767;
-    int32_t s3 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_1060)) / 32767;
+    int32_t s1 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_left))   / 32767;
+    int32_t s2 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_center)) / 32767;
+    int32_t s3 = ((int32_t)sig3_amp * (int32_t)sig3_sin_u32(sig3_ph_right))  / 32767;
 
     *x = sig3_clamp_s16(s1 + s2 + s3);
     *y = 0;
@@ -235,9 +235,10 @@ static uint32_t fft_fs_hz = 10000u;
 #define TRACK3_DEFAULT_N           2048u
 #define TRACK3_DEFAULT_SETTLE      256u
 #define TRACK3_DEFAULT_CENTER_HZ   1000u
-#define TRACK3_DEFAULT_DELTA_HZ    10u
-#define TRACKQ_DEFAULT_DELTA_HZ    10u
+#define TRACK3_DEFAULT_DELTA_HZ    30u
+#define TRACKQ_DEFAULT_DELTA_HZ    30u
 #define TRACK3_DEFAULT_BAND_BINS   1u
+#define TRACK3_STEP_WAIT_TICKS     10000u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
 #define TRACKQ_MAX_STEP_HZ         2
@@ -249,6 +250,7 @@ static uint32_t fft_fs_hz = 10000u;
 #define TRACKQ_WEAK_DEADBAND_PCT   10u
 #define TRACKQ_WEAK_GAIN_DEN       4
 #define TRACKQ_WEAK_MAX_ERR_MHZ    750
+#define TRACKQ_BG_SERVICE_PERIOD   16u
 #define TRACK3_FIFO_WAIT_POLLS     1000000u
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
@@ -422,6 +424,10 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
         acc_i += ((int64_t)sample * (int64_t)cos_q15) >> TRACKQ_CORR_SHIFT;
         acc_q -= ((int64_t)sample * (int64_t)sin_q15) >> TRACKQ_CORR_SHIFT;
         phase += phase_inc;
+
+        if ((i & (TRACKQ_BG_SERVICE_PERIOD - 1u)) == 0u) {
+            track3_service_background_budget(1);
+        }
     }
 
     return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
@@ -1357,7 +1363,7 @@ static void cmd_track3(char *args) {
             return;
         }
 
-        track3_wait_ticks(TRACKQ_INTERVAL_TICKS);
+        track3_wait_ticks(TRACK3_STEP_WAIT_TICKS);
         sweep_hz += step_hz;
     }
 
@@ -1919,7 +1925,7 @@ void uberclock_register_cmds(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(10327486);
+    main_phase_inc_down_1_write(11321544);
     main_phase_inc_down_2_write(80652);
     main_phase_inc_down_3_write(80648);
     main_phase_inc_down_4_write(80644);
