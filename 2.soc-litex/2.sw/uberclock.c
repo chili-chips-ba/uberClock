@@ -161,6 +161,8 @@ static void cmd_fft32_ds_y(char *args) {
 #define SIG3_CHANNELS 5
 #define SIG3_TONES    3
 #define TRACKQ_CHANNELS 3
+#define TRACKQ_CH1_DELTA_HZ  10u
+#define TRACKQ_CH23_DELTA_HZ 30u
 #define TRACKQ_CH1_START_HZ 10002950u
 #define TRACKQ_CH2_START_HZ 3386370u
 #define TRACKQ_CH3_START_HZ 3727990u
@@ -173,8 +175,8 @@ static uint32_t sig3_phase[SIG3_CHANNELS][SIG3_TONES];
 static uint32_t sig3_inc[SIG3_CHANNELS][SIG3_TONES];
 static uint32_t sig3_freq_hz[SIG3_CHANNELS][SIG3_TONES] = {
     { 990u, 1000u, 1010u},
-    { 990u, 1000u, 1010u},
-    { 990u, 1000u, 1010u},
+    { 970u, 1000u, 1030u},
+    { 970u, 1000u, 1030u},
     { 990u, 1000u, 1010u},
     { 990u, 1000u, 1010u},
 };
@@ -488,7 +490,6 @@ static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
 #define TRACK3_DEFAULT_CENTER_HZ   1000u
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACK3_DEFAULT_BAND_BINS   1u
-#define TRACKQ_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
 #define TRACKQ_MAX_STEP_HZ         2
@@ -518,10 +519,14 @@ struct trackq_state {
 };
 
 static struct trackq_state trackq[TRACKQ_CHANNELS] = {
-    {0, 0u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
-    {0, 1u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
-    {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_DEFAULT_DELTA_HZ, 0u, 0, 0},
+    {0, 0u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH1_DELTA_HZ,  0u, 0, 0},
+    {0, 1u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH23_DELTA_HZ, 0u, 0, 0},
+    {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH23_DELTA_HZ, 0u, 0, 0},
 };
+
+static uint32_t trackq_default_delta_hz(unsigned channel) {
+    return (channel == 0u) ? TRACKQ_CH1_DELTA_HZ : TRACKQ_CH23_DELTA_HZ;
+}
 
 static inline int is_pow2_u(unsigned x) {
     return (x != 0u) && ((x & (x - 1u)) == 0u);
@@ -982,10 +987,10 @@ static void trackq_step(void) {
     }
 
     uc_commit();
-    printf("trackq: ch1=%luHz ch2=%luHz ch3=%luHz\n",
-           (unsigned long)phase_hz_log[0],
-           (unsigned long)phase_hz_log[1],
-           (unsigned long)phase_hz_log[2]);
+    // printf("trackq: ch1=%luHz ch2=%luHz ch3=%luHz\n",
+    //        (unsigned long)phase_hz_log[0],
+    //        (unsigned long)phase_hz_log[1],
+    //        (unsigned long)phase_hz_log[2]);
 }
 
 static void cmd_track3(char *args) {
@@ -1136,20 +1141,26 @@ static void cmd_trackq_start(char *args) {
     char *tok_f3     = strtok(NULL, " \t");
     char *tok_n      = strtok(NULL, " \t");
     char *tok_center = strtok(NULL, " \t");
-    char *tok_delta  = strtok(NULL, " \t");
+    char *tok_delta1 = strtok(NULL, " \t");
+    char *tok_delta23 = strtok(NULL, " \t");
     uint32_t f1_hz = tok_f1 ? (uint32_t)strtoul(tok_f1, NULL, 0) : 0u;
     uint32_t f2_hz = tok_f2 ? (uint32_t)strtoul(tok_f2, NULL, 0) : 0u;
     uint32_t f3_hz = tok_f3 ? (uint32_t)strtoul(tok_f3, NULL, 0) : 0u;
     unsigned n = tok_n ? (unsigned)strtoul(tok_n, NULL, 0) : TRACK3_DEFAULT_N;
     uint32_t center_hz = tok_center ? (uint32_t)strtoul(tok_center, NULL, 0) : TRACK3_DEFAULT_CENTER_HZ;
-    uint32_t delta_hz = tok_delta ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACKQ_DEFAULT_DELTA_HZ;
+    uint32_t delta_ch1_hz = tok_delta1 ? (uint32_t)strtoul(tok_delta1, NULL, 0) : trackq_default_delta_hz(0u);
+    uint32_t delta_ch23_hz = tok_delta23 ? (uint32_t)strtoul(tok_delta23, NULL, 0) : trackq_default_delta_hz(1u);
 
     if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
         printf("trackq_start requires N to be power-of-2 and <= %u\n", FFT_MAX_N);
         return;
     }
-    if (center_hz <= delta_hz) {
-        puts("trackq_start requires center_hz > delta_hz");
+    if (delta_ch1_hz == 0u || delta_ch23_hz == 0u) {
+        puts("trackq_start requires delta_hz > 0");
+        return;
+    }
+    if (center_hz <= delta_ch1_hz || center_hz <= delta_ch23_hz) {
+        puts("trackq_start requires center_hz > delta_hz for all tracked channels");
         return;
     }
     if (fft_fs_hz == 0u) {
@@ -1168,19 +1179,21 @@ static void cmd_trackq_start(char *args) {
         trackq[i].n = n;
         trackq[i].settle = TRACK3_DEFAULT_SETTLE;
         trackq[i].center_hz = center_hz;
-        trackq[i].delta_hz = delta_hz;
+        trackq[i].delta_hz = (i == 0u) ? delta_ch1_hz : delta_ch23_hz;
         trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
         trackq[i].filt_error_mhz = 0;
         trackq[i].step_accum_mhz = 0;
     }
 
-    printf("trackq_start: ch1=%lu Hz ch2=%lu Hz ch3=%lu Hz N=%u center=%lu Hz delta=%lu Hz interval=1 s\n",
+    printf("trackq_start: ch1=%lu Hz ch2=%lu Hz ch3=%lu Hz N=%u center=%lu Hz delta={%lu,%lu,%lu} Hz interval=1 s\n",
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(0), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(1), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(2), TRACK3_RF_FS_HZ),
            n,
            (unsigned long)center_hz,
-           (unsigned long)delta_hz);
+           (unsigned long)trackq[0].delta_hz,
+           (unsigned long)trackq[1].delta_hz,
+           (unsigned long)trackq[2].delta_hz);
 }
 
 static void cmd_trackq_probe(char *args) {
@@ -1189,7 +1202,7 @@ static void cmd_trackq_probe(char *args) {
     char *tok_delta  = strtok(NULL, " \t");
     unsigned n = tok_n ? (unsigned)strtoul(tok_n, NULL, 0) : TRACK3_DEFAULT_N;
     uint32_t center_hz = tok_center ? (uint32_t)strtoul(tok_center, NULL, 0) : TRACK3_DEFAULT_CENTER_HZ;
-    uint32_t delta_hz = tok_delta ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACKQ_DEFAULT_DELTA_HZ;
+    uint32_t delta_hz = tok_delta ? (uint32_t)strtoul(tok_delta, NULL, 0) : TRACKQ_CH1_DELTA_HZ;
     uint64_t left_pwr;
     uint64_t center_pwr;
     uint64_t right_pwr;
@@ -1395,7 +1408,7 @@ static void uc_help(char *args) {
     puts("  fft_ds_peak [N]             (FFT over DS FIFO IQ samples, N=8..2048, peak only)");
     puts("  fft_fs <Hz>                 (set DS sample rate used for fft_ds Hz print)");
     puts("  track3 <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
-    puts("  trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_hz]");
+    puts("  trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_ch1_hz] [delta_ch23_hz]");
     puts("  trackq_probe [N] [center_hz] [delta_hz]");
     puts("  trackq_stop                 (stop 3-point quadratic tracking)");
 
@@ -2290,7 +2303,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples and print bins"},
     {"fft_ds_peak",          cmd_fft_ds_peak,         "Run FFT over downsample FIFO IQ samples and print peak only"},
     {"track3",               cmd_track3,              "Sweep phase_down_1 until the 3-tone pattern is found"},
-    {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking on ch1/ch2/ch3: trackq_start <f1> <f2> <f3>"},
+    {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking: trackq_start <f1> <f2> <f3> [N] [center] [delta1] [delta23]"},
     {"trackq_probe",         cmd_trackq_probe,        "Capture one 3-point tracking snapshot"},
     {"trackq_stop",          cmd_trackq_stop,         "Stop 3-point quadratic tracking"},
 
