@@ -182,7 +182,7 @@ static uint32_t sig3_freq_hz[SIG3_CHANNELS][SIG3_TONES] = {
 };
 
 /* per-tone amplitude in output counts */
-static int16_t sig3_amp[SIG3_CHANNELS] = {3000, 3000, 3000, 3000, 3000};
+static int16_t sig3_amp[SIG3_CHANNELS] = {3000, 10000, 10000, 3000, 3000};
 
 /* 256-entry sine LUT, one full cycle, Q15-ish signed values */
 static const int16_t sine_q64[64] = {
@@ -501,6 +501,7 @@ static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
 #define TRACKQ_WEAK_DEADBAND_PCT   10u
 #define TRACKQ_WEAK_GAIN_DEN       4
 #define TRACKQ_WEAK_MAX_ERR_MHZ    750
+#define TRACKQ_SERVICE_STRIDE      16u
 #define TRACK3_FIFO_WAIT_POLLS     1000000u
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
@@ -523,6 +524,7 @@ static struct trackq_state trackq[TRACKQ_CHANNELS] = {
     {0, 1u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH23_DELTA_HZ, 0u, 0, 0},
     {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH23_DELTA_HZ, 0u, 0, 0},
 };
+static uint32_t trackq_log_iteration = 0u;
 
 static uint32_t trackq_default_delta_hz(unsigned channel) {
     return (channel == 0u) ? TRACKQ_CH1_DELTA_HZ : TRACKQ_CH23_DELTA_HZ;
@@ -538,6 +540,25 @@ static uint32_t uc_phase_inc_from_hz(uint32_t f_hz, uint32_t fs_hz) {
 
 static uint32_t uc_phase_inc_to_hz(uint32_t phase_inc, uint32_t fs_hz) {
     return (uint32_t)((((uint64_t)phase_inc * (uint64_t)fs_hz) + (1u << 25)) >> 26);
+}
+
+static int64_t uc_phase_inc_to_mhz(uint32_t phase_inc, uint32_t fs_hz) {
+    return (int64_t)((((uint64_t)phase_inc * (uint64_t)fs_hz * 1000ull) + (1u << 25)) >> 26);
+}
+
+static int64_t sig3_phase_inc_to_mhz(uint32_t phase_inc, uint32_t fs_hz) {
+    return (int64_t)((((uint64_t)phase_inc * (uint64_t)fs_hz * 1000ull) + (1ull << 31)) >> 32);
+}
+
+static int64_t trackq_center_tone_hz_milli(unsigned channel) {
+    if (channel < SIG3_CHANNELS &&
+        sig3_enable &&
+        sig3_channel_enable[channel] &&
+        trackq[channel].center_hz == sig3_freq_hz[channel][1]) {
+        return sig3_phase_inc_to_mhz(sig3_inc[channel][1], 10000u);
+    }
+
+    return (int64_t)trackq[channel].center_hz * 1000ll;
 }
 
 static uint32_t phase_down_read(unsigned channel) {
@@ -720,6 +741,12 @@ static uint64_t fft_band_power_at(unsigned k, unsigned half_bins, unsigned n) {
     return pwr;
 }
 
+static inline void trackq_service_background_sample(unsigned sample_idx) {
+    /* Keep the software-fed upsampler moving during long correlation sweeps. */
+    if ((sample_idx & (TRACKQ_SERVICE_STRIDE - 1u)) == (TRACKQ_SERVICE_STRIDE - 1u))
+        track3_service_background_budget(1u);
+}
+
 static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
     uint32_t phase_acc = 0u;
     uint32_t phase_inc = sig3_phase_inc(f_hz, fft_fs_hz);
@@ -735,6 +762,7 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
         acc_i += ((int64_t)sample * (int64_t)cos_q15) >> TRACKQ_CORR_SHIFT;
         acc_q -= ((int64_t)sample * (int64_t)sin_q15) >> TRACKQ_CORR_SHIFT;
         phase_acc += phase_inc;
+        trackq_service_background_sample(i);
     }
 
     return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
@@ -755,6 +783,7 @@ static uint64_t track_power_at_hz_samples(const int16_t *samples, uint32_t f_hz,
         acc_i += ((int64_t)sample * (int64_t)cos_q15) >> TRACKQ_CORR_SHIFT;
         acc_q -= ((int64_t)sample * (int64_t)sin_q15) >> TRACKQ_CORR_SHIFT;
         phase_acc += phase_inc;
+        trackq_service_background_sample(i);
     }
 
     return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
@@ -882,7 +911,7 @@ static void trackq_step(void) {
     unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
     int any_due = 0;
     int any_enabled = 0;
-    uint32_t phase_hz_log[TRACKQ_CHANNELS];
+    int64_t vertex_hf_mhz_log[TRACKQ_CHANNELS];
 
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         if (!trackq[i].enabled)
@@ -923,8 +952,10 @@ static void trackq_step(void) {
         int64_t num;
         int64_t den;
         int64_t center_hz_milli;
+        int64_t center_base_hz_milli;
         int64_t h_hz_milli;
         int64_t vertex_hz_milli;
+        int64_t phase_hz_milli;
         int32_t correction_hz;
         int32_t applied_hz;
         uint32_t phase_inc;
@@ -935,7 +966,9 @@ static void trackq_step(void) {
         int confident;
         int weak_mode;
 
-        phase_hz_log[i] = uc_phase_inc_to_hz(phase_down_read(i), TRACK3_RF_FS_HZ);
+        center_base_hz_milli = trackq_center_tone_hz_milli(i);
+        vertex_hf_mhz_log[i] = uc_phase_inc_to_mhz(phase_down_read(i), TRACK3_RF_FS_HZ) +
+                               center_base_hz_milli;
         if (!trackq[i].enabled || ce_ticks < trackq[i].next_tick)
             continue;
 
@@ -982,15 +1015,19 @@ static void trackq_step(void) {
         applied_hz = correction_hz;
         phase_hz = (uint32_t)((int32_t)phase_hz + applied_hz);
         phase_down_write(i, uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ));
-        phase_hz_log[i] = phase_hz;
+        phase_hz_milli = uc_phase_inc_to_mhz(uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ), TRACK3_RF_FS_HZ);
+        vertex_hf_mhz_log[i] = phase_hz_milli + center_base_hz_milli + (vertex_hz_milli - center_hz_milli);
         trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
     }
 
     uc_commit();
-    // printf("trackq: ch1=%luHz ch2=%luHz ch3=%luHz\n",
-    //        (unsigned long)phase_hz_log[0],
-    //        (unsigned long)phase_hz_log[1],
-    //        (unsigned long)phase_hz_log[2]);
+    trackq_log_iteration++;
+    if ((trackq_log_iteration % 5u) == 0u) {
+        printf("trackq hf vertex: ch1=%ld.%03ldHz ch2=%ld.%03ldHz ch3=%ld.%03ldHz\n",
+               (long)(vertex_hf_mhz_log[0] / 1000ll), (long)llabs(vertex_hf_mhz_log[0] % 1000ll),
+               (long)(vertex_hf_mhz_log[1] / 1000ll), (long)llabs(vertex_hf_mhz_log[1] % 1000ll),
+               (long)(vertex_hf_mhz_log[2] / 1000ll), (long)llabs(vertex_hf_mhz_log[2] % 1000ll));
+    }
 }
 
 static void cmd_track3(char *args) {
