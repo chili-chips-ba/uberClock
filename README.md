@@ -139,6 +139,8 @@ We are grateful to NLnet Foundation for their sponsorship of this development ac
    <img width="115" alt="NGI-Entrust-Logo" src="https://github.com/chili-chips-ba/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522">
 </p>
 
+This project was funded through the NGI0 Core Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101092990.
+
 ### Public posts:
 - [2025-09-21](https://lnkd.in/p/gMNfu-y3)
 - [2025-09-20](https://cfp.balccon.org/balccon2k25-2025/talk/8YKFDU)
