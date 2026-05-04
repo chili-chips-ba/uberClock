@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 /** Register all firmware commands */
-void uberclock_register_cmds(void);
+void uberclock_register_commands(void);
 
 /** Initialize firmware runtime */
 void uberclock_init(void);

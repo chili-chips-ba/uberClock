@@ -25,7 +25,7 @@ static struct uberclock_app_context application_context = {
         0,
         0
     },
-    .siggen = {0, 0u, 0u, 0u, 0u, 0u, 0u, 3000}
+    .siggen = {0, 0u, 0u, 0u, 0u, 0u, 0u, 10000}
 };
 
 static void service_ce_event(void) {

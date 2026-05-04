@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../../console.h"
+#include "../../../console.h"
 #include "uberclock/uberclock.h"
 #include "uberclock/uberclock_config.h"
 #include "uberclock/uberclock_commands.h"

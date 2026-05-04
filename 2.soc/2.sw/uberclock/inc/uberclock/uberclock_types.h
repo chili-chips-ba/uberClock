@@ -32,12 +32,12 @@ struct uberclock_track_state {
 
 struct uberclock_siggen_state {
     int enabled;
-    uint32_t phase_940;
+    uint32_t phase_left;
     uint32_t phase_1000;
-    uint32_t phase_1060;
-    uint32_t increment_940;
+    uint32_t phase_right;
+    uint32_t increment_left;
     uint32_t increment_1000;
-    uint32_t increment_1060;
+    uint32_t increment_right;
     int16_t amplitude;
 };
 
@@ -49,4 +49,3 @@ struct uberclock_app_context {
 };
 
 #endif
-

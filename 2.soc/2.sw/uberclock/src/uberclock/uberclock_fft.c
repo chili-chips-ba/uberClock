@@ -172,6 +172,10 @@ uint64_t uberclock_compute_power_at_hz(uint32_t frequency_hz, unsigned sample_co
         accumulator_i += ((int64_t)sample * (int64_t)cosine_q15) >> UBERCLOCK_TRACK_CORR_SHIFT;
         accumulator_q -= ((int64_t)sample * (int64_t)sine_q15) >> UBERCLOCK_TRACK_CORR_SHIFT;
         phase += phase_increment;
+
+        if ((sample_index & (UBERCLOCK_TRACK_BG_SERVICE_PERIOD - 1u)) == 0u) {
+            uberclock_runtime_service_ce_events(1u);
+        }
     }
 
     return (uint64_t)(accumulator_i * accumulator_i) + (uint64_t)(accumulator_q * accumulator_q);

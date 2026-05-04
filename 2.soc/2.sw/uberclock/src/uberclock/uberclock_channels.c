@@ -3,7 +3,7 @@
 #include "uberclock/uberclock_channels.h"
 
 static const uint32_t default_phase_down[UBERCLOCK_CHANNEL_COUNT] = {
-    10327486u, 80652u, 80648u, 80644u, 80640u
+    11321544u, 80652u, 80648u, 80644u, 80640u
 };
 
 static const uint32_t default_phase_cpu[UBERCLOCK_CHANNEL_COUNT] = {

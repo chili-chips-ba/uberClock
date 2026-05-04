@@ -47,7 +47,7 @@ int main(void) {
 
 	console_init("\e[92;1muberClock\e[0m>");
 	console_register(g_root_cmds, sizeof(g_root_cmds)/sizeof(g_root_cmds[0]));
-	uberclock_register_cmds();
+	uberclock_register_commands();
 	ubddr3_register_cmds();
 
 	uberclock_init();
@@ -61,4 +61,3 @@ int main(void) {
 	}
 	return 0;
 }
-

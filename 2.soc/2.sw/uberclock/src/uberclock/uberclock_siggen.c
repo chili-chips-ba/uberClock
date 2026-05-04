@@ -43,12 +43,12 @@ static int16_t clamp_to_s16(int32_t value) {
 void uberclock_siggen_start(void) {
     struct uberclock_siggen_state *siggen = uberclock_siggen_state();
 
-    siggen->phase_940 = 0u;
+    siggen->phase_left = 0u;
     siggen->phase_1000 = 0u;
-    siggen->phase_1060 = 0u;
-    siggen->increment_940 = siggen_phase_increment(990u, 10000u);
+    siggen->phase_right = 0u;
+    siggen->increment_left = siggen_phase_increment(970u, 10000u);
     siggen->increment_1000 = siggen_phase_increment(1000u, 10000u);
-    siggen->increment_1060 = siggen_phase_increment(1010u, 10000u);
+    siggen->increment_right = siggen_phase_increment(1030u, 10000u);
     siggen->enabled = 1;
 
     puts("3-tone software generator enabled");
@@ -69,13 +69,13 @@ int uberclock_siggen_step(int16_t *sample_x, int16_t *sample_y) {
         return 0;
     }
 
-    siggen->phase_940 += siggen->increment_940;
+    siggen->phase_left += siggen->increment_left;
     siggen->phase_1000 += siggen->increment_1000;
-    siggen->phase_1060 += siggen->increment_1060;
+    siggen->phase_right += siggen->increment_right;
 
-    tone0 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_940)) / 32767;
+    tone0 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_left)) / 32767;
     tone1 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_1000)) / 32767;
-    tone2 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_1060)) / 32767;
+    tone2 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_right)) / 32767;
 
     *sample_x = clamp_to_s16(tone0 + tone1 + tone2);
     *sample_y = 0;

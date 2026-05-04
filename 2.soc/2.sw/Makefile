@@ -17,6 +17,7 @@ include $(COMMON_MAK)
 # ------------------------------------------------------------------------------
 UBERCLOCK_DIR := $(CURDIR)/uberclock
 SRC_DIR := $(UBERCLOCK_DIR)/src
+UBERCLOCK_SRC_DIR := $(SRC_DIR)/uberclock
 INC_DIR := $(UBERCLOCK_DIR)/inc
 KISSFFT_DIR := $(UBERCLOCK_DIR)/kissfft
 
@@ -36,15 +37,17 @@ TOP_C_SOURCES := \
 
 UBERCLOCK_C_SOURCES := \
 	$(SRC_DIR)/main.c \
-	$(SRC_DIR)/uberclock_channels.c \
-	$(SRC_DIR)/uberclock_commands.c \
-	$(SRC_DIR)/uberclock_dma.c \
-	$(SRC_DIR)/uberclock_fft.c \
-	$(SRC_DIR)/uberclock_fifo.c \
-	$(SRC_DIR)/uberclock_hw.c \
-	$(SRC_DIR)/uberclock_parse.c \
-	$(SRC_DIR)/uberclock_siggen.c \
-	$(SRC_DIR)/uberclock_track.c
+	$(UBERCLOCK_SRC_DIR)/uberclock.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_capture.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_channels.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_commands.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_dma.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_fft.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_fifo.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_hw.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_parse.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_siggen.c \
+	$(UBERCLOCK_SRC_DIR)/uberclock_track.c
 
 KISSFFT_C_SOURCES := \
 	$(KISSFFT_DIR)/kiss_fft.c

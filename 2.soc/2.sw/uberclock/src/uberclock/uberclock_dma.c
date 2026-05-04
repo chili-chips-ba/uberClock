@@ -3,7 +3,7 @@
 #include <generated/csr.h>
 #include <generated/soc.h>
 #include <libliteeth/udp.h>
-#include "../../console.h"
+#include "../../../console.h"
 #include "uberclock/uberclock_runtime.h"
 #include "uberclock/uberclock_hw.h"
 #include "uberclock/uberclock_parse.h"
