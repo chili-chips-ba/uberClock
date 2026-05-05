@@ -52,7 +52,7 @@ This script:
 ---
 
 Available Analysis Tools
------------------------
+------------------------
 
 The repository provides several helper scripts:
 
