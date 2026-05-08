@@ -138,6 +138,8 @@ We are grateful to NLnet Foundation for their sponsorship of this development ac
    <img width="115" alt="NGI-Entrust-Logo" src="https://github.com/chili-chips-ba/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522">
 </p>
 
+This project was funded through the NGI0 Core Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101092990.
+
 ### Public posts:
 - [2025-05-25](https://www.linkedin.com/posts/chili-chips_adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
 - [2025-02-10](https://www.linkedin.com/posts/chili-chips_dsp-adc-cordic-activity-7294943218167689216-ZzOs?utm_source=share&utm_medium=member_desktop)
