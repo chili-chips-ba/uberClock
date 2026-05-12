@@ -149,7 +149,7 @@ trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388412.578Hz
 ```
 
 
- Using the lowspeed debug signal capture we can look at the three tones in three channels, shown in the pictures below. We observe that the algorithm will try and stay near the interpolated vertex with the central 1kHz tone.  
+ Using the [lowspeed debug signal capture](https://chili-chips-ba.github.io/uberClock/examples/capture_low_speed.html) we can look at the three tones in three channels, shown in the pictures below. We observe that [the algorithm](https://chili-chips-ba.github.io/uberClock/examples/capture_low_speed.html) will try and stay near the interpolated vertex with the central 1kHz tone.  
 
  
 <img width="1295" height="555" alt="image" src="https://github.com/user-attachments/assets/82087cb3-5908-431e-bf4a-6906a9e5142a" />
@@ -157,7 +157,7 @@ trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388412.578Hz
 <img width="1295" height="555" alt="image" src="https://github.com/user-attachments/assets/994bdcf5-0955-47ed-9a82-b9ecc0bc589a" />
 
 
-All three modes (9 tones) can be seen coming out of the XTAL into the FPGA board with high-speed debug capture.
+All three modes (9 tones) can be seen coming out of the XTAL into the FPGA board with [high-speed debug capture](https://chili-chips-ba.github.io/uberClock/examples/capture_high_speed_ddr3.html).
 
 <img width="1139" height="1023" alt="image" src="https://github.com/user-attachments/assets/3cdd1d4f-3b93-4424-8c77-231ab8801f41" />
 
