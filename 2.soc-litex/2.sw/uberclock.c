@@ -2244,7 +2244,10 @@ struct __attribute__((packed)) ubd3_hdr {
 #define UBD3_PAYLOAD_MAX 1400u
 
 /* Call udp_service() once every N packets (power-of-two recommended) */
-#define UBD3_SERVICE_EVERY 64u
+#define UBD3_SERVICE_EVERY 1u
+
+/* Small pacing delay to reduce host-side RX overruns on long bursts. */
+#define UBD3_PACE_WAIT_MS 1u
 
 /* 0 disables progress completely */
 #define UBD3_PROGRESS_EVERY 0u
@@ -2353,6 +2356,8 @@ static void cmd_ub_send(char *args) {
 
         memcpy(tx + hdr_sz, (const void*)(p + sent), chunk);
         (void)udp_send(src_port, dst_port, (unsigned)(hdr_sz + chunk));
+        if (UBD3_PACE_WAIT_MS)
+            busy_wait(UBD3_PACE_WAIT_MS);
 
         sent += chunk;
         seq++;
