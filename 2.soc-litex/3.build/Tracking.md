@@ -6,7 +6,7 @@ It positions the CPU genarated tones and the CORDIC mixer frequencies near the r
 
 ## C300 Mode
 
-From our [lab data]() this tone is expected to be found in frequency range: 10.003840 to 10.004000 MHz. 
+From our lab data this tone is expected to be found in frequency range: 10.003840 to 10.004000 MHz. 
 Using the serial console inteface of the algorithm: `track3 <ch> <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]`
 We try and find this tone in few iterations. 
 
@@ -50,7 +50,7 @@ track3 lock: phase_down_1=10002953 Hz inc=10327489 center=1000 left=990 right=10
 
 From our lab data this tone is expected to be found in frequency range: 6.261641 to 6.271641 MHz.
 
-Three iterations for this mode:
+Iteration for this mode:
 
 ```
 uberClock> track3 2 6261000 1000 10 2048 1000 100
@@ -66,28 +66,6 @@ track3 step=7 phase_down_2=6268000 Hz inc=6471359 bins={184,205,225} pwr={77,95,
 track3 step=8 phase_down_2=6269000 Hz inc=6472391 bins={184,205,225} pwr={96,69,121}
 track3 step=9 phase_down_2=6270000 Hz inc=6473424 bins={184,205,225} pwr={105,130,67}
 track3 lock: phase_down_2=6270000 Hz inc=6473424 center=1000 left=900 right=1100
-
-
-uberClock> track3 2 6269000 100 20 2048 1000 50
-track3: ch=2 start=6269000 Hz step=100 Hz max_steps=20 N=2048 center=1000 Hz delta=50 Hz Fs=10000 Hz sig3={950,1000,1050} Hz
-track3 step=0 phase_down_2=6269000 Hz inc=6472391 bins={195,205,215} pwr={0,114,0}
-track3 step=1 phase_down_2=6269100 Hz inc=6472495 bins={195,205,215} pwr={0,103,0}
-track3 step=2 phase_down_2=6269200 Hz inc=6472598 bins={195,205,215} pwr={0,110,0}
-track3 step=3 phase_down_2=6269300 Hz inc=6472701 bins={195,205,215} pwr={0,105,0}
-track3 step=4 phase_down_2=6269400 Hz inc=6472804 bins={195,205,215} pwr={0,91,0}
-track3 step=5 phase_down_2=6269500 Hz inc=6472908 bins={195,205,215} pwr={0,121,0}
-track3 step=6 phase_down_2=6269600 Hz inc=6473011 bins={195,205,215} pwr={0,121,0}
-track3 step=7 phase_down_2=6269700 Hz inc=6473114 bins={195,205,215} pwr={72,68,98}
-track3 step=8 phase_down_2=6269800 Hz inc=6473217 bins={195,205,215} pwr={76,102,81}
-track3 lock: phase_down_2=6269800 Hz inc=6473217 center=1000 left=950 right=1050
-
-
-uberClock> track3 2 6269700 20 10 2048 1000 50
-track3: ch=2 start=6269700 Hz step=20 Hz max_steps=10 N=2048 center=1000 Hz delta=50 Hz Fs=10000 Hz sig3={950,1000,1050} Hz
-track3 step=0 phase_down_2=6269700 Hz inc=6473114 bins={195,205,215} pwr={393,474,613}
-track3 step=1 phase_down_2=6269720 Hz inc=6473135 bins={195,205,215} pwr={331,513,669}
-track3 step=2 phase_down_2=6269740 Hz inc=6473155 bins={195,205,215} pwr={455,738,604}
-track3 lock: phase_down_2=6269740 Hz inc=6473155 center=1000 left=950 right=1050
 
 
 ```
@@ -117,91 +95,71 @@ Leaning on the found tones and the CLI interface: `trackq_start <f1> <f2> <f3> [
 we start the tracking and print out the state every 5 seconds. All frequnecies are rough estimations of the current mixer frequnecy value + the 1kHz offset that is chosen as the point of the vertex.
 
 ```
-uberClock> trackq_start 10002953 6269740 3387460 2048 1000 10 50 20
-trackq_start: ch1=10002953 Hz ch2=6269739 Hz ch3=3387459 Hz N=2048 center=1000 Hz delta={10,50,20} Hz sig3={{990,1000,1010},{950,1000,1050},{980,1000,1020}} Hz interval=2 s
-uberClock> trackq hf vertex: ch1=10003952.591Hz ch2=6270734.353Hz ch3=3388454.227Hz
-trackq hf vertex: ch1=10003951.622Hz ch2=6270729.510Hz ch3=3388448.415Hz
-trackq hf vertex: ch1=10003950.653Hz ch2=6270729.510Hz ch3=3388445.509Hz
-trackq hf vertex: ch1=10003949.685Hz ch2=6270729.510Hz ch3=3388444.541Hz
-trackq hf vertex: ch1=10003949.185Hz ch2=6270729.510Hz ch3=3388443.572Hz
-trackq hf vertex: ch1=10003948.511Hz ch2=6270730.479Hz ch3=3388442.604Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388441.635Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388440.667Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388440.667Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388439.698Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388438.729Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388437.761Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388436.792Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388435.824Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388434.855Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388434.855Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388433.887Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388432.918Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388431.949Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388430.981Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388430.981Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388426.138Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388420.326Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388415.484Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388413.546Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388413.546Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388413.546Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388412.578Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388411.609Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388410.641Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388410.641Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388410.641Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388410.641Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388405.899Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388409.672Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388404.610Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388406.766Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388406.766Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388401.817Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388404.829Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270730.479Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
-trackq hf vertex: ch1=10003948.716Hz ch2=6270729.510Hz ch3=3388403.861Hz
+uberClock> trackq_start 10002953 6270000 3387460 2048 1000 10 100 20
+trackq_start: ch1=10002953 Hz ch2=6270000 Hz ch3=3387459 Hz N=2048 center=1000 Hz delta={10,100,20} Hz sig3={{990,1000,1010},{900,1000,1100},{980,1000,1020}} Hz interval=2 s
+trackq hf vertex: ch1=10003952.591Hz ch2=6270999.743Hz ch3=3388454.227Hz
+trackq hf vertex: ch1=10003952.591Hz ch2=6270989.468Hz ch3=3388449.384Hz
+trackq hf vertex: ch1=10003952.591Hz ch2=6270977.848Hz ch3=3388445.509Hz
+trackq hf vertex: ch1=10003951.622Hz ch2=6270966.016Hz ch3=3388444.541Hz
+trackq hf vertex: ch1=10003950.059Hz ch2=6270960.719Hz ch3=3388443.572Hz
+trackq hf vertex: ch1=10003949.441Hz ch2=6270955.188Hz ch3=3388442.604Hz
+trackq hf vertex: ch1=10003949.540Hz ch2=6270953.199Hz ch3=3388441.635Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270951.865Hz ch3=3388441.635Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270945.502Hz ch3=3388437.761Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270945.502Hz ch3=3388436.792Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270945.502Hz ch3=3388436.792Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270941.062Hz ch3=3388435.824Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270935.811Hz ch3=3388434.855Hz
+
+
+...after some time...
+
+trackq hf vertex: ch1=10003949.685Hz ch2=6270890.293Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270885.451Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270889.236Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388414.515Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270883.513Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270880.839Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270877.096Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270871.984Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270871.891Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270870.922Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270869.953Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270869.953Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388413.546Hz
+trackq hf vertex: ch1=10003949.685Hz ch2=6270868.985Hz ch3=3388412.578Hz
 ```
+
+
+ Using the lowspeed debug signal capture we can look at the three tones in three channels, shown in the pictures below. We observe that the algorithm will try and stay near the interpolated vertex with the central 1kHz tone.  
+
+ 
+<img width="1295" height="555" alt="image" src="https://github.com/user-attachments/assets/82087cb3-5908-431e-bf4a-6906a9e5142a" />
+<img width="1295" height="555" alt="image" src="https://github.com/user-attachments/assets/40db3eaf-0d2a-4aa4-aaa0-b3759c2dc776" />
+<img width="1295" height="555" alt="image" src="https://github.com/user-attachments/assets/994bdcf5-0955-47ed-9a82-b9ecc0bc589a" />
+
+
+All three modes (9 tones) can be seen coming out of the XTAL into the FPGA board with high-speed debug capture.
+
+<img width="1139" height="1023" alt="image" src="https://github.com/user-attachments/assets/3cdd1d4f-3b93-4424-8c77-231ab8801f41" />
+
+
  
