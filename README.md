@@ -1,8 +1,6 @@
 <!--
-//SPDX-FileCopyrightText:2026
-Ahmed Imamović Tarik Hamedović
-SPDX-License-Identifier
-CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2026 Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
 [![NLnet Foundation](https://img.shields.io/badge/funded%20by-NLnet%20Foundation-74AA00)](https://nlnet.nl/)
@@ -136,15 +134,19 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 --------------------
 
-### Acknowledgements
+# License
+
+This repository is licensed under the Creative Commons Attribution-ShareAlike 4.0 International license. See [LICENSE](LICENSE) for the full license text.
+
+
+--------------------
+
+Acknowledgements
 We are grateful to NLnet Foundation for their sponsorship of this development activity.
 
-<p align="center">
-   <img src="https://github.com/openeye/assets/67533663/18e7db5c-8c52-406b-a58e-8860caa327c2">
-   <img width="115" alt="NGI-Entrust-Logo" src="https://github.com/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522">
-</p>
+       
 
-This project was funded through the NGI0 Core Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101092990.
+This project was funded through the NGI0 Commons Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101135429. Additional funding is made available by the Swiss State Secretariat for Education, Research and Innovation (SERI).
 
 ### Public posts:
 - [2025-05-25](https://www.linkedin.com/posts/adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
@@ -153,4 +155,3 @@ This project was funded through the NGI0 Core Fund, a fund established by NLnet 
 
 --------------------
 #### End of Document
-
