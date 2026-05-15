@@ -141,12 +141,15 @@ This repository is licensed under the Creative Commons Attribution-ShareAlike 4.
 
 --------------------
 
-Acknowledgements
-We are grateful to NLnet Foundation for their sponsorship of this development activity.
+## Acknowledgements
+We are grateful to **NLnet Foundation** for their sponsorship of this development activity.
 
-       
+<p align="center">
+   <img width="25%" src="https://nlnet.nl/logo/banner.svg">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <img width="25%" src="https://nlnet.nl/image/logos/NGI0Core_tag.svg">
+</p>
 
-This project was funded through the NGI0 Commons Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101135429. Additional funding is made available by the Swiss State Secretariat for Education, Research and Innovation (SERI).
+This project was funded through the NGI0 Commons Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement N<sup>o</sup> 101135429. Additional funding is made available by the Swiss State Secretariat for Education, Research and Innovation (SERI).
 
 ### Public posts:
 - [2025-05-25](https://www.linkedin.com/posts/adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
