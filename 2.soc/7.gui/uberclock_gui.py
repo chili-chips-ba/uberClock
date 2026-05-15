@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# SPDX-FilecopyrightText:2026
+# Ahmed Imamović Tarik Hamedović
+# SPDX-License-Identifier:
+# APGL-3.0-or-later
 
 import sys
 import os
@@ -25,7 +29,7 @@ import serial.tools.list_ports
 # ----------------------------
 # Config
 # ----------------------------
-DEFAULT_BIN_DIR = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock/2.soc/2.sw"
+DEFAULT_BIN_DIR = "/home/hamed/FPGA//uberclock-hub/uberClock/2.soc/2.sw"
 
 BAUD_NOTE = "litex_term handles baud; GUI uses litex_term exactly like make term."
 

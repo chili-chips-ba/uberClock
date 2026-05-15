@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Ahmed Imamović
+//SPDX-FileCopyrightText:2026
+//Tarik Hamedović
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
+
 `timescale 1ns / 1ps
 //`default_nettype none
 module cordic_dsp_dac#(

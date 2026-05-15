@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 Miniac Overview
 ===============
 
@@ -55,7 +62,7 @@ Direct Snooping Method
 ----------------------
 
 The direct method uses
-`PlotDataADC.py <https://github.com/chili-chips-ba/uberClock/blob/main/4.miniac/5.test/PlotDataADC.py>`_.
+`PlotDataADC.py <https://github.com/uberClock/blob/main/4.miniac/5.test/PlotDataADC.py>`_.
 It polls ADC samples continuously over UART, estimates the actual sampling
 frequency, and plots both the time-domain signal and FFT.
 
@@ -86,7 +93,7 @@ Indirect Snooping Method
 ------------------------
 
 The indirect method uses
-`CPUSnooping.py <https://github.com/chili-chips-ba/uberClock/blob/main/4.miniac/5.test/CPUSnooping.py>`_.
+`CPUSnooping.py <https://github.com/uberClock/blob/main/4.miniac/5.test/CPUSnooping.py>`_.
 This script reads buffered blocks of 1024 pre-sampled values from the FPGA over
 UART, extracts the ADC samples, reconstructs the waveform, and performs FFT
 analysis.

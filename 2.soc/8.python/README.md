@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 # 8.python
 
 Python packaging and documentation layer for the UberClock LiteX SoC.

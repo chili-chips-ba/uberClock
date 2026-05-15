@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 uberclock_soc
 =============
 

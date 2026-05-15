@@ -62,7 +62,7 @@ RUN git config --global http.postBuffer 1048576000 && \
     git config --global core.compression 0 && \
     git config --global http.lowSpeedLimit 0 && \
     git config --global http.lowSpeedTime 999 && \
-    git clone https://github.com/chili-chips-ba/uberClock.git ${REPOSITORY_DIR} && \
+    git clone https://github.com/uberClock.git ${REPOSITORY_DIR} && \
     cp -r ${REPOSITORY_DIR}/2.soc/6.migen/* ${LITEX_PATH}/litex-boards/litex_boards/
 
 # ──────────────────────────────────────────────────────────────────────────

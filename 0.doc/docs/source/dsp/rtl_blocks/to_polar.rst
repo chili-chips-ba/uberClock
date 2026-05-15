@@ -1,5 +1,9 @@
-.. SPDX-FileCopyrightText: 2026 Ahmed Imamovic Tarik Hamedovic
-.. SPDX-License-Identifier: CC-BY-SA-4.0
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
 
 Polar Conversion
 ================

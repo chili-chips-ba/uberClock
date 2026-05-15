@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 # Installation Guide
 
 Follow these steps to get a clean Python environment and install LiteX (with Migen, LiteDRAM, LiteSPI, etc.) on Linux or WSL.

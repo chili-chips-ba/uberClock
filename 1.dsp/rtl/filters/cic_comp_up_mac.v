@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Ahmed Imamović
+//SPDX-FileCopyrightText:2026
+//Tarik Hamedović
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
+
 module cic_comp_up_mac #(
   parameter DW              = 16,                  // input/output data width
   parameter CW              = 19,                  // coefficient width

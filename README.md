@@ -1,7 +1,13 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
 
 [![NLnet Foundation](https://img.shields.io/badge/funded%20by-NLnet%20Foundation-74AA00)](https://nlnet.nl/)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://chili-chips-ba.github.io/uberClock)
-[![GitHub stars](https://img.shields.io/github/stars/chili-chips-ba/uberClock?style=social)](https://github.com/chili-chips-ba/uberClock/stargazers)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://.github.io/uberClock)
+[![GitHub stars](https://img.shields.io/github/stars/uberClock?style=social)](https://github.com/uberClock/stargazers)
 
 ---
 Clocks can be extracted from GPS satellite signals, or locally generated with MEMS oscillators, SAW resonators, quartz crystal (XTAL, XO) or piezo resonators, often set in “ovens” (TCXO, OCXO), derived from atomic properties (like Cesium Beam, Hydrogen Maser, Rubidium, Strontium or Ytterbium), or obtained in another way.
@@ -134,15 +140,15 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 We are grateful to NLnet Foundation for their sponsorship of this development activity.
 
 <p align="center">
-   <img src="https://github.com/chili-chips-ba/openeye/assets/67533663/18e7db5c-8c52-406b-a58e-8860caa327c2">
-   <img width="115" alt="NGI-Entrust-Logo" src="https://github.com/chili-chips-ba/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522">
+   <img src="https://github.com/openeye/assets/67533663/18e7db5c-8c52-406b-a58e-8860caa327c2">
+   <img width="115" alt="NGI-Entrust-Logo" src="https://github.com/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522">
 </p>
 
 This project was funded through the NGI0 Core Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No 101092990.
 
 ### Public posts:
-- [2025-05-25](https://www.linkedin.com/posts/chili-chips_adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
-- [2025-02-10](https://www.linkedin.com/posts/chili-chips_dsp-adc-cordic-activity-7294943218167689216-ZzOs?utm_source=share&utm_medium=member_desktop)
+- [2025-05-25](https://www.linkedin.com/posts/adc-dac-riscv-activity-7332575086975078400-41q6/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAAJv-TcBSi_5ff0VNMrInrT-xg44YF3jnyU)
+- [2025-02-10](https://www.linkedin.com/posts/dsp-adc-cordic-activity-7294943218167689216-ZzOs?utm_source=share&utm_medium=member_desktop)
 
 
 --------------------

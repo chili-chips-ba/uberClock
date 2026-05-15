@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+# SPDX-FilecopyrightText:2026
+# Ahmed Imamović Tarik Hamedović
+# SPDX-License-Identifier:
+# APGL-3.0-or-later
 
 # -----------------------------------------------------------------------------
 # AX7203 + LiteX SoC for UberClock + UberDDR3:
@@ -51,7 +55,7 @@ import math
 # --- set your repo paths ---
 #   repository_dir:  root of your uberClock repo
 #   verilog_dir:     directory that contains the Verilog sources used below
-repository_dir = "/home/hamed/FPGA/chili-chips/uberclock-hub/uberClock"
+repository_dir = "/home/hamed/FPGA//uberclock-hub/uberClock"
 verilog_dir    = repository_dir
 
 # =============================================================================

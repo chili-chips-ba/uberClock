@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 https://opentitan.org/book/doc/contributing/style_guides/c_cpp_coding_style.html
 
 ----

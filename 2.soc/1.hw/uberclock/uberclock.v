@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Ahmed Imamović
+//SPDX-FileCopyrightText:2026
+//Tarik Hamedović
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
+
 `timescale 1ns / 1ps
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width

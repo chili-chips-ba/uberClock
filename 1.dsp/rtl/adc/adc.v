@@ -1,5 +1,9 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamovic Tarik Hamedovic
-// SPDX-License-Identifier: CC-BY-SA-4.0
+//SPDX-FileCopyrightText:2026
+//Ahmed Imamović
+//SPDX-FileCopyrightText:2026
+//Tarik Hamedović
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
 
 `timescale 1ns/1ps
 `default_nettype none

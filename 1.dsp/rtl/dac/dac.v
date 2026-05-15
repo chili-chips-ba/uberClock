@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Ahmed Imamović
+//SPDX-FileCopyrightText:2026
+//Tarik Hamedović
+//SPDX-License-Identifier:
+//CERN-3.0-or-laters
+
 // ============================================================================
 //  dac.v
 //

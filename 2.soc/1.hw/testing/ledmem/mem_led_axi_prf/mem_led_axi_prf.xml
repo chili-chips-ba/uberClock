@@ -1,3 +1,10 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
 <testsuite timestamp="2025-05-12T00:19:10" hostname="archlinux" package="mem_led_axi" id="0" name="prf" tests="36" errors="0" failures="0" time="1" skipped="4">

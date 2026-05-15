@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Alice
+//SPDX-FileCopyrightText:2026
+//Bob
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Filename:	bench/formal/faxil_slave.v

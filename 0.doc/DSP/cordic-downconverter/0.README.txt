@@ -1,2 +1,9 @@
+<!--
+//SPDX-FileCopyrightText:2026
+Ahmed Imamović Tarik Hamedović
+SPDX-License-Identifier
+CC-BY-SA-4.0
+-->
+
 https://www.youtube.com/watch?v=Xp_tyh2d_Gc
 https://www.youtube.com/watch?v=sAAQvBdCUSQ

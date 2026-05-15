@@ -1,3 +1,10 @@
+//SPDX-FileCopyrightText:2026
+//Alice
+//SPDX-FileCopyrightText:2026
+//Bob
+//SPDX-License-Identifier:
+//CERN-3.0-or-later
+
 `default_nettype none
 module mem_led_axi #(
     // Widths: AXI-Lite is fixed at 32 bits, four config words

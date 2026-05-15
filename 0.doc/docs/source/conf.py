@@ -1,3 +1,8 @@
+# SPDX-FilecopyrightText:2026
+# Ahmed Imamović Tarik Hamedović
+# SPDX-License-Identifier:
+# APGL-3.0-or-later
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -12,7 +17,7 @@ PYTHON_SOC_SRC = REPO_ROOT / "2.soc" / "8.python" / "src"
 sys.path.insert(0, str(PYTHON_SOC_SRC))
 
 project = 'uberClock'
-copyright = '2026, Chili-chips'
+copyright = '2026, '
 author = 'Ahmed Imamovic Tarik Hamedovic'
 release = '0.0.1'
 
