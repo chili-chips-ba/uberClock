@@ -6,11 +6,11 @@
 *.bkp
 *.log
 *.jou
-*.idea
 *temp*
 *xOLD*
 *output*
 
+.idea/
 .vscode/
 
 # =========================
