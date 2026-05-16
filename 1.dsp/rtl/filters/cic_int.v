@@ -1,9 +1,6 @@
-//SPDX-FileCopyrightText:2026
-//Ahmed Imamović
-//SPDX-FileCopyrightText:2026
-//Tarik Hamedović
-//SPDX-License-Identifier:
-//CERN-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 // Language: Verilog 2001
 //`timescale 1ns / 1ps

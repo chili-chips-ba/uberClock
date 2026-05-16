@@ -1,12 +1,14 @@
-//SPDX-FilecopyrightText:2026
-//Ahmed Imamović Tarik Hamedović
-//SPDX-License-Identifier:
-//APGL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <stdio.h>
+#include <string.h>
 #include "uberclock/uberclock_runtime.h"
 #include "uberclock/uberclock_fifo.h"
 #include "uberclock/uberclock_siggen.h"
+
+#define SIGGEN_TONES 3u
 
 static const int16_t sine_q64[64] = {
     0, 804, 1608, 2410, 3212, 4011, 4808, 5602,
@@ -45,63 +47,198 @@ static int16_t clamp_to_s16(int32_t value) {
     return (int16_t)value;
 }
 
+static void siggen_update_increments(void) {
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+    unsigned channel_index;
+    unsigned tone_index;
+
+    for (channel_index = 0u; channel_index < UBERCLOCK_CHANNEL_COUNT; ++channel_index) {
+        for (tone_index = 0u; tone_index < SIGGEN_TONES; ++tone_index) {
+            siggen->increment[channel_index][tone_index] =
+                siggen_phase_increment(siggen->frequency_hz[channel_index][tone_index], 10000u);
+        }
+    }
+}
+
 void uberclock_siggen_start(void) {
     struct uberclock_siggen_state *siggen = uberclock_siggen_state();
 
-    siggen->phase_left = 0u;
-    siggen->phase_1000 = 0u;
-    siggen->phase_right = 0u;
-    siggen->increment_left = siggen_phase_increment(970u, 10000u);
-    siggen->increment_1000 = siggen_phase_increment(1000u, 10000u);
-    siggen->increment_right = siggen_phase_increment(1030u, 10000u);
+    memset(siggen->phase, 0, sizeof(siggen->phase));
+    siggen_update_increments();
+    siggen->channel_enabled[0] = 1u;
+    siggen->channel_enabled[1] = 1u;
+    siggen->channel_enabled[2] = 1u;
+    siggen->channel_enabled[3] = 0u;
+    siggen->channel_enabled[4] = 0u;
     siggen->enabled = 1;
 
-    puts("3-tone software generator enabled");
+    puts("sig3 enabled on ch1..ch3");
 }
 
 void uberclock_siggen_stop(void) {
-    uberclock_siggen_state()->enabled = 0;
-    puts("3-tone software generator disabled");
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+    struct uberclock_iq_frame frame = {0};
+    unsigned channel_index;
+    unsigned limit = 100000u;
+
+    for (channel_index = 0u; channel_index < UBERCLOCK_CHANNEL_COUNT; ++channel_index) {
+        siggen->channel_enabled[channel_index] = 0u;
+    }
+
+    while (limit-- > 0u) {
+        if (uberclock_ups_fifo_push_frame(&frame)) {
+            break;
+        }
+    }
+
+    siggen->enabled = 0;
+    puts("5-channel 3-tone software generator disabled");
 }
 
-int uberclock_siggen_step(int16_t *sample_x, int16_t *sample_y) {
+int uberclock_siggen_step_frame(struct uberclock_iq_frame *frame) {
     struct uberclock_siggen_state *siggen = uberclock_siggen_state();
-    int32_t tone0;
-    int32_t tone1;
-    int32_t tone2;
+    unsigned channel_index;
+    unsigned tone_index;
 
     if (!siggen->enabled) {
         return 0;
     }
 
-    siggen->phase_left += siggen->increment_left;
-    siggen->phase_1000 += siggen->increment_1000;
-    siggen->phase_right += siggen->increment_right;
+    for (channel_index = 0u; channel_index < UBERCLOCK_CHANNEL_COUNT; ++channel_index) {
+        int32_t accumulator = 0;
 
-    tone0 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_left)) / 32767;
-    tone1 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_1000)) / 32767;
-    tone2 = ((int32_t)siggen->amplitude * (int32_t)sine_lookup(siggen->phase_right)) / 32767;
+        if (!siggen->channel_enabled[channel_index]) {
+            frame->x[channel_index] = 0;
+            frame->y[channel_index] = 0;
+            continue;
+        }
 
-    *sample_x = clamp_to_s16(tone0 + tone1 + tone2);
-    *sample_y = 0;
+        for (tone_index = 0u; tone_index < SIGGEN_TONES; ++tone_index) {
+            siggen->phase[channel_index][tone_index] += siggen->increment[channel_index][tone_index];
+            accumulator += ((int32_t)siggen->amplitude[channel_index] *
+                            (int32_t)sine_lookup(siggen->phase[channel_index][tone_index])) /
+                           32767;
+        }
+
+        frame->x[channel_index] = clamp_to_s16(accumulator);
+        frame->y[channel_index] = 0;
+    }
+
+    return 1;
+}
+
+int uberclock_siggen_step(int16_t *sample_x, int16_t *sample_y) {
+    struct uberclock_iq_frame frame;
+
+    if (!uberclock_siggen_step_frame(&frame)) {
+        return 0;
+    }
+
+    *sample_x = frame.x[0];
+    *sample_y = frame.y[0];
     return 1;
 }
 
 void uberclock_siggen_service_push(void) {
-    int16_t sample_x;
-    int16_t sample_y;
+    struct uberclock_iq_frame frame;
 
-    if (!uberclock_siggen_step(&sample_x, &sample_y)) {
+    if (!uberclock_siggen_step_frame(&frame)) {
         return;
     }
 
-    (void)uberclock_ups_fifo_push(sample_x, sample_y);
+    (void)uberclock_ups_fifo_push_frame(&frame);
 }
 
-void uberclock_siggen_set_amplitude(int16_t amplitude) {
-    uberclock_siggen_state()->amplitude = amplitude;
+void uberclock_siggen_set_amplitude_all(int16_t amplitude) {
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+    unsigned channel_index;
+
+    for (channel_index = 0u; channel_index < UBERCLOCK_CHANNEL_COUNT; ++channel_index) {
+        siggen->amplitude[channel_index] = amplitude;
+    }
 }
 
-int16_t uberclock_siggen_amplitude(void) {
-    return uberclock_siggen_state()->amplitude;
+void uberclock_siggen_set_channel_amplitude(unsigned channel_index, int16_t amplitude) {
+    if (channel_index < UBERCLOCK_CHANNEL_COUNT) {
+        uberclock_siggen_state()->amplitude[channel_index] = amplitude;
+    }
+}
+
+int16_t uberclock_siggen_channel_amplitude(unsigned channel_index) {
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT) {
+        return 0;
+    }
+    return uberclock_siggen_state()->amplitude[channel_index];
+}
+
+void uberclock_siggen_set_channel_frequencies(unsigned channel_index,
+                                              uint32_t f1_hz,
+                                              uint32_t f2_hz,
+                                              uint32_t f3_hz) {
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT) {
+        return;
+    }
+
+    siggen->frequency_hz[channel_index][0] = f1_hz;
+    siggen->frequency_hz[channel_index][1] = f2_hz;
+    siggen->frequency_hz[channel_index][2] = f3_hz;
+    siggen_update_increments();
+}
+
+void uberclock_siggen_set_channel_symmetric(unsigned channel_index, uint32_t center_hz, uint32_t delta_hz) {
+    if (center_hz <= delta_hz) {
+        return;
+    }
+
+    uberclock_siggen_set_channel_frequencies(channel_index, center_hz - delta_hz, center_hz, center_hz + delta_hz);
+}
+
+void uberclock_siggen_enable_channel(unsigned channel_index) {
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT) {
+        return;
+    }
+
+    siggen->enabled = 1;
+    siggen->channel_enabled[channel_index] = 1u;
+}
+
+void uberclock_siggen_disable_channel(unsigned channel_index) {
+    struct uberclock_siggen_state *siggen = uberclock_siggen_state();
+
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT) {
+        return;
+    }
+
+    siggen->channel_enabled[channel_index] = 0u;
+}
+
+int uberclock_siggen_channel_enabled(unsigned channel_index) {
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT) {
+        return 0;
+    }
+    return uberclock_siggen_state()->channel_enabled[channel_index] != 0u;
+}
+
+uint32_t uberclock_siggen_channel_frequency(unsigned channel_index, unsigned tone_index) {
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT || tone_index >= SIGGEN_TONES) {
+        return 0u;
+    }
+    return uberclock_siggen_state()->frequency_hz[channel_index][tone_index];
+}
+
+uint32_t uberclock_siggen_channel_increment(unsigned channel_index, unsigned tone_index) {
+    if (channel_index >= UBERCLOCK_CHANNEL_COUNT || tone_index >= SIGGEN_TONES) {
+        return 0u;
+    }
+    return uberclock_siggen_state()->increment[channel_index][tone_index];
+}
+
+int64_t uberclock_siggen_increment_to_mhz(uint32_t phase_increment, uint32_t sample_rate_hz) {
+    return (int64_t)((((uint64_t)phase_increment * (uint64_t)sample_rate_hz * 1000ull) +
+                      (1ull << 31)) >>
+                     32);
 }

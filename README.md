@@ -1,5 +1,7 @@
 <!--
-SPDX-FileCopyrightText: 2026 Ahmed Imamović Tarik Hamedović
+SPDX-FileCopyrightText: 2026 Ahmed Imamović
+SPDX-FileCopyrightText: 2026 Tarik Hamedović
+SPDX-FileCopyrightText: 2026 Chili.CHIPS
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
@@ -136,7 +138,7 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 # License
 
-This repository is licensed under the Creative Commons Attribution-ShareAlike 4.0 International license. See [LICENSE](LICENSE) for the full license text.
+This repository uses multiple licenses. Text and documentation are licensed under CC-BY-SA-4.0. LiteX integration code is licensed under BSD-2-Clause. Other original code is licensed under GPL-3.0-or-later. Existing third-party or separately licensed files keep their own licenses, including BSD-3-Clause, Apache-2.0 for ZipCPU/WB2AXIP code, and ISC for PicoRV32. See [LICENSE](LICENSE) for the full license texts.
 
 
 --------------------

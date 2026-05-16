@@ -1,7 +1,6 @@
-//SPDX-FilecopyrightText:2026
-//Ahmed Imamović Tarik Hamedović
-//SPDX-License-Identifier:
-//APGL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 // The donut code with fixed-point arithmetic; no sines, cosines, square roots, or anything.
 // a1k0n 2020

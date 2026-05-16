@@ -1,9 +1,6 @@
-//SPDX-FileCopyrightText:2026
-//Ahmed Imamović
-//SPDX-FileCopyrightText:2026
-//Tarik Hamedović
-//SPDX-License-Identifier:
-//CERN-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 // Encapsulates phase accumulator, CORDIC pipeline, and scaling (no mux)
 `timescale 1 ns / 1 ns

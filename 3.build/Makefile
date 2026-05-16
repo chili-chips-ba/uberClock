@@ -1,7 +1,6 @@
-# SPDX-FilecopyrightText:2026
-# Ahmed Imamović Tarik Hamedović
-# SPDX-License-Identifier:
-# APGL-3.0-or-later
+# SPDX-FileCopyrightText: 2026 Ahmed Imamović
+# SPDX-FileCopyrightText: 2026 Tarik Hamedović
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 SHELL := /bin/bash
 
@@ -79,7 +78,7 @@ build-board:
 	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
 	$(PYTHON) -m $(SOC_MODULE) \
 	  --build \
-	  --toolchain=openxc7 \
+	  --toolchain=vivado \
 	  --sys-clk-freq=$(FREQ) \
 	  $(OPTIONS)
 # ----------------------------

@@ -1,7 +1,6 @@
-//SPDX-FilecopyrightText:2026
-//Ahmed Imamović Tarik Hamedović
-//SPDX-License-Identifier:
-//APGL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -464,19 +463,28 @@ static void command_fft32_ds_y(char *args) {
 }
 
 static void command_track3(char *args) {
-    char *start_text = strtok(args, " \t");
+    char *channel_text = strtok(args, " \t");
+    char *start_text = strtok(NULL, " \t");
     char *step_text = strtok(NULL, " \t");
     char *steps_text = strtok(NULL, " \t");
     char *n_text = strtok(NULL, " \t");
     char *center_text = strtok(NULL, " \t");
     char *delta_text = strtok(NULL, " \t");
+    unsigned channel;
 
-    if (!start_text) {
-        puts("Usage: track3 <start_phase_down_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
+    if (!channel_text || !start_text) {
+        puts("Usage: track3 <ch:1..5> <start_phase_down_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
+        return;
+    }
+
+    channel = (unsigned)strtoul(channel_text, NULL, 0);
+    if (channel < 1u || channel > UBERCLOCK_CHANNEL_COUNT) {
+        puts("track3 channel must be 1..5");
         return;
     }
 
     (void)uberclock_track3_run((uint32_t)strtoul(start_text, NULL, 0),
+                               channel - 1u,
                                step_text ? (uint32_t)strtoul(step_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_STEP_HZ,
                                steps_text ? (unsigned)strtoul(steps_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_MAX_STEPS,
                                n_text ? (unsigned)strtoul(n_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_N,
@@ -485,12 +493,22 @@ static void command_track3(char *args) {
 }
 
 static void command_trackq_start(char *args) {
-    char *n_text = strtok(args, " \t");
+    char *f1_text = strtok(args, " \t");
+    char *f2_text = strtok(NULL, " \t");
+    char *f3_text = strtok(NULL, " \t");
+    char *n_text = strtok(NULL, " \t");
     char *center_text = strtok(NULL, " \t");
-    char *delta_text = strtok(NULL, " \t");
-    (void)uberclock_trackq_start(n_text ? (unsigned)strtoul(n_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_N,
+    char *delta1_text = strtok(NULL, " \t");
+    char *delta2_text = strtok(NULL, " \t");
+    char *delta3_text = strtok(NULL, " \t");
+    (void)uberclock_trackq_start(f1_text ? (uint32_t)strtoul(f1_text, NULL, 0) : 0u,
+                                 f2_text ? (uint32_t)strtoul(f2_text, NULL, 0) : 0u,
+                                 f3_text ? (uint32_t)strtoul(f3_text, NULL, 0) : 0u,
+                                 n_text ? (unsigned)strtoul(n_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_N,
                                  center_text ? (uint32_t)strtoul(center_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_CENTER_HZ,
-                                 delta_text ? (uint32_t)strtoul(delta_text, NULL, 0) : UBERCLOCK_TRACK_DEFAULT_DELTA_HZ);
+                                 delta1_text ? (uint32_t)strtoul(delta1_text, NULL, 0) : UBERCLOCK_TRACK_CH1_DELTA_HZ,
+                                 delta2_text ? (uint32_t)strtoul(delta2_text, NULL, 0) : UBERCLOCK_TRACK_CH2_DELTA_HZ,
+                                 delta3_text ? (uint32_t)strtoul(delta3_text, NULL, 0) : UBERCLOCK_TRACK_CH3_DELTA_HZ);
 }
 
 static void command_trackq_probe(char *args) {
@@ -669,12 +687,116 @@ static void command_sig3_stop(char *args) {
 }
 
 static void command_sig3_amp(char *args) {
-    int amplitude = uberclock_parse_signed(args, 1, 10000, "sig3_amp");
+    char *first_text = strtok(args, " \t");
+    char *second_text = strtok(NULL, " \t");
+    char *extra_text = strtok(NULL, " \t");
+    int amplitude;
+    unsigned channel_index;
+
+    if (!first_text || extra_text) {
+        puts("Usage: sig3_amp <val> | sig3_amp <ch:1..5> <val>");
+        return;
+    }
+
+    if (!second_text) {
+        amplitude = uberclock_parse_signed(first_text, 1, 10000, "sig3_amp");
+        if (amplitude < 1 || amplitude > 10000) {
+            return;
+        }
+        uberclock_siggen_set_amplitude_all((int16_t)amplitude);
+        printf("sig3 amplitude per tone = %d for all channels\n", amplitude);
+        return;
+    }
+
+    channel_index = (unsigned)strtoul(first_text, NULL, 0);
+    if (channel_index < 1u || channel_index > UBERCLOCK_CHANNEL_COUNT) {
+        puts("sig3_amp channel must be 1..5");
+        return;
+    }
+
+    amplitude = uberclock_parse_signed(second_text, 1, 10000, "sig3_amp");
     if (amplitude < 1 || amplitude > 10000) {
         return;
     }
-    uberclock_siggen_set_amplitude((int16_t)amplitude);
-    printf("sig3 amplitude per tone = %d\n", uberclock_siggen_amplitude());
+    uberclock_siggen_set_channel_amplitude(channel_index - 1u, (int16_t)amplitude);
+    printf("sig3 ch%u amplitude per tone = %d\n", channel_index, amplitude);
+}
+
+static void command_sig3_freqs(char *args) {
+    char *channel_text = strtok(args, " \t");
+    char *f1_text = strtok(NULL, " \t");
+    char *f2_text = strtok(NULL, " \t");
+    char *f3_text = strtok(NULL, " \t");
+    unsigned channel_index;
+    uint32_t f1_hz;
+    uint32_t f2_hz;
+    uint32_t f3_hz;
+
+    if (!channel_text || !f1_text || !f2_text || !f3_text) {
+        puts("Usage: sig3_freqs <ch:1..5> <f1_hz> <f2_hz> <f3_hz>");
+        return;
+    }
+
+    channel_index = (unsigned)strtoul(channel_text, NULL, 0);
+    if (channel_index < 1u || channel_index > UBERCLOCK_CHANNEL_COUNT) {
+        puts("sig3_freqs channel must be 1..5");
+        return;
+    }
+
+    f1_hz = (uint32_t)strtoul(f1_text, NULL, 0);
+    f2_hz = (uint32_t)strtoul(f2_text, NULL, 0);
+    f3_hz = (uint32_t)strtoul(f3_text, NULL, 0);
+    if (f1_hz == 0u || f2_hz == 0u || f3_hz == 0u) {
+        puts("sig3_freqs frequencies must be > 0 Hz");
+        return;
+    }
+
+    uberclock_siggen_set_channel_frequencies(channel_index - 1u, f1_hz, f2_hz, f3_hz);
+    printf("sig3 ch%u freqs = %lu, %lu, %lu Hz\n",
+           channel_index,
+           (unsigned long)f1_hz,
+           (unsigned long)f2_hz,
+           (unsigned long)f3_hz);
+}
+
+static void command_sig3_enable_ch(char *args) {
+    unsigned channel_index = (unsigned)strtoul(args ? args : "0", NULL, 0);
+
+    if (channel_index < 1u || channel_index > UBERCLOCK_CHANNEL_COUNT) {
+        puts("sig3_enable_ch channel must be 1..5");
+        return;
+    }
+
+    uberclock_siggen_enable_channel(channel_index - 1u);
+    printf("sig3 channel %u enabled\n", channel_index);
+}
+
+static void command_sig3_disable_ch(char *args) {
+    struct uberclock_iq_frame frame = {0};
+    unsigned channel_index = (unsigned)strtoul(args ? args : "0", NULL, 0);
+    unsigned i;
+    int any_enabled = 0;
+
+    if (channel_index < 1u || channel_index > UBERCLOCK_CHANNEL_COUNT) {
+        puts("sig3_disable_ch channel must be 1..5");
+        return;
+    }
+
+    uberclock_siggen_disable_channel(channel_index - 1u);
+    for (i = 0u; i < UBERCLOCK_CHANNEL_COUNT; ++i) {
+        if (uberclock_siggen_channel_enabled(i)) {
+            any_enabled = 1;
+            break;
+        }
+    }
+    if (any_enabled) {
+        (void)uberclock_siggen_step_frame(&frame);
+        (void)uberclock_ups_fifo_push_frame(&frame);
+    } else {
+        (void)uberclock_ups_fifo_push_frame(&frame);
+        uberclock_siggen_state()->enabled = 0;
+    }
+    printf("sig3 channel %u disabled\n", channel_index);
 }
 
 void uberclock_commands_print_help(void) {
@@ -704,8 +826,8 @@ void uberclock_commands_print_help(void) {
     puts("  fft_ds [N]");
     puts("  fft64_peak");
     puts("  fft32_ds_y");
-    puts("  track3 <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
-    puts("  trackq_start [N] [center_hz] [delta_hz]");
+    puts("  track3 <ch> <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
+    puts("  trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_ch1_hz] [delta_ch2_hz] [delta_ch3_hz]");
     puts("  trackq_probe [N] [center_hz] [delta_hz]");
     puts("  trackq_stop");
     puts("  cap_arm | cap_done | cap_rd <idx>");
@@ -718,7 +840,8 @@ void uberclock_commands_print_help(void) {
     puts("  ub_cap <addr_hex> [beats] [size]");
     puts("  ub_wait | ub_hexdump <addr_hex> <bytes>");
     puts("  ub_send <addr_hex> <bytes> <dst_ip> <dst_port>");
-    puts("  sig3_start | sig3_stop | sig3_amp <value>");
+    puts("  sig3_start | sig3_stop | sig3_amp <value> | sig3_amp <ch> <value>");
+    puts("  sig3_freqs <ch> <f1> <f2> <f3> | sig3_enable_ch <ch> | sig3_disable_ch <ch>");
 }
 
 static void command_help(char *args) {
@@ -751,7 +874,7 @@ static const struct cmd_entry command_table[] = {
     {"fft_ds", command_fft_ds, "Run FFT over DS FIFO IQ samples"},
     {"fft64_peak", command_fft64_peak, "64-point FFT over DS FIFO IQ samples, print peak only"},
     {"fft32_ds_y", command_fft32_ds_y, "Real FFT of 32 Y samples from DS FIFO"},
-    {"track3", command_track3, "Sweep phase_down_1 until 3-tone pattern is found"},
+    {"track3", command_track3, "Sweep phase_down_<ch> until 3-tone pattern is found"},
     {"trackq_start", command_trackq_start, "Start 3-point quadratic tracking"},
     {"trackq_probe", command_trackq_probe, "Capture one 3-point tracking snapshot"},
     {"trackq_stop", command_trackq_stop, "Stop 3-point quadratic tracking"},
@@ -777,9 +900,12 @@ static const struct cmd_entry command_table[] = {
     {"ub_wait", command_ub_wait, "Wait until DMA done"},
     {"ub_hexdump", command_ub_hexdump, "Hexdump DDR memory"},
     {"ub_send", command_ub_send, "Send DDR memory region via UDP"},
-    {"sig3_start", command_sig3_start, "Start 3-tone software generator"},
-    {"sig3_stop", command_sig3_stop, "Stop 3-tone software generator"},
-    {"sig3_amp", command_sig3_amp, "Set 3-tone per-tone amplitude"}
+    {"sig3_start", command_sig3_start, "Start 5 independent 3-tone software generators"},
+    {"sig3_stop", command_sig3_stop, "Stop 5 independent 3-tone software generators"},
+    {"sig3_amp", command_sig3_amp, "Set 3-tone per-tone amplitude"},
+    {"sig3_freqs", command_sig3_freqs, "Set channel 3-tone frequencies"},
+    {"sig3_enable_ch", command_sig3_enable_ch, "Enable one sig3 channel"},
+    {"sig3_disable_ch", command_sig3_disable_ch, "Disable one sig3 channel"}
 };
 
 void uberclock_commands_register(void) {

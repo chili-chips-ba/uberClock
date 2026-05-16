@@ -1,8 +1,7 @@
 <!--
-//SPDX-FileCopyrightText:2026
-Ahmed Imamović Tarik Hamedović
-SPDX-License-Identifier
-CC-BY-SA-4.0
+SPDX-FileCopyrightText: 2026 Ahmed Imamović
+SPDX-FileCopyrightText: 2026 Tarik Hamedović
+SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
 # CORDIC-Based Downconversion

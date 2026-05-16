@@ -1,9 +1,5 @@
-//SPDX-FileCopyrightText:2026
-//Alice
-//SPDX-FileCopyrightText:2026
-//Bob
-//SPDX-License-Identifier:
-//CERN-3.0-or-later
+// SPDX-FileCopyrightText: 2018-2025 Gisselquist Technology, LLC
+// SPDX-License-Identifier: Apache-2.0
 
 ////////////////////////////////////////////////////////////////////////////////
 //

@@ -1,7 +1,6 @@
-//SPDX-FilecopyrightText:2026
-//Ahmed Imamović Tarik Hamedović
-//SPDX-License-Identifier:
-//APGL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <stdio.h>
 #include <irq.h>
@@ -21,16 +20,27 @@ static struct uberclock_app_context application_context = {
     .runtime = {0u, 0u, 0, 0},
     .fft = {{{0}}, {{0}}, {0}, 10000u},
     .track = {
-        0,
-        UBERCLOCK_TRACK_DEFAULT_N,
-        UBERCLOCK_TRACK_DEFAULT_SETTLE,
-        UBERCLOCK_TRACK_DEFAULT_CENTER_HZ,
-        UBERCLOCK_TRACK_DEFAULT_DELTA_HZ,
-        0u,
-        0,
-        0
+        {0, 0u, UBERCLOCK_TRACK_DEFAULT_N, UBERCLOCK_TRACK_DEFAULT_SETTLE, UBERCLOCK_TRACK_DEFAULT_CENTER_HZ,
+         UBERCLOCK_TRACK_CH1_DELTA_HZ, 0u, 0, 0},
+        {0, 1u, UBERCLOCK_TRACK_DEFAULT_N, UBERCLOCK_TRACK_DEFAULT_SETTLE, UBERCLOCK_TRACK_DEFAULT_CENTER_HZ,
+         UBERCLOCK_TRACK_CH2_DELTA_HZ, 0u, 0, 0},
+        {0, 2u, UBERCLOCK_TRACK_DEFAULT_N, UBERCLOCK_TRACK_DEFAULT_SETTLE, UBERCLOCK_TRACK_DEFAULT_CENTER_HZ,
+         UBERCLOCK_TRACK_CH3_DELTA_HZ, 0u, 0, 0}
     },
-    .siggen = {0, 0u, 0u, 0u, 0u, 0u, 0u, 10000}
+    .siggen = {
+        0,
+        {1u, 1u, 1u, 0u, 0u},
+        {{0}},
+        {{0}},
+        {
+            {990u, 1000u, 1010u},
+            {970u, 1000u, 1030u},
+            {970u, 1000u, 1030u},
+            {990u, 1000u, 1010u},
+            {990u, 1000u, 1010u}
+        },
+        {3000, 10000, 10000, 3000, 3000}
+    }
 };
 
 static void service_ce_event(void) {
@@ -62,7 +72,7 @@ struct uberclock_fft_context *uberclock_fft_context(void) {
 }
 
 struct uberclock_track_state *uberclock_track_state(void) {
-    return &application_context.track;
+    return application_context.track;
 }
 
 struct uberclock_siggen_state *uberclock_siggen_state(void) {
@@ -109,7 +119,7 @@ void uberclock_register_commands(void) {
 void uberclock_init(void) {
     uberclock_set_nco_phase_increment(10324440u);
     uberclock_set_phase_down_reference(2581110u);
-    uberclock_set_nco_magnitude(500);
+    uberclock_set_nco_magnitude(300);
 
     uberclock_channels_apply_default_init();
     uberclock_set_input_select(0u);

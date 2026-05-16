@@ -1,14 +1,13 @@
-//SPDX-FilecopyrightText:2026
-//Ahmed Imamović Tarik Hamedović
-//SPDX-License-Identifier:
-//APGL-3.0-or-later
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
 
 #include <generated/csr.h>
 #include "uberclock/uberclock_config.h"
 #include "uberclock/uberclock_channels.h"
 
 static const uint32_t default_phase_down[UBERCLOCK_CHANNEL_COUNT] = {
-    11321544u, 80652u, 80648u, 80644u, 80640u
+    10327486u, 3496237u, 3848941u, 80644u, 80640u
 };
 
 static const uint32_t default_phase_cpu[UBERCLOCK_CHANNEL_COUNT] = {
@@ -20,7 +19,7 @@ static const int16_t default_magnitude_cpu[UBERCLOCK_CHANNEL_COUNT] = {
 };
 
 static const int32_t default_gain[UBERCLOCK_CHANNEL_COUNT] = {
-    0x40000000, 0, 0, 0, 0
+    0x40000000, 0x40000000, 0x40000000, 0, 0
 };
 
 int uberclock_channel_set_phase_down(unsigned channel_index, uint32_t phase_increment) {
