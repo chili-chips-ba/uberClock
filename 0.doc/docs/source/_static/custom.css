@@ -1,127 +1,180 @@
-/*
- * SPDX-FileCopyrightText: 2026 Ahmed Imamović
- * SPDX-FileCopyrightText: 2026 Tarik Hamedović
- * SPDX-License-Identifier: CC-BY-SA-4.0
- */
+/* SPDX-FileCopyrightText: 2026 Tarik Hamedovic
+   SPDX-License-Identifier: CC-BY-SA-4.0 */
 
-/*
- * Main documentation accent overrides for sphinx_rtd_theme.
- * Swaps the default blue accents for a quartz/lab-inspired green palette.
- */
+/* =========================================================
+   openENOC Documentation Theme (RTD override)
+   ========================================================= */
 
-:root {
-    --uc-accent: #3d6b5a;
-    --uc-accent-dark: #28483d;
-    --uc-accent-soft: #dfeae5;
-    --uc-ink: #f7faf8;
-    --uc-sidebar: #22342d;
-    --uc-sidebar-active: #2d4a3f;
-    --uc-border: #c7d9d1;
-}
-
+/* -------------------------
+   Sidebar background
+------------------------- */
 .wy-side-nav-search,
-.wy-nav-top {
-    background: var(--uc-accent);
-    color: var(--uc-ink);
-}
-
-.wy-side-nav-search input[type="text"] {
-    border-color: rgba(255, 255, 255, 0.25);
-}
-
-.wy-side-nav-search a,
-.wy-side-nav-search a:visited,
-.wy-nav-top a,
-.wy-nav-top a:visited {
-    color: var(--uc-ink);
-}
-
 .wy-nav-side {
-    background: var(--uc-sidebar);
+    background: #111827;
 }
 
-.wy-menu-vertical header,
-.wy-menu-vertical p.caption {
-    color: #d7e5df;
-    letter-spacing: 0.03em;
+/* -------------------------
+   Logo / title
+------------------------- */
+.wy-side-nav-search > a,
+.wy-side-nav-search .wy-dropdown > a {
+    color: #ffffff !important;
 }
 
+/* -------------------------
+   Search box
+------------------------- */
+.wy-side-nav-search input[type="text"] {
+    border-color: #374151;
+    background: #1f2937;
+    color: #ffffff;
+}
+
+/* -------------------------
+   Default sidebar links
+------------------------- */
 .wy-menu-vertical a {
-    color: #e6efeb;
+    color: #d1d5db !important;
+    background: transparent !important;
+    border-left: 4px solid transparent;
 }
 
-.wy-menu-vertical li.toctree-l1.current > a,
-.wy-menu-vertical li.toctree-l2.current > a,
-.wy-menu-vertical li.toctree-l3.current > a,
-.wy-menu-vertical li.current > a,
-.wy-menu-vertical li.current > a:visited,
-.wy-menu-vertical li.current a,
-.wy-menu-vertical li.current a:visited {
-    color: #f7faf8;
+/* -------------------------
+   Top-level (unopened)
+------------------------- */
+.wy-menu-vertical li.toctree-l1 > a {
+    background-color: #111827 !important;
 }
 
-.wy-menu-vertical li.current {
-    background: var(--uc-sidebar-active);
+/* -------------------------
+   Top-level (opened section)
+------------------------- */
+.wy-menu-vertical li.toctree-l1.current > a {
+    background-color: #1f2937 !important;
+    color: #ffffff !important;
+    border-left: 4px solid #38bdf8;
+    font-weight: 700;
 }
 
+/* -------------------------
+   Nested container (opened)
+------------------------- */
+.wy-menu-vertical li.toctree-l1.current > ul {
+    background-color: #0b1220 !important;
+    padding-top: 4px;
+    padding-bottom: 6px;
+}
+
+/* -------------------------
+   Nested links
+------------------------- */
+.wy-menu-vertical li.toctree-l2 > a,
+.wy-menu-vertical li.toctree-l3 > a {
+    background-color: #0b1220 !important;
+    color: #cbd5e1 !important;
+    padding-left: 28px;
+}
+
+/* -------------------------
+   Currently selected page
+------------------------- */
+.wy-menu-vertical li.current a.current {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+    border-left: 4px solid #f97316;
+    font-weight: 600;
+}
+
+/* -------------------------
+   Hover (ALL cases fixed)
+------------------------- */
 .wy-menu-vertical a:hover,
+.wy-menu-vertical li.current > a:hover,
+.wy-menu-vertical li.current a:hover,
+.wy-menu-vertical li.toctree-l1 > a:hover,
+.wy-menu-vertical li.toctree-l2 > a:hover,
+.wy-menu-vertical li.toctree-l3 > a:hover {
+    background-color: #374151 !important;
+    color: #ffffff !important;
+    border-left-color: #38bdf8;
+}
+
+/* -------------------------
+   Focus / active fix
+------------------------- */
 .wy-menu-vertical a:focus,
-.wy-menu-vertical li.current > a,
-.wy-menu-vertical li.current > a:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: #ffffff;
+.wy-menu-vertical a:active {
+    background-color: #374151 !important;
+    color: #ffffff !important;
 }
 
-.wy-menu-vertical li.current ul li a {
-    color: #eef5f1;
+/* -------------------------
+   Section titles
+------------------------- */
+.wy-menu-vertical p.caption {
+    color: #9ca3af;
+    font-weight: 600;
 }
 
-.wy-menu-vertical li.current ul li a:hover,
-.wy-menu-vertical li.current ul li a:focus {
-    color: #ffffff;
+/* =========================================================
+   Main content styling
+   ========================================================= */
+
+/* Links */
+.rst-content a {
+    color: #2563eb;
 }
 
-a,
-a:visited {
-    color: var(--uc-accent);
+.rst-content a:hover {
+    color: #1d4ed8;
 }
 
-a:hover {
-    color: var(--uc-accent-dark);
-}
-
-.wy-body-for-nav {
-    background: #f5f7f5;
-}
-
-.wy-nav-content {
-    max-width: 980px;
-    border-left: 1px solid var(--uc-border);
-}
-
+/* Headings */
 .rst-content h1,
 .rst-content h2,
 .rst-content h3 {
-    color: var(--uc-accent-dark);
+    color: #111827;
 }
 
-.rst-content code,
-.rst-content tt,
-.rst-content dl:not(.docutils) dt,
-.rst-content code.literal,
-.rst-content tt.literal {
-    background: var(--uc-accent-soft);
-    border: 1px solid var(--uc-border);
-    border-radius: 3px;
+/* Code blocks */
+.rst-content code.literal {
+    color: #be123c;
+    background-color: #f3f4f6;
+    border: 1px solid #e5e7eb;
 }
 
-.rst-content .viewcode-link,
-.rst-content .viewcode-back {
-    color: var(--uc-accent-dark);
+/* Pre blocks */
+.rst-content pre {
+    background: #111827;
+    color: #e5e7eb;
+    border-radius: 6px;
+    padding: 12px;
 }
 
-.rst-content .admonition,
-.rst-content .note,
-.rst-content .warning {
-    border-left: 4px solid var(--uc-accent);
+/* Tables */
+.rst-content table {
+    border: 1px solid #e5e7eb;
+}
+
+.rst-content table th {
+    background: #f3f4f6;
+}
+
+/* =========================================================
+   Small polish
+   ========================================================= */
+
+/* Scrollbar (webkit only) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+}
+
+/* Smooth transitions */
+.wy-menu-vertical a {
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
