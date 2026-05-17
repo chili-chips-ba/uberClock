@@ -238,128 +238,248 @@
             "size": 1,
             "type": "rw"
         },
-        "main_upsampler_input_x": {
+        "main_upsampler_input_x1": {
             "addr": 4026536052,
             "size": 1,
             "type": "rw"
         },
-        "main_upsampler_input_y": {
+        "main_upsampler_input_y1": {
             "addr": 4026536056,
             "size": 1,
             "type": "rw"
         },
-        "main_ds_fifo_pop": {
+        "main_upsampler_input_x2": {
             "addr": 4026536060,
             "size": 1,
             "type": "rw"
         },
-        "main_ds_fifo_x": {
+        "main_upsampler_input_y2": {
             "addr": 4026536064,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
         },
-        "main_ds_fifo_y": {
+        "main_upsampler_input_x3": {
             "addr": 4026536068,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
         },
-        "main_ds_fifo_overflow": {
+        "main_upsampler_input_y3": {
             "addr": 4026536072,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
         },
-        "main_ds_fifo_underflow": {
+        "main_upsampler_input_x4": {
             "addr": 4026536076,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
         },
-        "main_ds_fifo_clear": {
+        "main_upsampler_input_y4": {
             "addr": 4026536080,
             "size": 1,
             "type": "rw"
         },
-        "main_ds_fifo_flags": {
+        "main_upsampler_input_x5": {
             "addr": 4026536084,
             "size": 1,
-            "type": "ro"
+            "type": "rw"
         },
-        "main_ups_fifo_x": {
+        "main_upsampler_input_y5": {
             "addr": 4026536088,
             "size": 1,
             "type": "rw"
         },
-        "main_ups_fifo_y": {
+        "main_ds_fifo_pop": {
             "addr": 4026536092,
             "size": 1,
             "type": "rw"
         },
-        "main_ups_fifo_push": {
+        "main_ds_fifo_x1": {
             "addr": 4026536096,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_ups_fifo_overflow": {
+        "main_ds_fifo_y1": {
             "addr": 4026536100,
             "size": 1,
             "type": "ro"
         },
-        "main_ups_fifo_underflow": {
+        "main_ds_fifo_x2": {
             "addr": 4026536104,
             "size": 1,
             "type": "ro"
         },
-        "main_ups_fifo_clear": {
+        "main_ds_fifo_y2": {
             "addr": 4026536108,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_ups_fifo_flags": {
+        "main_ds_fifo_x3": {
             "addr": 4026536112,
             "size": 1,
             "type": "ro"
         },
-        "main_final_shift": {
+        "main_ds_fifo_y3": {
             "addr": 4026536116,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_cap_enable": {
+        "main_ds_fifo_x4": {
             "addr": 4026536120,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_cap_beats": {
+        "main_ds_fifo_y4": {
             "addr": 4026536124,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_cap_arm": {
+        "main_ds_fifo_x5": {
             "addr": 4026536128,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_cap_idx": {
+        "main_ds_fifo_y5": {
             "addr": 4026536132,
             "size": 1,
-            "type": "rw"
+            "type": "ro"
         },
-        "main_cap_done": {
+        "main_ds_fifo_overflow": {
             "addr": 4026536136,
             "size": 1,
             "type": "ro"
         },
-        "main_cap_data": {
+        "main_ds_fifo_underflow": {
             "addr": 4026536140,
             "size": 1,
             "type": "ro"
         },
-        "main_magnitude": {
+        "main_ds_fifo_clear": {
             "addr": 4026536144,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ds_fifo_flags": {
+            "addr": 4026536148,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_ups_fifo_x1": {
+            "addr": 4026536152,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_y1": {
+            "addr": 4026536156,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_x2": {
+            "addr": 4026536160,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_y2": {
+            "addr": 4026536164,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_x3": {
+            "addr": 4026536168,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_y3": {
+            "addr": 4026536172,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_x4": {
+            "addr": 4026536176,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_y4": {
+            "addr": 4026536180,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_x5": {
+            "addr": 4026536184,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_y5": {
+            "addr": 4026536188,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_push": {
+            "addr": 4026536192,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_overflow": {
+            "addr": 4026536196,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_ups_fifo_underflow": {
+            "addr": 4026536200,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_ups_fifo_clear": {
+            "addr": 4026536204,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_ups_fifo_flags": {
+            "addr": 4026536208,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_final_shift": {
+            "addr": 4026536212,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_cap_enable": {
+            "addr": 4026536216,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_cap_beats": {
+            "addr": 4026536220,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_cap_arm": {
+            "addr": 4026536224,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_cap_idx": {
+            "addr": 4026536228,
+            "size": 1,
+            "type": "rw"
+        },
+        "main_cap_done": {
+            "addr": 4026536232,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_cap_data": {
+            "addr": 4026536236,
+            "size": 1,
+            "type": "ro"
+        },
+        "main_magnitude": {
+            "addr": 4026536240,
             "size": 1,
             "type": "ro"
         },
         "main_phase": {
-            "addr": 4026536148,
+            "addr": 4026536244,
             "size": 1,
             "type": "ro"
         },
@@ -602,7 +722,7 @@
         "config_cpu_name": "vexriscv",
         "config_cpu_human_name": "vexriscv",
         "config_cpu_nop": "nop",
-        "config_identifier": "ax7203: sys@100mhz uc@65mhz optional uberddr3 + uberclock 2026-05-15 17:23:00",
+        "config_identifier": "ax7203: sys@100mhz uc@65mhz optional uberddr3 + uberclock 2026-05-17 16:57:55",
         "ubddr3_mem_base": 2684354560,
         "config_csr_data_width": 32,
         "config_csr_alignment": 32,
