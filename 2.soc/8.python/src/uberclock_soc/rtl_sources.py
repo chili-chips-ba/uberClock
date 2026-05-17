@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from litex.build.sim import SimPlatform
+
 
 def _find_repo_root(start: Path) -> Path:
     """Walk upward from `start` and return the repository root."""
@@ -59,6 +61,9 @@ def add_sources(platform, rel_files: Iterable[str], base_dir: Path | None = None
         abs_path = (root_dir / rel_path).resolve()
         if not abs_path.exists():
             missing.append(str(abs_path))
+            continue
+
+        if isinstance(platform, SimPlatform) and abs_path.suffix == ".mem":
             continue
 
         platform.add_source(str(abs_path))

@@ -25,6 +25,7 @@ PORT          ?= /dev/ttyUSB0
 # Python / environment selection
 DEFAULT_VENV  := $(firstword $(wildcard $(REPO_ROOT)/.venv $(HOME)/litex-venv))
 PYTHON        ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV)/bin/python3,$(if $(DEFAULT_VENV),$(DEFAULT_VENV)/bin/python3,python3))
+PYTHON_BIN_DIR := $(dir $(PYTHON))
 PYTHONPATH_REPO ?= $(PYTHON_PKG_DIR)/src
 SOC_MODULE    ?= uberclock_soc
 
@@ -34,17 +35,21 @@ BOARD         := alinx_ax7203
 # Defaults
 FREQ          ?= 100e6
 OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
+SIM_CFLAGS    ?= -Wno-error=incompatible-pointer-types
+SIM_CYCLES    ?= 100000
 
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
 
-.PHONY: help build-board build-sw load term \
+.PHONY: help build-board build-sw sim-soc sim-soc-run load term \
         clean clean-gateware clean-sw clean-sw-deep \
         install-python print-python docs view-docs clean-docs
 
 help:
 	@echo "Targets:"
 	@echo "  make build-board [FREQ=100e6] [OPTIONS='...']"
+	@echo "  make sim-soc     [SIM_OPTIONS='...']"
+	@echo "  make sim-soc-run [SIM_OPTIONS='...']"
 	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make term        [PORT=/dev/ttyUSB0]"
 	@echo "  make build-sw    [DEMO_FLAGS='..']"
@@ -81,6 +86,34 @@ build-board:
 	  --toolchain=vivado \
 	  --sys-clk-freq=$(FREQ) \
 	  $(OPTIONS)
+
+sim-soc:
+	@echo "[sim] module=$(SOC_MODULE).sim"
+	@echo "[sim] python=$(PYTHON)"
+	CFLAGS="$(SIM_CFLAGS)" \
+	PATH=$(PYTHON_BIN_DIR):$$PATH \
+	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
+	$(PYTHON) -m $(SOC_MODULE).sim \
+	  --with-uberclock \
+	  --build \
+	  --no-run \
+	  --output-dir=$(BUILD_DIR)/build/sim \
+	  $(SIM_OPTIONS)
+
+sim-soc-run:
+	@echo "[sim] module=$(SOC_MODULE).sim"
+	@echo "[sim] python=$(PYTHON)"
+	CFLAGS="$(SIM_CFLAGS)" \
+	PATH=$(PYTHON_BIN_DIR):$$PATH \
+	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
+	$(PYTHON) -m $(SOC_MODULE).sim \
+	  --with-uberclock \
+	  --build \
+	  --non-interactive \
+	  --trace \
+	  --finish-after-cycles=$(SIM_CYCLES) \
+	  --output-dir=$(BUILD_DIR)/build/sim \
+	  $(SIM_OPTIONS)
 # ----------------------------
 # Build software under 2.sw/
 # ----------------------------

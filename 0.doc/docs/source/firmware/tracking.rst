@@ -7,8 +7,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 Tracking Firmware
 =================
 
-The tracking code in ``2.soc/2.sw/uberclock.c`` closes a software control loop
-around the FPGA DSP datapath.  The FPGA moves samples at full rate, decimates
+The tracking code in ``2.soc/2.sw/uberclock.c`` closes a software control loop around the FPGA DSP datapath.  The FPGA moves samples at full rate, decimates
 them into the firmware-visible FIFO, and exposes phase-increment CSRs.  The
 firmware captures low-rate samples, estimates spectral power with KISS FFT, and
 updates the downconversion phase increments.

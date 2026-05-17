@@ -7,8 +7,7 @@ SPDX-License-Identifier: CC-BY-SA-4.0
 Firmware
 ========
 
-The firmware under ``2.soc/2.sw`` runs on the VexRiscV CPU and provides runtime
-control over the ADC, DSP, DAC, FIFO, capture, and DDR datapaths.
+The firmware under ``2.soc/2.sw`` runs on the VexRiscV CPU and provides runtime control over the ADC, DSP, DAC, FIFO, capture, and DDR datapaths of the uberClock project.
 
 It allows:
 
@@ -20,8 +19,6 @@ It allows:
 - execute ``track3`` and ``trackq`` frequency-tracking algorithms,
 - generate software three-tone test signals for bring-up.
 
-The firmware turns the hardware into an interactive system instead of a fixed
-bitstream.
 
 .. toctree::
    :maxdepth: 1

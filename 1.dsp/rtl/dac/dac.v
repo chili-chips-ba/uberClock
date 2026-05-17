@@ -35,7 +35,7 @@ module dac (
     output wire [13:0] da2_data    // 14-bit data bus
 );
 
-  genvar bit;
+  genvar i;
 
   //----------------------------------------------------------------------------
   // Clocks & write strobes (always toggling 0→1 on SYS_CLK via ODDR)
@@ -92,15 +92,15 @@ module dac (
   // DDR ODDR for each data bit: channel1 = data1, channel2 = data2
   //----------------------------------------------------------------------------
   generate
-    for (bit = 0; bit < 14; bit = bit + 1) begin : DAC1_DATA
+    for (i = 0; i < 14; i = i + 1) begin : DAC1_DATA
       ODDR #(
         .DDR_CLK_EDGE("SAME_EDGE")
       ) oddr_d1 (
-        .Q   (da1_data[bit]),
+        .Q   (da1_data[i]),
         .C   (sys_clk),
         .CE  (1'b1),
-        .D1  (data1[bit]),
-        .D2  (data1[bit]),
+        .D1  (data1[i]),
+        .D2  (data1[i]),
         .R   (1'b0),
         .S   (1'b0)
       );
@@ -108,15 +108,15 @@ module dac (
   endgenerate
 
   generate
-    for (bit = 0; bit < 14; bit = bit + 1) begin : DAC2_DATA
+    for (i = 0; i < 14; i = i + 1) begin : DAC2_DATA
       ODDR #(
         .DDR_CLK_EDGE("SAME_EDGE")
       ) oddr_d2 (
-        .Q   (da2_data[bit]),
+        .Q   (da2_data[i]),
         .C   (sys_clk),
         .CE  (1'b1),
-        .D1  (data2[bit]),
-        .D2  (data2[bit]),
+        .D1  (data2[i]),
+        .D2  (data2[i]),
         .R   (1'b0),
         .S   (1'b0)
       );
