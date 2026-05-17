@@ -1,7 +1,11 @@
-# SPDX-FileCopyrightText: 2026 Ahmed Imamović
-# SPDX-FileCopyrightText: 2026 Tarik Hamedović
-# SPDX-License-Identifier: BSD-2-Clause
+# uberclock_soc/__init__.py
 
-"""UberClock SoC Python package."""
+from .ubddr3 import UberDDR3
+from .streams import RampSource, SamplePackerStream, UCStreamMux
 
-__version__ = "0.1.0"
+__all__ = [
+    "UberDDR3",
+    "RampSource",
+    "SamplePackerStream",
+    "UCStreamMux",
+]

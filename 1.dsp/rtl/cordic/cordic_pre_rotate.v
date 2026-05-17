@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file cordic_pre_rotate.v
+ * @brief CORDIC pre-rotation stage.
+ *
+ * Maps the requested phase into the convergence range before iterative CORDIC rotation.
+ */
+
 module cordic_pre_rotate #(
     parameter IW = 12,
     parameter WW = 22,

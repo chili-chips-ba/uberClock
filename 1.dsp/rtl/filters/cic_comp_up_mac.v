@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * @file cic_comp_up_mac.v
+ * @brief Upsampling CIC compensation FIR.
+ *
+ * Multiply-accumulate FIR compensation stage used before/after CIC interpolation in the transmit path.
+ */
 
 module cic_comp_up_mac #(
   parameter DW              = 16,                  // input/output data width

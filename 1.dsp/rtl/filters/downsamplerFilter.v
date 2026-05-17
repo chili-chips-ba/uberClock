@@ -1,8 +1,11 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `default_nettype none
+/**
+ * @file downsamplerFilter.v
+ * @brief Receive downsampler filter chain.
+ *
+ * Composite filter chain that converts full-rate downconverted I/Q samples to the low-rate samples consumed by firmware.
+ */
+
 module downsamplerFilter (
     input  wire        clk,
     input  wire        clk_enable,

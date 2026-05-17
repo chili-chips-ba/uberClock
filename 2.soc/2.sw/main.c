@@ -1,13 +1,10 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 #include <stdio.h>
 #include <irq.h>
 #include <libbase/uart.h>
 #include "console.h"
 #include "uberclock.h"
 #include "ubddr3.h"
+
 
 extern void donut(void);
 extern void helloc(void);
@@ -51,7 +48,7 @@ int main(void) {
 
 	console_init("\e[92;1muberClock\e[0m>");
 	console_register(g_root_cmds, sizeof(g_root_cmds)/sizeof(g_root_cmds[0]));
-	uberclock_register_commands();
+	uberclock_register_cmds();
 	ubddr3_register_cmds();
 
 	uberclock_init();

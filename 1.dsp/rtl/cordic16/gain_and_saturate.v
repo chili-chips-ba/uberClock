@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file gain_and_saturate.v
+ * @brief 16-bit CORDIC gain correction and saturation.
+ *
+ * Applies gain handling and output saturation for the transmit CORDIC path.
+ */
+
 module gain_and_saturate #(
   parameter integer OW = 12
 ) (

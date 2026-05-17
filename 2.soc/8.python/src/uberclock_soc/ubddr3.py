@@ -17,8 +17,8 @@ from migen.genlib.fifo import AsyncFIFO
 
 from .wishbone import ClassicToPipelinedWishboneBridge, PipelinedWishboneXbar2M1S
 from .streams import UCStreamMux, SamplePackerStream
-from .rtl_filelist import UBERDDR3_RTL_FILES
 from .rtl_sources import add_sources
+from .rtl_filelist import UBERDDR3_RTL_FILES
 
 
 # =============================================================================
@@ -31,46 +31,41 @@ class UberDDR3(LiteXModule):
     Use-case
     --------
     This module wires a Verilog DDR3 controller (`ddr3_top`) into a LiteX SoC and
-    provides TWO ways to write/read DDR:
+    provides two ways to write/read DDR.
 
-    1. CPU / software access (SYS domain)
+    CPU / software access (SYS domain):
+      - Classic 32-bit Wishbone (LiteX standard) exposed as `self.wb`.
+      - Width-converted up to the DDR bus width (UB_BUS_WIDTH_BITS).
+      - Bridged into pipelined WB signaling used by the controller.
 
-       - Classic 32-bit Wishbone (LiteX standard) exposed as ``self.wb``.
-       - Width-converted up to the DDR bus width (``UB_BUS_WIDTH_BITS``).
-       - Bridged into pipelined WB signaling used by the controller.
-
-    2. High-throughput capture / DMA (UC domain -> SYS domain -> DDR)
-
-       - A UC-domain stream source generates DW-bit beats.
-       - The source can be either an internal ramp or packed external samples.
-       - The stream crosses UC->SYS via ``AsyncFIFO``.
-       - ``zipdma_s2mm`` writes the stream into DDR through a shared crossbar.
+    High-throughput capture / DMA (UC domain -> SYS domain -> DDR):
+      - A UC-domain stream source generates DW-bit beats.
+      - The source is either an internal ramp or packed design samples.
+      - Stream crosses UC->SYS via AsyncFIFO.
+      - zipdma_s2mm writes the stream into DDR through a shared crossbar.
 
     Clock domains
     -------------
-
-    - ``sys``: CPU, CSR bus, zipdma_s2mm, Wishbone fabric
-    - ``uc``: UberClock DSP / sample domain
-    - ``ub_4x``: DDR3 PHY clock
-    - ``ub_4x_dqs``: DDR3 PHY clock 90 degrees shifted
-    - ``idelay``: IDELAYCTRL reference clock
+      - "sys"    : CPU, CSR bus, zipdma_s2mm, Wishbone fabric
+      - "uc"     : UberClock DSP / sample domain
+      - "ub_4x"  : DDR3 PHY clock
+      - "ub_4x_dqs" : DDR3 PHY clock 90° shifted (DQS)
+      - "idelay" : IDELAYCTRL reference clock
 
     External inputs (from SoC)
     --------------------------
-
-    - ``cap_enable_uc``: 1 means capture external design samples, 0 means use ramp
-    - ``cap_beats_uc``: number of DW-bit beats to write
-    - ``cap_sample``: selected 12-bit sample in the UC domain
+      - cap_enable_uc : 1 = capture external design samples, 0 = use ramp
+      - cap_beats_uc  : number of DW-bit beats to write
+      - cap_sample    : the selected 12-bit sample (UC domain)
 
     CSRs (SYS domain)
     -----------------
-
-    - ``dma_req``: strobe to start DMA write
-    - ``dma_addr0/1``: 64-bit base address packed from two 32-bit registers
-    - ``dma_inc``: increment mode for DMA
-    - ``dma_size``: transfer size encoding used by ``zipdma_s2mm``
-    - ``dma_busy`` / ``dma_err``: DMA status
-    - ``calib_done``: DDR controller calibration complete
+      - dma_req   : strobe to start DMA write
+      - dma_addr0/1 : 64-bit base address (packed from two 32-bit regs)
+      - dma_inc   : increment mode for DMA
+      - dma_size  : transfer size encoding (zipdma convention)
+      - dma_busy/dma_err : status from zipdma
+      - calib_done : DDR controller calibration complete
     """
 
     # ----------------------------

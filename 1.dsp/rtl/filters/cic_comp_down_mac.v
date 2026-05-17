@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file cic_comp_down_mac.v
+ * @brief Downsampling CIC compensation FIR.
+ *
+ * Multiply-accumulate FIR compensation stage that flattens CIC passband droop in the receive/downsample path.
+ */
+
 module cic_comp_down_mac #(
     parameter DW_IN           = 12,
     parameter DW_ACC          = 32,

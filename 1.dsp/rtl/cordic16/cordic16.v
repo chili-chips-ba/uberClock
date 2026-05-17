@@ -1,5 +1,12 @@
 // Creator:	Dan Gisselquist, Ph.D.
 //		Gisselquist Technology, LLC
+/**
+ * @file cordic16.v
+ * @brief 16-bit transmit CORDIC.
+ *
+ * Pipelined 16-bit CORDIC rotator used for transmit-side upconversion after interpolation.
+ */
+
 //
 ////////////////////////////////////////////////////////////////////////////////
 //

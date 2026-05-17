@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file cordic_pre_rotate_16.v
+ * @brief 16-bit CORDIC pre-rotation stage.
+ *
+ * Maps transmit-side phase input into the 16-bit CORDIC convergence range.
+ */
+
 module cordic_pre_rotate_16 #(
     parameter IW = 12,
     parameter WW = 15,

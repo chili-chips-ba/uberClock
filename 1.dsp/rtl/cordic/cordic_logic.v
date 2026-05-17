@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file cordic_logic.v
+ * @brief CORDIC stage logic.
+ *
+ * Single iterative CORDIC micro-rotation stage shared by the full-width CORDIC pipeline.
+ */
+
 // Encapsulates phase accumulator, CORDIC pipeline, and scaling (no mux)
 `timescale 1 ns / 1 ns
 `default_nettype none

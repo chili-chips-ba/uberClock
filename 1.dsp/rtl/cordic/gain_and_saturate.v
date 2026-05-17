@@ -4,6 +4,13 @@
 
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file gain_and_saturate.v
+ * @brief CORDIC gain correction and saturation.
+ *
+ * Applies CORDIC gain handling and clamps results to the selected output range.
+ */
+
 module gain_and_saturate #(
   parameter integer OW = 12
 ) (

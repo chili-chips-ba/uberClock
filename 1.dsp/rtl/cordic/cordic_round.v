@@ -4,6 +4,13 @@
 
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file cordic_round.v
+ * @brief CORDIC output rounding.
+ *
+ * Rounds and truncates full-width CORDIC working values to the configured output width.
+ */
+
 module cordic_round #(
    parameter WW = 15,
    parameter OW = 12

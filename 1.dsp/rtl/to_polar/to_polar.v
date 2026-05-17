@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file to_polar.v
+ * @brief Rectangular-to-polar CORDIC.
+ *
+ * Converts signed I/Q samples into magnitude and phase for low-rate measurement and tracking feedback.
+ */
+
 module to_polar #(
     parameter IW      = 16,   // input width
     parameter OW      = 16,   // output magnitude width

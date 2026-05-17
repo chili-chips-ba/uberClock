@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file cic.v
+ * @brief CIC decimator.
+ *
+ * Implements a cascaded integrator-comb decimation stage used to reduce sample rate before compensation and half-band filtering.
+ */
+
 module cic #(
     parameter  DATA_WIDTH_I       = 12,
     parameter DATA_WIDTH_O      = 16,
@@ -90,8 +93,25 @@ module cic #(
   //=============================//
   //       Output section        //
   //=============================//
-  assign data_out = (comb8 >>> (REGISTER_WIDTH - DATA_WIDTH_O - 1));
+  //assign data_out = (comb8 >>> (REGISTER_WIDTH - DATA_WIDTH_O - 1));
 //assign data_out = comb8[54:39];
 //  assign data_out = comb8[55:44] << 2;
   assign data_clk = decimation_clk;
+
+
+   
+    wire signed [DATA_WIDTH_O-1:0] cic_core  = comb8 >>> (REGISTER_WIDTH - DATA_WIDTH_O- 1);
+    
+    localparam signed [31:0] GAIN = 32'shA2067B24;
+    wire signed       [32:0] gain_const_s = {1'b0,GAIN};
+    reg  signed [DATA_WIDTH_O+33-1:0]        gain_full_reg;
+    
+    always @(posedge clk)
+    if (en) begin
+      gain_full_reg <= $signed(cic_core) * gain_const_s;
+    end
+    
+    assign data_out= gain_full_reg >>> 31;
+//    assign output_tdata = (comb_reg[N-1] >>> (REG_WIDTH - O_WIDTH - 1));
+//    assign data_clk = clk & ce_out;   // gated clock pulse
 endmodule

@@ -19,6 +19,8 @@ The documentation is organized into a small set of topic areas:
 - ``SoC Platform`` for the system structure, software layers, and API surface.
 - ``Firmware`` for the firmware written in C.
 - ``Examples`` for capture, transfer, and algorithm workflows.
+- ``Characterization`` for VNA measurements, crystal orientation data, and the
+  multi-mode BVD model.
 - ``Build`` for setup and repeatable build procedures.
 - ``Miniac`` for the acquisition prototype, build flow, and simulation support.
 - ``References`` for external material and board documentation links.
@@ -32,6 +34,7 @@ The documentation is organized into a small set of topic areas:
    SoC Platform <soc_litex/index>
    Firmware <firmware/index>
    Examples <examples/index>
+   Characterization <characterization/index>
    Build <build/index>
    Miniac <miniac/index>
    References <references/index>

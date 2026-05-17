@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+
+/**
+ * @file hb_down_opt.v
+ * @brief Optimized downsampling half-band FIR.
+ *
+ * Resource-optimized half-band decimation filter for receive-side rate reduction.
+ */
 
 module hb_down_opt
                (

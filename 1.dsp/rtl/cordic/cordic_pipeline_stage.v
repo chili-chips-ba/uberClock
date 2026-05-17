@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file cordic_pipeline_stage.v
+ * @brief CORDIC pipeline stage wrapper.
+ *
+ * Registers and wires one full-width CORDIC rotation stage for timing closure.
+ */
+
 module cordic_pipeline_stage #(
     parameter STAGE        = 0,
     parameter WW           = 22,

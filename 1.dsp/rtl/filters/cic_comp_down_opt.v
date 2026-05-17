@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file cic_comp_down_opt.v
+ * @brief Optimized downsampling CIC compensation FIR.
+ *
+ * Resource-optimized variant of the receive-side CIC compensation filter.
+ */
+
 module cic_comp_down_opt
                (
                 clk,

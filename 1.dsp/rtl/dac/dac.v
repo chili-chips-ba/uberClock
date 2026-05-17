@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file dac.v
+ * @brief DAC DDR output interface.
+ *
+ * Drives the two 14-bit AN9767 DAC buses, clock outputs, and write strobes with Xilinx ODDR primitives.
+ */
+
 // ============================================================================
 //  dac.v
 //

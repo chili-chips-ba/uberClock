@@ -3,7 +3,6 @@
 # SPDX-FileCopyrightText: 2026 Ahmed Imamović
 # SPDX-FileCopyrightText: 2026 Tarik Hamedović
 # SPDX-License-Identifier: BSD-2-Clause
-
 """
 uberclock_soc/soc.py
 
@@ -27,7 +26,6 @@ from __future__ import annotations
 
 from migen import *
 from litex.gen import *
-from litex.gen import LiteXModule
 
 from litex_boards.platforms import alinx_ax7203
 
@@ -64,7 +62,7 @@ class BaseSoC(SoCCore):
       - idelay   : IDELAYCTRL reference, 200 MHz
 
     Memory options:
-      - Integrated LiteX main RAM (default 64 KiB)
+      - Integrated LiteX main RAM (default 512 KiB)
       - Optional LiteDRAM (if integrated_main_ram_size == 0 AND not using UberDDR3)
       - Optional UberDDR3 as *side memory* mapped at 0xA0000000
     """
@@ -340,8 +338,22 @@ def build_main() -> None:
 
     parser.add_argument("--with-uberclock", action="store_true")
     parser.add_argument("--with-uberddr3", action="store_true")
+    parser.add_argument(
+        "--with-sdram-main-ram",
+        action="store_true",
+        help="Use external DDR3/LiteDRAM as main_ram instead of the default 512 KiB integrated RAM.",
+    )
 
     args = parser.parse_args()
+
+    if args.with_sdram_main_ram and args.with_uberddr3:
+        parser.error(
+            "--with-sdram-main-ram and --with-uberddr3 are mutually exclusive: "
+            "both modes require ownership of the same DDR3 device."
+        )
+
+    if args.with_sdram_main_ram:
+        parser.soc_argdict["integrated_main_ram_size"] = 0
 
     soc = BaseSoC(
         toolchain=args.toolchain,

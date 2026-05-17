@@ -216,6 +216,7 @@ Relevant documentation:
 - High-speed capture workflow: :doc:`examples/capture_high_speed_ddr3`
 - UDP export workflow: :doc:`examples/stream_udp`
 - Tracking algorithm: :doc:`examples/tracking_algorithm`
+- Measurement and crystal model: :doc:`characterization/index`
 
 WP5: Implementation of DSP Algorithms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

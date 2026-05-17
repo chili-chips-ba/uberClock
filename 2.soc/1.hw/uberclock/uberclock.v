@@ -1,8 +1,11 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1ns / 1ps
+/**
+ * @file uberclock.v
+ * @brief uberClock SoC-side DSP top level.
+ *
+ * Instantiates ADC/DAC interfaces, five receive channels, five transmit paths, routing muxes, capture logic, debug outputs, and CPU-visible control signals.
+ */
+
 module uberclock#(
     parameter IW       = 12,   // CORDIC input width
     parameter OW       = 12,   // CORDIC output width
@@ -67,11 +70,27 @@ module uberclock#(
     input  [31:0]             gain5,
 
     // CPU signals
-    output signed [15:0]      downsampled_data_x,
-    output signed [15:0]      downsampled_data_y,
+    output signed [15:0]      downsampled_data_x1,
+    output signed [15:0]      downsampled_data_y1,
+    output signed [15:0]      downsampled_data_x2,
+    output signed [15:0]      downsampled_data_y2,
+    output signed [15:0]      downsampled_data_x3,
+    output signed [15:0]      downsampled_data_y3,
+    output signed [15:0]      downsampled_data_x4,
+    output signed [15:0]      downsampled_data_y4,
+    output signed [15:0]      downsampled_data_x5,
+    output signed [15:0]      downsampled_data_y5,
     output                    ce_down,
-    input signed  [15:0]      upsampler_input_x,
-    input signed  [15:0]      upsampler_input_y,
+    input signed  [15:0]      upsampler_input_x1,
+    input signed  [15:0]      upsampler_input_y1,
+    input signed  [15:0]      upsampler_input_x2,
+    input signed  [15:0]      upsampler_input_y2,
+    input signed  [15:0]      upsampler_input_x3,
+    input signed  [15:0]      upsampler_input_y3,
+    input signed  [15:0]      upsampler_input_x4,
+    input signed  [15:0]      upsampler_input_y4,
+    input signed  [15:0]      upsampler_input_x5,
+    input signed  [15:0]      upsampler_input_y5,
 
     output signed [15:0]      magnitude,
     output signed [24:0]      phase,
@@ -174,8 +193,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    assign  downsampled_data_x = downsampled_x1;
-    assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x1 = downsampled_x1;
+    assign  downsampled_data_y1 = downsampled_y1;
     assign  magnitude = rx0_magnitude1;
     assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -192,10 +211,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x1, upsampler_in_y1;
 
     assign upsampler_in_x1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x1 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x1_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x1 : x1_cpu_nco << 4;
 
     assign upsampler_in_y1 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y1 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y1_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y1 : y1_cpu_nco << 4;
     //--------------------------------------------------------
     // tx1 channel
     //--------------------------------------------------------
@@ -257,8 +276,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x2 = downsampled_x2;
+    assign  downsampled_data_y2 = downsampled_y2;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -275,10 +294,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x2, upsampler_in_y2;
 
     assign upsampler_in_x2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x2 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x2_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x2 : x2_cpu_nco << 4;
 
     assign upsampler_in_y2 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y2 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y2_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y2 : y2_cpu_nco << 4;
     //--------------------------------------------------------
     // tx2 channel
     //--------------------------------------------------------
@@ -338,8 +357,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x3 = downsampled_x3;
+    assign  downsampled_data_y3 = downsampled_y3;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -356,10 +375,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x3, upsampler_in_y3;
 
     assign upsampler_in_x3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x3 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x3_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x3 : x3_cpu_nco << 4;
 
     assign upsampler_in_y3 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y3 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y3_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y3 : y3_cpu_nco << 4;
     //--------------------------------------------------------
     // tx3 channel
     //--------------------------------------------------------
@@ -418,8 +437,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x4 = downsampled_x4;
+    assign  downsampled_data_y4 = downsampled_y4;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -436,10 +455,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x4, upsampler_in_y4;
 
     assign upsampler_in_x4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x4 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x4_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x4 : x4_cpu_nco << 4;
 
     assign upsampler_in_y4 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y4 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y4_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y4 : y4_cpu_nco << 4;
     //--------------------------------------------------------
     // tx4 channel
     //--------------------------------------------------------
@@ -498,8 +517,8 @@ module uberclock#(
     // ----------------------------------------------------------------------
     // output to CPU
     // ----------------------------------------------------------------------
-    // assign  downsampled_data_x = downsampled_x1;
-    // assign  downsampled_data_y = downsampled_y1;
+    assign  downsampled_data_x5 = downsampled_x5;
+    assign  downsampled_data_y5 = downsampled_y5;
     // assign  magnitude = rx0_magnitude1;
     // assign  phase = rx0_phase1;
     // ----------------------------------------------------------------------
@@ -516,10 +535,10 @@ module uberclock#(
     wire signed [15:0] upsampler_in_x5, upsampler_in_y5;
 
     assign upsampler_in_x5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_x5 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_x : x5_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_x5 : x5_cpu_nco << 4;
 
     assign upsampler_in_y5 = (upsampler_input_mux == 2'b00) ? upsampled_gain_y5 :
-                            (upsampler_input_mux == 2'b01) ? upsampler_input_y : y5_cpu_nco << 4;
+                            (upsampler_input_mux == 2'b01) ? upsampler_input_y5 : y5_cpu_nco << 4;
     //--------------------------------------------------------
     // tx5 channel
     //--------------------------------------------------------

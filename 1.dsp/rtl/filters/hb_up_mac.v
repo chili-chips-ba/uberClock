@@ -1,9 +1,12 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
-
 `timescale 1 ns / 1 ns
 `default_nettype none
+/**
+ * @file hb_up_mac.v
+ * @brief Upsampling half-band FIR.
+ *
+ * Half-band interpolation filter implemented as a multiply-accumulate datapath for transmit-side rate increase.
+ */
+
 module hb_up_mac #(
   //------------------------------------------------------------------------
   // Data widths & depths

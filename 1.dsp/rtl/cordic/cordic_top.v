@@ -2,6 +2,13 @@
 // SPDX-FileCopyrightText: 2026 Tarik Hamedović
 // SPDX-License-Identifier: GPL-3.0-or-later
 
+/**
+ * @file cordic_top.v
+ * @brief CORDIC standalone top.
+ *
+ * Standalone wrapper around the full-width CORDIC pipeline used for experiments and tests.
+ */
+
 // ============================================================================
 //  cordic_nco.v
 //    A simple NCO that uses your existing `cordic` core to generate sine/cosine.

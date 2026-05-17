@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * @file rx_channel.v
+ * @brief Receive channel pipeline.
+ *
+ * Combines downconversion, decimation, and rectangular-to-polar measurement for one logical receive channel.
+ */
 
 module rx_channel # (
     parameter IW = 12, 

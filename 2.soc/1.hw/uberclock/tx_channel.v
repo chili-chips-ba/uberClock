@@ -1,6 +1,9 @@
-// SPDX-FileCopyrightText: 2026 Ahmed Imamović
-// SPDX-FileCopyrightText: 2026 Tarik Hamedović
-// SPDX-License-Identifier: GPL-3.0-or-later
+/**
+ * @file tx_channel.v
+ * @brief Transmit channel pipeline.
+ *
+ * Combines interpolation and CORDIC upconversion for one logical transmit/DAC channel.
+ */
 
 module tx_channel # (
     parameter IW = 16, 

@@ -5,6 +5,13 @@
 `timescale 1ns/1ps
 `default_nettype none
 
+/**
+ * @file adc.v
+ * @brief ADC DDR input interface.
+ *
+ * Captures the two 12-bit AD9238 input buses with Xilinx IDDR primitives and forwards sampling clocks back to the ADC mezzanine.
+ */
+
 module adc(
    // sys
    input  wire        sys_clk,        // system clock

@@ -5,7 +5,7 @@
 # SPDX-License-Identifier: BSD-2-Clause
 
 """
-uberclock_block.py
+uberclock_core.py
 
 Use-case
 --------
@@ -45,7 +45,6 @@ from __future__ import annotations
 
 from migen import *
 from litex.gen import *
-from litex.gen import LiteXModule
 
 from litex.soc.interconnect.csr_eventmanager import EventManager, EventSourcePulse
 from migen.genlib.cdc import PulseSynchronizer, MultiReg, ClockDomainsRenamer
@@ -53,9 +52,8 @@ from migen.genlib.fifo import AsyncFIFO
 
 from .uberclock_csrs import UberClockCSRBank
 from .csr_snapshot_fifo import CsrConfigSnapshotFIFO
-from .rtl_filelist import UBERCLOCK_RTL_FILES
 from .rtl_sources import add_sources
-
+from .rtl_filelist import UBERCLOCK_RTL_FILES
 
 def add_uberclock_fullrate(soc, leds):
     """
@@ -163,8 +161,16 @@ def add_uberclock_fullrate(soc, leds):
         "gain5":                m.gain5.storage,
 
         # CPU-fed upsampler injection
-        "ups_in_x":             m.upsampler_input_x.storage,
-        "ups_in_y":             m.upsampler_input_y.storage,
+        "ups_in_x1":            m.upsampler_input_x1.storage,
+        "ups_in_y1":            m.upsampler_input_y1.storage,
+        "ups_in_x2":            m.upsampler_input_x2.storage,
+        "ups_in_y2":            m.upsampler_input_y2.storage,
+        "ups_in_x3":            m.upsampler_input_x3.storage,
+        "ups_in_y3":            m.upsampler_input_y3.storage,
+        "ups_in_x4":            m.upsampler_input_x4.storage,
+        "ups_in_y4":            m.upsampler_input_y4.storage,
+        "ups_in_x5":            m.upsampler_input_x5.storage,
+        "ups_in_y5":            m.upsampler_input_y5.storage,
         "final_shift":          m.final_shift.storage,
 
         # High-speed DDR capture control (used if soc.ubddr3 exists)
@@ -197,16 +203,40 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     # UberClock instance (UC domain)
     # -------------------------------------------------------------------------
-    ds_x_uc    = Signal(16, name="downsampled_x_uc")
-    ds_y_uc    = Signal(16, name="downsampled_y_uc")
+    ds_x_uc1    = Signal(16, name="downsampled_x_uc1")
+    ds_y_uc1    = Signal(16, name="downsampled_y_uc1")
+    ds_x_uc2    = Signal(16, name="downsampled_x_uc2")
+    ds_y_uc2    = Signal(16, name="downsampled_y_uc2")
+    ds_x_uc3    = Signal(16, name="downsampled_x_uc3")
+    ds_y_uc3    = Signal(16, name="downsampled_y_uc3")
+    ds_x_uc4    = Signal(16, name="downsampled_x_uc4")
+    ds_y_uc4    = Signal(16, name="downsampled_y_uc4")
+    ds_x_uc5    = Signal(16, name="downsampled_x_uc5")
+    ds_y_uc5    = Signal(16, name="downsampled_y_uc5")
     cap_sel_uc = Signal(12, name="cap_selected_uc")  # selected sample for HS capture
 
     # UC-domain upsampler FIFO hold registers
-    ups_x_uc = Signal(16, name="upsampler_fifo_x_uc")
-    ups_y_uc = Signal(16, name="upsampler_fifo_y_uc")
+    ups_x_uc1 = Signal(16, name="upsampler_fifo_x1_uc")
+    ups_y_uc1 = Signal(16, name="upsampler_fifo_y1_uc")
+    ups_x_uc2 = Signal(16, name="upsampler_fifo_x2_uc")
+    ups_y_uc2 = Signal(16, name="upsampler_fifo_y2_uc")
+    ups_x_uc3 = Signal(16, name="upsampler_fifo_x3_uc")
+    ups_y_uc3 = Signal(16, name="upsampler_fifo_y3_uc")
+    ups_x_uc4 = Signal(16, name="upsampler_fifo_x4_uc")
+    ups_y_uc4 = Signal(16, name="upsampler_fifo_y4_uc")
+    ups_x_uc5 = Signal(16, name="upsampler_fifo_x5_uc")
+    ups_y_uc5 = Signal(16, name="upsampler_fifo_y5_uc")
     ups_have_sample_uc = Signal(name="upsampler_fifo_has_sample_uc")
-    ups_in_x_uc = Signal(16, name="upsampler_in_x_uc")
-    ups_in_y_uc = Signal(16, name="upsampler_in_y_uc")
+    ups_in_x_uc1 = Signal(16, name="upsampler_in_x1_uc")
+    ups_in_y_uc1 = Signal(16, name="upsampler_in_y1_uc")
+    ups_in_x_uc2 = Signal(16, name="upsampler_in_x2_uc")
+    ups_in_y_uc2 = Signal(16, name="upsampler_in_y2_uc")
+    ups_in_x_uc3 = Signal(16, name="upsampler_in_x3_uc")
+    ups_in_y_uc3 = Signal(16, name="upsampler_in_y3_uc")
+    ups_in_x_uc4 = Signal(16, name="upsampler_in_x4_uc")
+    ups_in_y_uc4 = Signal(16, name="upsampler_in_y4_uc")
+    ups_in_x_uc5 = Signal(16, name="upsampler_in_x5_uc")
+    ups_in_y_uc5 = Signal(16, name="upsampler_in_y5_uc")
 
     # Low-speed capture outputs (UC domain)
     cap_done_uc = Signal(name="ls_cap_done_uc")
@@ -273,14 +303,30 @@ def add_uberclock_fullrate(soc, leds):
         i_gain4=_uc_out("gain4"),
         i_gain5=_uc_out("gain5"),
 
-        i_upsampler_input_x=ups_in_x_uc,
-        i_upsampler_input_y=ups_in_y_uc,
+        i_upsampler_input_x1=ups_in_x_uc1,
+        i_upsampler_input_y1=ups_in_y_uc1,
+        i_upsampler_input_x2=ups_in_x_uc2,
+        i_upsampler_input_y2=ups_in_y_uc2,
+        i_upsampler_input_x3=ups_in_x_uc3,
+        i_upsampler_input_y3=ups_in_y_uc3,
+        i_upsampler_input_x4=ups_in_x_uc4,
+        i_upsampler_input_y4=ups_in_y_uc4,
+        i_upsampler_input_x5=ups_in_x_uc5,
+        i_upsampler_input_y5=ups_in_y_uc5,
         i_final_shift=_uc_out("final_shift"),
 
         # Outputs
         o_ce_down=ce_down_uc,
-        o_downsampled_data_x=ds_x_uc,
-        o_downsampled_data_y=ds_y_uc,
+        o_downsampled_data_x1=ds_x_uc1,
+        o_downsampled_data_y1=ds_y_uc1,
+        o_downsampled_data_x2=ds_x_uc2,
+        o_downsampled_data_y2=ds_y_uc2,
+        o_downsampled_data_x3=ds_x_uc3,
+        o_downsampled_data_y3=ds_y_uc3,
+        o_downsampled_data_x4=ds_x_uc4,
+        o_downsampled_data_y4=ds_y_uc4,
+        o_downsampled_data_x5=ds_x_uc5,
+        o_downsampled_data_y5=ds_y_uc5,
 
         # High-speed capture sample out
         o_cap_selected_input=cap_sel_uc,
@@ -324,7 +370,7 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     DS_FIFO_DEPTH = 16384
 
-    ds_fifo_width = 32
+    ds_fifo_width = 16 * 10
     ds_fifo = AsyncFIFO(width=ds_fifo_width, depth=DS_FIFO_DEPTH)
     soc.submodules.ds_fifo = ClockDomainsRenamer({"write": "uc", "read": "sys"})(ds_fifo)
 
@@ -335,7 +381,13 @@ def add_uberclock_fullrate(soc, leds):
 
     # UC write-side: push on ce_down
     soc.comb += [
-        ds_fifo.din.eq(Cat(ds_x_uc, ds_y_uc)),
+        ds_fifo.din.eq(Cat(
+            ds_x_uc1, ds_y_uc1,
+            ds_x_uc2, ds_y_uc2,
+            ds_x_uc3, ds_y_uc3,
+            ds_x_uc4, ds_y_uc4,
+            ds_x_uc5, ds_y_uc5,
+        )),
         ds_fifo.we.eq(ce_down_uc & ds_fifo.writable),
     ]
 
@@ -376,8 +428,16 @@ def add_uberclock_fullrate(soc, leds):
     ]
 
     soc.comb += [
-        m.ds_fifo_x.status.eq(ds_data_sys[0:16]),
-        m.ds_fifo_y.status.eq(ds_data_sys[16:32]),
+        m.ds_fifo_x1.status.eq(ds_data_sys[0:16]),
+        m.ds_fifo_y1.status.eq(ds_data_sys[16:32]),
+        m.ds_fifo_x2.status.eq(ds_data_sys[32:48]),
+        m.ds_fifo_y2.status.eq(ds_data_sys[48:64]),
+        m.ds_fifo_x3.status.eq(ds_data_sys[64:80]),
+        m.ds_fifo_y3.status.eq(ds_data_sys[80:96]),
+        m.ds_fifo_x4.status.eq(ds_data_sys[96:112]),
+        m.ds_fifo_y4.status.eq(ds_data_sys[112:128]),
+        m.ds_fifo_x5.status.eq(ds_data_sys[128:144]),
+        m.ds_fifo_y5.status.eq(ds_data_sys[144:160]),
         m.ds_fifo_overflow.status.eq(ds_overflow_sys),
         m.ds_fifo_underflow.status.eq(ds_underflow_sys),
         m.ds_fifo_flags.status.eq(Cat(ds_fifo.readable, C(0, 7))),
@@ -388,7 +448,7 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     UPS_FIFO_DEPTH = 16384
 
-    ups_fifo_width = 32
+    ups_fifo_width = 16 * 10
     ups_fifo = AsyncFIFO(width=ups_fifo_width, depth=UPS_FIFO_DEPTH)
     soc.submodules.ups_fifo = ClockDomainsRenamer({"write": "sys", "read": "uc"})(ups_fifo)
 
@@ -402,7 +462,13 @@ def add_uberclock_fullrate(soc, leds):
     soc.comb += ups_push_sys.eq(m.ups_fifo_push.re)
 
     soc.comb += [
-        ups_fifo.din.eq(Cat(m.ups_fifo_x.storage, m.ups_fifo_y.storage)),
+        ups_fifo.din.eq(Cat(
+            m.ups_fifo_x1.storage, m.ups_fifo_y1.storage,
+            m.ups_fifo_x2.storage, m.ups_fifo_y2.storage,
+            m.ups_fifo_x3.storage, m.ups_fifo_y3.storage,
+            m.ups_fifo_x4.storage, m.ups_fifo_y4.storage,
+            m.ups_fifo_x5.storage, m.ups_fifo_y5.storage,
+        )),
         ups_fifo.we.eq(ups_push_sys & ups_fifo.writable),
     ]
 
@@ -425,8 +491,16 @@ def add_uberclock_fullrate(soc, leds):
     soc.comb += ups_fifo.re.eq(ce_down_uc & ups_fifo.readable)
 
     soc.sync.uc += If(ce_down_uc & ups_fifo.readable,
-        ups_x_uc.eq(ups_fifo.dout[0:16]),
-        ups_y_uc.eq(ups_fifo.dout[16:32]),
+        ups_x_uc1.eq(ups_fifo.dout[0:16]),
+        ups_y_uc1.eq(ups_fifo.dout[16:32]),
+        ups_x_uc2.eq(ups_fifo.dout[32:48]),
+        ups_y_uc2.eq(ups_fifo.dout[48:64]),
+        ups_x_uc3.eq(ups_fifo.dout[64:80]),
+        ups_y_uc3.eq(ups_fifo.dout[80:96]),
+        ups_x_uc4.eq(ups_fifo.dout[96:112]),
+        ups_y_uc4.eq(ups_fifo.dout[112:128]),
+        ups_x_uc5.eq(ups_fifo.dout[128:144]),
+        ups_y_uc5.eq(ups_fifo.dout[144:160]),
         ups_have_sample_uc.eq(1)
     )
 
@@ -448,8 +522,16 @@ def add_uberclock_fullrate(soc, leds):
 
     # Upsampler input always comes from FIFO; before first sample, drive zero.
     soc.comb += [
-        ups_in_x_uc.eq(Mux(ups_have_sample_uc, ups_x_uc, C(0, 16))),
-        ups_in_y_uc.eq(Mux(ups_have_sample_uc, ups_y_uc, C(0, 16))),
+        ups_in_x_uc1.eq(Mux(ups_have_sample_uc, ups_x_uc1, C(0, 16))),
+        ups_in_y_uc1.eq(Mux(ups_have_sample_uc, ups_y_uc1, C(0, 16))),
+        ups_in_x_uc2.eq(Mux(ups_have_sample_uc, ups_x_uc2, C(0, 16))),
+        ups_in_y_uc2.eq(Mux(ups_have_sample_uc, ups_y_uc2, C(0, 16))),
+        ups_in_x_uc3.eq(Mux(ups_have_sample_uc, ups_x_uc3, C(0, 16))),
+        ups_in_y_uc3.eq(Mux(ups_have_sample_uc, ups_y_uc3, C(0, 16))),
+        ups_in_x_uc4.eq(Mux(ups_have_sample_uc, ups_x_uc4, C(0, 16))),
+        ups_in_y_uc4.eq(Mux(ups_have_sample_uc, ups_y_uc4, C(0, 16))),
+        ups_in_x_uc5.eq(Mux(ups_have_sample_uc, ups_x_uc5, C(0, 16))),
+        ups_in_y_uc5.eq(Mux(ups_have_sample_uc, ups_y_uc5, C(0, 16))),
     ]
 
     # -------------------------------------------------------------------------

@@ -1,5 +1,12 @@
 // Creator:	Dan Gisselquist, Ph.D.
 //		Gisselquist Technology, LLC
+/**
+ * @file cordic.v
+ * @brief Full-width rotation CORDIC.
+ *
+ * Pipelined CORDIC rotator used for NCO generation and receive-side frequency translation.
+ */
+
 //
 ////////////////////////////////////////////////////////////////////////////////
 //
