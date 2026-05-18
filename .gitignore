@@ -23,7 +23,7 @@
 *.map
 *.fbi
 *.txt
-
+!analysis.txt
 __pycache__/
 *.pyc
 
