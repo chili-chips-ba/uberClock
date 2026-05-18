@@ -1,0 +1,47 @@
+Crystal Oscillator Temperature Analysis
+=======================================
+
+
+SUMMARY STATISTICS
+==================
+
+C100 Mode (3.333 MHz nominal):
+  Temperature range: 20°C to 65°C (10 points)
+  Frequency range: 3.388438 to 3.388594 MHz
+  PPM deviation range: 16633.06 to 16679.87 ppm
+  PPM standard deviation: 22.61 ppm
+  Linear temperature coefficient: -1.191 ppm/°C
+  Linear fit R²: 0.6364
+
+B100 Mode (3.660 MHz nominal):
+  Temperature range: 20°C to 65°C (10 points)
+  Frequency range: 3.722656 to 3.728594 MHz
+  PPM deviation range: 17119.13 to 18741.53 ppm
+  PPM standard deviation: 567.89 ppm
+  Linear temperature coefficient: -37.156 ppm/°C
+  Linear fit R²: 0.9810
+
+A100 Mode (6.224 MHz nominal):
+  Temperature range: 20°C to 65°C (10 points)
+  Frequency range: 6.260469 to 6.271250 MHz
+  PPM deviation range: 5859.42 to 7591.58 ppm
+  PPM standard deviation: 594.03 ppm
+  Linear temperature coefficient: -38.996 ppm/°C
+  Linear fit R²: 0.9876
+
+C300 Mode (10.000 MHz nominal):
+  Temperature range: 20°C to 65°C (10 points)
+  Frequency range: 10.003810 to 10.004000 MHz
+  PPM deviation range: 381.00 to 400.00 ppm
+  PPM standard deviation: 6.75 ppm
+  Linear temperature coefficient: -0.428 ppm/°C
+  Linear fit R²: 0.9208
+
+B300 Mode (10.981 MHz nominal):
+  Temperature range: 20°C to 65°C (10 points)
+  Frequency range: 10.953250 to 10.966730 MHz
+  PPM deviation range: -2527.09 to -1299.52 ppm
+  PPM standard deviation: 412.44 ppm
+  Linear temperature coefficient: -27.224 ppm/°C
+  Linear fit R²: 0.9985
+
