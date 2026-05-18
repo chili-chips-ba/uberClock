@@ -1,6 +1,7 @@
 <!--
 SPDX-FileCopyrightText: 2026 Ahmed Imamović
 SPDX-FileCopyrightText: 2026 Tarik Hamedović
+SPDX-FileCopyrightText: 2026 Dan Gisselquist
 SPDX-License-Identifier: CC-BY-SA-4.0
 -->
 
