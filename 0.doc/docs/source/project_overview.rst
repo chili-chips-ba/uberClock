@@ -61,11 +61,11 @@ Hardware Platform
 - **Physics Package**: full-custom `analog board <https://github.com/jdbrinton/uberclock>`_ with multi-mode quartz crystal
 
 .. image:: ../../Quartz/Analog-Card.1.jpg
-   :width: 250
+   :width: 500
    :align: center
 
 .. image:: ../../Quartz/Analog-Card.2.png
-   :width: 200
+   :width: 500
    :align: center
 
 - `AX7203 Artix7-200 FPGA Board <https://www.en.alinx.com/Product/FPGA-Development-Boards/Artix-7/AX7203.html>`_
@@ -293,56 +293,22 @@ Conceptually, the work packages define the following development path:
       ↓
    Analysis and benchmarking
 
-DSP Theory of Operation
------------------------
-
-- WIP
-
-Bit-Accurate Models
--------------------
-
-Multi-mode Quartz Crystal
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- WIP
-
-DSP Datapath
-~~~~~~~~~~~~
-
-- WIP
-
-Bit-Accurate Simulation of the Entire Algorithm
------------------------------------------------
-
-- WIP
-
-Software Architecture
----------------------
-
-The software side of the project includes:
-
-- LiteX-based SoC generation and integration in Python,
-- embedded firmware running on the VexRiscV CPU,
-- host-side scripts for capture export, plotting, and analysis.
-
-See:
-
-- :doc:`firmware/index`
-- :doc:`python_soc/index`
-- :doc:`examples/index`
 
 Acknowledgements
 ----------------
 
-We are grateful to NLnet Foundation for their sponsorship of this development
-activity.
+We are grateful to **NLnet Foundation** for their sponsorship of this
+development activity.
 
-.. image:: https://github.com/openeye/assets/67533663/18e7db5c-8c52-406b-a58e-8860caa327c2
+.. image:: https://nlnet.nl/logo/banner.svg
+   :width: 25%
    :align: center
 
-.. image:: https://github.com/openeye-CamSI/assets/67533663/013684f5-d530-42ab-807d-b4afd34c1522
-   :width: 115
+.. image:: https://nlnet.nl/image/logos/NGI0Core_tag.svg
+   :width: 25%
    :align: center
+
+This project was funded through the NGI0 Commons Fund, a fund established by NLnet with financial support from the European Commission's Next Generation Internet programme, under the aegis of DG Communications Networks, Content and Technology under grant agreement No. 101135429. Additional funding is made available by the Swiss State Secretariat for Education, Research and Innovation.
 
 Public Posts
 ------------

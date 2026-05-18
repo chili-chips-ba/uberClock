@@ -1,0 +1,27 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="uberclock_rtl_datapath">
+    <mxGraphModel dx="1300" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="UberClock RTL Datapath" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="540" y="30" width="430" height="40" as="geometry"/></mxCell>
+        <mxCell id="adc" value="ADC / sample input" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="70" y="220" width="170" height="70" as="geometry"/></mxCell>
+        <mxCell id="mux" value="input select&lt;br&gt;ramp / ADC / test" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1"><mxGeometry x="300" y="220" width="170" height="70" as="geometry"/></mxCell>
+        <mxCell id="rx" value="rx_channel.v&lt;br&gt;CORDIC / mixer&lt;br&gt;downconversion" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1"><mxGeometry x="530" y="200" width="210" height="110" as="geometry"/></mxCell>
+        <mxCell id="filters" value="filters&lt;br&gt;CIC, halfband,&lt;br&gt;compensation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1"><mxGeometry x="800" y="205" width="190" height="100" as="geometry"/></mxCell>
+        <mxCell id="low" value="low-speed I/Q&lt;br&gt;debug FIFO / CSR&lt;br&gt;ce_down event" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="1060" y="110" width="210" height="100" as="geometry"/></mxCell>
+        <mxCell id="high" value="high-speed capture stream&lt;br&gt;to UCStreamMux / DMA" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="1060" y="270" width="210" height="90" as="geometry"/></mxCell>
+        <mxCell id="tx" value="tx_channel.v&lt;br&gt;upsampler mux&lt;br&gt;interpolation / output routing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1" vertex="1" parent="1"><mxGeometry x="530" y="470" width="230" height="110" as="geometry"/></mxCell>
+        <mxCell id="dac" value="DAC outputs&lt;br&gt;channel 1 / channel 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="830" y="490" width="190" height="70" as="geometry"/></mxCell>
+        <mxCell id="cfg" value="UC shadow registers&lt;br&gt;phase increments, gains,&lt;br&gt;route selects, shifts" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666" vertex="1" parent="1"><mxGeometry x="260" y="470" width="210" height="110" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="adc" target="mux" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="mux" target="rx" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="rx" target="filters" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="filters" target="low" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="filters" target="high" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="cfg" target="rx" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="cfg" target="tx" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="tx" target="dac" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

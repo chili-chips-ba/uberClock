@@ -1,0 +1,27 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="ddr3_capture_path">
+    <mxGraphModel dx="1300" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="High-Speed DDR3 Capture Path" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="520" y="30" width="520" height="40" as="geometry"/></mxCell>
+        <mxCell id="uc" value="UC domain" style="swimlane;html=1;startSize=30;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="80" y="120" width="560" height="560" as="geometry"/></mxCell>
+        <mxCell id="sys" value="SYS domain" style="swimlane;html=1;startSize=30;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="760" y="120" width="600" height="560" as="geometry"/></mxCell>
+        <mxCell id="source" value="RampSource or&lt;br&gt;SamplePackerStream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="uc"><mxGeometry x="80" y="110" width="190" height="80" as="geometry"/></mxCell>
+        <mxCell id="mux" value="UCStreamMux&lt;br&gt;cap_enable selects source" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="uc"><mxGeometry x="330" y="110" width="190" height="80" as="geometry"/></mxCell>
+        <mxCell id="afifo_uc" value="async FIFO&lt;br&gt;write side" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366" vertex="1" parent="uc"><mxGeometry x="330" y="290" width="190" height="80" as="geometry"/></mxCell>
+        <mxCell id="afifo_sys" value="async FIFO&lt;br&gt;read side" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="sys"><mxGeometry x="60" y="290" width="180" height="80" as="geometry"/></mxCell>
+        <mxCell id="dma" value="zipdma_s2mm&lt;br&gt;stream-to-memory writer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="sys"><mxGeometry x="310" y="290" width="210" height="80" as="geometry"/></mxCell>
+        <mxCell id="xbar" value="wbxbar&lt;br&gt;CPU + DMA masters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="sys"><mxGeometry x="310" y="420" width="210" height="80" as="geometry"/></mxCell>
+        <mxCell id="ddr" value="ddr3_top&lt;br&gt;controller + PHY&lt;br&gt;external DDR3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#b85450" vertex="1" parent="sys"><mxGeometry x="310" y="530" width="210" height="90" as="geometry"/></mxCell>
+        <mxCell id="fw" value="C firmware&lt;br&gt;arm DMA, wait done,&lt;br&gt;dump or send capture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="sys"><mxGeometry x="60" y="60" width="200" height="90" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" parent="uc" source="source" target="mux" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="uc" source="mux" target="afifo_uc" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="afifo_uc" target="afifo_sys" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="sys" source="afifo_sys" target="dma" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="sys" source="dma" target="xbar" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" parent="sys" source="xbar" target="ddr" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" edge="1" parent="sys" source="fw" target="dma" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

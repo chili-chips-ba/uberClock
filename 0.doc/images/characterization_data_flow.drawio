@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="characterization_data_flow">
+    <mxGraphModel dx="1300" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Characterization Data Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="560" y="30" width="430" height="40" as="geometry"/></mxCell>
+        <mxCell id="setup" value="Crystal / analog board&lt;br&gt;VNA + temperature chamber&lt;br&gt;orientation setup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontStyle=1" vertex="1" parent="1"><mxGeometry x="100" y="230" width="230" height="100" as="geometry"/></mxCell>
+        <mxCell id="raw" value="1.raw_data&lt;br&gt;Touchstone .s2p files&lt;br&gt;Top, Bottom, Front, Back&lt;br&gt;C100, B100, A100, C300, B300" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1"><mxGeometry x="420" y="210" width="250" height="140" as="geometry"/></mxCell>
+        <mxCell id="analysis" value="2.analysis&lt;br&gt;processed data&lt;br&gt;plots and summaries" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="760" y="230" width="220" height="100" as="geometry"/></mxCell>
+        <mxCell id="model" value="3.model&lt;br&gt;BVD extraction&lt;br&gt;multi-mode crystal model" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf" vertex="1" parent="1"><mxGeometry x="1060" y="230" width="230" height="100" as="geometry"/></mxCell>
+        <mxCell id="docs" value="Sphinx documentation&lt;br&gt;characterization section&lt;br&gt;plots, parameters, conclusions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="620" y="500" width="260" height="100" as="geometry"/></mxCell>
+        <mxCell id="dsp" value="DSP / tracking design input&lt;br&gt;mode frequencies&lt;br&gt;temperature movement&lt;br&gt;model parameters" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1"><mxGeometry x="960" y="500" width="260" height="110" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="setup" target="raw" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="raw" target="analysis" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="analysis" target="model" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="analysis" target="docs" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="model" target="docs" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="model" target="dsp" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

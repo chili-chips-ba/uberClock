@@ -1,0 +1,26 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="firmware_runtime_flow">
+    <mxGraphModel dx="1300" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Bare-Metal Firmware Runtime Flow" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="520" y="30" width="540" height="40" as="geometry"/></mxCell>
+        <mxCell id="main" value="main.c&lt;br&gt;UART init&lt;br&gt;interrupt init&lt;br&gt;console init&lt;br&gt;uberclock_init()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1"><mxGeometry x="120" y="130" width="210" height="120" as="geometry"/></mxCell>
+        <mxCell id="loop" value="main loop&lt;br&gt;console_poll()&lt;br&gt;uberclock_poll()" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1"><mxGeometry x="420" y="150" width="210" height="90" as="geometry"/></mxCell>
+        <mxCell id="uart" value="UART console input" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1"><mxGeometry x="150" y="360" width="190" height="70" as="geometry"/></mxCell>
+        <mxCell id="cmd" value="console.c&lt;br&gt;command parser + dispatch" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656" vertex="1" parent="1"><mxGeometry x="420" y="350" width="220" height="80" as="geometry"/></mxCell>
+        <mxCell id="uc" value="uberclock.c&lt;br&gt;CSR setup, FFT, tracking,&lt;br&gt;capture, DDR, UDP commands" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1" vertex="1" parent="1"><mxGeometry x="730" y="330" width="260" height="110" as="geometry"/></mxCell>
+        <mxCell id="csr" value="LiteX CSRs&lt;br&gt;config commit&lt;br&gt;DMA control/status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="1080" y="340" width="210" height="90" as="geometry"/></mxCell>
+        <mxCell id="isr" value="ce_down event&lt;br&gt;LiteX ISR records pending work" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1"><mxGeometry x="420" y="570" width="230" height="80" as="geometry"/></mxCell>
+        <mxCell id="dsp" value="FPGA DSP / DMA&lt;br&gt;low-speed samples&lt;br&gt;DDR3 capture path" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="1080" y="560" width="210" height="90" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="main" target="loop" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="uart" target="cmd" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="loop" target="cmd" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="cmd" target="uc" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="uc" target="csr" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="csr" target="dsp" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="dsp" target="isr" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="isr" target="loop" style="endArrow=block;html=1;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

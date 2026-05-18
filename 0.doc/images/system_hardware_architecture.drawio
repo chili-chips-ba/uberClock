@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="system_hardware_architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="uberClock System Hardware Architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="430" y="30" width="650" height="40" as="geometry"/></mxCell>
+        <mxCell id="physics" value="Physics package&lt;br&gt;multi-mode quartz crystal&lt;br&gt;analog front-end" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=14" vertex="1" parent="1"><mxGeometry x="70" y="230" width="220" height="100" as="geometry"/></mxCell>
+        <mxCell id="adc" value="AN9238 ADC&lt;br&gt;2 ch, 65 MSPS, 12-bit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14" vertex="1" parent="1"><mxGeometry x="350" y="230" width="180" height="90" as="geometry"/></mxCell>
+        <mxCell id="fpga" value="AX7203 Artix-7 FPGA&lt;br&gt;&lt;br&gt;DSP datapath&lt;br&gt;LiteX SoC / RISC-V CPU&lt;br&gt;UberDDR3 capture memory&lt;br&gt;UART / Ethernet / debug" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontSize=14;fontStyle=1" vertex="1" parent="1"><mxGeometry x="600" y="170" width="290" height="220" as="geometry"/></mxCell>
+        <mxCell id="dac" value="AN9767 DAC&lt;br&gt;2 ch, 125 MSPS, 14-bit" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=14" vertex="1" parent="1"><mxGeometry x="970" y="230" width="180" height="90" as="geometry"/></mxCell>
+        <mxCell id="measure" value="Measurement / debug equipment&lt;br&gt;spectrum analyzer, oscilloscope, host tools" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=14" vertex="1" parent="1"><mxGeometry x="1210" y="230" width="230" height="100" as="geometry"/></mxCell>
+        <mxCell id="host" value="Host PC&lt;br&gt;UART / Ethernet&lt;br&gt;Python analysis, capture tools, firmware console" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=14" vertex="1" parent="1"><mxGeometry x="620" y="520" width="250" height="110" as="geometry"/></mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="physics" target="adc" style="endArrow=block;html=1;rounded=0;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="adc" target="fpga" style="endArrow=block;html=1;rounded=0;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="fpga" target="dac" style="endArrow=block;html=1;rounded=0;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="dac" target="measure" style="endArrow=block;html=1;rounded=0;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="fpga" target="host" style="endArrow=block;html=1;rounded=0;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="host" target="fpga" style="endArrow=block;html=1;rounded=0;dashed=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

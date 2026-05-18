@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">Tracking loop block diagram</title>
+  <desc id="desc">Oscillator samples pass through FPGA DSP and a downsampled FIFO to firmware. Firmware estimates tone position and writes phase increment CSRs back to the FPGA downconverters.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 z" fill="#334155"/>
+    </marker>
+    <style>
+      .box { fill:#f8fafc; stroke:#334155; stroke-width:2; rx:8; }
+      .soft { fill:#eef6ff; }
+      .firm { fill:#fff7ed; }
+      .text { font-family:Arial, Helvetica, sans-serif; font-size:20px; fill:#0f172a; }
+      .small { font-size:15px; fill:#475569; }
+      .arrow { stroke:#334155; stroke-width:2.5; fill:none; marker-end:url(#arrow); }
+      .return { stroke:#7c2d12; stroke-width:2.5; fill:none; marker-end:url(#arrow); stroke-dasharray:8 6; }
+    </style>
+  </defs>
+  <rect x="30" y="95" width="150" height="90" class="box"/>
+  <text x="105" y="132" class="text" text-anchor="middle">ADC / XTAL</text>
+  <text x="105" y="158" class="small" text-anchor="middle">sampled signal</text>
+  <rect x="240" y="70" width="190" height="140" class="box soft"/>
+  <text x="335" y="112" class="text" text-anchor="middle">FPGA DSP</text>
+  <text x="335" y="140" class="small" text-anchor="middle">CORDIC mix</text>
+  <text x="335" y="162" class="small" text-anchor="middle">decimate / FIFO</text>
+  <rect x="500" y="95" width="160" height="90" class="box soft"/>
+  <text x="580" y="132" class="text" text-anchor="middle">DS FIFO</text>
+  <text x="580" y="158" class="small" text-anchor="middle">low-rate IQ</text>
+  <rect x="730" y="70" width="190" height="140" class="box firm"/>
+  <text x="825" y="110" class="text" text-anchor="middle">Firmware</text>
+  <text x="825" y="138" class="small" text-anchor="middle">power estimate</text>
+  <text x="825" y="160" class="small" text-anchor="middle">track3 / trackq</text>
+  <rect x="990" y="95" width="170" height="90" class="box firm"/>
+  <text x="1075" y="132" class="text" text-anchor="middle">CSR write</text>
+  <text x="1075" y="158" class="small" text-anchor="middle">phase_down_N</text>
+  <path d="M180 140 H235" class="arrow"/>
+  <path d="M430 140 H495" class="arrow"/>
+  <path d="M660 140 H725" class="arrow"/>
+  <path d="M920 140 H985" class="arrow"/>
+  <path d="M1075 95 C1075 35 335 35 335 68" class="return"/>
+  <text x="705" y="34" class="small" text-anchor="middle" fill="#7c2d12">new downconversion frequency</text>
+</svg>

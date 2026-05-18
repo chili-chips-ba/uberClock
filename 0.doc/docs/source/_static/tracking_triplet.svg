@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Three-tone tracking measurement</title>
+  <desc id="desc">Power spectrum with left, center, and right measurements around the baseband center frequency.</desc>
+  <defs>
+    <style>
+      .axis { stroke:#334155; stroke-width:2; }
+      .grid { stroke:#cbd5e1; stroke-width:1; stroke-dasharray:5 7; }
+      .curve { fill:none; stroke:#2563eb; stroke-width:5; }
+      .stem { stroke:#b45309; stroke-width:4; }
+      .dot { fill:#f97316; stroke:#7c2d12; stroke-width:2; }
+      .text { font-family:Arial, Helvetica, sans-serif; font-size:20px; fill:#0f172a; }
+      .small { font-size:16px; fill:#475569; }
+      .label { font-size:18px; fill:#7c2d12; font-weight:bold; }
+    </style>
+  </defs>
+  <line x1="90" y1="300" x2="1120" y2="300" class="axis"/>
+  <line x1="90" y1="300" x2="90" y2="40" class="axis"/>
+  <text x="610" y="342" class="text" text-anchor="middle">baseband frequency</text>
+  <text x="24" y="170" class="text" text-anchor="middle" transform="rotate(-90 24 170)">power</text>
+  <path d="M120 292 C250 285 330 246 420 190 C480 154 530 80 600 74 C670 80 720 154 780 190 C870 246 950 285 1080 292" class="curve"/>
+  <line x1="420" y1="300" x2="420" y2="190" class="stem"/>
+  <circle cx="420" cy="190" r="8" class="dot"/>
+  <text x="420" y="176" class="label" text-anchor="middle">P_L</text>
+  <line x1="600" y1="300" x2="600" y2="74" class="stem"/>
+  <circle cx="600" cy="74" r="8" class="dot"/>
+  <text x="600" y="60" class="label" text-anchor="middle">P_C</text>
+  <line x1="780" y1="300" x2="780" y2="190" class="stem"/>
+  <circle cx="780" cy="190" r="8" class="dot"/>
+  <text x="780" y="176" class="label" text-anchor="middle">P_R</text>
+  <line x1="420" y1="300" x2="420" y2="40" class="grid"/>
+  <line x1="600" y1="300" x2="600" y2="40" class="grid"/>
+  <line x1="780" y1="300" x2="780" y2="40" class="grid"/>
+  <text x="420" y="326" class="small" text-anchor="middle">f_c - h</text>
+  <text x="600" y="326" class="small" text-anchor="middle">f_c</text>
+  <text x="780" y="326" class="small" text-anchor="middle">f_c + h</text>
+  <text x="600" y="28" class="small" text-anchor="middle">coarse lock: center strongest, side tones visible and balanced</text>
+</svg>

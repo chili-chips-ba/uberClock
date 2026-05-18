@@ -25,7 +25,6 @@ If you are new to the SoC tree, read the pages in this order:
    overview
    Python Integration and API <../python_soc/index>
    Testing and Experiments <testing>
-   uberClock RTL Simulation <uberclock_simulation>
 
 .. toctree::
    :maxdepth: 1

@@ -1,0 +1,29 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="python_soc_package_architecture">
+    <mxGraphModel dx="1300" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1500" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/><mxCell id="1" parent="0"/>
+        <mxCell id="title" value="Python / LiteX SoC Package Architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=26;fontStyle=1" vertex="1" parent="1"><mxGeometry x="480" y="30" width="620" height="40" as="geometry"/></mxCell>
+        <mxCell id="entry" value="python -m uberclock_soc&lt;br&gt;__main__.py" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontStyle=1" vertex="1" parent="1"><mxGeometry x="610" y="100" width="220" height="70" as="geometry"/></mxCell>
+        <mxCell id="soc" value="soc.py&lt;br&gt;build_main(), BaseSoC&lt;br&gt;platform, CRG, SoCCore" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1" vertex="1" parent="1"><mxGeometry x="590" y="230" width="260" height="100" as="geometry"/></mxCell>
+        <mxCell id="clock" value="clocking.py&lt;br&gt;sys, uc, DDR, idelay domains" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="150" y="420" width="230" height="80" as="geometry"/></mxCell>
+        <mxCell id="core" value="uberclock_core.py&lt;br&gt;wraps Verilog uberclock&lt;br&gt;events, debug, capture" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="430" y="420" width="240" height="90" as="geometry"/></mxCell>
+        <mxCell id="ubddr3" value="ubddr3.py&lt;br&gt;side memory, stream mux,&lt;br&gt;DMA integration" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366" vertex="1" parent="1"><mxGeometry x="730" y="420" width="240" height="90" as="geometry"/></mxCell>
+        <mxCell id="rtl" value="rtl_sources.py / rtl_filelist.py&lt;br&gt;collect Verilog sources" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6" vertex="1" parent="1"><mxGeometry x="1030" y="420" width="250" height="80" as="geometry"/></mxCell>
+        <mxCell id="csrs" value="uberclock_csrs.py&lt;br&gt;CSR bank definitions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="330" y="620" width="210" height="70" as="geometry"/></mxCell>
+        <mxCell id="snap" value="csr_snapshot_fifo.py&lt;br&gt;atomic sys-to-uc config transfer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="570" y="620" width="240" height="70" as="geometry"/></mxCell>
+        <mxCell id="streams" value="streams.py&lt;br&gt;ramp source, sample packer, stream mux" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="850" y="620" width="250" height="70" as="geometry"/></mxCell>
+        <mxCell id="wishbone" value="wishbone.py&lt;br&gt;bus helpers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450" vertex="1" parent="1"><mxGeometry x="1130" y="620" width="170" height="70" as="geometry"/></mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="entry" target="soc" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="soc" target="clock" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="soc" target="core" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="soc" target="ubddr3" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="soc" target="rtl" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="core" target="csrs" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="core" target="snap" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="ubddr3" target="streams" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="ubddr3" target="wishbone" style="endArrow=block;html=1;"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -16,5 +16,6 @@ implementation of the specific modules.
    :caption: DSP RTL
 
    rtl_blocks/index
+   Simulation <simulation>
    ad_da_conversion
    cordic_downconversion

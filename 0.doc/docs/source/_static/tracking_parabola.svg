@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="380" viewBox="0 0 1200 380" role="img" aria-labelledby="title desc">
+  <title id="title">Quadratic peak interpolation</title>
+  <desc id="desc">Three measured powers define a parabola. The estimated vertex indicates the baseband frequency error used for fine tracking.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,4 L0,8 z" fill="#334155"/>
+    </marker>
+    <style>
+      .axis { stroke:#334155; stroke-width:2; marker-end:url(#arrow); }
+      .curve { fill:none; stroke:#2563eb; stroke-width:5; }
+      .stem { stroke:#b45309; stroke-width:4; }
+      .dot { fill:#f97316; stroke:#7c2d12; stroke-width:2; }
+      .vertex { stroke:#16a34a; stroke-width:3; stroke-dasharray:7 6; }
+      .text { font-family:Arial, Helvetica, sans-serif; font-size:20px; fill:#0f172a; }
+      .small { font-size:16px; fill:#475569; }
+      .green { fill:#166534; font-weight:bold; }
+      .formula { font-size:18px; fill:#0f172a; }
+    </style>
+  </defs>
+  <line x1="90" y1="310" x2="1110" y2="310" class="axis"/>
+  <line x1="90" y1="310" x2="90" y2="45" class="axis"/>
+  <text x="590" y="356" class="text" text-anchor="middle">frequency</text>
+  <text x="32" y="175" class="text" text-anchor="middle" transform="rotate(-90 32 175)">power</text>
+  <path d="M170 292 C300 210 440 92 560 78 C690 64 815 145 1005 288" class="curve"/>
+  <line x1="430" y1="310" x2="430" y2="108" class="stem"/>
+  <circle cx="430" cy="108" r="8" class="dot"/>
+  <line x1="600" y1="310" x2="600" y2="82" class="stem"/>
+  <circle cx="600" cy="82" r="8" class="dot"/>
+  <line x1="770" y1="310" x2="770" y2="136" class="stem"/>
+  <circle cx="770" cy="136" r="8" class="dot"/>
+  <line x1="560" y1="310" x2="560" y2="74" class="vertex"/>
+  <text x="560" y="60" class="green" text-anchor="middle">estimated vertex</text>
+  <text x="430" y="334" class="small" text-anchor="middle">f_c - h</text>
+  <text x="600" y="334" class="small" text-anchor="middle">f_c</text>
+  <text x="770" y="334" class="small" text-anchor="middle">f_c + h</text>
+  <text x="560" y="286" class="green" text-anchor="middle">f_hat</text>
+  <text x="817" y="74" class="formula">f_hat = f_c + h(P_L - P_R) / 2(P_L - 2P_C + P_R)</text>
+  <path d="M600 270 H565" stroke="#16a34a" stroke-width="3" marker-end="url(#arrow)"/>
+  <text x="584" y="258" class="small green" text-anchor="middle">error</text>
+</svg>
