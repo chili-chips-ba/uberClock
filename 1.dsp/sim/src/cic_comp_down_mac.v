@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: 2026 Ahmed Imamović
+// SPDX-FileCopyrightText: 2026 Tarik Hamedović
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 module cic_comp_down_mac #(
     parameter DW_IN           = 12,
     parameter DW_ACC          = 32,

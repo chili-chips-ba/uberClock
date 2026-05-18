@@ -1,4 +1,5 @@
-# TB Uberclock Simulation Results
+TB Uberclock Simulation Results
+===============================
 This testbench simulates our DSP datapath without CPU ([method 1](https://github.com/chili-chips-ba/uberClock/blob/dev-5channel-fifo/0.doc/HW_architecture.png)). Test case feeds 
 one 10MHz sinewave into 5 channels. Each channel downconverts and downsamples the signal, adds gains, and then upsamples and upconverts. The output of the system is the sum of 
 all 5 channels that in real case represents the driving signal of he oscillator. 
@@ -21,4 +22,3 @@ After upsampling and upconverting all signals are expected to be back to 10MHz, 
 The FFT analysis shows the expected result is achieved and 5 channels are working together in parallel. Each one can now be responsible for driving one mode of the XTAL.
 
 <img width="1914" height="1080" alt="Figure_1" src="https://github.com/user-attachments/assets/51db5b78-f2f0-48b6-bd3c-e49fbd79b34d" />
-
