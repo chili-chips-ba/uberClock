@@ -226,11 +226,11 @@ class UberClockCSRBank(LiteXModule):
             description="Direct Y (Q) input sample for upsampler channel 5."
         )
         # =====================================================================
-        #        Downsampled 5-channel frame FIFO (UC->SYS, CPU readback)
+        #        Downsampled 6-channel frame FIFO (UC->SYS, CPU readback)
         # =====================================================================
         self.ds_fifo_pop = CSRStorage(
             1,
-            description="Write (strobe) to pop one 5-channel downsampled frame from the FIFO."
+            description="Write (strobe) to pop one 6-channel downsampled frame from the FIFO."
         )
 
         self.ds_fifo_x1 = CSRStatus(
@@ -281,6 +281,16 @@ class UberClockCSRBank(LiteXModule):
         self.ds_fifo_y5 = CSRStatus(
             self.SAMPLE_WIDTH,
             description="Latched Y sample for channel 5 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_xref = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for the reference channel from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_yref = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for the reference channel from the last popped downsample FIFO frame."
         )
 
         self.ds_fifo_overflow = CSRStatus(

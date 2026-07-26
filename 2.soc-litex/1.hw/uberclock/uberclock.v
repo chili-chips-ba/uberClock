@@ -73,6 +73,8 @@ module uberclock#(
     output signed [15:0]      downsampled_data_y4,
     output signed [15:0]      downsampled_data_x5,
     output signed [15:0]      downsampled_data_y5,
+    output signed [15:0]      downsampled_data_xref,
+    output signed [15:0]      downsampled_data_yref,
     output                    ce_down,
     input signed  [15:0]      upsampler_input_x1,
     input signed  [15:0]      upsampler_input_y1,
@@ -645,6 +647,8 @@ module uberclock#(
         .rx_magnitude (rx0_magnitude_ref),
         .rx_phase (rx0_phase_ref)
     );
+    assign downsampled_data_xref = downsampled_x_ref;
+    assign downsampled_data_yref = downsampled_y_ref;
     // ----------------------------------------------------------------------
     // CPU CORDIC NCO TX1
     // ----------------------------------------------------------------------
@@ -840,6 +844,7 @@ module uberclock#(
                                 (output_select_ch1 == 4'b1011) ? filter_in << 2:
                                 (output_select_ch1 == 4'b1100) ? upsampler_in_x1[15:2] :
                                 (output_select_ch1 == 4'b1101) ? filter_in_1 << 2:
+                                (output_select_ch1 == 4'b1110) ? downsampled_y_ref[15:2] :
                                                                  sum; // 19->14:
 
     wire [13:0] dac2_data_in =  (output_select_ch2 == 4'b0000) ? upsampled_gain_y1[15:2]: // 19->14:
@@ -857,6 +862,7 @@ module uberclock#(
                                 (output_select_ch2 == 4'b1011) ? filter_in << 2:
                                 (output_select_ch2 == 4'b1100) ? upsampler_in_x1[15:2] :
                                 (output_select_ch2 == 4'b1101) ? filter_in_1 << 2:
+                                (output_select_ch2 == 4'b1110) ? downsampled_y_ref[15:2] :
                                                                  sum; // 19->14:
 
     reg  [13:0] dac1_data_reg, dac2_data_reg;
@@ -890,7 +896,8 @@ module uberclock#(
         (lowspeed_dbg_select == 3'b010) ? upsampled_gain_y3 :
         (lowspeed_dbg_select == 3'b011) ? upsampled_gain_y4 :
         (lowspeed_dbg_select == 3'b100) ? upsampled_gain_y5 : 
-        (lowspeed_dbg_select == 3'b101) ? upsampler_in_x1 : 16'sd0;
+        (lowspeed_dbg_select == 3'b101) ? upsampler_in_x1 :
+        (lowspeed_dbg_select == 3'b110) ? downsampled_y_ref : 16'sd0;
 
     reg cap_arm_q;
     wire cap_arm_pulse = cap_arm & ~cap_arm_q;

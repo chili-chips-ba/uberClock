@@ -24,6 +24,11 @@ typedef struct {
     int16_t y[5];
 } iq5_frame_t;
 
+typedef struct {
+    int16_t x[6];
+    int16_t y[6];
+} iq6_frame_t;
+
 static void write_upsampler_inputs_all_x(int16_t v) {
     uint32_t w = (uint32_t)((int32_t)v & 0xffff);
     main_upsampler_input_x1_write(w);
@@ -64,7 +69,7 @@ static void ups_fifo_write_replicated(int16_t x, int16_t y) {
     ups_fifo_write_frame(&frame);
 }
 
-static void ds_fifo_read_frame(iq5_frame_t *frame) {
+static void ds_fifo_read_frame(iq6_frame_t *frame) {
     main_ds_fifo_pop_write(1);
     frame->x[0] = (int16_t)(main_ds_fifo_x1_read() & 0xffffu);
     frame->y[0] = (int16_t)(main_ds_fifo_y1_read() & 0xffffu);
@@ -76,6 +81,8 @@ static void ds_fifo_read_frame(iq5_frame_t *frame) {
     frame->y[3] = (int16_t)(main_ds_fifo_y4_read() & 0xffffu);
     frame->x[4] = (int16_t)(main_ds_fifo_x5_read() & 0xffffu);
     frame->y[4] = (int16_t)(main_ds_fifo_y5_read() & 0xffffu);
+    frame->x[5] = (int16_t)(main_ds_fifo_xref_read() & 0xffffu);
+    frame->y[5] = (int16_t)(main_ds_fifo_yref_read() & 0xffffu);
 }
 
 static void cmd_fft32_ds_y(char *args) {
@@ -109,7 +116,7 @@ static void cmd_fft32_ds_y(char *args) {
             return;
         }
 
-        iq5_frame_t frame;
+        iq6_frame_t frame;
         ds_fifo_read_frame(&frame);
         int16_t sy = frame.y[0];
 
@@ -198,6 +205,12 @@ static const int16_t sine_q64[64] = {
 };
 static uint32_t sig3_phase_inc(uint32_t f_hz, uint32_t fs_hz) {
     return (uint32_t)(((uint64_t)f_hz << 32) / fs_hz);
+}
+
+static uint32_t sig3_phase_inc_from_mhz(int64_t f_hz_milli, uint32_t fs_hz) {
+    if (f_hz_milli <= 0)
+        return 0u;
+    return (uint32_t)((((uint64_t)f_hz_milli) << 32) / ((uint64_t)fs_hz * 1000ull));
 }
 
 static void sig3_update_increments(void) {
@@ -504,6 +517,7 @@ static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
 static uint32_t fft_fs_hz = 10000u;
 static volatile uint32_t ce_ticks = 0;
 static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
+static int16_t track_samples_ref[FFT_MAX_N];
 
 #define TRACK3_RF_FS_HZ            65000000u
 #define TRACK3_DEFAULT_STEP_HZ     5u
@@ -512,9 +526,12 @@ static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
 #define TRACK3_DEFAULT_SETTLE      256u
 #define TRACK3_DEFAULT_CENTER_HZ   1000u
 #define TRACK3_DEFAULT_DELTA_HZ    10u
+#define TRACKQ_REF_INPUT_HZ        10000000u
+#define TRACKQ_NCO_TARGET_HZ       10000000u
 #define TRACK3_DEFAULT_BAND_BINS   1u
-#define TRACKQ_INTERVAL_TICKS      20000u
+#define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
+#define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_MAX_STEP_HZ         2
 #define TRACKQ_ERR_ALPHA_NUM       1
 #define TRACKQ_ERR_ALPHA_DEN       4
@@ -695,7 +712,7 @@ static int track3_wait_ds_fifo(const char *phase, unsigned sample_idx, unsigned 
 
 static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle) {
     for (unsigned i = 0; i < settle; i++) {
-        iq5_frame_t frame;
+        iq6_frame_t frame;
 
         if (!track3_wait_ds_fifo("settle", i, settle)) {
             return 0;
@@ -705,7 +722,7 @@ static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle)
     }
 
     for (unsigned i = 0; i < n; i++) {
-        iq5_frame_t frame;
+        iq6_frame_t frame;
         int16_t sx;
 
         if (!track3_wait_ds_fifo("capture", i, n)) {
@@ -726,7 +743,7 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
     unsigned i;
 
     for (i = 0; i < settle; i++) {
-        iq5_frame_t frame;
+        iq6_frame_t frame;
 
         if (!track3_wait_ds_fifo("settle", i, settle))
             return 0;
@@ -735,7 +752,7 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
     }
 
     for (i = 0; i < n; i++) {
-        iq5_frame_t frame;
+        iq6_frame_t frame;
 
         if (!track3_wait_ds_fifo("capture", i, n))
             return 0;
@@ -743,6 +760,7 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
         track_samples[0][i] = frame.x[0];
         track_samples[1][i] = frame.x[1];
         track_samples[2][i] = frame.x[2];
+        track_samples_ref[i] = frame.y[5];
         track3_service_background_budget(4);
     }
 
@@ -801,6 +819,27 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
 static uint64_t track_power_at_hz_samples(const int16_t *samples, uint32_t f_hz, unsigned n) {
     uint32_t phase_acc = 0u;
     uint32_t phase_inc = sig3_phase_inc(f_hz, fft_fs_hz);
+    int64_t acc_i = 0;
+    int64_t acc_q = 0;
+    unsigned i;
+
+    for (i = 0; i < n; i++) {
+        int32_t sample = (int32_t)samples[i];
+        int32_t cos_q15 = (int32_t)sig3_sin_u32(phase_acc + 0x40000000u);
+        int32_t sin_q15 = (int32_t)sig3_sin_u32(phase_acc);
+
+        acc_i += ((int64_t)sample * (int64_t)cos_q15) >> TRACKQ_CORR_SHIFT;
+        acc_q -= ((int64_t)sample * (int64_t)sin_q15) >> TRACKQ_CORR_SHIFT;
+        phase_acc += phase_inc;
+        trackq_service_background_sample(i);
+    }
+
+    return (uint64_t)(acc_i * acc_i) + (uint64_t)(acc_q * acc_q);
+}
+
+static uint64_t track_power_at_mhz_samples(const int16_t *samples, int64_t f_hz_milli, unsigned n) {
+    uint32_t phase_acc = 0u;
+    uint32_t phase_inc = sig3_phase_inc_from_mhz(f_hz_milli, fft_fs_hz);
     int64_t acc_i = 0;
     int64_t acc_q = 0;
     unsigned i;
@@ -935,13 +974,128 @@ static int32_t trackq_side_error_mhz(uint64_t left_pwr, uint64_t right_pwr, uint
     return (int32_t)diff;
 }
 
+static int trackq_bin_vertex_estimate_mhz(const int16_t *samples,
+                                          uint32_t center_hz,
+                                          unsigned n,
+                                          int64_t *vertex_hz_milli_out) {
+    uint32_t k_center;
+    int64_t x1, x2, x3;
+    uint64_t p_left;
+    uint64_t p_center;
+    uint64_t p_right;
+    int64_t y1, y2, y3;
+    int64_t den;
+    int64_t num;
+
+    if (!samples || !vertex_hz_milli_out || n < 8u || fft_fs_hz == 0u)
+        return 0;
+
+    k_center = (uint32_t)((((uint64_t)center_hz * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
+    if (k_center == 0u || (k_center + 1u) >= (n / 2u))
+        return 0;
+
+    x1 = (int64_t)((((uint64_t)(k_center - 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+    x2 = (int64_t)((((uint64_t)k_center * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+    x3 = (int64_t)((((uint64_t)(k_center + 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+
+    p_left = track_power_at_mhz_samples(samples, x1, n);
+    p_center = track_power_at_mhz_samples(samples, x2, n);
+    p_right = track_power_at_mhz_samples(samples, x3, n);
+
+    if (p_center <= p_left || p_center <= p_right)
+        return 0;
+
+    y1 = (int64_t)p_left;
+    y2 = (int64_t)p_center;
+    y3 = (int64_t)p_right;
+
+    den = (y1 - (2ll * y2) + y3);
+    if (den >= 0ll)
+        return 0;
+
+    num = (x3 - x1) * (y1 - y3);
+    *vertex_hz_milli_out = x2 + (num / (4ll * den));
+    return 1;
+}
+
+static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
+                                               unsigned n,
+                                               int64_t *vertex_hz_milli_out) {
+    size_t cfg_need = 0;
+    size_t cfg_len;
+    kiss_fft_cfg cfg;
+    unsigned bins;
+    unsigned k_peak = 0u;
+    uint64_t p_peak = 0u;
+    unsigned k;
+    int64_t x1, x2, x3;
+    int64_t y1, y2, y3;
+    int64_t den;
+    int64_t num;
+
+    if (!samples || !vertex_hz_milli_out || !is_pow2_u(n) || n < 8u || n > FFT_MAX_N || fft_fs_hz == 0u)
+        return 0;
+
+    for (k = 0u; k < n; k++) {
+        fft_in[k].r = (kiss_fft_scalar)samples[k];
+        fft_in[k].i = (kiss_fft_scalar)0;
+    }
+
+    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    if (cfg_need > (size_t)FFT_CFG_MAX_BYTES)
+        return 0;
+
+    cfg_len = (size_t)FFT_CFG_MAX_BYTES;
+    cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    if (!cfg)
+        return 0;
+
+    kiss_fft(cfg, fft_in, fft_out);
+
+    bins = n / 2u;
+    for (k = 1u; k + 1u < bins; k++) {
+        uint64_t pwr = fft_bin_power_at(k);
+        if (pwr > p_peak) {
+            p_peak = pwr;
+            k_peak = k;
+        }
+    }
+
+    if (k_peak == 0u || (k_peak + 1u) >= bins)
+        return 0;
+
+    y1 = (int64_t)fft_bin_power_at(k_peak - 1u);
+    y2 = (int64_t)fft_bin_power_at(k_peak);
+    y3 = (int64_t)fft_bin_power_at(k_peak + 1u);
+    if (y2 <= y1 || y2 <= y3)
+        return 0;
+
+    x1 = (int64_t)((((uint64_t)(k_peak - 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+    x2 = (int64_t)((((uint64_t)k_peak * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+    x3 = (int64_t)((((uint64_t)(k_peak + 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
+
+    den = y1 - (2ll * y2) + y3;
+    if (den >= 0ll)
+        return 0;
+
+    num = (x3 - x1) * (y1 - y3);
+    *vertex_hz_milli_out = x2 + (num / (4ll * den));
+    return 1;
+}
+
 static void trackq_step(void) {
     unsigned i;
     unsigned capture_n = 0u;
     unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
+    uint32_t nco_phase_inc_log = main_phase_inc_nco_read();
     int any_due = 0;
     int any_enabled = 0;
-    int64_t vertex_hf_mhz_log[TRACKQ_CHANNELS];
+    int64_t bin_vertex_hf_mhz_log[TRACKQ_CHANNELS];
+    int64_t ref_bin_vertex_baseband_mhz_log = (int64_t)TRACK3_DEFAULT_CENTER_HZ * 1000ll;
+    int64_t ref_real_fs_mhz_log = (int64_t)TRACK3_RF_FS_HZ * 1000ll;
+    int64_t ref_error_ppm_milli_log = 0ll;
+    uint8_t bin_vertex_valid_log[TRACKQ_CHANNELS] = {0u, 0u, 0u};
+    uint8_t ref_bin_vertex_valid_log = 0u;
 
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         if (!trackq[i].enabled)
@@ -986,6 +1140,7 @@ static void trackq_step(void) {
         int64_t h_hz_milli;
         int64_t vertex_hz_milli;
         int64_t phase_hz_milli;
+        int64_t bin_vertex_hz_milli;
         int32_t correction_hz;
         int32_t applied_hz;
         uint32_t phase_inc;
@@ -997,8 +1152,9 @@ static void trackq_step(void) {
         int weak_mode;
 
         center_base_hz_milli = trackq_center_tone_hz_milli(i);
-        vertex_hf_mhz_log[i] = uc_phase_inc_to_mhz(phase_down_read(i), TRACK3_RF_FS_HZ) +
-                               center_base_hz_milli;
+        center_hz_milli = (int64_t)trackq[i].center_hz * 1000ll;
+        bin_vertex_hf_mhz_log[i] = uc_phase_inc_to_mhz(phase_down_read(i), TRACK3_RF_FS_HZ) +
+                                   center_base_hz_milli;
         if (!trackq[i].enabled || ce_ticks < trackq[i].next_tick)
             continue;
 
@@ -1006,7 +1162,6 @@ static void trackq_step(void) {
         center_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz, trackq[i].n);
         right_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz + trackq[i].delta_hz, trackq[i].n);
 
-        center_hz_milli = (int64_t)trackq[i].center_hz * 1000ll;
         vertex_hz_milli = center_hz_milli;
         correction_hz = 0;
         error_mhz = 0;
@@ -1046,17 +1201,47 @@ static void trackq_step(void) {
         phase_hz = (uint32_t)((int32_t)phase_hz + applied_hz);
         phase_down_write(i, uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ));
         phase_hz_milli = uc_phase_inc_to_mhz(uc_phase_inc_from_hz(phase_hz, TRACK3_RF_FS_HZ), TRACK3_RF_FS_HZ);
-        vertex_hf_mhz_log[i] = phase_hz_milli + center_base_hz_milli + (vertex_hz_milli - center_hz_milli);
+        if (trackq_bin_vertex_estimate_mhz(track_samples[i], trackq[i].center_hz, trackq[i].n, &bin_vertex_hz_milli)) {
+            bin_vertex_hf_mhz_log[i] = phase_hz_milli + center_base_hz_milli + (bin_vertex_hz_milli - center_hz_milli);
+            bin_vertex_valid_log[i] = 1u;
+        }
         trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
+    }
+
+    if (trackq_fft_peak_vertex_estimate_mhz(track_samples_ref, capture_n, &ref_bin_vertex_baseband_mhz_log)) {
+        int64_t ref_phase_hz_milli = uc_phase_inc_to_mhz(main_phase_inc_down_ref_read(), TRACK3_RF_FS_HZ);
+        int64_t ref_meas_hz_milli = ref_phase_hz_milli + ref_bin_vertex_baseband_mhz_log;
+        int64_t nominal_fs_hz = (int64_t)TRACK3_RF_FS_HZ;
+
+        if (ref_meas_hz_milli > 0ll) {
+            int64_t fs_real_hz = (nominal_fs_hz * (int64_t)TRACKQ_REF_INPUT_HZ * 1000ll) / ref_meas_hz_milli;
+            ref_real_fs_mhz_log = fs_real_hz * 1000ll;
+            ref_error_ppm_milli_log = ((fs_real_hz - nominal_fs_hz) * 1000000ll * 1000ll) / nominal_fs_hz;
+            if (fs_real_hz > 0ll && fs_real_hz <= 0xffffffffll) {
+                nco_phase_inc_log = uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)fs_real_hz);
+                main_phase_inc_nco_write(nco_phase_inc_log);
+            }
+        }
+        ref_bin_vertex_valid_log = 1u;
     }
 
     uc_commit();
     trackq_log_iteration++;
     if ((trackq_log_iteration % 5u) == 0u) {
-        printf("trackq hf vertex: ch1=%ld.%03ldHz ch2=%ld.%03ldHz ch3=%ld.%03ldHz\n",
-               (long)(vertex_hf_mhz_log[0] / 1000ll), (long)llabs(vertex_hf_mhz_log[0] % 1000ll),
-               (long)(vertex_hf_mhz_log[1] / 1000ll), (long)llabs(vertex_hf_mhz_log[1] % 1000ll),
-               (long)(vertex_hf_mhz_log[2] / 1000ll), (long)llabs(vertex_hf_mhz_log[2] % 1000ll));
+        printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz ppm=%s%ld.%03ld fs=%s%ld.%03ldHz nco_inc=%lu\n",
+               bin_vertex_valid_log[0] ? "" : "(na)",
+               (long)(bin_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[0] % 1000ll),
+               bin_vertex_valid_log[1] ? "" : "(na)",
+               (long)(bin_vertex_hf_mhz_log[1] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[1] % 1000ll),
+               bin_vertex_valid_log[2] ? "" : "(na)",
+               (long)(bin_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[2] % 1000ll),
+               ref_bin_vertex_valid_log ? "" : "(na)",
+               (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
+               ref_bin_vertex_valid_log ? "" : "(na)",
+               (long)(ref_error_ppm_milli_log / 1000ll), (long)llabs(ref_error_ppm_milli_log % 1000ll),
+               ref_bin_vertex_valid_log ? "" : "(na)",
+               (long)(ref_real_fs_mhz_log / 1000ll), (long)llabs(ref_real_fs_mhz_log % 1000ll),
+               (unsigned long)nco_phase_inc_log);
     }
 }
 
@@ -1287,7 +1472,7 @@ static void cmd_trackq_start(char *args) {
         trackq[i].step_accum_mhz = 0;
     }
 
-    printf("trackq_start: ch1=%lu Hz ch2=%lu Hz ch3=%lu Hz N=%u center=%lu Hz delta={%lu,%lu,%lu} Hz sig3={{%lu,%lu,%lu},{%lu,%lu,%lu},{%lu,%lu,%lu}} Hz interval=2 s\n",
+    printf("trackq_start: ch1=%lu Hz ch2=%lu Hz ch3=%lu Hz N=%u center=%lu Hz delta={%lu,%lu,%lu} Hz sig3={{%lu,%lu,%lu},{%lu,%lu,%lu},{%lu,%lu,%lu}} Hz interval=1 s\n",
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(0), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(1), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(2), TRACK3_RF_FS_HZ),
@@ -1389,7 +1574,7 @@ static void cmd_fft64_peak(char *args) {
             return;
         }
 
-        iq5_frame_t frame;
+        iq6_frame_t frame;
         ds_fifo_read_frame(&frame);
         int16_t sx = frame.x[0];
         int16_t sy = frame.y[0];
@@ -1494,13 +1679,13 @@ static void uc_help(char *args) {
     puts("  input_select         <0..3> (0=ADC,1=NCO,2=SUM,3=reserved)");
     puts("  upsampler_input_mux  <0..2> (0=Gain,1=CPU,2=CPU NCO)");
 
-    puts("  output_select_ch1    <0..15>");
-    puts("  output_select_ch2    <0..15>");
+    puts("  output_select_ch1    <0..15> (14=downsampled_y_ref, 15=sum)");
+    puts("  output_select_ch2    <0..15> (14=downsampled_y_ref, 15=sum)");
     puts("  gain1|gain2|gain3|gain4|gain5 <int32>");
     puts("  final_shift          <0..7>");
 
-    puts("  lowspeed_dbg_select  <0..4>");
-    puts("  highspeed_dbg_select <0..3>");
+    puts("  lowspeed_dbg_select  <0..7> (6=downsampled_y_ref)");
+    puts("  highspeed_dbg_select <0..3> (1=filter_in_1)");
 
     puts("  upsampler_x          <val>  (signed 16-bit, replicated to ch1..ch5)");
     puts("  upsampler_y          <val>  (signed 16-bit, replicated to ch1..ch5)");
@@ -1510,7 +1695,7 @@ static void uc_help(char *args) {
     puts("  sig3_freqs <ch> <f1> <f2> <f3> (set 3-tone frequencies for one channel)");
     puts("  sig3_enable_ch     <ch>     (enable one sig3 channel)");
     puts("  sig3_disable_ch    <ch>     (disable one sig3 channel)");
-    puts("  ds_pop                      (pop one 5-channel downsampled frame)");
+    puts("  ds_pop                      (pop one 6-channel downsampled frame, ch1..ch5 + ref)");
     puts("  ds_status                   (read downsample FIFO flags/overflow)");
     puts("  ups_push <x> <y>             (enqueue one 5-channel frame, replicated)");
     puts("  ups_status                  (read upsampler FIFO flags/overflow)");
@@ -1805,7 +1990,7 @@ static unsigned dsp_pump_step(unsigned max_in, unsigned max_out) {
 
     for (i = 0; i < max_in; i++) {
         if ((main_ds_fifo_flags_read() & 0x1u) != 0u) {
-            iq5_frame_t frame;
+            iq6_frame_t frame;
             ds_fifo_read_frame(&frame);
             int16_t in_x = frame.x[0];
             int16_t in_y = frame.y[0];
@@ -1870,19 +2055,21 @@ static void cmd_dsp_test(char *args) {
 
 static void cmd_ds_pop(char *a) {
     (void)a;
-    iq5_frame_t frame;
+    iq6_frame_t frame;
     ds_fifo_read_frame(&frame);
     printf("ds_fifo:"
            " ch1=(%d,%d)"
            " ch2=(%d,%d)"
            " ch3=(%d,%d)"
            " ch4=(%d,%d)"
-           " ch5=(%d,%d)\n",
+           " ch5=(%d,%d)"
+           " ref=(%d,%d)\n",
            (int)frame.x[0], (int)frame.y[0],
            (int)frame.x[1], (int)frame.y[1],
            (int)frame.x[2], (int)frame.y[2],
            (int)frame.x[3], (int)frame.y[3],
-           (int)frame.x[4], (int)frame.y[4]);
+           (int)frame.x[4], (int)frame.y[4],
+           (int)frame.x[5], (int)frame.y[5]);
 }
 
 static void cmd_ds_status(char *a) {
@@ -1953,7 +2140,7 @@ static void run_fft_ds(char *args, int peak_only) {
             printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
             return;
         }
-        iq5_frame_t frame;
+        iq6_frame_t frame;
         ds_fifo_read_frame(&frame);
         int16_t sx = frame.x[0];
         int16_t sy = frame.y[0];
@@ -2399,17 +2586,17 @@ static const struct cmd_entry uc_tbl[] = {
     {"mag_cpu4",             cmd_mag_cpu4,            "Set CPU NCO magnitude ch4"},
     {"mag_cpu5",             cmd_mag_cpu5,            "Set CPU NCO magnitude ch5"},
 
-    {"output_select_ch1",    cmd_output_sel_ch1,      "Select DAC1 source (0..15)"},
-    {"output_select_ch2",    cmd_output_sel_ch2,      "Select DAC2 source (0..15)"},
+    {"output_select_ch1",    cmd_output_sel_ch1,      "Select DAC1 source (0..15, 14=ref_y, 15=sum)"},
+    {"output_select_ch2",    cmd_output_sel_ch2,      "Select DAC2 source (0..15, 14=ref_y, 15=sum)"},
     {"input_select",         cmd_input_select,        "Set input select register"},
     {"upsampler_input_mux",  cmd_ups_in_mux,          "Set upsampler input mux (0..2)"},
 
-    {"lowspeed_dbg_select",  cmd_lowspeed_dbg_select, "Select low-speed debug source (0..4)"},
-    {"highspeed_dbg_select", cmd_highspeed_dbg_select,"Select high-speed debug source (0..3)"},
+    {"lowspeed_dbg_select",  cmd_lowspeed_dbg_select, "Select low-speed debug source (0..7, 6=ref_y)"},
+    {"highspeed_dbg_select", cmd_highspeed_dbg_select,"Select high-speed debug source (0..3, 1=filter_in_1)"},
 
     {"upsampler_x",          cmd_upsampler_x,         "Write upsampler_input_x1..x5 (signed 16-bit)"},
     {"upsampler_y",          cmd_upsampler_y,         "Write upsampler_input_y1..y5 (signed 16-bit)"},
-    {"ds_pop",               cmd_ds_pop,              "Pop one 5-channel downsampled frame from FIFO"},
+    {"ds_pop",               cmd_ds_pop,              "Pop one 6-channel downsampled frame from FIFO"},
     {"ds_status",            cmd_ds_status,           "Show downsample FIFO readable/overflow"},
     {"ups_push",             cmd_ups_push,            "Push one replicated 5-channel frame into upsampler FIFO"},
     {"ups_status",           cmd_ups_status,          "Show upsampler FIFO writable/overflow"},
@@ -2542,7 +2729,7 @@ void uberclock_init(void) {
     main_phase_inc_down_4_write(80644);
     main_phase_inc_down_5_write(80640);
 
-    main_phase_inc_down_ref_write(2581110);
+    main_phase_inc_down_ref_write(uc_phase_inc_from_hz(9999000u, TRACK3_RF_FS_HZ));
 
     main_nco_mag_write((uint32_t)(300 & 0x0fff));
 
@@ -2568,7 +2755,7 @@ void uberclock_init(void) {
     main_gain5_write(0x00000000);
 
     main_output_select_ch1_write(14);
-    main_output_select_ch2_write(0);
+    main_output_select_ch2_write(10);
 
     main_final_shift_write(2);
 

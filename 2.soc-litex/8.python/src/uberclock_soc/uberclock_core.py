@@ -209,6 +209,8 @@ def add_uberclock_fullrate(soc, leds):
     ds_y_uc4    = Signal(16, name="downsampled_y_uc4")
     ds_x_uc5    = Signal(16, name="downsampled_x_uc5")
     ds_y_uc5    = Signal(16, name="downsampled_y_uc5")
+    ds_x_ucref  = Signal(16, name="downsampled_x_ucref")
+    ds_y_ucref  = Signal(16, name="downsampled_y_ucref")
     cap_sel_uc = Signal(12, name="cap_selected_uc")  # selected sample for HS capture
 
     # UC-domain upsampler FIFO hold registers
@@ -323,6 +325,8 @@ def add_uberclock_fullrate(soc, leds):
         o_downsampled_data_y4=ds_y_uc4,
         o_downsampled_data_x5=ds_x_uc5,
         o_downsampled_data_y5=ds_y_uc5,
+        o_downsampled_data_xref=ds_x_ucref,
+        o_downsampled_data_yref=ds_y_ucref,
 
         # High-speed capture sample out
         o_cap_selected_input=cap_sel_uc,
@@ -366,7 +370,7 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     DS_FIFO_DEPTH = 16384
 
-    ds_fifo_width = 16 * 10
+    ds_fifo_width = 16 * 12
     ds_fifo = AsyncFIFO(width=ds_fifo_width, depth=DS_FIFO_DEPTH)
     soc.submodules.ds_fifo = ClockDomainsRenamer({"write": "uc", "read": "sys"})(ds_fifo)
 
@@ -383,6 +387,7 @@ def add_uberclock_fullrate(soc, leds):
             ds_x_uc3, ds_y_uc3,
             ds_x_uc4, ds_y_uc4,
             ds_x_uc5, ds_y_uc5,
+            ds_x_ucref, ds_y_ucref,
         )),
         ds_fifo.we.eq(ce_down_uc & ds_fifo.writable),
     ]
@@ -434,6 +439,8 @@ def add_uberclock_fullrate(soc, leds):
         m.ds_fifo_y4.status.eq(ds_data_sys[112:128]),
         m.ds_fifo_x5.status.eq(ds_data_sys[128:144]),
         m.ds_fifo_y5.status.eq(ds_data_sys[144:160]),
+        m.ds_fifo_xref.status.eq(ds_data_sys[160:176]),
+        m.ds_fifo_yref.status.eq(ds_data_sys[176:192]),
         m.ds_fifo_overflow.status.eq(ds_overflow_sys),
         m.ds_fifo_underflow.status.eq(ds_underflow_sys),
         m.ds_fifo_flags.status.eq(Cat(ds_fifo.readable, C(0, 7))),
