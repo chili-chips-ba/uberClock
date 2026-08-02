@@ -528,6 +528,12 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
+#define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
+#define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
+#define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
+#define TRACKQ_TEMP_C1_NC_PER_MHZ    -278440ll
+#define TRACKQ_TEMP_C2_NC_PER_MHZ      -4614ll
+#define TRACKQ_TEMP_C3_NC_PER_MHZ    -247762ll
 #define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
@@ -1087,15 +1093,16 @@ static void trackq_step(void) {
     unsigned i;
     unsigned capture_n = 0u;
     unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
-    uint32_t nco_phase_inc_log = main_phase_inc_nco_read();
     int any_due = 0;
     int any_enabled = 0;
     int64_t bin_vertex_hf_mhz_log[TRACKQ_CHANNELS];
     int64_t ref_bin_vertex_baseband_mhz_log = (int64_t)TRACK3_DEFAULT_CENTER_HZ * 1000ll;
     int64_t ref_real_fs_mhz_log = (int64_t)TRACK3_RF_FS_HZ * 1000ll;
     int64_t ref_error_ppm_milli_log = 0ll;
+    int64_t temp_delta_mc_log = 0ll;
     uint8_t bin_vertex_valid_log[TRACKQ_CHANNELS] = {0u, 0u, 0u};
     uint8_t ref_bin_vertex_valid_log = 0u;
+    uint8_t temp_delta_valid_log = 0u;
 
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         if (!trackq[i].enabled)
@@ -1218,17 +1225,28 @@ static void trackq_step(void) {
             ref_real_fs_mhz_log = fs_real_hz * 1000ll;
             ref_error_ppm_milli_log = ((fs_real_hz - nominal_fs_hz) * 1000000ll * 1000ll) / nominal_fs_hz;
             if (fs_real_hz > 0ll && fs_real_hz <= 0xffffffffll) {
-                nco_phase_inc_log = uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)fs_real_hz);
-                main_phase_inc_nco_write(nco_phase_inc_log);
+                main_phase_inc_nco_write(uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)fs_real_hz));
             }
         }
         ref_bin_vertex_valid_log = 1u;
     }
 
+    if (bin_vertex_valid_log[0] && bin_vertex_valid_log[1] && bin_vertex_valid_log[2]) {
+        int64_t d1_mhz = bin_vertex_hf_mhz_log[0] - TRACKQ_TEMP_NOM_CH1_MHZ;
+        int64_t d2_mhz = bin_vertex_hf_mhz_log[1] - TRACKQ_TEMP_NOM_CH2_MHZ;
+        int64_t d3_mhz = bin_vertex_hf_mhz_log[2] - TRACKQ_TEMP_NOM_CH3_MHZ;
+
+        temp_delta_mc_log =
+            ((TRACKQ_TEMP_C1_NC_PER_MHZ * d1_mhz) +
+             (TRACKQ_TEMP_C2_NC_PER_MHZ * d2_mhz) +
+             (TRACKQ_TEMP_C3_NC_PER_MHZ * d3_mhz)) / 1000000ll;
+        temp_delta_valid_log = 1u;
+    }
+
     uc_commit();
     trackq_log_iteration++;
     if ((trackq_log_iteration % 5u) == 0u) {
-        printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz ppm=%s%ld.%03ld fs=%s%ld.%03ldHz nco_inc=%lu\n",
+        printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz fs=%s%ld.%03ldHz dtemp=%s%ld.%03ldC\n",
                bin_vertex_valid_log[0] ? "" : "(na)",
                (long)(bin_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[0] % 1000ll),
                bin_vertex_valid_log[1] ? "" : "(na)",
@@ -1237,11 +1255,10 @@ static void trackq_step(void) {
                (long)(bin_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[2] % 1000ll),
                ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
-               ref_bin_vertex_valid_log ? "" : "(na)",
-               (long)(ref_error_ppm_milli_log / 1000ll), (long)llabs(ref_error_ppm_milli_log % 1000ll),
-               ref_bin_vertex_valid_log ? "" : "(na)",
+                ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_real_fs_mhz_log / 1000ll), (long)llabs(ref_real_fs_mhz_log % 1000ll),
-               (unsigned long)nco_phase_inc_log);
+               temp_delta_valid_log ? "" : "(na)",
+               (long)(temp_delta_mc_log / 1000ll), (long)llabs(temp_delta_mc_log % 1000ll));
     }
 }
 
@@ -2755,7 +2772,7 @@ void uberclock_init(void) {
     main_gain5_write(0x00000000);
 
     main_output_select_ch1_write(14);
-    main_output_select_ch2_write(10);
+    main_output_select_ch2_write(0);
 
     main_final_shift_write(2);
 
