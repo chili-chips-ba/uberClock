@@ -531,9 +531,9 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
-#define TRACKQ_TEMP_C1_NC_PER_MHZ    -278440ll
-#define TRACKQ_TEMP_C2_NC_PER_MHZ      -4614ll
-#define TRACKQ_TEMP_C3_NC_PER_MHZ    -247762ll
+#define TRACKQ_TEMP_W1_NC_PER_PPM    -299905ll
+#define TRACKQ_TEMP_W2_NC_PER_PPM  -28884410ll
+#define TRACKQ_TEMP_W3_NC_PER_PPM    -994948ll
 #define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
@@ -1096,9 +1096,9 @@ static void trackq_step(void) {
     int any_due = 0;
     int any_enabled = 0;
     int64_t bin_vertex_hf_mhz_log[TRACKQ_CHANNELS];
+    int64_t corr_vertex_hf_mhz_log[TRACKQ_CHANNELS];
     int64_t ref_bin_vertex_baseband_mhz_log = (int64_t)TRACK3_DEFAULT_CENTER_HZ * 1000ll;
     int64_t ref_real_fs_mhz_log = (int64_t)TRACK3_RF_FS_HZ * 1000ll;
-    int64_t ref_error_ppm_milli_log = 0ll;
     int64_t temp_delta_mc_log = 0ll;
     uint8_t bin_vertex_valid_log[TRACKQ_CHANNELS] = {0u, 0u, 0u};
     uint8_t ref_bin_vertex_valid_log = 0u;
@@ -1162,6 +1162,7 @@ static void trackq_step(void) {
         center_hz_milli = (int64_t)trackq[i].center_hz * 1000ll;
         bin_vertex_hf_mhz_log[i] = uc_phase_inc_to_mhz(phase_down_read(i), TRACK3_RF_FS_HZ) +
                                    center_base_hz_milli;
+        corr_vertex_hf_mhz_log[i] = bin_vertex_hf_mhz_log[i];
         if (!trackq[i].enabled || ce_ticks < trackq[i].next_tick)
             continue;
 
@@ -1223,23 +1224,28 @@ static void trackq_step(void) {
         if (ref_meas_hz_milli > 0ll) {
             int64_t fs_real_hz = (nominal_fs_hz * (int64_t)TRACKQ_REF_INPUT_HZ * 1000ll) / ref_meas_hz_milli;
             ref_real_fs_mhz_log = fs_real_hz * 1000ll;
-            ref_error_ppm_milli_log = ((fs_real_hz - nominal_fs_hz) * 1000000ll * 1000ll) / nominal_fs_hz;
             if (fs_real_hz > 0ll && fs_real_hz <= 0xffffffffll) {
                 main_phase_inc_nco_write(uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)fs_real_hz));
+                for (i = 0; i < TRACKQ_CHANNELS; ++i) {
+                    if (bin_vertex_valid_log[i]) {
+                        corr_vertex_hf_mhz_log[i] =
+                            ((bin_vertex_hf_mhz_log[i] * fs_real_hz) + (nominal_fs_hz / 2ll)) / nominal_fs_hz;
+                    }
+                }
             }
         }
         ref_bin_vertex_valid_log = 1u;
     }
 
-    if (bin_vertex_valid_log[0] && bin_vertex_valid_log[1] && bin_vertex_valid_log[2]) {
-        int64_t d1_mhz = bin_vertex_hf_mhz_log[0] - TRACKQ_TEMP_NOM_CH1_MHZ;
-        int64_t d2_mhz = bin_vertex_hf_mhz_log[1] - TRACKQ_TEMP_NOM_CH2_MHZ;
-        int64_t d3_mhz = bin_vertex_hf_mhz_log[2] - TRACKQ_TEMP_NOM_CH3_MHZ;
+    if (ref_bin_vertex_valid_log && bin_vertex_valid_log[0] && bin_vertex_valid_log[1] && bin_vertex_valid_log[2]) {
+        int64_t p1_mppm = ((corr_vertex_hf_mhz_log[0] - TRACKQ_TEMP_NOM_CH1_MHZ) * 1000000000ll) / TRACKQ_TEMP_NOM_CH1_MHZ;
+        int64_t p2_mppm = ((corr_vertex_hf_mhz_log[1] - TRACKQ_TEMP_NOM_CH2_MHZ) * 1000000000ll) / TRACKQ_TEMP_NOM_CH2_MHZ;
+        int64_t p3_mppm = ((corr_vertex_hf_mhz_log[2] - TRACKQ_TEMP_NOM_CH3_MHZ) * 1000000000ll) / TRACKQ_TEMP_NOM_CH3_MHZ;
 
         temp_delta_mc_log =
-            ((TRACKQ_TEMP_C1_NC_PER_MHZ * d1_mhz) +
-             (TRACKQ_TEMP_C2_NC_PER_MHZ * d2_mhz) +
-             (TRACKQ_TEMP_C3_NC_PER_MHZ * d3_mhz)) / 1000000ll;
+            ((TRACKQ_TEMP_W1_NC_PER_PPM * p1_mppm) +
+             (TRACKQ_TEMP_W2_NC_PER_PPM * p2_mppm) +
+             (TRACKQ_TEMP_W3_NC_PER_PPM * p3_mppm)) / 1000000000ll;
         temp_delta_valid_log = 1u;
     }
 
@@ -1248,11 +1254,11 @@ static void trackq_step(void) {
     if ((trackq_log_iteration % 5u) == 0u) {
         printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz fs=%s%ld.%03ldHz dtemp=%s%ld.%03ldC\n",
                bin_vertex_valid_log[0] ? "" : "(na)",
-               (long)(bin_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[0] % 1000ll),
+               (long)(corr_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[0] % 1000ll),
                bin_vertex_valid_log[1] ? "" : "(na)",
-               (long)(bin_vertex_hf_mhz_log[1] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[1] % 1000ll),
+               (long)(corr_vertex_hf_mhz_log[1] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[1] % 1000ll),
                bin_vertex_valid_log[2] ? "" : "(na)",
-               (long)(bin_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[2] % 1000ll),
+               (long)(corr_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[2] % 1000ll),
                ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
                 ref_bin_vertex_valid_log ? "" : "(na)",
