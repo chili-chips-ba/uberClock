@@ -537,12 +537,18 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
-#define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_MAX_STEP_HZ         2
 #define TRACKQ_ERR_ALPHA_NUM       1
 #define TRACKQ_ERR_ALPHA_DEN       4
 #define TRACKQ_KP_NUM              1
 #define TRACKQ_KP_DEN              4
+/* Master-NCO (referent-clock) correction: same IIR + clamp shape as the
+ * per-channel loop above, plus an outlier gate. A single bad FFT peak pick
+ * on the reference channel must not be allowed to slew the output clock. */
+#define TRACKQ_REF_ERR_ALPHA_NUM   1
+#define TRACKQ_REF_ERR_ALPHA_DEN   4
+#define TRACKQ_REF_MAX_STEP_HZ     2
+#define TRACKQ_REF_MAX_DEVIATION_HZ 130000ll /* +-2000 ppm of 65 MHz: beyond any real crystal excursion, so reject as a bad peak pick */
 #define TRACKQ_MIN_CONF_PCT        5u
 #define TRACKQ_WEAK_DEADBAND_PCT   10u
 #define TRACKQ_WEAK_GAIN_DEN       4
@@ -571,6 +577,9 @@ static struct trackq_state trackq[TRACKQ_CHANNELS] = {
     {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH3_DELTA_HZ, 0u, 0, 0},
 };
 static uint32_t trackq_log_iteration = 0u;
+/* Referent-clock master-NCO filter state: 0 means "not yet seeded". */
+static int64_t trackq_ref_filt_fs_hz = 0ll;
+static int64_t trackq_ref_applied_fs_hz = 0ll;
 
 static uint32_t trackq_default_delta_hz(unsigned channel) {
     switch (channel) {
@@ -1224,8 +1233,34 @@ static void trackq_step(void) {
             int64_t fs_real_hz = (nominal_fs_hz * (int64_t)TRACKQ_REF_INPUT_HZ * 1000ll) / ref_meas_hz_milli;
             ref_real_fs_mhz_log = fs_real_hz * 1000ll;
             ref_error_ppm_milli_log = ((fs_real_hz - nominal_fs_hz) * 1000000ll * 1000ll) / nominal_fs_hz;
-            if (fs_real_hz > 0ll && fs_real_hz <= 0xffffffffll) {
-                main_phase_inc_nco_write(uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)fs_real_hz));
+
+            if (fs_real_hz > 0ll && fs_real_hz <= 0xffffffffll &&
+                llabs(fs_real_hz - nominal_fs_hz) <= TRACKQ_REF_MAX_DEVIATION_HZ) {
+                int64_t applied_fs_hz;
+                int64_t step_hz;
+
+                if (trackq_ref_filt_fs_hz == 0ll) {
+                    /* First valid reading: seed the filter instead of easing in from 0. */
+                    trackq_ref_filt_fs_hz = fs_real_hz;
+                } else {
+                    int64_t filt_delta_hz = ((fs_real_hz - trackq_ref_filt_fs_hz) * TRACKQ_REF_ERR_ALPHA_NUM) /
+                                             TRACKQ_REF_ERR_ALPHA_DEN;
+                    trackq_ref_filt_fs_hz += filt_delta_hz;
+                }
+
+                if (trackq_ref_applied_fs_hz == 0ll)
+                    trackq_ref_applied_fs_hz = trackq_ref_filt_fs_hz;
+
+                step_hz = trackq_ref_filt_fs_hz - trackq_ref_applied_fs_hz;
+                if (step_hz > TRACKQ_REF_MAX_STEP_HZ)
+                    step_hz = TRACKQ_REF_MAX_STEP_HZ;
+                else if (step_hz < -TRACKQ_REF_MAX_STEP_HZ)
+                    step_hz = -TRACKQ_REF_MAX_STEP_HZ;
+                trackq_ref_applied_fs_hz += step_hz;
+
+                applied_fs_hz = trackq_ref_applied_fs_hz;
+                if (applied_fs_hz > 0ll && applied_fs_hz <= 0xffffffffll)
+                    main_phase_inc_nco_write(uc_phase_inc_from_hz(TRACKQ_NCO_TARGET_HZ, (uint32_t)applied_fs_hz));
             }
         }
         ref_bin_vertex_valid_log = 1u;
