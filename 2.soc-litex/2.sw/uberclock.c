@@ -528,12 +528,13 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
+#define TRACKQ_REF_FFT_N                64u
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
-#define TRACKQ_TEMP_W1_NC_PER_PPM    -299905ll
-#define TRACKQ_TEMP_W2_NC_PER_PPM  -28884410ll
-#define TRACKQ_TEMP_W3_NC_PER_PPM    -994948ll
+#define TRACKQ_TEMP_W1_NC_PER_PPM -291015844ll
+#define TRACKQ_TEMP_W2_NC_PER_PPM  -25790991ll
+#define TRACKQ_TEMP_W3_NC_PER_PPM  -12172096ll
 #define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
@@ -1216,7 +1217,13 @@ static void trackq_step(void) {
         trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
     }
 
-    if (trackq_fft_peak_vertex_estimate_mhz(track_samples_ref, capture_n, &ref_bin_vertex_baseband_mhz_log)) {
+    if (trackq_fft_peak_vertex_estimate_mhz(track_samples_ref,
+                                            (capture_n >= TRACKQ_REF_FFT_N) ? TRACKQ_REF_FFT_N : capture_n,
+                                            &ref_bin_vertex_baseband_mhz_log)) {
+        ref_bin_vertex_valid_log = 1u;
+    }
+
+    if (ref_bin_vertex_valid_log) {
         int64_t ref_phase_hz_milli = uc_phase_inc_to_mhz(main_phase_inc_down_ref_read(), TRACK3_RF_FS_HZ);
         int64_t ref_meas_hz_milli = ref_phase_hz_milli + ref_bin_vertex_baseband_mhz_log;
         int64_t nominal_fs_hz = (int64_t)TRACK3_RF_FS_HZ;
@@ -1234,7 +1241,6 @@ static void trackq_step(void) {
                 }
             }
         }
-        ref_bin_vertex_valid_log = 1u;
     }
 
     if (ref_bin_vertex_valid_log && bin_vertex_valid_log[0] && bin_vertex_valid_log[1] && bin_vertex_valid_log[2]) {
@@ -2777,7 +2783,7 @@ void uberclock_init(void) {
     main_gain4_write(0x00000000);
     main_gain5_write(0x00000000);
 
-    main_output_select_ch1_write(14);
+    main_output_select_ch1_write(15);
     main_output_select_ch2_write(0);
 
     main_final_shift_write(2);
