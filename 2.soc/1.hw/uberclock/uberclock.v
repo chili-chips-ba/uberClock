@@ -9,13 +9,13 @@ module uberclock#(
     input                     sys_clk,
     input                     rst,
     input  [2:0]              final_shift,
-    // ADC (12-bit inputs; AD9238 on J11)
+    // ADC (12-bit inputs; AD9238 on J13)
     output                    adc_clk_ch0,  // AD channel 0 sampling clock
     output                    adc_clk_ch1,  // AD channel 1 sampling clock
     input  [11:0]             adc_data_ch0, // AD channel 0 data
     input  [11:0]             adc_data_ch1, // AD channel 1 data
 
-    // DDR‐output DAC (14-bit output; AN9767 on J13)
+    // DDR‐output DAC (14-bit output; AN9767 on J11)
     output                    da1_clk,         // DA1 clock (DDR‐output)
     output                    da1_wrt,         // DA1 write strobe (DDR‐output)
     output [13:0]             da1_data,        // DA1 14‐bit data bus (DDR‐output)

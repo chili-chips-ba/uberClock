@@ -338,7 +338,7 @@ def build_main() -> None:
     parser.add_argument(
         "--with-sdram-main-ram",
         action="store_true",
-        help="Use external DDR3/LiteDRAM as main_ram instead of the default 512 KiB integrated RAM.",
+        help="Use external DDR3/LiteDRAM as main_ram instead of the default 256 KiB integrated RAM.",
     )
 
     args = parser.parse_args()

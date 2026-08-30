@@ -150,9 +150,9 @@
 | UberDDR3 size            | `0x1000_0000`  | 256 MiB (`ub_size`)                          |
 | UberDDR3 region flags    | `cached=False` | `linker=False`                               |
 | Firmware constant        | `UBDDR3_MEM_BASE` | Exported to C firmware                    |
-| Integrated main RAM size | 512 KiB        | Default `integrated_main_ram_size`           |
+| Integrated main RAM size | 256 KiB        | Default `integrated_main_ram_size`           |
 
-By default, firmware links against ``main_ram`` and that region is the 512 KiB integrated BRAM.
+By default, firmware links against ``main_ram`` and that region is the 256 KiB integrated BRAM.
 If you want large C ``.bss``/heap allocations for things like FFT buffers, build the SoC with
 ``--with-sdram-main-ram`` so LiteDRAM-backed DDR3 becomes ``main_ram``.
 
