@@ -343,7 +343,18 @@ def add_uberclock_fullrate(soc, leds):
     soc.specials += Instance("uberclock", **ports)
 
     # -------------------------------------------------------------------------
-    # UC->SYS: low-speed capture readback into CSRs (safe CDC)
+    # UC->SYS: low-speed capture readback and magnitude/phase debug outputs.
+    #
+    # Accepted CDC tradeoff: these cross clock domains via plain MultiReg on a
+    # multi-bit bus. MultiReg only guarantees metastability resolution on each
+    # individual bit, not that all bits of a word were sampled on the same
+    # source-domain cycle -- an occasional torn read is architecturally
+    # possible here. This is deliberately not upgraded to a FIFO/handshake:
+    # cap_data/cap_done are only read once cap_done is stable (post-capture,
+    # no longer changing), and magnitude/phase are slowly-changing debug
+    # values that are polled repeatedly, so a rare torn read is tolerable and
+    # self-corrects on the next poll. Do not reuse this pattern for anything
+    # that needs a bus-coherent single-cycle snapshot.
     # -------------------------------------------------------------------------
     cap_done_sys = Signal(name="ls_cap_done_sys")
     cap_data_sys = Signal(16, name="ls_cap_data_sys")

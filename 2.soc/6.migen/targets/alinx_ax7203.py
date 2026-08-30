@@ -2,6 +2,18 @@
 # -*- coding: utf-8 -*-
 
 # -----------------------------------------------------------------------------
+# STALE / NOT ON THE BUILD PATH: this predates the 5-channel + reference-clock
+# uberclock.v rework and its Instance("uberclock", ...) port map no longer
+# matches current RTL -- it will fail to elaborate if built. Its MainCSRs
+# phase-increment width (24 bits, "Match PW=24 in Verilog") is also stale;
+# the live CORDIC phase width is 26 bits and the canonical CSR bank
+# (8.python/src/uberclock_soc/uberclock_csrs.py) already uses 26.
+# The canonical, actively-built SoC target lives under
+# 8.python/src/uberclock_soc/ (see 8.python/src/targets/alinx_ax7203_uberclock.py).
+# Kept here for reference only -- do not build from this file.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 # AX7203 + LiteX SoC for UberClock + UberDDR3:
 #
 # - sys clock domain @ 100 MHz  (CPU/CSR, DDR controller side)
