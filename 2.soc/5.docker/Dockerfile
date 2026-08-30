@@ -63,7 +63,7 @@ RUN git config --global http.postBuffer 1048576000 && \
     git config --global http.lowSpeedLimit 0 && \
     git config --global http.lowSpeedTime 999 && \
     git clone https://github.com/chili-chips-ba/uberClock.git ${REPOSITORY_DIR} && \
-    cp -r ${REPOSITORY_DIR}/2.soc-litex/6.migen/* ${LITEX_PATH}/litex-boards/litex_boards/
+    cp -r ${REPOSITORY_DIR}/2.soc/6.migen/* ${LITEX_PATH}/litex-boards/litex_boards/
 
 # ──────────────────────────────────────────────────────────────────────────
 # Copy Vivado 2024.2 WebPACK installer into image and install silently

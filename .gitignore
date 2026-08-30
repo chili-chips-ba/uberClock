@@ -8,18 +8,18 @@
 *output*
 
 # ignore the LiteX build output
-2.soc-litex/3.build/build/
-2.soc-litex/2.sw/uberClock/
-2.soc-litex/3.build/analyzer.csv
-2.soc-litex/3.build/dump.vcd
-2.soc-litex/3.build/vivado.jou
-2.soc-litex/3.build/vivado_*.str
+3.build/build/
+2.soc/2.sw/uberClock/
+3.build/analyzer.csv
+3.build/dump.vcd
+3.build/vivado.jou
+3.build/vivado_*.str
 #*impl*
 *temp*
 
 *.jou
 .vscode/
-#2.soc-litex/3.build/
+#3.build/
 *.bin
 *.txt
 *.o

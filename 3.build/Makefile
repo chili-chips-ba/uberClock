@@ -1,12 +1,15 @@
 SHELL := /bin/bash
 
 MAKEFILE_DIR  := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJECT_ROOT  := $(realpath $(MAKEFILE_DIR)/..)
+# 3.build lives at the repo root (sibling of 2.soc); the SoC sources (0.doc,
+# 1.hw, 2.sw, 8.python) live one level up, under 2.soc.
+REPO_ROOT     := $(realpath $(MAKEFILE_DIR)/..)
+PROJECT_ROOT  := $(REPO_ROOT)/2.soc
 
 DOC_DIR       := $(PROJECT_ROOT)/0.doc
 HW_DIR        := $(PROJECT_ROOT)/1.hw
 SW_DIR        := $(PROJECT_ROOT)/2.sw
-BUILD_DIR     := $(PROJECT_ROOT)/3.build
+BUILD_DIR     := $(realpath $(MAKEFILE_DIR))
 SIM_DIR       := $(PROJECT_ROOT)/4.sim
 
 BAUD          ?= 115200
