@@ -2124,6 +2124,53 @@ static void cmd_ds_pop(char *a) {
            (int)frame.x[5], (int)frame.y[5]);
 }
 
+/* Background FIFO health monitor: the ds_fifo/ups_fifo sticky overflow/underflow
+ * bits are otherwise only visible via manual ds_status/ups_status console commands,
+ * so an unattended run that drops frames or replays stale samples would go
+ * completely unnoticed. Poll them periodically and keep running counters. */
+#define FIFO_HEALTH_INTERVAL_TICKS 1000u /* ~100 ms at the 10 kHz ce_down rate */
+static uint32_t fifo_health_next_tick = 0u;
+static uint32_t ds_fifo_overflow_count = 0u;
+static uint32_t ds_fifo_underflow_count = 0u;
+static uint32_t ups_fifo_overflow_count = 0u;
+static uint32_t ups_fifo_underflow_count = 0u;
+
+static void trackq_fifo_health_poll(void) {
+    unsigned ov, un;
+
+    if (ce_ticks < fifo_health_next_tick)
+        return;
+    fifo_health_next_tick = ce_ticks + FIFO_HEALTH_INTERVAL_TICKS;
+
+    ov = (unsigned)(main_ds_fifo_overflow_read() & 1u);
+    un = (unsigned)(main_ds_fifo_underflow_read() & 1u);
+    if (ov || un) {
+        if (ov) ds_fifo_overflow_count++;
+        if (un) ds_fifo_underflow_count++;
+        main_ds_fifo_clear_write(1);
+        printf("ds_fifo health: overflow=%u(total %lu) underflow=%u(total %lu) - tracking loop may be falling behind\n",
+               ov, (unsigned long)ds_fifo_overflow_count, un, (unsigned long)ds_fifo_underflow_count);
+    }
+
+    ov = (unsigned)(main_ups_fifo_overflow_read() & 1u);
+    un = (unsigned)(main_ups_fifo_underflow_read() & 1u);
+    if (ov || un) {
+        if (ov) ups_fifo_overflow_count++;
+        if (un) ups_fifo_underflow_count++;
+        main_ups_fifo_clear_write(1);
+        printf("ups_fifo health: overflow=%u(total %lu) underflow=%u(total %lu) - TX chain may be replaying stale samples\n",
+               ov, (unsigned long)ups_fifo_overflow_count, un, (unsigned long)ups_fifo_underflow_count);
+    }
+}
+
+static void cmd_fifo_health(char *a) {
+    (void)a;
+    printf("ds_fifo:  overflow_total=%lu underflow_total=%lu\n",
+           (unsigned long)ds_fifo_overflow_count, (unsigned long)ds_fifo_underflow_count);
+    printf("ups_fifo: overflow_total=%lu underflow_total=%lu\n",
+           (unsigned long)ups_fifo_overflow_count, (unsigned long)ups_fifo_underflow_count);
+}
+
 static void cmd_ds_status(char *a) {
     (void)a;
     unsigned flags = (unsigned)(main_ds_fifo_flags_read() & 0xffu);
@@ -2652,6 +2699,7 @@ static const struct cmd_entry uc_tbl[] = {
     {"ds_status",            cmd_ds_status,           "Show downsample FIFO readable/overflow"},
     {"ups_push",             cmd_ups_push,            "Push one replicated 5-channel frame into upsampler FIFO"},
     {"ups_status",           cmd_ups_status,          "Show upsampler FIFO writable/overflow"},
+    {"fifo_health",          cmd_fifo_health,         "Show cumulative ds_fifo/ups_fifo overflow/underflow counts"},
     {"dsp_test",             cmd_dsp_test,            "Run DSP loop over FIFO samples (optional N)"},
     {"dsp_run",              cmd_dsp_run,             "Enable/disable non-blocking DSP pump"},
     {"fft_fs",               cmd_fft_fs,              "Set DS sample rate (Hz) used by fft_ds"},
@@ -2839,6 +2887,7 @@ void uberclock_init(void) {
 
 void uberclock_poll(void) {
     trackq_step();
+    trackq_fifo_health_poll();
 
     while (ce_event) {
         ce_event--;
