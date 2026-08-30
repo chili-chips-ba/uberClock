@@ -528,7 +528,7 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
-#define TRACKQ_REF_FFT_N                64u
+#define TRACKQ_REF_FFT_N              2048u
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
@@ -764,10 +764,19 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
         if (!track3_wait_ds_fifo("capture", i, n))
             return 0;
         ds_fifo_read_frame(&frame);
+        /* VALIDATION MODE: use downsampled_y1 for channel-1 frequency estimation.
+         * Restore the original multi-channel/ref assignments below after the measurement-validation experiment.
+         */
+        track_samples[0][i] = frame.y[0];
+        track_samples[1][i] = 0;
+        track_samples[2][i] = 0;
+        track_samples_ref[i] = 0;
+        /*
         track_samples[0][i] = frame.x[0];
         track_samples[1][i] = frame.x[1];
         track_samples[2][i] = frame.x[2];
         track_samples_ref[i] = frame.y[5];
+        */
         track3_service_background_budget(4);
     }
 
@@ -1137,6 +1146,35 @@ static void trackq_step(void) {
         return;
     }
 
+    /* VALIDATION MODE: bypass the multi-mode/ref tracking pipeline and only
+     * estimate the channel-1 lowband from downsampled_y1 using a 64-point FFT
+     * with 3-bin quadratic interpolation around the strongest bin. The original
+     * tracking/correction code is kept below in comments for easy restore.
+     */
+    {
+        unsigned meas_n = (capture_n >= TRACKQ_REF_FFT_N) ? TRACKQ_REF_FFT_N : capture_n;
+        int64_t bb_hz_milli = 0ll;
+        int64_t nco_hz_milli = uc_phase_inc_to_mhz(main_phase_inc_nco_read(), TRACK3_RF_FS_HZ);
+        static uint32_t last_validate_tick = 0u;
+        uint32_t dticks = ce_ticks - last_validate_tick;
+        int bb_valid = trackq_fft_peak_vertex_estimate_mhz(track_samples[0], meas_n, &bb_hz_milli);
+
+        uc_commit();
+        trackq_log_iteration++;
+        printf("trackq validate: nco=%ld.%03ldHz bb=%s%ld.%03ldHz dticks=%lu\n",
+               (long)(nco_hz_milli / 1000ll), (long)llabs(nco_hz_milli % 1000ll),
+               bb_valid ? "" : "(na)",
+               (long)(bb_hz_milli / 1000ll), (long)llabs(bb_hz_milli % 1000ll),
+               (unsigned long)dticks);
+        last_validate_tick = ce_ticks;
+        for (i = 0; i < TRACKQ_CHANNELS; ++i) {
+            if (trackq[i].enabled)
+                trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
+        }
+        return;
+    }
+
+    /* ORIGINAL multi-mode/ref tracking path kept commented for easy restore.
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         uint64_t left_pwr;
         uint64_t center_pwr;
@@ -1267,11 +1305,12 @@ static void trackq_step(void) {
                (long)(corr_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[2] % 1000ll),
                ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
-                ref_bin_vertex_valid_log ? "" : "(na)",
+               ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_real_fs_mhz_log / 1000ll), (long)llabs(ref_real_fs_mhz_log % 1000ll),
                temp_delta_valid_log ? "" : "(na)",
                (long)(temp_delta_mc_log / 1000ll), (long)llabs(temp_delta_mc_log % 1000ll));
     }
+    */
 }
 
 static void cmd_track3(char *args) {
@@ -1486,8 +1525,9 @@ static void cmd_trackq_start(char *args) {
     if (f1_hz || f2_hz || f3_hz)
         uc_commit();
 
+    /* VALIDATION MODE: enable only channel 1 tracking state. */
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++) {
-        trackq[i].enabled = 1;
+        trackq[i].enabled = (i == 0u) ? 1u : 0u;
         trackq[i].n = n;
         trackq[i].settle = TRACK3_DEFAULT_SETTLE;
         trackq[i].center_hz = center_hz;
@@ -2752,7 +2792,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(uc_phase_inc_from_hz(TRACKQ_CH1_START_HZ, TRACK3_RF_FS_HZ));
+    main_phase_inc_down_1_write(uc_phase_inc_from_hz(9999000u, TRACK3_RF_FS_HZ));
     main_phase_inc_down_2_write(uc_phase_inc_from_hz(TRACKQ_CH2_START_HZ, TRACK3_RF_FS_HZ));
     main_phase_inc_down_3_write(uc_phase_inc_from_hz(TRACKQ_CH3_START_HZ, TRACK3_RF_FS_HZ));
     main_phase_inc_down_4_write(80644);
@@ -2774,7 +2814,7 @@ void uberclock_init(void) {
     main_mag_cpu4_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu5_write((uint32_t)(0 & 0x0fff));
 
-    main_input_select_write(0);
+    main_input_select_write(1);
     main_upsampler_input_mux_write(1);
 
     main_gain1_write(0x40000000);
