@@ -528,6 +528,14 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
+/* Nominal mode frequencies and temperature-sensitivity coefficients for the
+ * three tracked crystal modes. These come from the BVD/temperature-chamber
+ * characterization work under 5.characterization/3.model (see bvd_extractor.py
+ * for the BVD-parameter extraction step), but there is currently no committed
+ * script or log tying these exact six constants to a specific characterization
+ * run -- the transfer from that work to these #defines is manual. If the
+ * crystal, board, or characterization sweep changes, re-derive these by hand
+ * and update this comment with the run/dataset used. */
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
@@ -1281,7 +1289,7 @@ static void trackq_step(void) {
     uc_commit();
     trackq_log_iteration++;
     if ((trackq_log_iteration % 5u) == 0u) {
-        printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz fs=%s%ld.%03ldHz dtemp=%s%ld.%03ldC\n",
+        printf("trackq hf binfit: ch1=%s%ld.%03ldHz ch2=%s%ld.%03ldHz ch3=%s%ld.%03ldHz ref=%s%ld.%03ldHz fs=%s%ld.%03ldHz err=%s%ld.%03ldppm dtemp=%s%ld.%03ldC\n",
                bin_vertex_valid_log[0] ? "" : "(na)",
                (long)(bin_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(bin_vertex_hf_mhz_log[0] % 1000ll),
                bin_vertex_valid_log[1] ? "" : "(na)",
@@ -1292,6 +1300,8 @@ static void trackq_step(void) {
                (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
                 ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_real_fs_mhz_log / 1000ll), (long)llabs(ref_real_fs_mhz_log % 1000ll),
+               ref_bin_vertex_valid_log ? "" : "(na)",
+               (long)(ref_error_ppm_milli_log / 1000ll), (long)llabs(ref_error_ppm_milli_log % 1000ll),
                temp_delta_valid_log ? "" : "(na)",
                (long)(temp_delta_mc_log / 1000ll), (long)llabs(temp_delta_mc_log % 1000ll));
     }
@@ -2029,7 +2039,8 @@ static void cap_dump_cmd(char *a) {
 
 static inline void dsp_process(int16_t in_x, int16_t in_y,
                                int16_t *out_x, int16_t *out_y) {
-    /* Passthrough. */
+    /* Intentional pass-through: dsp_test/dsp_run exercise the ds_fifo/ups_fifo
+     * round trip itself, not any algorithm. Not a stub for missing DSP work. */
     *out_x = in_x;
     *out_y = in_y;
 }
@@ -2754,69 +2765,6 @@ void uberclock_register_cmds(void) {
 }
 
 /* ========================================================================= */
-/*                            FSM                                             */
-/* ========================================================================= */
-
-enum fsm_states {IDLE, S1, S2};
-char curr_state;
-uint32_t fsm_counter, max_mag, current_phase_inc, max_mag_phase_inc, shooting_phase_inc ;
-int8_t sgn = 1;
-
-void fsm_init(void) {
- curr_state = IDLE; 
- ce_ticks = 0;
- max_mag = 0;
- max_mag_phase_inc = 0; 
- shooting_phase_inc = 10328467;
-}
-void tran(void) {
-    switch (curr_state) {
-        case IDLE: {
-            if (ce_ticks == 9999) {
-                curr_state = S1;
-            }  else if (ce_ticks == 1) {
-                main_phase_inc_nco_write(shooting_phase_inc);
-                main_phase_inc_down_1_write(shooting_phase_inc + 1000);  
-                puts("Input NCO phase increment set");
-            }
-        }
-        break;
-        case S1: {
-                     // cmd_magnitude(NULL);
-                     if (mag < 30) {
-                       curr_state = IDLE;
-                       ce_ticks = 0;
-                       shooting_phase_inc = shooting_phase_inc + 6;
-                       
-                     }else 
-
-                     if ( (uint32_t)mag + 10  > max_mag  ) {
-                       puts("mag greater");
-                       max_mag = mag; 
-                       max_mag_phase_inc = shooting_phase_inc;
-                       shooting_phase_inc = shooting_phase_inc + sgn * 6;
-                       curr_state = IDLE;
-                       ce_ticks = 0;
-                    } else {
-                       //  sgn = -sgn;
-                       // shooting_phase_inc = shooting_phase_inc - sgn * 2;
-                        main_phase_inc_nco_write(shooting_phase_inc - 6);
-                       ce_ticks = 0;
-                       curr_state = S2;
-                    }
-                 }
-            break;
-        
-        case S2: {
-            puts("S2");
-            // cmd_magnitude(NULL);
-            // curr_state = IDLE;
-                 }
-            break;
-    }
-}
-
-/* ========================================================================= */
 /*                            Init / poll functions                           */
 /* ========================================================================= */
 
@@ -2868,7 +2816,6 @@ void uberclock_init(void) {
     main_upsampler_input_mux_write(1);
     main_cap_enable_write(1);
     cmd_dsp_run("1");
-    //fsm_init();
     sig3_start();
     uc_commit();
 
