@@ -566,6 +566,10 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
 #define TRACK3_SIDE_BALANCE_PCT    40u
+/* Mirrors DS_FIFO_DEPTH in uberclock_core.py. Used only as a flush bound
+ * (an upper limit that guarantees a full drain); does not need to track the
+ * hardware value exactly, only to be >= it. */
+#define DS_FIFO_HW_DEPTH           16384u
 
 struct trackq_state {
     int enabled;
@@ -764,6 +768,18 @@ static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle)
 
 static int capture_ds_track_multi(unsigned n, unsigned settle) {
     unsigned i;
+
+    /* trackq_step() only calls this roughly once per second per due channel;
+     * nothing else drains ds_fifo between calls, so hardware keeps pushing
+     * frames at 10 kHz the whole time this function is idle. Without a flush
+     * here, the settle/capture loops below would silently consume whatever
+     * stale backlog piled up since the last call instead of fresh samples,
+     * and the backlog only grows call over call until ds_fifo pins at full
+     * and every capture runs on ~1.6s-old data forever. Drop it and
+     * resynchronize to the live stream before capturing, same as the manual
+     * flush already used in cmd_trackq_probe. */
+    main_ds_fifo_clear_write(1);
+    (void)ds_fifo_flush_all(DS_FIFO_HW_DEPTH);
 
     for (i = 0; i < settle; i++) {
         iq6_frame_t frame;

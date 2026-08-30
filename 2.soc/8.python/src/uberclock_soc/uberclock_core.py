@@ -378,8 +378,24 @@ def add_uberclock_fullrate(soc, leds):
     ]
     # -------------------------------------------------------------------------
     # UC->SYS: downsampled data async FIFO (for CPU readback)
+    #
+    # Sizing rationale (was an unexplained 16384 = ~3 Mbit of block RAM):
+    # hardware pushes one 192-bit frame per ce_down tick (10 kHz) whether or
+    # not the CPU is reading. The only consumer is trackq_step()'s periodic
+    # capture (~once/second per due channel, firmware/uberclock.c), which
+    # pops in a tight real-time-paced loop (track3_wait_ds_fifo) doing only
+    # O(1) bounded work per frame -- it cannot fall behind mid-capture.
+    # capture_ds_track_multi() now flushes any pre-existing backlog before
+    # each capture (see uberclock.c), so between captures ds_fifo is not
+    # expected to hold more than a handful of frames at a time; a semantic
+    # capture itself needs at most settle+n = 256+2048 = 2304 frames of
+    # headroom if a flush ever races a fresh push. 4096 gives ~1.8x margin
+    # over that with a large fraction of the previous BRAM cost. This is an
+    # analytical bound, not a profiled one -- tighten or loosen it once the
+    # golden hardware-capture regression (see project roadmap) gives real
+    # worst-case numbers.
     # -------------------------------------------------------------------------
-    DS_FIFO_DEPTH = 16384
+    DS_FIFO_DEPTH = 4096
 
     ds_fifo_width = 16 * 12
     ds_fifo = AsyncFIFO(width=ds_fifo_width, depth=DS_FIFO_DEPTH)
@@ -459,6 +475,19 @@ def add_uberclock_fullrate(soc, leds):
 
     # -------------------------------------------------------------------------
     # SYS->UC: upsampler input async FIFO (CPU injection)
+    #
+    # Sizing rationale: unlike ds_fifo, this one is not the site of a known
+    # backlog/staleness bug -- production (one push per ce_down-driven
+    # service_one_ce_event()) and consumption (uc pops one entry per tick)
+    # run at the same nominal 10 kHz rate, and firmware never intentionally
+    # gets ahead of real time, so its underflow margin is whatever headroom
+    # accumulates when ce_event backlog lets the CPU briefly push faster than
+    # 1:1. That margin has not been analytically bounded the way ds_fifo's
+    # was above, so this depth is left unchanged pending real measurement
+    # (see project roadmap for the golden hardware-capture regression) rather
+    # than resized on an unverified guess -- an under-provisioned TX buffer
+    # fails audibly (stale-sample replay into the DAC), which is a worse
+    # failure mode to get wrong than spending extra BRAM here.
     # -------------------------------------------------------------------------
     UPS_FIFO_DEPTH = 16384
 
