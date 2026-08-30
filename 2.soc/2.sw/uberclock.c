@@ -14,7 +14,7 @@
 #include "uberclock.h"
 #include "console.h"
 #include "ubddr3.h"
-#include "kissfft/kiss_fft.h"
+#include "kiss_fft.h"
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
