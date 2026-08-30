@@ -15,6 +15,7 @@
 #include "console.h"
 #include "ubddr3.h"
 #include "kiss_fft.h"
+#include "kiss_fftr.h"
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
@@ -514,6 +515,14 @@ static inline void uc_commit(void);
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
 static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
+/* Real-only input for kiss_fftr call sites (track3 sweep, referent ppm
+ * estimate): both grab a single real ADC-domain channel and used to zero-pad
+ * an imaginary half into fft_in for a full complex transform. kiss_fftr does
+ * the same math in ~half the cycles for genuinely real input. fft_out is
+ * still large enough to hold its nfft/2+1 complex output bins for any
+ * n <= FFT_MAX_N. Genuinely complex I/Q call sites (fft64_peak, fft_ds) keep
+ * using fft_in/kiss_fft unchanged. */
+static kiss_fft_scalar fft_real_in[FFT_MAX_N];
 static uint32_t fft_fs_hz = 10000u;
 static volatile uint32_t ce_ticks = 0;
 static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
@@ -758,8 +767,7 @@ static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle)
         ds_fifo_read_frame(&frame);
         sx = frame.x[channel];
 
-        fft_in[i].r = (kiss_fft_scalar)sx;
-        fft_in[i].i = (kiss_fft_scalar)0;
+        fft_real_in[i] = (kiss_fft_scalar)sx;
         track3_service_background_budget(4);
     }
 
@@ -842,7 +850,7 @@ static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
     unsigned i;
 
     for (i = 0; i < n; i++) {
-        int32_t sample = (int32_t)fft_in[i].r;
+        int32_t sample = (int32_t)fft_real_in[i];
         int32_t cos_q15 = (int32_t)sig3_sin_u32(phase_acc + 0x40000000u);
         int32_t sin_q15 = (int32_t)sig3_sin_u32(phase_acc);
 
@@ -1062,7 +1070,7 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
                                                int64_t *vertex_hz_milli_out) {
     size_t cfg_need = 0;
     size_t cfg_len;
-    kiss_fft_cfg cfg;
+    kiss_fftr_cfg cfg;
     unsigned bins;
     unsigned k_peak = 0u;
     uint64_t p_peak = 0u;
@@ -1076,20 +1084,19 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
         return 0;
 
     for (k = 0u; k < n; k++) {
-        fft_in[k].r = (kiss_fft_scalar)samples[k];
-        fft_in[k].i = (kiss_fft_scalar)0;
+        fft_real_in[k] = (kiss_fft_scalar)samples[k];
     }
 
-    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    (void)kiss_fftr_alloc((int)n, 0, NULL, &cfg_need);
     if (cfg_need > (size_t)FFT_CFG_MAX_BYTES)
         return 0;
 
     cfg_len = (size_t)FFT_CFG_MAX_BYTES;
-    cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    cfg = kiss_fftr_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
     if (!cfg)
         return 0;
 
-    kiss_fft(cfg, fft_in, fft_out);
+    kiss_fftr(cfg, fft_real_in, fft_out);
 
     bins = n / 2u;
     for (k = 1u; k + 1u < bins; k++) {
@@ -1345,7 +1352,7 @@ static void cmd_track3(char *args) {
     uint32_t sweep_hz;
     size_t cfg_need = 0;
     size_t cfg_len;
-    kiss_fft_cfg cfg;
+    kiss_fftr_cfg cfg;
 
     if (!tok_ch || !tok_start) {
         puts("Usage: track3 <ch:1..5> <start_phase_down_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
@@ -1387,7 +1394,7 @@ static void cmd_track3(char *args) {
     sig3_update_increments();
     sig3_enable_channel(channel);
 
-    (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
+    (void)kiss_fftr_alloc((int)n, 0, NULL, &cfg_need);
     if (cfg_need > (size_t)FFT_CFG_MAX_BYTES) {
         printf("track3 fft cfg too big: need %lu bytes (max %u)\n",
                (unsigned long)cfg_need, FFT_CFG_MAX_BYTES);
@@ -1395,9 +1402,9 @@ static void cmd_track3(char *args) {
     }
 
     cfg_len = (size_t)FFT_CFG_MAX_BYTES;
-    cfg = kiss_fft_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
+    cfg = kiss_fftr_alloc((int)n, 0, fft_cfg_mem, &cfg_len);
     if (!cfg) {
-        puts("track3 kiss_fft_alloc failed");
+        puts("track3 kiss_fftr_alloc failed");
         return;
     }
 
@@ -1434,7 +1441,7 @@ static void cmd_track3(char *args) {
             return;
         }
 
-        kiss_fft(cfg, fft_in, fft_out);
+        kiss_fftr(cfg, fft_real_in, fft_out);
 
         left_k   = (unsigned)((((uint64_t)(center_hz - delta_hz) * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
         center_k = (unsigned)((((uint64_t)center_hz * (uint64_t)n) + (fft_fs_hz / 2u)) / (uint64_t)fft_fs_hz);
