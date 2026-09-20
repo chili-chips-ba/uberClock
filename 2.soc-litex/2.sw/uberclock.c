@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
+
+/* Not all libc's define M_PI; keep our own constant rather than depend on it. */
+#define TRACKQ_PI 3.14159265358979323846
 
 #include <irq.h>
 #include <libbase/uart.h>
@@ -18,6 +22,12 @@
 #include "libliteeth/udp.h"   // LiteEth UDP stack header
 static inline unsigned parse_u(const char *s, unsigned max, const char *what);
 static inline int parse_s(const char *s, int minv, int maxv, const char *what);
+static int ds_capture_begin(unsigned settle);
+static int ds_capture_end(void);
+static int track3_wait_ds_fifo(const char *phase, unsigned sample_idx, unsigned total);
+#define TRACKQ_BUILD_ID "loopback-fifo-v1"
+#define TRACKQ_WINDOW "rect"
+#define DS_CAPTURE_SETTLE 256u
 
 typedef struct {
     int16_t x[5];
@@ -93,7 +103,7 @@ void cmd_fft32_ds_y(char *args) {
 
     kiss_fft_cpx in[32];
     kiss_fft_cpx out[32];
-    uint8_t cfg_mem[768];
+    uint8_t cfg_mem[768] __attribute__((aligned(8)));
 
     size_t cfg_need = 0;
     (void)kiss_fft_alloc((int)N, 0, NULL, &cfg_need);
@@ -109,9 +119,9 @@ void cmd_fft32_ds_y(char *args) {
         return;
     }
 
-    /* Pop last 32 real Y samples from DS FIFO */
+    if (!ds_capture_begin(DS_CAPTURE_SETTLE)) return;
     for (unsigned i = 0; i < N; i++) {
-        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+        if (!track3_wait_ds_fifo("capture", i, N)) {
             printf("Not enough DS FIFO samples: got %u/%u\n", i, N);
             return;
         }
@@ -124,6 +134,7 @@ void cmd_fft32_ds_y(char *args) {
         in[i].i = (kiss_fft_scalar)0;
     }
 
+    if (!ds_capture_end()) return;
     kiss_fft(cfg, in, out);
 
     puts("bin,freq_hz,re,im,pwr");
@@ -513,7 +524,7 @@ static inline void uc_commit(void);
 #define FFT_CFG_MAX_BYTES 12288u
 static kiss_fft_cpx fft_in[FFT_MAX_N];
 static kiss_fft_cpx fft_out[FFT_MAX_N];
-static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES];
+static uint8_t fft_cfg_mem[FFT_CFG_MAX_BYTES] __attribute__((aligned(8)));
 static uint32_t fft_fs_hz = 10000u;
 static volatile uint32_t ce_ticks = 0;
 static int16_t track_samples[TRACKQ_CHANNELS][FFT_MAX_N];
@@ -523,12 +534,13 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_STEP_HZ     5u
 #define TRACK3_DEFAULT_MAX_STEPS   400u
 #define TRACK3_DEFAULT_N           2048u
-#define TRACK3_DEFAULT_SETTLE      256u
+#define TRACK3_DEFAULT_SETTLE      DS_CAPTURE_SETTLE
 #define TRACK3_DEFAULT_CENTER_HZ   1000u
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
 #define TRACKQ_REF_FFT_N              2048u
+#define TRACKQ_VALIDATE_SEARCH_HALF_WIDTH_HZ 20u
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
@@ -538,7 +550,6 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_BAND_BINS   1u
 #define TRACKQ_INTERVAL_TICKS      10000u
 #define TRACKQ_CORR_SHIFT          10u
-#define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_MAX_STEP_HZ         2
 #define TRACKQ_ERR_ALPHA_NUM       1
 #define TRACKQ_ERR_ALPHA_DEN       4
@@ -572,6 +583,15 @@ static struct trackq_state trackq[TRACKQ_CHANNELS] = {
     {0, 2u, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_CH3_DELTA_HZ, 0u, 0, 0},
 };
 static uint32_t trackq_log_iteration = 0u;
+static uint32_t trackq_last_capture_tick;
+static int trackq_have_capture_tick;
+static unsigned trackq_dump_n;
+static uint32_t trackq_capture_nco, trackq_capture_down, trackq_capture_input, trackq_capture_fs;
+static unsigned ds_capture_drained, ds_capture_old_overflow;
+static unsigned ds_capture_overflow, ds_capture_underflow;
+/* Diagnostics describe the current FFT only, including on failure. */
+static unsigned trackq_dbg_k_peak = 0u;
+static int64_t trackq_dbg_y1 = 0, trackq_dbg_y2 = 0, trackq_dbg_y3 = 0, trackq_dbg_den = 0;
 
 static uint32_t trackq_default_delta_hz(unsigned channel) {
     switch (channel) {
@@ -587,7 +607,8 @@ static inline int is_pow2_u(unsigned x) {
 }
 
 static uint32_t uc_phase_inc_from_hz(uint32_t f_hz, uint32_t fs_hz) {
-    return (uint32_t)(((uint64_t)f_hz << 26) / (uint64_t)fs_hz);
+    if (fs_hz == 0u) return 0u;
+    return (uint32_t)((((uint64_t)f_hz << 26) + fs_hz / 2u) / fs_hz);
 }
 
 static uint32_t uc_phase_inc_to_hz(uint32_t phase_inc, uint32_t fs_hz) {
@@ -717,16 +738,59 @@ static int track3_wait_ds_fifo(const char *phase, unsigned sample_idx, unsigned 
     return 1;
 }
 
-static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle) {
-    for (unsigned i = 0; i < settle; i++) {
-        iq6_frame_t frame;
+/* The CSR clear pulse clears sticky errors, NOT queued frames. Drain until
+ * empty before every record. A bounded drain that does not reach empty fails.
+ * 65536 pops covers the 16384-frame FIFO plus producer activity while draining.
+ */
+static int ds_capture_end(void) {
+    /* Allow write-domain overflow to cross the synchronizer before checking. */
+    for (unsigned i = 0; i < 32u; ++i)
+        (void)main_ds_fifo_flags_read();
+    ds_capture_overflow = main_ds_fifo_overflow_read();
+    ds_capture_underflow = main_ds_fifo_underflow_read();
+    if (ds_capture_overflow || ds_capture_underflow) {
+        printf("capture rejected: overflow=%u underflow=%u drained=%u\n",
+               ds_capture_overflow, ds_capture_underflow, ds_capture_drained);
+        return 0;
+    }
+    return 1;
+}
 
-        if (!track3_wait_ds_fifo("settle", i, settle)) {
-            return 0;
-        }
+static int ds_capture_begin(unsigned settle) {
+    ds_capture_old_overflow = main_ds_fifo_overflow_read();
+    ds_capture_overflow = ds_capture_underflow = 0u;
+    ds_capture_drained = ds_fifo_flush_all(65536u);
+    if (main_ds_fifo_flags_read() & 1u) {
+        puts("capture rejected: FIFO drain limit reached (reader cannot catch producer)");
+        return 0;
+    }
+
+    main_ds_fifo_clear_write(1);
+    /* Clear traverses SYS->UC and its status returns UC->SYS. Do not mistake
+     * the old sticky overflow for an error in the new record. */
+    for (unsigned i = 0; i < 32u; ++i)
+        (void)main_ds_fifo_flags_read();
+    unsigned polls;
+    for (polls = 0; polls < 1024u; ++polls) {
+        if (!main_ds_fifo_overflow_read() && !main_ds_fifo_underflow_read())
+            break;
+    }
+    if (polls == 1024u) {
+        puts("capture rejected: FIFO error flags did not clear");
+        return 0;
+    }
+
+    for (unsigned i = 0; i < settle; ++i) {
+        iq6_frame_t frame;
+        if (!track3_wait_ds_fifo("settle", i, settle)) return 0;
         ds_fifo_read_frame(&frame);
         track3_service_background_budget(4);
     }
+    return ds_capture_end();
+}
+
+static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle) {
+    if (channel >= 6u || n > FFT_MAX_N || !ds_capture_begin(settle)) return 0;
 
     for (unsigned i = 0; i < n; i++) {
         iq6_frame_t frame;
@@ -743,20 +807,13 @@ static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle)
         track3_service_background_budget(4);
     }
 
-    return 1;
+    return ds_capture_end();
 }
 
 static int capture_ds_track_multi(unsigned n, unsigned settle) {
     unsigned i;
 
-    for (i = 0; i < settle; i++) {
-        iq6_frame_t frame;
-
-        if (!track3_wait_ds_fifo("settle", i, settle))
-            return 0;
-        ds_fifo_read_frame(&frame);
-        track3_service_background_budget(4);
-    }
+    if (n > FFT_MAX_N || !ds_capture_begin(settle)) return 0;
 
     for (i = 0; i < n; i++) {
         iq6_frame_t frame;
@@ -780,7 +837,7 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
         track3_service_background_budget(4);
     }
 
-    return 1;
+    return ds_capture_end();
 }
 
 static uint64_t fft_bin_power_at(unsigned k) {
@@ -1036,6 +1093,8 @@ static int trackq_bin_vertex_estimate_mhz(const int16_t *samples,
 
 static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
                                                unsigned n,
+                                               int64_t center_hz_milli_hint,
+                                               unsigned half_width_hz,
                                                int64_t *vertex_hz_milli_out) {
     size_t cfg_need = 0;
     size_t cfg_len;
@@ -1044,16 +1103,28 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     unsigned k_peak = 0u;
     uint64_t p_peak = 0u;
     unsigned k;
+    unsigned k_lo, k_hi;
     int64_t x1, x2, x3;
     int64_t y1, y2, y3;
     int64_t den;
-    int64_t num;
+
+    trackq_dbg_k_peak = 0u;
+    trackq_dbg_y1 = trackq_dbg_y2 = trackq_dbg_y3 = trackq_dbg_den = 0ll;
+    if (vertex_hz_milli_out) *vertex_hz_milli_out = 0ll;
 
     if (!samples || !vertex_hz_milli_out || !is_pow2_u(n) || n < 8u || n > FFT_MAX_N || fft_fs_hz == 0u)
         return 0;
 
+    /* Hann window, computed on the fly for whatever N is in use (rather than
+     * a fixed-size precomputed table) so N=64/256/1024 get the same coverage
+     * as N=2048. Bench-verified (LoopbackRetest.md dumps, offline analysis):
+     * combined with the log-power parabola below, this cuts interpolation
+     * bias from ~0.28-0.31 bin down to ~0.01-0.02 bin, consistently across
+     * N=64..2048 and at both mid-bin and bin-boundary operating points. */
     for (k = 0u; k < n; k++) {
-        fft_in[k].r = (kiss_fft_scalar)samples[k];
+        double w = 0.5 - 0.5 * cos((2.0 * TRACKQ_PI * (double)k) / (double)(n - 1));
+        double windowed = (double)samples[k] * w;
+        fft_in[k].r = (kiss_fft_scalar)windowed;
         fft_in[k].i = (kiss_fft_scalar)0;
     }
 
@@ -1069,7 +1140,32 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     kiss_fft(cfg, fft_in, fft_out);
 
     bins = n / 2u;
-    for (k = 1u; k + 1u < bins; k++) {
+
+    /* Bound the search to a window around the expected frequency when a hint
+     * is available (steady-state tracking, where the last estimate is a
+     * strong prior); fall back to a full-spectrum search only when there is
+     * no prior (first call after (re)acquisition). An unbounded search during
+     * tracking lets any unrelated, momentarily-stronger spectral component
+     * (image, harmonic, filter leakage) hijack the peak pick even though the
+     * real tone has barely moved since the previous update. */
+    k_lo = 1u;
+    k_hi = bins - 2u;
+    if (center_hz_milli_hint > 0) {
+        int64_t lo_hz_milli = center_hz_milli_hint - ((int64_t)half_width_hz * 1000ll);
+        int64_t hi_hz_milli = center_hz_milli_hint + ((int64_t)half_width_hz * 1000ll);
+        int64_t k_lo_s = (lo_hz_milli * (int64_t)n) / ((int64_t)fft_fs_hz * 1000ll);
+        /* Include both bins bracketing the upper edge, also for N=64. */
+        int64_t k_hi_s = (hi_hz_milli * (int64_t)n + (int64_t)fft_fs_hz * 1000ll - 1ll) /
+                         ((int64_t)fft_fs_hz * 1000ll);
+        if (k_lo_s < 1) k_lo_s = 1;
+        if (k_hi_s > (int64_t)(bins - 2u)) k_hi_s = (int64_t)(bins - 2u);
+        if (k_lo_s <= k_hi_s) {
+            k_lo = (unsigned)k_lo_s;
+            k_hi = (unsigned)k_hi_s;
+        }
+    }
+
+    for (k = k_lo; k <= k_hi; k++) {
         uint64_t pwr = fft_bin_power_at(k);
         if (pwr > p_peak) {
             p_peak = pwr;
@@ -1083,19 +1179,45 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     y1 = (int64_t)fft_bin_power_at(k_peak - 1u);
     y2 = (int64_t)fft_bin_power_at(k_peak);
     y3 = (int64_t)fft_bin_power_at(k_peak + 1u);
-    if (y2 <= y1 || y2 <= y3)
+    trackq_dbg_k_peak = k_peak;
+    trackq_dbg_y1 = y1; trackq_dbg_y2 = y2; trackq_dbg_y3 = y3;
+    den = y1 - (2ll * y2) + y3;
+    trackq_dbg_den = den;
+    /* Equal adjacent maxima at a half-bin position are valid; a flat triplet
+     * is not. Requiring strict dominance rejects a legitimate half-bin tone.
+     * y1,y3 > 0 is required below for log(); a real FFT bin power is only
+     * ever exactly zero for a pathological all-zero capture. */
+    if (y2 < y1 || y2 < y3 || den >= 0ll || y1 <= 0ll || y3 <= 0ll)
         return 0;
 
     x1 = (int64_t)((((uint64_t)(k_peak - 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
     x2 = (int64_t)((((uint64_t)k_peak * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
     x3 = (int64_t)((((uint64_t)(k_peak + 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
 
-    den = y1 - (2ll * y2) + y3;
-    if (den >= 0ll)
-        return 0;
-
-    num = (x3 - x1) * (y1 - y3);
-    *vertex_hz_milli_out = x2 + (num / (4ll * den));
+    {
+        /* Fit the parabola to log(power), not raw power: a linear-power fit
+         * assumes a mainlobe shape that neither a rectangular nor a Hann
+         * window actually has, and is the confirmed source of the ~0.3-bin
+         * bias measured before this change. log-power matches a windowed
+         * mainlobe's real shape far better (bench-verified across N=64..2048
+         * via LoopbackRetest.md's raw-dump analysis). */
+        double ly1 = log((double)y1);
+        double ly2 = log((double)y2);
+        double ly3 = log((double)y3);
+        double log_den = ly1 - 2.0 * ly2 + ly3;
+        double log_num = (double)(x3 - x1) * (ly1 - ly3);
+        /* Local-maximum geometry bounds the correction to half a bin. */
+        int64_t half_bin_hz_milli = ((int64_t)fft_fs_hz * 1000ll) / (2ll * (int64_t)n);
+        int64_t correction;
+        if (!(log_den < 0.0))
+            return 0;
+        correction = (int64_t)(log_num / (4.0 * log_den));
+        if (correction > half_bin_hz_milli)
+            correction = half_bin_hz_milli;
+        if (correction < -half_bin_hz_milli)
+            correction = -half_bin_hz_milli;
+        *vertex_hz_milli_out = x2 + correction;
+    }
     return 1;
 }
 
@@ -1105,15 +1227,6 @@ static void trackq_step(void) {
     unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
     int any_due = 0;
     int any_enabled = 0;
-    int64_t bin_vertex_hf_mhz_log[TRACKQ_CHANNELS];
-    int64_t corr_vertex_hf_mhz_log[TRACKQ_CHANNELS];
-    int64_t ref_bin_vertex_baseband_mhz_log = (int64_t)TRACK3_DEFAULT_CENTER_HZ * 1000ll;
-    int64_t ref_real_fs_mhz_log = (int64_t)TRACK3_RF_FS_HZ * 1000ll;
-    int64_t temp_delta_mc_log = 0ll;
-    uint8_t bin_vertex_valid_log[TRACKQ_CHANNELS] = {0u, 0u, 0u};
-    uint8_t ref_bin_vertex_valid_log = 0u;
-    uint8_t temp_delta_valid_log = 0u;
-
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         if (!trackq[i].enabled)
             continue;
@@ -1128,7 +1241,7 @@ static void trackq_step(void) {
             trackq[i].enabled = 0;
             continue;
         }
-        if (ce_ticks >= trackq[i].next_tick) {
+        if ((int32_t)(ce_ticks - trackq[i].next_tick) >= 0) {
             any_due = 1;
             if (capture_n == 0u) {
                 capture_n = trackq[i].n;
@@ -1140,33 +1253,49 @@ static void trackq_step(void) {
     if (!any_enabled || !any_due)
         return;
 
+    trackq_dump_n = 0u;
+    trackq_capture_nco = main_phase_inc_nco_read();
+    trackq_capture_down = phase_down_read(0);
+    trackq_capture_input = main_input_select_read();
+    trackq_capture_fs = fft_fs_hz;
     if (!capture_ds_track_multi(capture_n, capture_settle)) {
         for (i = 0; i < TRACKQ_CHANNELS; i++)
             trackq[i].enabled = 0;
         return;
     }
 
-    /* VALIDATION MODE: bypass the multi-mode/ref tracking pipeline and only
-     * estimate the channel-1 lowband from downsampled_y1 using a 64-point FFT
-     * with 3-bin quadratic interpolation around the strongest bin. The original
-     * tracking/correction code is kept below in comments for easy restore.
-     */
+    /* Measurement-only validation. Never write an NCO correction here. */
     {
-        unsigned meas_n = (capture_n >= TRACKQ_REF_FFT_N) ? TRACKQ_REF_FFT_N : capture_n;
+        unsigned meas_n = capture_n;
+        uint32_t capture_tick = ce_ticks;
+        uint32_t dticks = trackq_have_capture_tick ? capture_tick - trackq_last_capture_tick : 0u;
         int64_t bb_hz_milli = 0ll;
-        int64_t nco_hz_milli = uc_phase_inc_to_mhz(main_phase_inc_nco_read(), TRACK3_RF_FS_HZ);
-        static uint32_t last_validate_tick = 0u;
-        uint32_t dticks = ce_ticks - last_validate_tick;
-        int bb_valid = trackq_fft_peak_vertex_estimate_mhz(track_samples[0], meas_n, &bb_hz_milli);
-
-        uc_commit();
+        int64_t nco_hz_milli = uc_phase_inc_to_mhz(trackq_capture_nco, TRACK3_RF_FS_HZ);
+        uint32_t difference = trackq_capture_nco > trackq_capture_down ?
+            trackq_capture_nco - trackq_capture_down : trackq_capture_down - trackq_capture_nco;
+        int64_t expected = uc_phase_inc_to_mhz(difference, TRACK3_RF_FS_HZ);
+        int expected_valid = trackq_capture_input == 1u && fft_fs_hz == 10000u &&
+                             expected > 0ll && expected < 5000000ll;
+        /* Search independently on every record: a bad estimate or manual
+         * register step must not trap later records in a stale search window. */
+        int bb_valid = trackq_fft_peak_vertex_estimate_mhz(track_samples[0], meas_n,
+                                                          0ll, 0u, &bb_hz_milli);
+        trackq_dump_n = meas_n;
+        trackq_last_capture_tick = capture_tick;
+        trackq_have_capture_tick = 1;
         trackq_log_iteration++;
-        printf("trackq validate: nco=%ld.%03ldHz bb=%s%ld.%03ldHz dticks=%lu\n",
+        printf("trackq validate: nco=%ld.%03ldHz bb=%s%ld.%03ldHz dticks=%lu k=%u y={%lld,%lld,%lld} den=%lld",
                (long)(nco_hz_milli / 1000ll), (long)llabs(nco_hz_milli % 1000ll),
                bb_valid ? "" : "(na)",
                (long)(bb_hz_milli / 1000ll), (long)llabs(bb_hz_milli % 1000ll),
-               (unsigned long)dticks);
-        last_validate_tick = ce_ticks;
+               (unsigned long)dticks, trackq_dbg_k_peak,
+               (long long)trackq_dbg_y1, (long long)trackq_dbg_y2, (long long)trackq_dbg_y3,
+               (long long)trackq_dbg_den);
+        printf(" N=%u window=" TRACKQ_WINDOW " input=%lu pnco=%lu pdown=%lu drained=%u oldov=%u ov=%u uf=%u expected=%s%ld.%03ldHz\n",
+               meas_n, (unsigned long)trackq_capture_input,
+               (unsigned long)trackq_capture_nco, (unsigned long)trackq_capture_down,
+               ds_capture_drained, ds_capture_old_overflow, ds_capture_overflow, ds_capture_underflow,
+               expected_valid ? "" : "(na)", (long)(expected / 1000ll), (long)(expected % 1000ll));
         for (i = 0; i < TRACKQ_CHANNELS; ++i) {
             if (trackq[i].enabled)
                 trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
@@ -1506,8 +1635,13 @@ void cmd_trackq_start(char *args) {
         puts("trackq_start requires center_hz > delta_hz for all tracked channels");
         return;
     }
-    if (fft_fs_hz == 0u) {
-        puts("trackq_start requires fft_fs > 0");
+    if (fft_fs_hz != 10000u) {
+        puts("trackq_start requires fft_fs 10000 (physical downsample rate)");
+        return;
+    }
+
+    if (f1_hz >= TRACK3_RF_FS_HZ || f2_hz >= TRACK3_RF_FS_HZ || f3_hz >= TRACK3_RF_FS_HZ) {
+        puts("trackq_start frequencies must be below 65000000 Hz; 0 preserves a tuning word");
         return;
     }
 
@@ -1524,6 +1658,14 @@ void cmd_trackq_start(char *args) {
     if (f3_hz) phase_down_write(2, uc_phase_inc_from_hz(f3_hz, TRACK3_RF_FS_HZ));
     if (f1_hz || f2_hz || f3_hz)
         uc_commit();
+
+    trackq_have_capture_tick = 0;
+    trackq_dump_n = 0u;
+    trackq_log_iteration = 0u;
+    printf("trackq config: build=" TRACKQ_BUILD_ID " compiled=" __DATE__ " " __TIME__
+           " mode=validate-ch1-y window=" TRACKQ_WINDOW " estimator=power-parabola Fs=%lu N=%u input=%lu pnco=%lu pdown=%lu\n",
+           (unsigned long)fft_fs_hz, n, (unsigned long)main_input_select_read(),
+           (unsigned long)main_phase_inc_nco_read(), (unsigned long)phase_down_read(0));
 
     /* VALIDATION MODE: enable only channel 1 tracking state. */
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++) {
@@ -1589,11 +1731,6 @@ void cmd_trackq_probe(char *args) {
         return;
     }
 
-    /* Drop stale samples after manual LO changes, then wait for a fresh window. */
-    main_ds_fifo_clear_write(1);
-    (void)ds_fifo_flush_all(n + TRACK3_DEFAULT_SETTLE);
-    track3_wait_ticks(n + TRACK3_DEFAULT_SETTLE);
-
     if (!capture_ds_fft_channel(0u, n, TRACK3_DEFAULT_SETTLE)) {
         puts("trackq_probe capture failed");
         return;
@@ -1630,15 +1767,38 @@ void cmd_trackq_stop(char *args) {
     (void)args;
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++)
         trackq[i].enabled = 0;
-    puts("trackq_stop: quadratic tracking disabled on ch1..ch3");
+    trackq_have_capture_tick = 0;
+    puts("trackq_stop: validation stopped; last raw capture retained for trackq_dump");
 }
+void cmd_trackq_dump(char *args) {
+    (void)args;
+    if (!trackq_dump_n) {
+        puts("trackq_dump: no successful capture available");
+        return;
+    }
+    /* Command processing and acquisition share the foreground thread. Stop
+     * acquisition so the dump is reproducible and the UART cannot mix logs. */
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) trackq[i].enabled = 0;
+    printf("trackq_dump begin: build=" TRACKQ_BUILD_ID " N=%u Fs=%lu window=" TRACKQ_WINDOW
+           " input=%lu pnco=%lu pdown=%lu\n", trackq_dump_n, (unsigned long)trackq_capture_fs,
+           (unsigned long)trackq_capture_input, (unsigned long)trackq_capture_nco,
+           (unsigned long)trackq_capture_down);
+    puts("sample,y1");
+    for (unsigned i = 0; i < trackq_dump_n; ++i) {
+        printf("%u,%d\n", i, (int)track_samples[0][i]);
+        track3_service_background_budget(4);
+    }
+    puts("trackq_dump end");
+}
+
 void cmd_fft64_peak(char *args) {
     (void)args;
 
     const unsigned n = 64u;
 
+    if (!ds_capture_begin(DS_CAPTURE_SETTLE)) return;
     for (unsigned i = 0; i < n; i++) {
-        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+        if (!track3_wait_ds_fifo("capture", i, n)) {
             printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
             return;
         }
@@ -1651,6 +1811,8 @@ void cmd_fft64_peak(char *args) {
         fft_in[i].r = (kiss_fft_scalar)sx;
         fft_in[i].i = (kiss_fft_scalar)sy;
     }
+
+    if (!ds_capture_end()) return;
 
     size_t cfg_need = 0;
     (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
@@ -1727,17 +1889,17 @@ void uc_help(char *args) {
     (void)args;
     puts_help_header("UberClock commands");
 
-    puts("  phase_nco        <val>      (0..16777215)");
+    puts("  phase_nco        <val>      (0..67108863)");
     puts("  nco_mag          <val>      (signed 12-bit: -2048..2047)");
 
-    puts("  phase_down_1 <val> ... phase_down_5 <val>  (0..524287)");
-    puts("  phase_down_ref   <val>      (0..524287)");
+    puts("  phase_down_1 <val> ... phase_down_5 <val>  (0..67108863)");
+    puts("  phase_down_ref   <val>      (0..67108863)");
 
-    puts("  phase_cpu1       <val>      (0..16777215)");
-    puts("  phase_cpu2       <val>      (0..16777215)");
-    puts("  phase_cpu3       <val>      (0..16777215)");
-    puts("  phase_cpu4       <val>      (0..16777215)");
-    puts("  phase_cpu5       <val>      (0..16777215)");
+    puts("  phase_cpu1       <val>      (0..67108863)");
+    puts("  phase_cpu2       <val>      (0..67108863)");
+    puts("  phase_cpu3       <val>      (0..67108863)");
+    puts("  phase_cpu4       <val>      (0..67108863)");
+    puts("  phase_cpu5       <val>      (0..67108863)");
 
     puts("  mag_cpu1         <val>      (signed 12-bit: -2048..2047)");
     puts("  mag_cpu2         <val>      (signed 12-bit: -2048..2047)");
@@ -1775,7 +1937,7 @@ void uc_help(char *args) {
     puts("  track3 <ch> <start_hz> [step_hz] [max_steps] [N] [center_hz] [delta_hz]");
     puts("  trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_ch1_hz] [delta_ch2_hz] [delta_ch3_hz]");
     puts("  trackq_probe [N] [center_hz] [delta_hz]");
-    puts("  trackq_stop                 (stop 3-point quadratic tracking)");
+    puts("  trackq_stop                 (stop validation)\n  trackq_dump                 (stop and dump last raw Y1 capture)");
 
     puts("  cap_arm              (pulse arm capture)");
     puts("  cap_done             (read cap_done)");
@@ -2192,6 +2354,12 @@ void cmd_fft_fs(char *a) {
         puts("Usage: fft_fs <Hz>, Hz must be > 0");
         return;
     }
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) {
+        if (trackq[i].enabled) {
+            puts("Stop validation before changing fft_fs");
+            return;
+        }
+    }
     fft_fs_hz = v;
     printf("fft_fs = %lu Hz\n", (unsigned long)fft_fs_hz);
 }
@@ -2204,8 +2372,9 @@ static void run_fft_ds(char *args, int peak_only) {
         return;
     }
 
+    if (!ds_capture_begin(DS_CAPTURE_SETTLE)) return;
     for (unsigned i = 0; i < n; i++) {
-        if ((main_ds_fifo_flags_read() & 0x1u) == 0u) {
+        if (!track3_wait_ds_fifo("capture", i, n)) {
             printf("Not enough DS FIFO samples: got %u/%u\n", i, n);
             return;
         }
@@ -2216,6 +2385,8 @@ static void run_fft_ds(char *args, int peak_only) {
         fft_in[i].r = (kiss_fft_scalar)sx;
         fft_in[i].i = (kiss_fft_scalar)sy;
     }
+
+    if (!ds_capture_end()) return;
 
     size_t cfg_need = 0;
     (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
@@ -2765,7 +2936,7 @@ void uberclock_init(void) {
     irq_attach(EVM_INTERRUPT, ce_down_isr);
     irq_setmask(irq_getmask() | (1u << EVM_INTERRUPT));
 
-    printf("UberClock init done.\n");
+    printf("UberClock init done. build=" TRACKQ_BUILD_ID " compiled=" __DATE__ " " __TIME__ " window=" TRACKQ_WINDOW "\n");
 }
 
 void uberclock_poll(void) {

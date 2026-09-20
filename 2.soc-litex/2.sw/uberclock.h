@@ -69,6 +69,7 @@ extern "C" {
     void cmd_trackq_probe(char *args);
     void cmd_trackq_start(char *args);
     void cmd_trackq_stop(char *args);
+    void cmd_trackq_dump(char *args);
     void cmd_ub_cap(char *args);
     void cmd_ub_hexdump(char *args);
     void cmd_ub_info(char *args);
