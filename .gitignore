@@ -22,6 +22,8 @@
 #2.soc-litex/3.build/
 *.bin
 *.txt
+# except the organized bench-capture logs, which are tracked deliberately
+!2.soc-litex/3.build/captures/**/*.txt
 *.o
 *.d
 *.elf

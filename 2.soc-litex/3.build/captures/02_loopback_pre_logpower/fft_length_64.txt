@@ -1,0 +1,248 @@
+Script started on 2026-09-21 00:20:40+02:00 [TERM="xterm-kitty" TTY="/dev/pts/2" COLUMNS="104" LINES="50"]
+[0m[38;5;240m[49m[39m[27m[24m[K
+
+[2A7[0m[49m[39m[38;5;240m╭─[0m[38;5;240m[49m[38;5;236m░▒▓[0m[38;5;236m[48;5;236m[38;5;31m [1m[38;5;31m[48;5;236m[38;5;39m~[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/fpga/[1m[38;5;31m[48;5;236m[38;5;39muberClock[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/2.soc-litex/[1m[38;5;31m[48;5;236m[38;5;39m3.build[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m[0m[38;5;31m[48;5;236m[48;5;236m[38;5;31m [0m[38;5;31m[48;5;236m[49m[38;5;236m▓▒░[0m[38;5;236m[49m[39m[38;5;240m───────────────────────────────────[0m[38;5;240m[49m[38;5;236m░▒▓[0m[38;5;236m[48;5;236m[38;5;70m [0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m✔[0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m [0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m[0m[38;5;70m[48;5;236m[48;5;236m[38;5;66m[38;5;244m[0m[38;5;244m[48;5;236m[48;5;236m[38;5;66m 00:20:40[0m[38;5;66m[48;5;236m[48;5;236m[38;5;66m[0m[38;5;66m[48;5;236m[48;5;236m[38;5;66m [49m[38;5;236m▓▒░[0m[38;5;236m[48;5;236m[38;5;66m[0m[38;5;66m[48;5;236m[49m[39m[38;5;240m─╮
+[0m[38;5;240m[49m[39m[38;5;240m╰─[0m[38;5;240m[49m[39m[0m[49m[39m [0m[49m[39m                                                                                                  [0m[38;5;240m[49m[39m[38;5;240m─╯[0m[38;5;240m[49m[39m[27m[24m[3C[?2004h[?25l8[0m[49m[39m[27m[24m[J]2;hamed@archlinux:~/fpga/uberClock/2.soc-litex/3.build]1;..litex/3.build]7;file://archlinux/home/hamed/fpga/uberClock/2.soc-litex/3.build\[0m[38;5;31m[49m[39m[27m[24m[1m[7m%[27m[1m[0m                                                                                                       [0m[49m[39m[27m[24m[K[0m[27m[24m[J[0m[38;5;240m[49m[39m
+[A[38;5;240m╭─[0m[38;5;240m[49m[38;5;236m░▒▓[0m[38;5;236m[48;5;236m[38;5;31m [1m[38;5;31m[48;5;236m[38;5;39m~[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/fpga/[1m[38;5;31m[48;5;236m[38;5;39muberClock[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/2.soc-litex/[1m[38;5;31m[48;5;236m[38;5;39m3.build[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m[0m[38;5;31m[48;5;236m[48;5;236m[38;5;31m [0m[38;5;31m[48;5;236m[48;5;236m[38;5;244m[0m[38;5;244m[48;5;236m[48;5;236m[38;5;178m [38;5;76mdev-gui [38;5;76m*1 [38;5;178m!3 [38;5;39m?10[0m[38;5;39m[48;5;236m[48;5;236m[38;5;178m [0m[38;5;178m[48;5;236m[49m[38;5;236m▓▒░[0m[38;5;236m[49m[39m[38;5;240m────[0m[38;5;240m[49m[38;5;236m░▒▓[0m[38;5;236m[48;5;236m[38;5;70m [0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m✔[0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m [0m[38;5;70m[48;5;236m[48;5;236m[38;5;70m[0m[38;5;70m[48;5;236m[48;5;236m[38;5;37m[38;5;244m[0m[38;5;244m[48;5;236m[48;5;236m[38;5;37m litex[0m[38;5;37m[48;5;236m[48;5;236m[38;5;37m 🐍[0m[38;5;37m[48;5;236m[48;5;236m[38;5;37m [0m[38;5;37m[48;5;236m[48;5;236m[38;5;37m[0m[38;5;37m[48;5;236m[48;5;236m[38;5;66m[38;5;244m[0m[38;5;244m[48;5;236m[48;5;236m[38;5;66m 00:20:40[0m[38;5;66m[48;5;236m[48;5;236m[38;5;66m[0m[38;5;66m[48;5;236m[48;5;236m[38;5;66m [49m[38;5;236m▓▒░[0m[38;5;236m[48;5;236m[38;5;66m[0m[38;5;66m[48;5;236m[49m[39m[38;5;240m─╮
+[0m[38;5;240m[49m[39m[38;5;240m╰─[0m[38;5;240m[49m[39m[0m[49m[39m [0m[49m[39m[K[98C[0m[49m[39m[38;5;240m─╯[39m[100D[?1h[?25h[?2004hscript -q fft_length_64.txt[27Dpython3 analyze_loopback_capture.py baseline_10323409.txt[57Dmake load                                                [48Dterm PORT=/dev/ttyUSB1[?1l[?2004l
+]2;make term PORT=/dev/ttyUSB1]1;make[term] port=/dev/ttyUSB1
+source /home/hamed/.venv/litex/bin/activate && \
+KERNEL_PATH=$(find /home/hamed/fpga/uberClock/2.soc-litex/2.sw -maxdepth 1 -type f -name '*.bin' | head -n1); \
+if [ -z "${KERNEL_PATH}" ]; then \
+  echo "Error: no .bin found in /home/hamed/fpga/uberClock/2.soc-litex/2.sw" >&2; \
+  exit 1; \
+fi; \
+litex_term /dev/ttyUSB1 --kernel="${KERNEL_PATH}"
+
+[1m        __   _ __      _  __[0m
+[1m       / /  (_) /____ | |/_/[0m
+[1m      / /__/ / __/ -_)>  <[0m
+[1m     /____/_/\__/\__/_/|_|[0m
+[1m   Build your hardware, easily![0m
+
+ (c) Copyright 2012-2026 Enjoy-Digital
+ (c) Copyright 2007-2015 M-Labs
+
+ BIOS built on Sep 20 2026 17:07:46
+ BIOS CRC passed (26a3a422)
+
+ LiteX git sha1: 3f01ef965
+
+--================ [1mSoC[0m =================--
+[1mCPU[0m:		VexRiscv @ 100MHz
+[1mBUS[0m:		wishbone 32-bit data/32-bit addr
+[1mCSR[0m:		32-bit data big ordering
+[1mROM[0m:		128.0KiB
+[1mSRAM[0m:		8.0KiB
+[1mMAIN RAM[0m:	256.0KiB
+
+--=========== [1mInitialization[0m ===========--
+Ethernet init...
+Local IP: 192.168.1.50
+Memtest at 0x40000000 (256.0KiB)...
+  Write: 0x40000000-0x40000000 0B     Write: 0x40000000-0x40020000 128.0KiB     Write: 0x40000000-0x40040000 256.0KiB   
+   Read: 0x40000000-0x40000000 0B      Read: 0x40000000-0x40020000 128.0KiB      Read: 0x40000000-0x40040000 256.0KiB   
+Memtest OK
+Memspeed at 0x40000000 (Sequential, 256.0KiB)...
+  Write speed: 164.8MiB/s
+   Read speed: 85.9MiB/s
+--================ [1mBoot[0m ================--
+Booting from serial...
+Press Q or ESC to abort boot completely.
+sL5DdSMmkekro
+[LITEX-TERM] Received firmware download request from the device.
+[LITEX-TERM] Uploading /home/hamed/fpga/uberClock/2.soc-litex/2.sw/demo.bin to 0x40000000 (75056 bytes)...
+[LITEX-TERM] Upload calibration... (inter-frame:  0.00us, length: 251, window: 8)
+|>                    | 0%|>                    | 2%|>                    | 4%|=>                   | 5%|=>                   | 7%|=>                   | 9%|==>                  | 11%|==>                  | 12%|==>                  | 14%|===>                 | 16%|===>                 | 17%|===>                 | 19%|====>                | 21%|====>                | 22%|====>                | 24%|=====>               | 26%|=====>               | 27%|=====>               | 29%|======>              | 31%|======>              | 32%|======>              | 34%|=======>             | 36%|=======>             | 37%|=======>             | 39%|========>            | 41%|========>            | 42%|========>            | 44%|=========>           | 46%|=========>           | 47%|=========>           | 49%|==========>          | 51%|==========>          | 52%|==========>          | 54%|===========>         | 56%|===========>         | 57%|===========>         | 59%|============>        | 61%|============>        | 62%|============>        | 64%|=============>       | 66%|=============>       | 67%|=============>       | 69%|==============>      | 71%|==============>      | 72%|==============>      | 74%|===============>     | 76%|===============>     | 77%|===============>     | 79%|================>    | 81%|================>    | 82%|================>    | 84%|=================>   | 86%|=================>   | 87%|=================>   | 89%|==================>  | 91%|==================>  | 92%|==================>  | 94%|===================> | 96%|===================> | 97%|===================> | 99%[LITEX-TERM] Upload complete (10.9KB/s).
+[LITEX-TERM] Booting the device.
+[LITEX-TERM] Done.
+Executing booted program at 0x40000000
+
+--============== [1mLiftoff![0m ==============--
+dsp_run = 1
+sig3 enabled on ch1..ch3
+UberClock init done. build=loopback-fifo-v1 compiled=Sep 20 2026 23:50:17 window=rect
+Type 'help' for top-level, 'help_uc' for UberClock commands, 'help_ddr' for DDR commands.
+[92;1m[92;1muberClock[0m>[0m input_select 1
+Main input select register set to 1
+[92;1m[92;1muberClock[0m>[0m fft_fs 1000   0000
+fft_fs = 10000 Hz
+[92;1m[92;1muberClock[0m>[0m phase_nco 10324440
+Input NCO phase increment set to 10324440
+[92;1m[92;1muberClock[0m>[0m phase_down_1 1-3  0323408
+Downconversion phase ch1 increment set to 10323408
+[92;1m[92;1muberClock[0m>[0m trackq_start 0 0 0 204   64 1000 10 100 20
+trackq config: build=loopback-fifo-v1 compiled=Sep 20 2026 23:50:17 mode=validate-ch1-y window=rect estimator=power-parabola Fs=10000 N=64 input=1 pnco=10324440 pdown=10323408
+trackq_start: ch1=9999000 Hz ch2=3386370 Hz ch3=3727990 Hz N=64 center=1000 Hz delta={10,100,20} Hz sig3={{990,1000,1010},{900,1000,1100},{980,1000,1020}} Hz interval=1 s
+[92;1m[92;1muberClock[0m>[0m trackq validate: nco=9999999.404Hz bb=951.376Hz dticks=0 k=6 y={89449,924313,341290} den=-1417887 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=16468 oldov=1 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.724Hz dticks=10373 k=6 y={87200,921665,344257} den=-1411873 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10205 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.312Hz dticks=10373 k=6 y={73817,871812,370145} den=-1299662 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.755Hz dticks=10373 k=6 y={53937,810596,412465} den=-1154790 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.137Hz dticks=10373 k=6 y={81225,902005,354994} den=-1367791 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.978Hz dticks=10373 k=6 y={81178,905633,353844} den=-1376244 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.600Hz dticks=10373 k=6 y={53681,811249,410890} den=-1157927 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.974Hz dticks=10373 k=6 y={71749,871060,377485} den=-1292886 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.692Hz dticks=10373 k=6 y={88345,918185,343490} den=-1404535 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=959.850Hz dticks=10373 k=6 y={58165,828946,401076} den=-1198651 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.526Hz dticks=10373 k=6 y={62845,841186,392962} den=-1226565 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.127Hz dticks=10373 k=6 y={89765,928305,338845} den=-1428000 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=957.228Hz dticks=10373 k=6 y={67009,855560,384970} den=-1259141 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.887Hz dticks=10373 k=6 y={55432,819074,407305} den=-1175411 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.167Hz dticks=10373 k=6 y={85136,913133,346900} den=-1394230 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.561Hz dticks=10373 k=6 y={76381,882340,365301} den=-1322998 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=962.087Hz dticks=10373 k=6 y={52330,806306,413309} den=-1146973 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.220Hz dticks=10373 k=6 y={76753,888322,362896} den=-1336995 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.415Hz dticks=10373 k=6 y={84296,907210,348146} den=-1381978 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.334Hz dticks=10373 k=6 y={55376,811665,408962} den=-1158992 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=956.630Hz dticks=10373 k=6 y={68129,858644,379125} den=-1270034 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.438Hz dticks=10373 k=6 y={88461,924260,341541} den=-1418518 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.995Hz dticks=10373 k=6 y={61265,833300,394434} den=-1210901 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=959.249Hz dticks=10373 k=6 y={60530,835234,397945} den=-1211993 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.557Hz dticks=10373 k=6 y={88100,923600,342917} den=-1416183 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=956.501Hz dticks=10373 k=6 y={69665,860513,379105} den=-1272256 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.596Hz dticks=10373 k=6 y={54765,811880,411714} den=-1157281 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.696Hz dticks=10373 k=6 y={83074,906121,351130} den=-1378038 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.718Hz dticks=10373 k=6 y={79645,896029,360333} den=-1352080 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.705Hz dticks=10373 k=6 y={53000,810725,411473} den=-1156977 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.821Hz dticks=10373 k=6 y={74506,878373,366277} den=-1315963 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.888Hz dticks=10373 k=6 y={85865,918293,344794} den=-1405927 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.413Hz dticks=10373 k=6 y={56746,821210,403481} den=-1182193 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=957.665Hz dticks=10373 k=6 y={66052,849733,387617} den=-1245797 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.205Hz dticks=10373 k=6 y={88589,924865,338209} den=-1422932 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.392Hz dticks=10373 k=6 y={64165,842594,392660} den=-1228363 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.327Hz dticks=10373 k=6 y={57781,824434,404496} den=-1186591 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.703Hz dticks=10373 k=6 y={87490,916456,342548} den=-1402874 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.533Hz dticks=10373 k=6 y={72845,871642,372452} den=-1297987 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.607Hz dticks=10373 k=6 y={52513,810485,409988} den=-1158469 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.348Hz dticks=10373 k=6 y={81341,898378,356921} den=-1358494 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.075Hz dticks=10373 k=6 y={81245,903977,354769} den=-1371940 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.724Hz dticks=10373 k=6 y={54322,809764,411925} den=-1153281 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.587Hz dticks=10373 k=6 y={71266,873106,372749} den=-1302197 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.644Hz dticks=10373 k=6 y={88938,920116,343765} den=-1407529 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.295Hz dticks=10373 k=6 y={57850,828425,405961} den=-1193039 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.577Hz dticks=10373 k=6 y={62554,840053,392949} den=-1224603 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.365Hz dticks=10373 k=6 y={88450,926609,341120} den=-1423648 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=957.307Hz dticks=10373 k=6 y={65668,852629,384004} den=-1255586 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.747Hz dticks=10373 k=6 y={55540,815634,404165} den=-1171563 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.066Hz dticks=10373 k=6 y={85370,914560,345992} den=-1397758 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.625Hz dticks=10373 k=6 y={76001,883917,366516} den=-1325317 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.715Hz dticks=10373 k=6 y={53285,803780,408449} den=-1145826 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.929Hz dticks=10373 k=6 y={78800,888901,360317} den=-1338685 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.745Hz dticks=10373 k=6 y={83777,906100,352313} den=-1376110 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.459Hz dticks=10373 k=6 y={54884,810353,409505} den=-1156317 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=956.663Hz dticks=10373 k=6 y={68725,858676,379933} den=-1268694 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.369Hz dticks=10373 k=6 y={88552,921761,339784} den=-1415186 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.988Hz dticks=10373 k=6 y={61213,835354,395201} den=-1214294 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=959.281Hz dticks=10373 k=6 y={60548,833092,397409} den=-1208227 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.460Hz dticks=10373 k=6 y={88866,922280,341569} den=-1414125 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=956.488Hz dticks=10373 k=6 y={70117,862605,380020} den=-1275073 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.400Hz dticks=10373 k=6 y={54325,814096,410293} den=-1163574 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.655Hz dticks=10373 k=6 y={83561,906980,351122} den=-1379277 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.910Hz dticks=10373 k=6 y={79312,893924,362133} den=-1346403 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=962.032Hz dticks=10373 k=6 y={53145,810746,415241} den=-1153106 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.735Hz dticks=10373 k=6 y={75665,883226,367588} den=-1323199 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.067Hz dticks=10373 k=6 y={85273,918020,347021} den=-1403746 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.345Hz dticks=10373 k=6 y={56836,817385,400997} den=-1176937 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=957.742Hz dticks=10373 k=6 y={65482,848341,387685} den=-1243515 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.221Hz dticks=10373 k=6 y={88777,928762,339761} den=-1428986 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.419Hz dticks=10373 k=6 y={63929,841330,392324} den=-1226407 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.005Hz dticks=10373 k=6 y={58005,824213,400725} den=-1189696 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.828Hz dticks=10373 k=6 y={86761,920146,345073} den=-1408458 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.642Hz dticks=10373 k=6 y={72340,874042,374516} den=-1301228 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.610Hz dticks=10373 k=6 y={53300,808993,409738} den=-1154948 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.221Hz dticks=10373 k=6 y={81461,901364,356161} den=-1365106 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=953.133Hz dticks=10373 k=6 y={80893,902746,354973} den=-1369626 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.581Hz dticks=10373 k=6 y={53737,810052,410141} den=-1156226 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=955.453Hz dticks=10373 k=6 y={71485,871109,370325} den=-1300408 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.693Hz dticks=10373 k=6 y={87650,922585,344378} den=-1413142 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=959.935Hz dticks=10373 k=6 y={57898,829225,402068} den=-1198484 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=958.405Hz dticks=10373 k=6 y={62978,843113,392353} den=-1230895 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.508Hz dticks=10373 k=6 y={89833,926333,344210} den=-1418623 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=957.179Hz dticks=10373 k=6 y={66445,852505,382772} den=-1255793 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=960.735Hz dticks=10373 k=6 y={55912,823225,407705} den=-1182833 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.982Hz dticks=10373 k=6 y={86402,915588,345749} den=-1399025 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.619Hz dticks=10373 k=6 y={74728,881501,364753} den=-1323521 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.890Hz dticks=10373 k=6 y={52561,809266,412633} den=-1153338 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=954.082Hz dticks=10373 k=6 y={78196,890825,362765} den=-1340689 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=952.517Hz dticks=10373 k=6 y={84461,908890,350309} den=-1383010 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=961.177Hz dticks=10373 k=6 y={54965,813220,407677} den=-1163798 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=956.648Hz dticks=10373 k=6 y={69512,861305,381242} den=-1271856 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+trackq validate: nco=9999999.404Hz bb=951.532Hz dticks=10373 k=6 y={88874,920914,342253} den=-1410701 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+tractrackq validate: nco=9999999.404Hz bb=959.142Hz dticks=10373 k=6 y={61081,831125,395173} den=-1205996 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+kq_strackq validate: nco=9999999.404Hz bb=959.322Hz dticks=10373 k=6 y={60713,830745,396973} den=-1203804 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+ dumptrackq validate: nco=9999999.404Hz bb=951.337Hz dticks=10373 k=6 y={88042,926305,340301} den=-1424267 N=64 window=rect input=1 pnco=10324440 pdown=10323408 drained=10208 oldov=0 ov=0 uf=0 expected=999.570Hz
+
+trackq_dump begin: build=loopback-fifo-v1 N=64 Fs=10000 window=rect input=1 pnco=10324440 pdown=10323408
+sample,y1
+0,-1737
+1,-2444
+2,-2231
+3,-1179
+4,312
+5,1675
+6,2389
+7,2169
+8,1115
+9,-379
+10,-1733
+11,-2447
+12,-2240
+13,-1192
+14,305
+15,1672
+16,2388
+17,2169
+18,1116
+19,-368
+20,-1731
+21,-2443
+22,-2239
+23,-1190
+24,293
+25,1659
+26,2380
+27,2169
+28,1126
+29,-359
+30,-1728
+31,-2447
+32,-2245
+33,-1204
+34,290
+35,1658
+36,2389
+37,2178
+38,1137
+39,-345
+40,-1710
+41,-2440
+42,-2250
+43,-1209
+44,281
+45,1659
+46,2382
+47,2176
+48,1140
+49,-339
+50,-1712
+51,-2439
+52,-2251
+53,-1211
+54,277
+55,1650
+56,2379
+57,2186
+58,1148
+59,-335
+60,-1703
+61,-2441
+62,-2249
+63,-1213
+trackq_dump end
+[92;1m[92;1muberClock[0m>[0m 
+[1m[7m%[27m[1m[0m                                                                                                        ]2;hamed@archlinux:~/fpga/uberClock/2.soc-litex/3.build]1;..litex/3.build]7;file://archlinux/home/hamed/fpga/uberClock/2.soc-litex/3.build\[0m[49m[39m[K
+[0m[27m[24m[J[0m[38;5;240m[49m[39m
+[A[38;5;240m╭─[0m[38;5;240m[49m[38;5;236m░▒▓[0m[38;5;236m[48;5;236m[38;5;31m [1m[38;5;31m[48;5;236m[38;5;39m~[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/[38;5;103mf[0m[38;5;103m[48;5;236m[48;5;236m[38;5;31m/[1m[38;5;31m[48;5;236m[38;5;39muberClock[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m/[38;5;103m2.soc-[0m[38;5;103m[48;5;236m[48;5;236m[38;5;31m/[1m[38;5;31m[48;5;236m[38;5;39m3.build[0m[38;5;39m[48;5;236m[48;5;236m[38;5;31m[0m[38;5;31m[48;5;236m[48;5;236m[38;5;31m [0m[38;5;31m[48;5;236m[48;5;236m[38;5;244m[0m[38;5;244m[48;5;236m[48;5;236m[38;5;178m [38;5;76mdev-gui [38;5;76m*1 [38;5;178m!3 [38;5;39m?10[0m[38;5;39m[48;5;236m[48;5;236m[38;5;178m [0m[38;5;178m[48;5;236m[49m[38;5;236m▓▒░[0m[38;5;236m[49m[39m[38;5;240m
+[0m[38;5;240m[49m[39m[38;5;240m╰─[0m[38;5;240m[49m[39m[0m[49m[39m [0m[49m[39m[K[98C[0m[49m[39m[38;5;240m─╯[39m[100D[?1h[?2004h[?2004l
+
+Script done on 2026-09-21 00:23:31+02:00 [COMMAND_EXIT_CODE="130"]
