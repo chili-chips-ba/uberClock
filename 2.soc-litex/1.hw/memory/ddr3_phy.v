@@ -1460,3 +1460,5 @@ module ddr3_phy #(
     // End of DCIRESET_inst instantiation
          
 endmodule
+
+`default_nettype wire

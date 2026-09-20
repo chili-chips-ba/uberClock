@@ -471,3 +471,5 @@ ddr3_top #(
         // end
 
 endmodule
+
+`default_nettype wire

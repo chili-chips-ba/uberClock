@@ -76,3 +76,5 @@ module downsamplerFilter (
  
 
 endmodule
+
+`default_nettype wire

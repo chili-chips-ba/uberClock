@@ -499,3 +499,5 @@ module skidbuffer #(
 `endif
 // }}}
 endmodule
+
+`default_nettype wire

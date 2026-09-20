@@ -14,7 +14,7 @@ PORT          ?= /dev/ttyUSB0
 
 # LiteX install
 LITEX_PATH    ?= $(HOME)/litex
-LITEX_VENV    ?= $(HOME)/litex-venv
+LITEX_VENV    ?= $(HOME)/.venv/litex
 PYTHON        := python3
 
 # Board/target

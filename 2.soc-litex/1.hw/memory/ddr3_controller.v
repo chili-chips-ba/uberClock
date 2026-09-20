@@ -5890,3 +5890,5 @@ module mini_fifo #(
 endmodule
 
 `endif
+
+`default_nettype wire

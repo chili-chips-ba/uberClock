@@ -63,3 +63,5 @@ module gain_and_saturate #(
     end
 
 endmodule
+
+`default_nettype wire

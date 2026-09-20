@@ -85,7 +85,7 @@ static void ds_fifo_read_frame(iq6_frame_t *frame) {
     frame->y[5] = (int16_t)(main_ds_fifo_yref_read() & 0xffffu);
 }
 
-static void cmd_fft32_ds_y(char *args) {
+void cmd_fft32_ds_y(char *args) {
     (void)args;
 
     const unsigned N = 32u;
@@ -368,7 +368,7 @@ static void sig3_push_one(void) {
 
     ups_fifo_write_frame(&frame);
 }
-static void cmd_sig3_amp(char *a) {
+void cmd_sig3_amp(char *a) {
     char *tok1 = strtok(a, " \t");
     char *tok2 = strtok(NULL, " \t");
     char *tok3 = strtok(NULL, " \t");
@@ -402,7 +402,7 @@ static void cmd_sig3_amp(char *a) {
     printf("sig3 ch%u amplitude per tone = %d\n", ch, v);
 }
 
-static void cmd_sig3_freqs(char *args) {
+void cmd_sig3_freqs(char *args) {
     char *tok_ch = strtok(args, " \t");
     char *tok_f1 = strtok(NULL, " \t");
     char *tok_f2 = strtok(NULL, " \t");
@@ -435,7 +435,7 @@ static void cmd_sig3_freqs(char *args) {
     printf("sig3 ch%u freqs = %u, %u, %u Hz\n", ch, f1, f2, f3);
 }
 
-static void cmd_sig3_enable_ch(char *a) {
+void cmd_sig3_enable_ch(char *a) {
     unsigned ch = (unsigned)strtoul(a ? a : "0", NULL, 0);
 
     if (ch < 1u || ch > SIG3_CHANNELS) {
@@ -448,7 +448,7 @@ static void cmd_sig3_enable_ch(char *a) {
     printf("sig3 channel %u enabled\n", ch);
 }
 
-static void cmd_sig3_disable_ch(char *a) {
+void cmd_sig3_disable_ch(char *a) {
     unsigned ch = (unsigned)strtoul(a ? a : "0", NULL, 0);
     unsigned any_enabled = 0u;
     unsigned i;
@@ -475,12 +475,12 @@ static void cmd_sig3_disable_ch(char *a) {
     printf("sig3 channel %u disabled\n", ch);
 }
 
-static void cmd_sig3_start(char *a) {
+void cmd_sig3_start(char *a) {
     (void)a;
     sig3_start();
 }
 
-static void cmd_sig3_stop(char *a) {
+void cmd_sig3_stop(char *a) {
     (void)a;
     sig3_stop();
 }
@@ -528,7 +528,7 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACK3_DEFAULT_DELTA_HZ    10u
 #define TRACKQ_REF_INPUT_HZ        10000000u
 #define TRACKQ_NCO_TARGET_HZ       10000000u
-#define TRACKQ_REF_FFT_N                64u
+#define TRACKQ_REF_FFT_N              2048u
 #define TRACKQ_TEMP_NOM_CH1_MHZ    10004000000ll
 #define TRACKQ_TEMP_NOM_CH2_MHZ     6269781000ll
 #define TRACKQ_TEMP_NOM_CH3_MHZ     3388594000ll
@@ -764,10 +764,19 @@ static int capture_ds_track_multi(unsigned n, unsigned settle) {
         if (!track3_wait_ds_fifo("capture", i, n))
             return 0;
         ds_fifo_read_frame(&frame);
+        /* VALIDATION MODE: use downsampled_y1 for channel-1 frequency estimation.
+         * Restore the original multi-channel/ref assignments below after the measurement-validation experiment.
+         */
+        track_samples[0][i] = frame.y[0];
+        track_samples[1][i] = 0;
+        track_samples[2][i] = 0;
+        track_samples_ref[i] = 0;
+        /*
         track_samples[0][i] = frame.x[0];
         track_samples[1][i] = frame.x[1];
         track_samples[2][i] = frame.x[2];
         track_samples_ref[i] = frame.y[5];
+        */
         track3_service_background_budget(4);
     }
 
@@ -1137,6 +1146,35 @@ static void trackq_step(void) {
         return;
     }
 
+    /* VALIDATION MODE: bypass the multi-mode/ref tracking pipeline and only
+     * estimate the channel-1 lowband from downsampled_y1 using a 64-point FFT
+     * with 3-bin quadratic interpolation around the strongest bin. The original
+     * tracking/correction code is kept below in comments for easy restore.
+     */
+    {
+        unsigned meas_n = (capture_n >= TRACKQ_REF_FFT_N) ? TRACKQ_REF_FFT_N : capture_n;
+        int64_t bb_hz_milli = 0ll;
+        int64_t nco_hz_milli = uc_phase_inc_to_mhz(main_phase_inc_nco_read(), TRACK3_RF_FS_HZ);
+        static uint32_t last_validate_tick = 0u;
+        uint32_t dticks = ce_ticks - last_validate_tick;
+        int bb_valid = trackq_fft_peak_vertex_estimate_mhz(track_samples[0], meas_n, &bb_hz_milli);
+
+        uc_commit();
+        trackq_log_iteration++;
+        printf("trackq validate: nco=%ld.%03ldHz bb=%s%ld.%03ldHz dticks=%lu\n",
+               (long)(nco_hz_milli / 1000ll), (long)llabs(nco_hz_milli % 1000ll),
+               bb_valid ? "" : "(na)",
+               (long)(bb_hz_milli / 1000ll), (long)llabs(bb_hz_milli % 1000ll),
+               (unsigned long)dticks);
+        last_validate_tick = ce_ticks;
+        for (i = 0; i < TRACKQ_CHANNELS; ++i) {
+            if (trackq[i].enabled)
+                trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
+        }
+        return;
+    }
+
+    /* ORIGINAL multi-mode/ref tracking path kept commented for easy restore.
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         uint64_t left_pwr;
         uint64_t center_pwr;
@@ -1267,14 +1305,15 @@ static void trackq_step(void) {
                (long)(corr_vertex_hf_mhz_log[2] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[2] % 1000ll),
                ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_bin_vertex_baseband_mhz_log / 1000ll), (long)llabs(ref_bin_vertex_baseband_mhz_log % 1000ll),
-                ref_bin_vertex_valid_log ? "" : "(na)",
+               ref_bin_vertex_valid_log ? "" : "(na)",
                (long)(ref_real_fs_mhz_log / 1000ll), (long)llabs(ref_real_fs_mhz_log % 1000ll),
                temp_delta_valid_log ? "" : "(na)",
                (long)(temp_delta_mc_log / 1000ll), (long)llabs(temp_delta_mc_log % 1000ll));
     }
+    */
 }
 
-static void cmd_track3(char *args) {
+void cmd_track3(char *args) {
     char *tok_ch     = strtok(args, " \t");
     char *tok_start  = strtok(NULL, " \t");
     char *tok_step   = strtok(NULL, " \t");
@@ -1437,7 +1476,7 @@ static void cmd_track3(char *args) {
            (unsigned long)uc_phase_inc_to_hz(original_phase_inc, TRACK3_RF_FS_HZ));
 }
 
-static void cmd_trackq_start(char *args) {
+void cmd_trackq_start(char *args) {
     char *tok_f1     = strtok(args, " \t");
     char *tok_f2     = strtok(NULL, " \t");
     char *tok_f3     = strtok(NULL, " \t");
@@ -1486,8 +1525,9 @@ static void cmd_trackq_start(char *args) {
     if (f1_hz || f2_hz || f3_hz)
         uc_commit();
 
+    /* VALIDATION MODE: enable only channel 1 tracking state. */
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++) {
-        trackq[i].enabled = 1;
+        trackq[i].enabled = (i == 0u) ? 1u : 0u;
         trackq[i].n = n;
         trackq[i].settle = TRACK3_DEFAULT_SETTLE;
         trackq[i].center_hz = center_hz;
@@ -1521,7 +1561,7 @@ static void cmd_trackq_start(char *args) {
            (unsigned long)(center_hz + trackq[2].delta_hz));
 }
 
-static void cmd_trackq_probe(char *args) {
+void cmd_trackq_probe(char *args) {
     char *tok_n      = strtok(args, " \t");
     char *tok_center = strtok(NULL, " \t");
     char *tok_delta  = strtok(NULL, " \t");
@@ -1586,13 +1626,13 @@ static void cmd_trackq_probe(char *args) {
            (long)labs(vertex_hz_milli % 1000ll));
 }
 
-static void cmd_trackq_stop(char *args) {
+void cmd_trackq_stop(char *args) {
     (void)args;
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++)
         trackq[i].enabled = 0;
     puts("trackq_stop: quadratic tracking disabled on ch1..ch3");
 }
-static void cmd_fft64_peak(char *args) {
+void cmd_fft64_peak(char *args) {
     (void)args;
 
     const unsigned n = 64u;
@@ -1683,7 +1723,7 @@ static void ce_down_isr(void) {
 }
 
 /* ---- Help ---- */
-static void uc_help(char *args) {
+void uc_help(char *args) {
     (void)args;
     puts_help_header("UberClock commands");
 
@@ -1746,7 +1786,7 @@ static void uc_help(char *args) {
 }
 
 /* ---- Phase/NCO/downconversion ---- */
-static void cmd_phase_nco(char *a) {
+void cmd_phase_nco(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_nco");
     if (p >= (1u << 26)) return;
     main_phase_inc_nco_write(p);
@@ -1754,7 +1794,7 @@ static void cmd_phase_nco(char *a) {
     printf("Input NCO phase increment set to %u\n", p);
 }
 
-static void cmd_phase_cpu1(char *a) {
+void cmd_phase_cpu1(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_cpu1");
     if (p >= (1u << 26)) return;
     main_phase_inc_cpu1_write(p);
@@ -1762,7 +1802,7 @@ static void cmd_phase_cpu1(char *a) {
     printf("CPU phase increment ch1 set to %u\n", p);
 }
 
-static void cmd_phase_cpu2(char *a) {
+void cmd_phase_cpu2(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_cpu2");
     if (p >= (1u << 26)) return;
     main_phase_inc_cpu2_write(p);
@@ -1770,7 +1810,7 @@ static void cmd_phase_cpu2(char *a) {
     printf("CPU phase increment ch2 set to %u\n", p);
 }
 
-static void cmd_phase_cpu3(char *a) {
+void cmd_phase_cpu3(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_cpu3");
     if (p >= (1u << 26)) return;
     main_phase_inc_cpu3_write(p);
@@ -1778,7 +1818,7 @@ static void cmd_phase_cpu3(char *a) {
     printf("CPU phase increment ch3 set to %u\n", p);
 }
 
-static void cmd_phase_cpu4(char *a) {
+void cmd_phase_cpu4(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_cpu4");
     if (p >= (1u << 26)) return;
     main_phase_inc_cpu4_write(p);
@@ -1786,7 +1826,7 @@ static void cmd_phase_cpu4(char *a) {
     printf("CPU phase increment ch4 set to %u\n", p);
 }
 
-static void cmd_phase_cpu5(char *a) {
+void cmd_phase_cpu5(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_cpu5");
     if (p >= (1u << 26)) return;
     main_phase_inc_cpu5_write(p);
@@ -1794,7 +1834,7 @@ static void cmd_phase_cpu5(char *a) {
     printf("CPU phase increment ch5 set to %u\n", p);
 }
 
-static void cmd_nco_mag(char *a) {
+void cmd_nco_mag(char *a) {
     int v = parse_s(a, -2048, 2047, "nco_mag");
     if (v < -2048 || v > 2047) return;
     /* store as 12-bit signed in low bits */
@@ -1803,7 +1843,7 @@ static void cmd_nco_mag(char *a) {
     printf("nco_mag set to %d\n", v);
 }
 
-static void cmd_phase_down_ref(char *a) {
+void cmd_phase_down_ref(char *a) {
     unsigned p = parse_u(a, 1u << 26, "phase_down_ref");
     if (p >= (1u << 26)) return;
     main_phase_inc_down_ref_write(p);
@@ -1811,35 +1851,35 @@ static void cmd_phase_down_ref(char *a) {
     printf("Downconversion phase ref increment set to %u\n", p);
 }
 
-static void cmd_mag_cpu1(char *a) {
+void cmd_mag_cpu1(char *a) {
     int v = parse_s(a, -2048, 2047, "mag_cpu1");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu1_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu1 set to %d\n", v);
 }
-static void cmd_mag_cpu2(char *a) {
+void cmd_mag_cpu2(char *a) {
     int v = parse_s(a, -2048, 2047, "mag_cpu2");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu2_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu2 set to %d\n", v);
 }
-static void cmd_mag_cpu3(char *a) {
+void cmd_mag_cpu3(char *a) {
     int v = parse_s(a, -2048, 2047, "mag_cpu3");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu3_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu3 set to %d\n", v);
 }
-static void cmd_mag_cpu4(char *a) {
+void cmd_mag_cpu4(char *a) {
     int v = parse_s(a, -2048, 2047, "mag_cpu4");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu4_write((uint32_t)((int32_t)v & 0x0fff));
     uc_commit();
     printf("mag_cpu4 set to %d\n", v);
 }
-static void cmd_mag_cpu5(char *a) {
+void cmd_mag_cpu5(char *a) {
     int v = parse_s(a, -2048, 2047, "mag_cpu5");
     if (v < -2048 || v > 2047) return;
     main_mag_cpu5_write((uint32_t)((int32_t)v & 0x0fff));
@@ -1847,7 +1887,7 @@ static void cmd_mag_cpu5(char *a) {
     printf("mag_cpu5 set to %d\n", v);
 }
 
-static void cmd_lowspeed_dbg_select(char *a) {
+void cmd_lowspeed_dbg_select(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     if (v > 7) { puts("lowspeed_dbg_select must be 0..7"); return; }
     main_lowspeed_dbg_select_write(v);
@@ -1855,7 +1895,7 @@ static void cmd_lowspeed_dbg_select(char *a) {
     printf("lowspeed_dbg_select = %u\n", v);
 }
 
-static void cmd_highspeed_dbg_select(char *a) {
+void cmd_highspeed_dbg_select(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     if (v > 3) { puts("highspeed_dbg_select must be 0..3"); return; }
     main_highspeed_dbg_select_write(v);
@@ -1877,35 +1917,35 @@ static void cmd_phase_dn(char *a, int ch) {
     uc_commit();
     printf("Downconversion phase ch%d increment set to %u\n", ch, p);
 }
-static void cmd_phase_down_1(char *a){ cmd_phase_dn(a, 1); }
-static void cmd_phase_down_2(char *a){ cmd_phase_dn(a, 2); }
-static void cmd_phase_down_3(char *a){ cmd_phase_dn(a, 3); }
-static void cmd_phase_down_4(char *a){ cmd_phase_dn(a, 4); }
-static void cmd_phase_down_5(char *a){ cmd_phase_dn(a, 5); }
+void cmd_phase_down_1(char *a){ cmd_phase_dn(a, 1); }
+void cmd_phase_down_2(char *a){ cmd_phase_dn(a, 2); }
+void cmd_phase_down_3(char *a){ cmd_phase_dn(a, 3); }
+void cmd_phase_down_4(char *a){ cmd_phase_dn(a, 4); }
+void cmd_phase_down_5(char *a){ cmd_phase_dn(a, 5); }
 
 /* ---- Muxes / gains ---- */
-static void cmd_output_sel_ch1(char *a) {
+void cmd_output_sel_ch1(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch1_write(v);
     uc_commit();
     printf("output_select_ch1 set to %u\n", v);
 }
 
-static void cmd_output_sel_ch2(char *a) {
+void cmd_output_sel_ch2(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0) & 0x0fu;
     main_output_select_ch2_write(v);
     uc_commit();
     printf("output_select_ch2 set to %u\n", v);
 }
 
-static void cmd_input_select(char *a) {
+void cmd_input_select(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     main_input_select_write(v);
     uc_commit();
     printf("Main input select register set to %u\n", v);
 }
 
-static void cmd_ups_in_mux(char *a) {
+void cmd_ups_in_mux(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     main_upsampler_input_mux_write(v);
     uc_commit();
@@ -1926,13 +1966,13 @@ static void cmd_gain(char *a, int idx) {
     printf("Gain%d register set to %ld (0x%08lX)\n",
            idx, (long)g, (unsigned long)g);
 }
-static void cmd_gain1(char *a){ cmd_gain(a, 1); }
-static void cmd_gain2(char *a){ cmd_gain(a, 2); }
-static void cmd_gain3(char *a){ cmd_gain(a, 3); }
-static void cmd_gain4(char *a){ cmd_gain(a, 4); }
-static void cmd_gain5(char *a){ cmd_gain(a, 5); }
+void cmd_gain1(char *a){ cmd_gain(a, 1); }
+void cmd_gain2(char *a){ cmd_gain(a, 2); }
+void cmd_gain3(char *a){ cmd_gain(a, 3); }
+void cmd_gain4(char *a){ cmd_gain(a, 4); }
+void cmd_gain5(char *a){ cmd_gain(a, 5); }
 
-static void cmd_final_shift(char *a) {
+void cmd_final_shift(char *a) {
     int32_t fs = (int32_t)strtol(a ? a : "0", NULL, 0);
     main_final_shift_write((uint32_t)fs);
     uc_commit();
@@ -1940,7 +1980,7 @@ static void cmd_final_shift(char *a) {
            (long)fs, (unsigned long)fs);
 }
 
-static void cmd_cap_enable(char *a) {
+void cmd_cap_enable(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     v = v ? 1u : 0u;
     main_cap_enable_write(v);
@@ -1948,7 +1988,7 @@ static void cmd_cap_enable(char *a) {
     printf("cap_enable = %u (%s)\n", v, v ? "CAPTURE(design)->DDR" : "RAMP->DDR");
 }
 
-static void cmd_upsampler_x(char *a) {
+void cmd_upsampler_x(char *a) {
     int v = parse_s(a, -32768, 32767, "upsampler_x");
     if (v < -32768 || v > 32767) return;
     write_upsampler_inputs_all_x((int16_t)v);
@@ -1956,7 +1996,7 @@ static void cmd_upsampler_x(char *a) {
     printf("upsampler_input_x[1..5] = %d\n", v);
 }
 
-static void cmd_upsampler_y(char *a) {
+void cmd_upsampler_y(char *a) {
     int v = parse_s(a, -32768, 32767, "upsampler_y");
     if (v < -32768 || v > 32767) return;
     write_upsampler_inputs_all_y((int16_t)v);
@@ -1964,7 +2004,7 @@ static void cmd_upsampler_y(char *a) {
     printf("upsampler_input_y[1..5] = %d\n", v);
 }
 
-static void cap_start_cmd(char *a) {
+void cap_start_cmd(char *a) {
     (void)a;
     main_cap_arm_write(0);
     uc_commit();
@@ -1978,13 +2018,13 @@ static void cap_start_cmd(char *a) {
     puts("Capture started.");
 }
 
-static void cap_status_cmd(char *a) {
+void cap_status_cmd(char *a) {
     (void)a;
     unsigned d = main_cap_done_read();
     printf("Capture %s\n", d ? "DONE" : "IN-PROGRESS");
 }
 
-static void cap_dump_cmd(char *a) {
+void cap_dump_cmd(char *a) {
     (void)a;
     if (!main_cap_done_read()) {
         puts("Capture not done yet. Use 'cap_status' or wait.");
@@ -2055,7 +2095,7 @@ static void fifo_clear_flags(void) {
     main_ups_fifo_clear_write(1);
 }
 
-static void cmd_dsp_test(char *args) {
+void cmd_dsp_test(char *args) {
     char *tok = strtok(args, " \t");
     unsigned limit = tok ? (unsigned)strtoul(tok, NULL, 0) : 0;
 
@@ -2082,7 +2122,7 @@ static void cmd_dsp_test(char *args) {
     printf("dsp_test processed %u samples (stall=%u)\n", processed, stall);
 }
 
-static void cmd_ds_pop(char *a) {
+void cmd_ds_pop(char *a) {
     (void)a;
     iq6_frame_t frame;
     ds_fifo_read_frame(&frame);
@@ -2101,7 +2141,7 @@ static void cmd_ds_pop(char *a) {
            (int)frame.x[5], (int)frame.y[5]);
 }
 
-static void cmd_ds_status(char *a) {
+void cmd_ds_status(char *a) {
     (void)a;
     unsigned flags = (unsigned)(main_ds_fifo_flags_read() & 0xffu);
     unsigned overflow = (unsigned)(main_ds_fifo_overflow_read() & 1u);
@@ -2110,7 +2150,7 @@ static void cmd_ds_status(char *a) {
     main_ds_fifo_clear_write(1);
 }
 
-static void cmd_ups_push(char *args) {
+void cmd_ups_push(char *args) {
     char *tokx = strtok(args, " \t");
     char *toky = strtok(NULL, " \t");
     if (!tokx || !toky) { puts("Usage: ups_push <x> <y>"); return; }
@@ -2121,7 +2161,7 @@ static void cmd_ups_push(char *args) {
     printf("ups_fifo push: replicated x=%d y=%d to ch1..ch5\n", x, y);
 }
 
-static void cmd_ups_status(char *a) {
+void cmd_ups_status(char *a) {
     (void)a;
     unsigned flags = (unsigned)(main_ups_fifo_flags_read() & 0xffu);
     unsigned overflow = (unsigned)(main_ups_fifo_overflow_read() & 1u);
@@ -2131,7 +2171,7 @@ static void cmd_ups_status(char *a) {
     main_ups_fifo_clear_write(1);
 }
 
-static void cmd_dsp_run(char *a) {
+void cmd_dsp_run(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     dsp_pump_enable = v ? 1 : 0;
     if (dsp_pump_enable) {
@@ -2146,7 +2186,7 @@ static void cmd_dsp_run(char *a) {
     printf("dsp_run = %u\n", dsp_pump_enable);
 }
 
-static void cmd_fft_fs(char *a) {
+void cmd_fft_fs(char *a) {
     uint32_t v = (uint32_t)strtoul(a ? a : "0", NULL, 0);
     if (v == 0u) {
         puts("Usage: fft_fs <Hz>, Hz must be > 0");
@@ -2222,15 +2262,15 @@ static void run_fft_ds(char *args, int peak_only) {
     }
 }
 
-static void cmd_fft_ds(char *args) {
+void cmd_fft_ds(char *args) {
     run_fft_ds(args, 0);
 }
 
-static void cmd_fft_ds_peak(char *args) {
+void cmd_fft_ds_peak(char *args) {
     run_fft_ds(args, 1);
 }
 
-static void cmd_cap_arm_pulse(char *a) {
+void cmd_cap_arm_pulse(char *a) {
     (void)a;
 
     main_cap_arm_write(0);
@@ -2245,12 +2285,12 @@ static void cmd_cap_arm_pulse(char *a) {
     puts("cap_arm pulsed");
 }
 
-static void cmd_cap_done(char *a) {
+void cmd_cap_done(char *a) {
     (void)a;
     printf("cap_done = %u\n", (unsigned)(main_cap_done_read() & 1u));
 }
 
-static void cmd_cap_rd(char *args) {
+void cmd_cap_rd(char *args) {
     char *tok = strtok(args, " \t");
     if (!tok) { puts("Usage: cap_rd <idx>"); return; }
 
@@ -2268,12 +2308,12 @@ static void cmd_cap_rd(char *args) {
     printf("cap[%u] = %d (0x%04x)\n", idx, (int)s, (unsigned)(v & 0xffff));
 }
 
-static void cmd_phase_print(char *a) {
+void cmd_phase_print(char *a) {
     (void)a;
     printf("Phase %ld\n", (long)phase);
 }
 
-static void cmd_magnitude(char *a) {
+void cmd_magnitude(char *a) {
     (void)a;
     printf("Magnitude %d\n", mag);
 }
@@ -2291,7 +2331,7 @@ static inline uint8_t ub_size_to_code(const char *s) {
     return 0;
 }
 
-static void ub_help(char *args) {
+void ub_help(char *args) {
     (void)args;
     puts_help_header("UberDDR3/S2MM commands");
     puts("  ub_info");
@@ -2316,7 +2356,7 @@ static void ub_help(char *args) {
     puts("");
 }
 
-static void cmd_ub_info(char *a) {
+void cmd_ub_info(char *a) {
     (void)a;
     int cal = 0;
     cal = ubddr3_calib_done_read();
@@ -2329,13 +2369,13 @@ static void cmd_ub_info(char *a) {
     printf("\n");
 }
 
-static void cmd_ub_mode(char *a) {
+void cmd_ub_mode(char *a) {
     (void)a;
     unsigned v = main_cap_enable_read() & 1u;
     printf("cap_enable = %u (%s)\n", v, v ? "CAPTURE(design)->DDR" : "RAMP->DDR");
 }
 
-static void cmd_ub_setmode(char *a) {
+void cmd_ub_setmode(char *a) {
     unsigned v = (unsigned)strtoul(a ? a : "0", NULL, 0);
     v = v ? 1u : 0u;
     main_cap_enable_write(v);
@@ -2358,7 +2398,7 @@ static void ub_dma_start(uint64_t addr, uint32_t beats, uint8_t size_code) {
 }
 
 /* ub_start: run DMA using current cap_enable mode */
-static void cmd_ub_start(char *args) {
+void cmd_ub_start(char *args) {
     char *p = args;
     char *tok_addr  = strtok(p, " \t");
     char *tok_beats = strtok(NULL, " \t");
@@ -2390,20 +2430,20 @@ static void cmd_ub_start(char *args) {
 }
 
 /* ub_ramp: force ramp mode then start */
-static void cmd_ub_ramp2(char *args) {
+void cmd_ub_ramp2(char *args) {
     main_cap_enable_write(0);
     uc_commit();
     cmd_ub_start(args);
 }
 
 /* ub_cap: force capture mode then start */
-static void cmd_ub_cap(char *args) {
+void cmd_ub_cap(char *args) {
     main_cap_enable_write(1);
     uc_commit();
     cmd_ub_start(args);
 }
 
-static void cmd_ub_wait(char *a) {
+void cmd_ub_wait(char *a) {
     (void)a;
     printf("Waiting for DMA ... "); fflush(stdout);
     while (ubddr3_dma_busy_read()) ;
@@ -2413,7 +2453,7 @@ static void cmd_ub_wait(char *a) {
         puts("DMA error flag is set!");
 }
 
-static void cmd_ub_hexdump(char *a) {
+void cmd_ub_hexdump(char *a) {
     char *tok_addr = strtok(a, " \t");
     char *tok_len  = strtok(NULL, " \t");
     if (!tok_addr || !tok_len) {
@@ -2432,7 +2472,7 @@ static void cmd_ub_hexdump(char *a) {
     puts("");
 }
 
-static void cmd_cap_beats(char *a) {
+void cmd_cap_beats(char *a) {
     uint32_t v = (uint32_t)strtoul(a ? a : "256", NULL, 0);
     if (v == 0) { puts("cap_beats must be >= 1"); return; }
     main_cap_beats_write(v);
@@ -2485,7 +2525,7 @@ static int parse_ipv4(const char *s, uint32_t *out_ip) {
 }
 
 /* Fast sender: minimal prints, fewer udp_service() calls, direct header store. */
-static void cmd_ub_send(char *args) {
+void cmd_ub_send(char *args) {
     char *tok_addr = strtok(args, " \t");
     char *tok_len  = strtok(NULL, " \t");
     char *tok_ip   = strtok(NULL, " \t");
@@ -2515,7 +2555,19 @@ static void cmd_ub_send(char *args) {
 
     static const unsigned char board_mac[6] = {0x02,0x00,0x00,0x00,0x00,0xAB};
 
-    eth_init();
+    /* eth_init() resets the PHY (ethphy_crg_reset_write) - a real link
+     * down/up. Doing that on every ub_send forces the link to
+     * renegotiate each time, which many switches/routers answer with a
+     * few seconds of blocked forwarding (STP/port re-learning) - long
+     * enough to blow past the host's capture timeout on repeated
+     * captures. The PHY link stays valid once trained, so only reset it
+     * on the first call; udp_set_mac/udp_set_ip/udp_start are cheap
+     * software-only resets and stay per-call. */
+    static int eth_phy_ready = 0;
+    if (!eth_phy_ready) {
+        eth_init();
+        eth_phy_ready = 1;
+    }
     udp_set_mac(board_mac);
     udp_set_ip(UBD3_BOARD_IP);
     udp_start(board_mac, UBD3_BOARD_IP);
@@ -2582,106 +2634,8 @@ static void cmd_ub_send(char *args) {
         printf("sent %lu / %lu\n", (unsigned long)sent, (unsigned long)total);
     }
     }
+
 }
-
-/* ========================================================================= */
-/*                           Command registration                             */
-/* ========================================================================= */
-
-static const struct cmd_entry uc_tbl[] = {
-    /* UberClock commands */
-    {"help_uc",              uc_help,                 "UberClock help"},
-{"fft64_peak", cmd_fft64_peak, "64-point FFT over DS FIFO IQ samples, print peak only"},
-
-    {"phase_nco",            cmd_phase_nco,           "Set input CORDIC NCO phase increment"},
-    {"nco_mag",              cmd_nco_mag,             "Set NCO magnitude (signed 12-bit)"},
-
-    {"phase_down_1",         cmd_phase_down_1,        "Set downconversion ch1 phase inc"},
-    {"phase_down_2",         cmd_phase_down_2,        "Set downconversion ch2 phase inc"},
-    {"phase_down_3",         cmd_phase_down_3,        "Set downconversion ch3 phase inc"},
-    {"phase_down_4",         cmd_phase_down_4,        "Set downconversion ch4 phase inc"},
-    {"phase_down_5",         cmd_phase_down_5,        "Set downconversion ch5 phase inc"},
-    {"phase_down_ref",       cmd_phase_down_ref,      "Set downconversion ref phase inc"},
-
-    {"phase_cpu1",           cmd_phase_cpu1,          "Set CPU NCO phase inc ch1"},
-    {"phase_cpu2",           cmd_phase_cpu2,          "Set CPU NCO phase inc ch2"},
-    {"phase_cpu3",           cmd_phase_cpu3,          "Set CPU NCO phase inc ch3"},
-    {"phase_cpu4",           cmd_phase_cpu4,          "Set CPU NCO phase inc ch4"},
-    {"phase_cpu5",           cmd_phase_cpu5,          "Set CPU NCO phase inc ch5"},
-
-    {"mag_cpu1",             cmd_mag_cpu1,            "Set CPU NCO magnitude ch1"},
-    {"mag_cpu2",             cmd_mag_cpu2,            "Set CPU NCO magnitude ch2"},
-    {"mag_cpu3",             cmd_mag_cpu3,            "Set CPU NCO magnitude ch3"},
-    {"mag_cpu4",             cmd_mag_cpu4,            "Set CPU NCO magnitude ch4"},
-    {"mag_cpu5",             cmd_mag_cpu5,            "Set CPU NCO magnitude ch5"},
-
-    {"output_select_ch1",    cmd_output_sel_ch1,      "Select DAC1 source (0..15, 14=ref_y, 15=sum)"},
-    {"output_select_ch2",    cmd_output_sel_ch2,      "Select DAC2 source (0..15, 14=ref_y, 15=sum)"},
-    {"input_select",         cmd_input_select,        "Set input select register"},
-    {"upsampler_input_mux",  cmd_ups_in_mux,          "Set upsampler input mux (0..2)"},
-
-    {"lowspeed_dbg_select",  cmd_lowspeed_dbg_select, "Select low-speed debug source (0..7, 6=ref_y)"},
-    {"highspeed_dbg_select", cmd_highspeed_dbg_select,"Select high-speed debug source (0..3, 1=filter_in_1)"},
-
-    {"upsampler_x",          cmd_upsampler_x,         "Write upsampler_input_x1..x5 (signed 16-bit)"},
-    {"upsampler_y",          cmd_upsampler_y,         "Write upsampler_input_y1..y5 (signed 16-bit)"},
-    {"ds_pop",               cmd_ds_pop,              "Pop one 6-channel downsampled frame from FIFO"},
-    {"ds_status",            cmd_ds_status,           "Show downsample FIFO readable/overflow"},
-    {"ups_push",             cmd_ups_push,            "Push one replicated 5-channel frame into upsampler FIFO"},
-    {"ups_status",           cmd_ups_status,          "Show upsampler FIFO writable/overflow"},
-    {"dsp_test",             cmd_dsp_test,            "Run DSP loop over FIFO samples (optional N)"},
-    {"dsp_run",              cmd_dsp_run,             "Enable/disable non-blocking DSP pump"},
-    {"fft_fs",               cmd_fft_fs,              "Set DS sample rate (Hz) used by fft_ds"},
-    {"fft_ds",               cmd_fft_ds,              "Run FFT over downsample FIFO IQ samples and print bins"},
-    {"fft_ds_peak",          cmd_fft_ds_peak,         "Run FFT over downsample FIFO IQ samples and print peak only"},
-    {"track3",               cmd_track3,              "Sweep phase_down_<ch> until the 3-tone pattern is found"},
-    {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking: trackq_start <f1> <f2> <f3> [N] [center] [delta1] [delta2] [delta3]"},
-    {"trackq_probe",         cmd_trackq_probe,        "Capture one 3-point tracking snapshot"},
-    {"trackq_stop",          cmd_trackq_stop,         "Stop 3-point quadratic tracking"},
-
-    {"gain1",                cmd_gain1,               "Set gain1"},
-    {"gain2",                cmd_gain2,               "Set gain2"},
-    {"gain3",                cmd_gain3,               "Set gain3"},
-    {"gain4",                cmd_gain4,               "Set gain4"},
-    {"gain5",                cmd_gain5,               "Set gain5"},
-    {"final_shift",          cmd_final_shift,         "Set final shift"},
-
-    {"cap_arm",              cmd_cap_arm_pulse,       "Pulse cap_arm"},
-    {"cap_done",             cmd_cap_done,            "Read cap_done"},
-    {"cap_rd",               cmd_cap_rd,              "Read cap_data at index"},
-
-    {"cap_enable",           cmd_cap_enable,          "0=ramp, 1=capture design to DDR"},
-    {"cap_beats",            cmd_cap_beats,           "Set capture length in 256-bit beats"},
-
-    {"phase",                cmd_phase_print,         "Print current CORDIC phase (if wired)"},
-    {"magnitude",            cmd_magnitude,           "Print current CORDIC magnitude (if wired)"},
-    {"cap_start",            cap_start_cmd,           "Start LS debug"},
-    {"cap_status",           cap_status_cmd,          "LS debug status"},
-    {"cap_dump",             cap_dump_cmd,             "Ls dump cmd"},
-    /* UberDDR3 / S2MM commands */
-    {"ub_help",              ub_help,                 "UberDDR3/S2MM help"},
-    {"ub_info",              cmd_ub_info,             "Show UBDDR3 info/state"},
-    {"ub_mode",              cmd_ub_mode,             "Show current cap_enable mode"},
-    {"ub_setmode",           cmd_ub_setmode,          "Set cap_enable (0=ramp,1=capture)"},
-    {"ub_start",             cmd_ub_start,            "Start S2MM using current mode"},
-    {"ub_ramp",              cmd_ub_ramp2,            "Force ramp mode then start S2MM"},
-    {"ub_cap",               cmd_ub_cap,              "Force capture mode then start S2MM"},
-    {"ub_wait",              cmd_ub_wait,             "Wait until DMA done"},
-    {"ub_hexdump",           cmd_ub_hexdump,          "Hexdump DDR memory"},
-    {"ub_send",              cmd_ub_send,             "Send DDR memory region via UDP"},
-    {"fft32_ds_y", cmd_fft32_ds_y, "Real FFT of 32 Y samples from DS FIFO"},
-    {"sig3_start", cmd_sig3_start, "Start 5 independent 3-tone software generators"},
-    {"sig3_stop",  cmd_sig3_stop,  "Stop 5 independent 3-tone software generators"},
-    {"sig3_amp",   cmd_sig3_amp,   "Set 3-tone per-tone amplitude: sig3_amp <val> | <ch> <val>"},
-    {"sig3_freqs", cmd_sig3_freqs, "Set channel 3-tone frequencies: sig3_freqs <ch> <f1> <f2> <f3>"},
-    {"sig3_enable_ch",  cmd_sig3_enable_ch,  "Enable one sig3 channel: sig3_enable_ch <ch>"},
-    {"sig3_disable_ch", cmd_sig3_disable_ch, "Disable one sig3 channel: sig3_disable_ch <ch>"},
-};
-
-void uberclock_register_cmds(void) {
-    console_register(uc_tbl, (unsigned)(sizeof(uc_tbl) / sizeof(uc_tbl[0])));
-}
-
 /* ========================================================================= */
 /*                            FSM                                             */
 /* ========================================================================= */
@@ -2692,10 +2646,10 @@ uint32_t fsm_counter, max_mag, current_phase_inc, max_mag_phase_inc, shooting_ph
 int8_t sgn = 1;
 
 void fsm_init(void) {
- curr_state = IDLE; 
+ curr_state = IDLE;
  ce_ticks = 0;
  max_mag = 0;
- max_mag_phase_inc = 0; 
+ max_mag_phase_inc = 0;
  shooting_phase_inc = 10328467;
 }
 void tran(void) {
@@ -2705,7 +2659,7 @@ void tran(void) {
                 curr_state = S1;
             }  else if (ce_ticks == 1) {
                 main_phase_inc_nco_write(shooting_phase_inc);
-                main_phase_inc_down_1_write(shooting_phase_inc + 1000);  
+                main_phase_inc_down_1_write(shooting_phase_inc + 1000);
                 puts("Input NCO phase increment set");
             }
         }
@@ -2716,12 +2670,12 @@ void tran(void) {
                        curr_state = IDLE;
                        ce_ticks = 0;
                        shooting_phase_inc = shooting_phase_inc + 6;
-                       
-                     }else 
+
+                     }else
 
                      if ( (uint32_t)mag + 10  > max_mag  ) {
                        puts("mag greater");
-                       max_mag = mag; 
+                       max_mag = mag;
                        max_mag_phase_inc = shooting_phase_inc;
                        shooting_phase_inc = shooting_phase_inc + sgn * 6;
                        curr_state = IDLE;
@@ -2735,7 +2689,7 @@ void tran(void) {
                     }
                  }
             break;
-        
+
         case S2: {
             puts("S2");
             // cmd_magnitude(NULL);
@@ -2752,7 +2706,7 @@ void tran(void) {
 void uberclock_init(void) {
     main_phase_inc_nco_write(10324440);
 
-    main_phase_inc_down_1_write(uc_phase_inc_from_hz(TRACKQ_CH1_START_HZ, TRACK3_RF_FS_HZ));
+    main_phase_inc_down_1_write(uc_phase_inc_from_hz(9999000u, TRACK3_RF_FS_HZ));
     main_phase_inc_down_2_write(uc_phase_inc_from_hz(TRACKQ_CH2_START_HZ, TRACK3_RF_FS_HZ));
     main_phase_inc_down_3_write(uc_phase_inc_from_hz(TRACKQ_CH3_START_HZ, TRACK3_RF_FS_HZ));
     main_phase_inc_down_4_write(80644);
@@ -2774,7 +2728,7 @@ void uberclock_init(void) {
     main_mag_cpu4_write((uint32_t)(0 & 0x0fff));
     main_mag_cpu5_write((uint32_t)(0 & 0x0fff));
 
-    main_input_select_write(0);
+    main_input_select_write(1);
     main_upsampler_input_mux_write(1);
 
     main_gain1_write(0x40000000);

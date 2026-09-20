@@ -87,3 +87,5 @@ module cordic_logic #(
     assign cos_out = cos_reg;
 
 endmodule
+
+`default_nettype wire

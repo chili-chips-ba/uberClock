@@ -131,3 +131,5 @@ module cic_int #(
 //    assign output_tdata = int_reg[N-1] >>> (REG_WIDTH - O_WIDTH -1);
     assign clk_out      = clk & ce_out;
 endmodule
+
+`default_nettype wire

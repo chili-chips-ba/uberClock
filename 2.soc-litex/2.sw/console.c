@@ -52,6 +52,18 @@ void console_register(const struct cmd_entry *tbl, unsigned n) {
     }
 }
 
+unsigned console_table_count(void) {
+    return g_ntbls;
+}
+
+unsigned console_table_len(unsigned t) {
+    return (t < g_ntbls) ? g_tblcnts[t] : 0;
+}
+
+const struct cmd_entry *console_table(unsigned t) {
+    return (t < g_ntbls) ? g_tbls[t] : NULL;
+}
+
 void console_print_prompt(void) {
     printf("\e[92;1m%s\e[0m ", g_prompt);
 }

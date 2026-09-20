@@ -36,3 +36,5 @@ module cordic_round #(
  end
 
 endmodule
+
+`default_nettype wire

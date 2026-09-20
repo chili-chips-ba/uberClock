@@ -193,7 +193,7 @@ static unsigned parse_kib(const char* s, unsigned def_kib){
 
 /* ---- command implementations ---- */
 
-static void cmd_help_ddr(char *a){
+void cmd_help_ddr(char *a){
     (void)a;
     puts_help_header("DDR commands");
     puts("  ddrinfo             - Print DDR base + calib CSR state");
@@ -209,7 +209,7 @@ static void cmd_help_ddr(char *a){
     puts("  timeinfo            - Show timing source and CLK_HZ");
 }
 
-static void cmd_ddrinfo(char *a){
+void cmd_ddrinfo(char *a){
     (void)a;
     puts_help_header("DDR Info");
     #ifdef MAIN_RAM_BASE
@@ -222,7 +222,7 @@ static void cmd_ddrinfo(char *a){
     #endif
 }
 
-static void cmd_ddrwait(char *a){
+void cmd_ddrwait(char *a){
     (void)a;
     puts_help_header("DDR Calibration");
     printf("Waiting for DDR calibration... ");
@@ -230,7 +230,7 @@ static void cmd_ddrwait(char *a){
     else                       puts("\e[31;1mTIMEOUT\e[0m");
 }
 
-static void cmd_ddrprobe(char *a){
+void cmd_ddrprobe(char *a){
     (void)a;
     puts_help_header("DDR 32-bit Probe");
     volatile uint32_t *p=(volatile uint32_t *)UBDDR3_MEM_BASE;
@@ -239,7 +239,7 @@ static void cmd_ddrprobe(char *a){
     printf("Read   0x%08x\n", p[0]);
 }
 
-static void cmd_ddrbyte(char *a){
+void cmd_ddrbyte(char *a){
     (void)a;
     puts_help_header("DDR Byte-Lane Sanity (first 32 bytes)");
     if (!ddr_wait_calib(10000)){ puts("\e[31;1mCalibration TIMEOUT\e[0m"); return; }
@@ -293,13 +293,13 @@ static void run_ddr_test32(uint32_t kib, pat32_fn fn, const char* pname, uint32_
     }
 }
 
-static void cmd_ddrtest(char *args){
+void cmd_ddrtest(char *args){
     unsigned kib = parse_kib(args && *args ? get_token(&args) : NULL, 4);
     puts_help_header("DDR 32-bit Test (A5A5^index)");
     run_ddr_test32(kib, pat_xor, "A5A5 XOR index", 0xA5A50000u);
 }
 
-static void cmd_ddrtestb(char *args){
+void cmd_ddrtestb(char *args){
     unsigned kib = parse_kib(args && *args ? get_token(&args) : NULL, 4);
     puts_help_header("DDR Byte Test (A5^index)");
     if (!ddr_wait_calib(10000)){ puts("\e[31;1mCalibration TIMEOUT\e[0m"); return; }
@@ -340,7 +340,7 @@ static void cmd_ddrtestb(char *args){
     }
 }
 
-static void cmd_ddrmap(char *a){
+void cmd_ddrmap(char *a){
     (void)a;
     puts_help_header("DDR Lane Map (one 256-bit beat @ base)");
     volatile uint32_t *w = (volatile uint32_t *)UBDDR3_MEM_BASE;
@@ -370,7 +370,7 @@ static void cmd_ddrmap(char *a){
 }
 
 
-static void cmd_ddrpat(char *args){
+void cmd_ddrpat(char *args){
     unsigned kib=4;
     const char *pname=NULL, *pretty=NULL;
     pat32_fn fn; uint32_t seed, def_seed;
@@ -388,7 +388,7 @@ static void cmd_ddrpat(char *args){
     run_ddr_test32(kib, fn, pretty, seed);
 }
 
-static void cmd_timertest(char *a){
+void cmd_timertest(char *a){
     (void)a;
     puts_help_header("Timer sanity");
     const unsigned sleep_ms=100;
@@ -400,7 +400,7 @@ static void cmd_timertest(char *a){
            t_source(), (unsigned)CLK_HZ, ticks, us);
 }
 
-static void cmd_timeinfo(char *a){
+void cmd_timeinfo(char *a){
     (void)a;
     puts_help_header("Timer info");
     printf("Timing source: %s\n", t_source());
@@ -411,22 +411,4 @@ static void cmd_timeinfo(char *a){
     #if defined(CSR_TIMER0_BASE)
     printf("TIMER0 base : 0x%08lx\n", (unsigned long)CSR_TIMER0_BASE);
     #endif
-}
-
-static const struct cmd_entry g_ddr_cmds[] = {
-    { "help_ddr", cmd_help_ddr },
-    { "ddrinfo",  cmd_ddrinfo  },
-    { "ddrwait",  cmd_ddrwait  },
-    { "ddrprobe", cmd_ddrprobe },
-    { "ddrbyte",  cmd_ddrbyte  },
-    { "ddrtest",  cmd_ddrtest  },
-    { "ddrtestb", cmd_ddrtestb },
-    { "ddrmap",   cmd_ddrmap  },
-    { "ddrpat",   cmd_ddrpat   },
-    { "timertest",cmd_timertest},
-    { "timeinfo", cmd_timeinfo },
-};
-
-void ubddr3_register_cmds(void){
-    console_register(g_ddr_cmds, sizeof(g_ddr_cmds)/sizeof(g_ddr_cmds[0]));
 }

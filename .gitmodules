@@ -1,0 +1,3 @@
+[submodule "2.soc-litex/2.sw/kissfft"]
+	path = 2.soc-litex/2.sw/kissfft
+	url = https://github.com/mborgerding/kissfft.git

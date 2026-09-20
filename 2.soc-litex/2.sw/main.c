@@ -3,7 +3,7 @@
 #include <libbase/uart.h>
 #include "console.h"
 #include "uberclock.h"
-#include "ubddr3.h"
+#include "cmd_list.h"
 
 
 extern void donut(void);
@@ -48,8 +48,7 @@ int main(void) {
 
 	console_init("\e[92;1muberClock\e[0m>");
 	console_register(g_root_cmds, sizeof(g_root_cmds)/sizeof(g_root_cmds[0]));
-	uberclock_register_cmds();
-	ubddr3_register_cmds();
+	cmd_list_register_cmds();
 
 	uberclock_init();
 

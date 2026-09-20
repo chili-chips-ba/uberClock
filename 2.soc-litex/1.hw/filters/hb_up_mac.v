@@ -215,3 +215,5 @@ module hb_up_mac #(
   assign filter_out = filter_out_reg;
 
 endmodule
+
+`default_nettype wire

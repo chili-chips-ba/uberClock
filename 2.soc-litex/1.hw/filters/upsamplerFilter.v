@@ -74,3 +74,5 @@ module upsamplerFilter (
 	
 	
 endmodule
+
+`default_nettype wire

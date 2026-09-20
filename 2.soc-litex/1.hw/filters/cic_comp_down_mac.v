@@ -41,7 +41,6 @@ assign phase_1 = phase_toggle && clk_enable;
 //--------------------------------------------------------------------------
 // 2) Coefficient memory 
 //--------------------------------------------------------------------------
-(* rom_style="block" *) 
 reg signed [CW-1:0] coeffs [0:2*POLYPHASE_DEPTH-1];
 initial $readmemb(COEFF_INIT_FILE, coeffs);
 
@@ -164,7 +163,9 @@ end
 reg signed [DW_ACC-1:0] acc, acc_reg;
 reg clear_acc, acc_en;
 always @(posedge clk or posedge reset) begin
-  if (reset || clear_acc) begin
+  if (reset) begin
+    acc <= 0;
+  end else if (clear_acc) begin
     acc <= 0;
   end else if (acc_en) begin
     acc <= acc + product;
@@ -330,3 +331,5 @@ always @(posedge clk or posedge reset) begin
 end
 
 endmodule
+
+`default_nettype wire

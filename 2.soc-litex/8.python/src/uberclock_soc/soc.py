@@ -30,7 +30,6 @@ from litex.soc.integration.soc_core import SoCCore
 from litex.soc.integration.soc import SoCRegion
 from litex.soc.integration.builder import Builder
 
-from litex.soc.cores.timer import Timer
 from litex.soc.cores.led import LedChaser
 from litex.soc.cores.video import VideoS7HDMIPHY
 
@@ -136,8 +135,7 @@ class BaseSoC(SoCCore):
         # ---------------------------------------------------------------------
         # Timer CSR (handy for firmware delays / profiling)
         # ---------------------------------------------------------------------
-        self.submodules.timer1 = Timer()
-        self.add_csr("timer1")
+        self.add_timer("timer1")
 
         # ---------------------------------------------------------------------
         # Standard LiteDRAM path (only when main RAM is external AND not UberDDR3)
@@ -221,7 +219,7 @@ class BaseSoC(SoCCore):
         - Exposes DMA/S2MM CSRs for high-speed capture into DDR.
         """
         pads = platform.request("ddram")
-        self.submodules.ubddr3 = UberDDR3(
+        self.ubddr3 = UberDDR3(
             platform=platform,
             pads=pads,
             locked=self.crg.pll0.locked,
@@ -243,7 +241,6 @@ class BaseSoC(SoCCore):
         self.bus.add_slave("ub_ram", self.ubddr3.wb, region)
 
         self.add_constant("UBDDR3_MEM_BASE", self.UBDDR3_BASE)
-        self.add_csr("ubddr3")
 
         # LED1 shows DDR calibration done (useful sanity indicator)
         self.comb += leds[1].eq(self.ubddr3.calib_done.status)
@@ -319,6 +316,11 @@ def build_main() -> None:
         platform=alinx_ax7203.Platform,
         description="AX7203: sys@100MHz, uc@65MHz, optional UberDDR3 + UberClock",
     )
+
+    # uberclock.c needs full picolibc (malloc/strtok/strtol/sscanf, libm),
+    # which LiteX's "minimal" default doesn't provide. Still overridable via
+    # --libc-mode=minimal if ever needed for a leaner build.
+    parser.set_defaults(libc_mode="full")
 
     # Standard LiteX args
     parser.add_target_argument("--cable", default="ft232")

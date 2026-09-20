@@ -108,3 +108,5 @@ module cic #(
 //    assign output_tdata = (comb_reg[N-1] >>> (REG_WIDTH - O_WIDTH - 1));
 //    assign data_clk = clk & ce_out;   // gated clock pulse
 endmodule
+
+`default_nettype wire

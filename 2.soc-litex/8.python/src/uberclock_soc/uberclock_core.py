@@ -58,7 +58,7 @@ def add_uberclock_fullrate(soc, leds):
     Parameters
     ----------
     soc:
-        LiteX SoC instance (must have `platform`, `irq`, `add_csr`, and clock domains).
+        LiteX SoC instance (must have `platform`, `irq`, and clock domains).
     leds:
         A Cat(...) of LED pads (or any signal vector) used for optional activity indicator.
 
@@ -96,18 +96,16 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     # CSRs: UberClock configuration surface (SYS domain)
     # -------------------------------------------------------------------------
-    soc.submodules.main = UberClockCSRBank()
-    soc.add_csr("main")
+    soc.main = UberClockCSRBank()
     m = soc.main
 
     # -------------------------------------------------------------------------
     # EventManager: UC->SYS `ce_down` pulse becomes a LiteX interrupt
     # -------------------------------------------------------------------------
-    soc.submodules.evm = EventManager()
+    soc.evm = EventManager()
     soc.evm.ce_down = EventSourcePulse(description="Downsample ready pulse (uc->sys).")
     soc.evm.finalize()
     soc.irq.add("evm")
-    soc.add_csr("evm")
 
     # -------------------------------------------------------------------------
     # SYS->UC configuration snapshot FIFO
@@ -178,8 +176,7 @@ def add_uberclock_fullrate(soc, leds):
         "cap_idx":              m.cap_idx.storage,
     }
 
-    soc.submodules.cfg_link = CsrConfigSnapshotFIFO(cfg_sys, cd_write="sys", cd_read="uc", fifo_depth=4)
-    soc.add_csr("cfg_link")
+    soc.cfg_link = CsrConfigSnapshotFIFO(cfg_sys, cd_write="sys", cd_read="uc", fifo_depth=4)
     uc = soc.cfg_link  # convenience alias
 
     # -------------------------------------------------------------------------
