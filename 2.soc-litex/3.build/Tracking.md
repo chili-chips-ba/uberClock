@@ -91,7 +91,7 @@ track3 lock: phase_down_3=3387460 Hz inc=3497362 center=1000 left=980 right=1020
 
 # Tracking
 
-Leaning on the found tones and the CLI interface: `trackq_start <f1> <f2> <f3> [N] [center_hz] [delta_ch1_hz] [delta_ch2_hz] [delta_ch3_hz]`,
+Leaning on the found tones and the CLI interface: `trackq_start <C300_mixer_hz> <A100_mixer_hz> <C100_mixer_hz> [N] [center_hz] [delta_ch1_hz] [delta_ch2_hz] [delta_ch3_hz]`,
 we start the tracking and print out the state every 5 seconds. All frequnecies are rough estimations of the current mixer frequnecy value + the 1kHz offset that is chosen as the point of the vertex.
 
 ```
