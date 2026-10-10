@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <math.h>
+
+#define REF_FFT_PI 3.14159265358979323846
 
 #include <irq.h>
 #include <libbase/uart.h>
@@ -183,6 +186,8 @@ static void cmd_fft32_ds_y(char *args) {
 #define TRACKQ_C100_START_MIXER_HZ  3387617u
 
 static volatile int sig3_enable = 0;
+/* Quiet single-tone test override; normal settings remain intact. */
+static int sig3_single_channel = -1;
 static uint8_t sig3_channel_enable[SIG3_CHANNELS] = {1u, 1u, 1u, 0u, 0u};
 
 /* 32-bit DDS phase accumulators/increments for 5 channels x 3 tones. */
@@ -314,7 +319,8 @@ static int sig3_step(iq5_frame_t *frame) {
     for (ch = 0; ch < SIG3_CHANNELS; ch++) {
         int32_t acc = 0;
 
-        if (!sig3_channel_enable[ch]) {
+        if (!sig3_channel_enable[ch] ||
+            (sig3_single_channel >= 0 && ch != (unsigned)sig3_single_channel)) {
             frame->x[ch] = 0;
             frame->y[ch] = 0;
             continue;
@@ -322,6 +328,7 @@ static int sig3_step(iq5_frame_t *frame) {
 
         for (tone = 0; tone < SIG3_TONES; tone++) {
             sig3_phase[ch][tone] += sig3_inc[ch][tone];
+            if (sig3_single_channel >= 0 && tone != 1u) continue;
             acc += ((int32_t)sig3_amp[ch] * (int32_t)sig3_sin_u32(sig3_phase[ch][tone])) / 32767;
         }
 
@@ -573,11 +580,11 @@ static int16_t track_samples_ref[FFT_MAX_N];
 #define TRACKQ_MIN_CONF_PCT        5u
 /* Side-power deadband percentages, channel order C300/A100/C100. */
 static unsigned trackq_deadband_pct[TRACKQ_CHANNELS] = {10u, 1u, 10u};
-static int trackq_control_diag = 1;
+static int trackq_control_diag = 0;
 static int64_t trackq_inc_remainder[TRACKQ_CHANNELS];
 #define TRACKQ_WEAK_GAIN_DEN       4
 #define TRACKQ_WEAK_MAX_ERR_MHZ    750
-#define TRACKQ_SERVICE_STRIDE      16u
+#define TRACKQ_SERVICE_STRIDE      4u
 #define TRACK3_FIFO_WAIT_POLLS     1000000u
 #define TRACK3_SIDE_MIN_PCT        2u
 #define TRACK3_SIDE_MAX_PCT        95u
@@ -601,6 +608,7 @@ static struct trackq_state trackq[TRACKQ_CHANNELS] = {
     {0, TRACKQ_C100_CHANNEL, TRACK3_DEFAULT_N, TRACK3_DEFAULT_SETTLE, TRACK3_DEFAULT_CENTER_HZ, TRACKQ_C100_DELTA_HZ, 0u, 0, 0},
 };
 static uint32_t trackq_log_iteration = 0u;
+static int trackq_hybrid_enabled;
 static int ref_fft_enabled = 0;
 static uint64_t ref_fft_origin = 0;
 static uint64_t ref_fft_next = 0;
@@ -779,6 +787,52 @@ static int capture_ds_fft_channel(unsigned channel, unsigned n, unsigned settle)
     return 1;
 }
 
+/* Hybrid capture diagnostics: old backlog is not the new record. */
+static uint32_t hybrid_fifo_pre, hybrid_fifo_capture, hybrid_fifo_process;
+static uint64_t ref_fft_cycles(void);
+static unsigned hybrid_fifo_flags(void) {
+    return (main_ds_fifo_overflow_read() ? 1u : 0u) |
+           (main_ds_fifo_underflow_read() ? 2u : 0u) |
+           (main_ups_fifo_overflow_read() ? 4u : 0u) |
+           (main_ups_fifo_underflow_read() ? 8u : 0u);
+}
+static void hybrid_fifo_boundary(void) {
+    main_ds_fifo_clear_write(1);
+    main_ups_fifo_clear_write(1);
+    uint64_t until = ref_fft_cycles() + CONFIG_CLOCK_FREQUENCY/100000u;
+    while (ref_fft_cycles() < until) track3_service_background_budget(4u);
+}
+static int hybrid_fresh_capture_prepare(void) {
+    hybrid_fifo_pre = hybrid_fifo_flags();
+    hybrid_fifo_capture = hybrid_fifo_process = 0u;
+    /* Recover excitation after any preceding UPS fault, servicing and draining.
+     * Retain the history; it does not silently disappear from the log. */
+    if (hybrid_fifo_pre & 12u) {
+        uint64_t until = ref_fft_cycles() + 2ull*CONFIG_CLOCK_FREQUENCY;
+        while (ref_fft_cycles() < until) {
+            track3_service_background_budget(4u);
+            if (main_ds_fifo_flags_read() & 1u) {
+                iq6_frame_t frame;
+                ds_fifo_read_frame(&frame);
+            }
+        }
+        hybrid_fifo_pre |= hybrid_fifo_flags();
+    }
+    /* Drain to empty, not merely N+settle samples from an old full FIFO. */
+    for (unsigned i = 0; i < 65536u; ++i) {
+        if (!(main_ds_fifo_flags_read() & 1u)) {
+            hybrid_fifo_pre |= hybrid_fifo_flags();
+            hybrid_fifo_boundary();
+            return 1;
+        }
+        iq6_frame_t frame;
+        ds_fifo_read_frame(&frame);
+        track3_service_background_budget(4u);
+    }
+    hybrid_fifo_capture = 32u;
+    return 0;
+}
+
 static int capture_ds_track_multi(unsigned n, unsigned settle) {
     unsigned i;
 
@@ -832,7 +886,7 @@ static uint64_t fft_band_power_at(unsigned k, unsigned half_bins, unsigned n) {
 static inline void trackq_service_background_sample(unsigned sample_idx) {
     /* Keep the software-fed upsampler moving during long correlation sweeps. */
     if ((sample_idx & (TRACKQ_SERVICE_STRIDE - 1u)) == (TRACKQ_SERVICE_STRIDE - 1u))
-        track3_service_background_budget(1u);
+        track3_service_background_budget(4u);
 }
 
 static uint64_t track_power_at_hz(uint32_t f_hz, unsigned n) {
@@ -1058,8 +1112,25 @@ static int trackq_bin_vertex_estimate_mhz(const int16_t *samples,
     return 1;
 }
 
-static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
+/* Reference estimator shared by trackq and the standalone comparison.
+ * Hann/log-power implementation adapted from dev-gui 9b07015. */
+/* Queue a bounded reserve before non-yielding FFT work. 512 samples are
+ * 51.2 ms at nominal 10 kHz before accounting for fill time. sig3_push_one
+ * checks writable BEFORE advancing phase, so a full FIFO loses no samples.
+ * Normal servicing continues between smaller arithmetic blocks. */
+static void qs_prime_excitation(void) {
+    if (!sig3_enable) return;
+    for (unsigned i = 0; i < 512u; ++i) {
+        if (!(main_ups_fifo_flags_read() & 2u)) break;
+        sig3_push_one();
+    }
+    track3_service_background_budget(4u);
+}
+
+static int ref_fft_hann_log_estimate_mhz(const int16_t *samples,
                                                unsigned n,
+                                               int64_t center_hz_milli_hint,
+                                               unsigned half_width_hz,
                                                int64_t *vertex_hz_milli_out) {
     size_t cfg_need = 0;
     size_t cfg_len;
@@ -1068,19 +1139,33 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     unsigned k_peak = 0u;
     uint64_t p_peak = 0u;
     unsigned k;
+    unsigned k_lo, k_hi;
     int64_t x1, x2, x3;
     int64_t y1, y2, y3;
     int64_t den;
-    int64_t num;
+
+    if (vertex_hz_milli_out) *vertex_hz_milli_out = 0ll;
 
     if (!samples || !vertex_hz_milli_out || !is_pow2_u(n) || n < 8u || n > FFT_MAX_N || fft_fs_hz == 0u)
         return 0;
 
+    qs_prime_excitation();
+
+    /* Hann window, computed on the fly for whatever N is in use (rather than
+     * a fixed-size precomputed table) so N=64/256/1024 get the same coverage
+     * as N=2048. Bench-verified (LoopbackRetest.md dumps, offline analysis):
+     * combined with the log-power parabola below, this cuts interpolation
+     * bias from ~0.28-0.31 bin down to ~0.01-0.02 bin, consistently across
+     * N=64..2048 and at both mid-bin and bin-boundary operating points. */
     for (k = 0u; k < n; k++) {
-        fft_in[k].r = (kiss_fft_scalar)samples[k];
+        double w = 0.5 - 0.5 * cos((2.0 * REF_FFT_PI * (double)k) / (double)(n - 1));
+        double windowed = (double)samples[k] * w;
+        fft_in[k].r = (kiss_fft_scalar)windowed;
         fft_in[k].i = (kiss_fft_scalar)0;
+        track3_service_background_budget(4u);
     }
 
+    for (unsigned reserve = 0; reserve < (n >= 2048u ? 16u : 1u); ++reserve) qs_prime_excitation();
     (void)kiss_fft_alloc((int)n, 0, NULL, &cfg_need);
     if (cfg_need > (size_t)FFT_CFG_MAX_BYTES)
         return 0;
@@ -1090,10 +1175,38 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     if (!cfg)
         return 0;
 
+    for (unsigned reserve = 0; reserve < (n >= 2048u ? 16u : 1u); ++reserve) qs_prime_excitation();
     kiss_fft(cfg, fft_in, fft_out);
+    track3_service_background_budget(16u);
 
     bins = n / 2u;
-    for (k = 1u; k + 1u < bins; k++) {
+
+    /* Bound the search to a window around the expected frequency when a hint
+     * is available (steady-state tracking, where the last estimate is a
+     * strong prior); fall back to a full-spectrum search only when there is
+     * no prior (first call after (re)acquisition). An unbounded search during
+     * tracking lets any unrelated, momentarily-stronger spectral component
+     * (image, harmonic, filter leakage) hijack the peak pick even though the
+     * real tone has barely moved since the previous update. */
+    k_lo = 1u;
+    k_hi = bins - 2u;
+    if (center_hz_milli_hint > 0) {
+        int64_t lo_hz_milli = center_hz_milli_hint - ((int64_t)half_width_hz * 1000ll);
+        int64_t hi_hz_milli = center_hz_milli_hint + ((int64_t)half_width_hz * 1000ll);
+        int64_t k_lo_s = (lo_hz_milli * (int64_t)n) / ((int64_t)fft_fs_hz * 1000ll);
+        /* Include both bins bracketing the upper edge, also for N=64. */
+        int64_t k_hi_s = (hi_hz_milli * (int64_t)n + (int64_t)fft_fs_hz * 1000ll - 1ll) /
+                         ((int64_t)fft_fs_hz * 1000ll);
+        if (k_lo_s < 1) k_lo_s = 1;
+        if (k_hi_s > (int64_t)(bins - 2u)) k_hi_s = (int64_t)(bins - 2u);
+        if (k_lo_s <= k_hi_s) {
+            k_lo = (unsigned)k_lo_s;
+            k_hi = (unsigned)k_hi_s;
+        }
+    }
+
+    for (k = k_lo; k <= k_hi; k++) {
+        trackq_service_background_sample(k);
         uint64_t pwr = fft_bin_power_at(k);
         if (pwr > p_peak) {
             p_peak = pwr;
@@ -1107,19 +1220,42 @@ static int trackq_fft_peak_vertex_estimate_mhz(const int16_t *samples,
     y1 = (int64_t)fft_bin_power_at(k_peak - 1u);
     y2 = (int64_t)fft_bin_power_at(k_peak);
     y3 = (int64_t)fft_bin_power_at(k_peak + 1u);
-    if (y2 <= y1 || y2 <= y3)
+    den = y1 - (2ll * y2) + y3;
+    /* Equal adjacent maxima at a half-bin position are valid; a flat triplet
+     * is not. Requiring strict dominance rejects a legitimate half-bin tone.
+     * y1,y3 > 0 is required below for log(); a real FFT bin power is only
+     * ever exactly zero for a pathological all-zero capture. */
+    if (y2 < y1 || y2 < y3 || den >= 0ll || y1 <= 0ll || y3 <= 0ll)
         return 0;
 
     x1 = (int64_t)((((uint64_t)(k_peak - 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
     x2 = (int64_t)((((uint64_t)k_peak * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
     x3 = (int64_t)((((uint64_t)(k_peak + 1u) * (uint64_t)fft_fs_hz * 1000ull) + ((uint64_t)n / 2ull)) / (uint64_t)n);
 
-    den = y1 - (2ll * y2) + y3;
-    if (den >= 0ll)
-        return 0;
-
-    num = (x3 - x1) * (y1 - y3);
-    *vertex_hz_milli_out = x2 + (num / (4ll * den));
+    {
+        /* Fit the parabola to log(power), not raw power: a linear-power fit
+         * assumes a mainlobe shape that neither a rectangular nor a Hann
+         * window actually has, and is the confirmed source of the ~0.3-bin
+         * bias measured before this change. log-power matches a windowed
+         * mainlobe's real shape far better (bench-verified across N=64..2048
+         * via LoopbackRetest.md's raw-dump analysis). */
+        double ly1 = log((double)y1);
+        double ly2 = log((double)y2);
+        double ly3 = log((double)y3);
+        double log_den = ly1 - 2.0 * ly2 + ly3;
+        double log_num = (double)(x3 - x1) * (ly1 - ly3);
+        /* Local-maximum geometry bounds the correction to half a bin. */
+        int64_t half_bin_hz_milli = ((int64_t)fft_fs_hz * 1000ll) / (2ll * (int64_t)n);
+        int64_t correction;
+        if (!(log_den < 0.0))
+            return 0;
+        correction = (int64_t)(log_num / (4.0 * log_den));
+        if (correction > half_bin_hz_milli)
+            correction = half_bin_hz_milli;
+        if (correction < -half_bin_hz_milli)
+            correction = -half_bin_hz_milli;
+        *vertex_hz_milli_out = x2 + correction;
+    }
     return 1;
 }
 
@@ -1345,10 +1481,79 @@ static int capture_ref_fft_samples(void) {
     return 1;
 }
 
+/* Time-domain comparator: fit rising zero-crossing sample positions against
+ * crossing ordinal. No FFT/interpolation of spectral bins and no extra buffer.
+ * Mean subtraction only; periods are checked, not selectively discarded. */
+struct ref_zc_diag {
+    uint32_t crossings, flags;
+    int32_t min_sample, max_sample, min_period_msamples, max_period_msamples;
+};
+static int ref_zc_estimate_mhz(const int16_t *samples, unsigned n,
+                              int64_t *frequency_mhz, struct ref_zc_diag *d) {
+    memset(d, 0, sizeof(*d));
+    *frequency_mhz = 0ll;
+    if (!samples || n < 32u || n > FFT_MAX_N || fft_fs_hz == 0u) { d->flags=1u; return 0; }
+    int32_t sum=0;
+    d->min_sample=32767; d->max_sample=-32768;
+    for (unsigned i=0; i<n; ++i) {
+        int32_t x=samples[i];
+        sum+=x;
+        if (x<d->min_sample) d->min_sample=x;
+        if (x>d->max_sample) d->max_sample=x;
+        trackq_service_background_sample(i);
+    }
+    if (d->max_sample-d->min_sample < 8) { d->flags=2u; return 0; }
+    double mean=(double)sum/(double)n;
+    double sum_k=0.0, sum_t=0.0, sum_kk=0.0, sum_kt=0.0;
+    double previous_crossing=0.0, min_period=1e9, max_period=0.0;
+    double previous=(double)samples[0]-mean;
+    for (unsigned i=1; i<n; ++i) {
+        double current=(double)samples[i]-mean;
+        if (previous<0.0 && current>=0.0) {
+            double t=(double)(i-1u)-previous/(current-previous);
+            double k=(double)d->crossings;
+            sum_k+=k; sum_t+=t; sum_kk+=k*k; sum_kt+=k*t;
+            if (d->crossings) {
+                double period=t-previous_crossing;
+                if (period<min_period) min_period=period;
+                if (period>max_period) max_period=period;
+            }
+            previous_crossing=t;
+            ++d->crossings;
+        }
+        previous=current;
+        trackq_service_background_sample(i);
+    }
+    if (d->crossings<8u) { d->flags|=1u; return 0; }
+    d->min_period_msamples=(int32_t)(min_period*1000.0+0.5);
+    d->max_period_msamples=(int32_t)(max_period*1000.0+0.5);
+    if (!(min_period>0.0) || max_period>1.25*min_period) d->flags|=4u;
+    double count=(double)d->crossings;
+    double den=count*sum_kk-sum_k*sum_k;
+    double period=(count*sum_kt-sum_k*sum_t)/den;
+    if (!(den>0.0 && period>2.0 && period<(double)n)) { d->flags|=8u; return 0; }
+    double f=(double)fft_fs_hz/period;
+    *frequency_mhz=(int64_t)(f*1000.0+0.5);
+    /* Period-spread flag retains the estimate for diagnosis, not servo use. */
+    return 1;
+}
+
+static int ref_reconstruct_fs(uint32_t ref_lo, int64_t ref_mhz, double *fs) {
+    if (ref_mhz<=0ll || ref_mhz>=5000000ll || ref_lo==0u) return 0;
+    double nominal=(double)TRACK3_RF_FS_HZ;
+    double denominator=(double)ref_lo*nominal/(double)(1ul<<26)+(double)ref_mhz/1000.0;
+    *fs=nominal*(double)TRACKQ_REF_INPUT_HZ/denominator;
+    return *fs>64000000.0 && *fs<66000000.0;
+}
+
 static void ref_fft_step(void) {
     uint64_t started, finished, elapsed;
-    int64_t f64_mhz = 0ll, f2048_mhz = 0ll;
-    int valid64 = 0, valid2048 = 0;
+    int64_t h64_mhz = 0ll, h2048_mhz = 0ll;
+    int hvalid64 = 0, hvalid2048 = 0;
+    int64_t zc_mhz=0ll;
+    int zvalid=0;
+    struct ref_zc_diag zdiag={0};
+    zdiag.flags=1u;
     if (!ref_fft_enabled)
         return;
     started = ref_fft_cycles();
@@ -1356,18 +1561,36 @@ static void ref_fft_step(void) {
         return;
     ref_fft_next += (uint64_t)CONFIG_CLOCK_FREQUENCY;
     if (capture_ref_fft_samples()) {
-        valid64 = trackq_fft_peak_vertex_estimate_mhz(track_samples_ref, 64u, &f64_mhz);
+        /* Symmetric Hann windows share sample center 1023.5:
+         * FFT64 uses indices 992..1055; FFT2048 uses 0..2047. */
+        hvalid64 = ref_fft_hann_log_estimate_mhz(track_samples_ref + (2048u - 64u) / 2u, 64u, 0ll, 0u, &h64_mhz);
         track3_service_background_budget(16u);
-        valid2048 = trackq_fft_peak_vertex_estimate_mhz(track_samples_ref, 2048u, &f2048_mhz);
+        hvalid2048 = ref_fft_hann_log_estimate_mhz(track_samples_ref, 2048u, 0ll, 0u, &h2048_mhz);
+        track3_service_background_budget(16u);
+        zvalid=ref_zc_estimate_mhz(track_samples_ref,2048u,&zc_mhz,&zdiag);
         track3_service_background_budget(16u);
     }
     finished = ref_fft_cycles();
     elapsed = finished - started;
     printf("ref_fft: seq=%lu t_ms=%lu", (unsigned long)++ref_fft_sequence,
            (unsigned long)((started - ref_fft_origin) / (CONFIG_CLOCK_FREQUENCY / 1000u)));
-    trackq_log_milli("ref64", valid64, f64_mhz, "Hz");
-    trackq_log_milli("ref2048", valid2048, f2048_mhz, "Hz");
-    trackq_log_milli("diff64_2048", valid64 && valid2048, f64_mhz - f2048_mhz, "Hz");
+    trackq_log_milli("ref64_center_hann_log", hvalid64, h64_mhz, "Hz");
+    trackq_log_milli("ref2048_hann_log", hvalid2048, h2048_mhz, "Hz");
+    trackq_log_milli("diff_center64_2048", hvalid64 && hvalid2048, h64_mhz - h2048_mhz, "Hz");
+    trackq_log_milli("ref_zc2048", zvalid, zc_mhz, "Hz");
+    trackq_log_milli("diff_zc_fft2048", zvalid && hvalid2048, zc_mhz-h2048_mhz, "Hz");
+    uint32_t ref_lo=main_phase_inc_down_ref_read();
+    double fs64=0.0, fs2048=0.0, fszc=0.0;
+    int fv64=hvalid64 && fft_fs_hz==10000u && ref_reconstruct_fs(ref_lo,h64_mhz,&fs64);
+    int fv2048=hvalid2048 && fft_fs_hz==10000u && ref_reconstruct_fs(ref_lo,h2048_mhz,&fs2048);
+    int fvzc=zvalid && !zdiag.flags && fft_fs_hz==10000u && ref_reconstruct_fs(ref_lo,zc_mhz,&fszc);
+    trackq_log_milli("fs64",fv64,(int64_t)(fs64*1000.0+0.5),"Hz");
+    trackq_log_milli("fs2048",fv2048,(int64_t)(fs2048*1000.0+0.5),"Hz");
+    trackq_log_milli("fs_zc",fvzc,(int64_t)(fszc*1000.0+0.5),"Hz");
+    printf(" zc_crossings=%lu zc_flags=%lu zc_min=%ld zc_max=%ld period_min_msamples=%ld period_max_msamples=%ld reflo=%lu",
+        (unsigned long)zdiag.crossings,(unsigned long)zdiag.flags,(long)zdiag.min_sample,
+        (long)zdiag.max_sample,(long)zdiag.min_period_msamples,(long)zdiag.max_period_msamples,
+        (unsigned long)ref_lo);
     printf(" work_ms=%lu fs_nom=%luHz\n",
            (unsigned long)(elapsed / (CONFIG_CLOCK_FREQUENCY / 1000u)),
            (unsigned long)fft_fs_hz);
@@ -1382,6 +1605,7 @@ static void ref_fft_step(void) {
 }
 
 static void cmd_ref_fft_start(char *args) {
+    if (trackq_hybrid_enabled) { puts("Run trackq_hybrid 0 before ref_fft_start"); return; }
     (void)args;
     if (ref_fft_enabled) {
         puts("ref_fft already running; use ref_fft_stop before restarting");
@@ -1400,7 +1624,7 @@ static void cmd_ref_fft_start(char *args) {
     ref_fft_origin = ref_fft_cycles();
     ref_fft_next = ref_fft_origin;
     ref_fft_enabled = 1;
-    puts("ref_fft_start: trackq stopped; Y_ref FFT64/FFT2048 from one fresh record, 1 s period via TIMER0; LO/NCO unchanged");
+    puts("ref_fft_start: trackq stopped; Y_ref Hann/log FFT64(center)/FFT2048 and time-domain rising crossings ZC2048 from one fresh record; fs reconstructed separately; zc_flags 1=few/invalid record 2=small range 4=period spread >25% 8=invalid slope; 1 s target period via TIMER0; LO/NCO unchanged");
 }
 
 static void cmd_ref_fft_stop(char *args) {
@@ -1436,7 +1660,262 @@ static uint32_t trackq_adjust_increment(unsigned channel, uint32_t previous,
     return (uint32_t)next;
 }
 
+/* Observer v1: read-only measurements, emitted after the control commit.
+ * Tick stamps describe CPU capture boundaries (including settle), NOT source
+ * sample timestamps. FIFO backlog/transport delay is not measured here. */
+static int trackq_observer_enabled;
+static uint32_t trackq_observer_session, trackq_observer_capture_id;
+static uint32_t trackq_observer_last_tick;
+static uint64_t trackq_observer_tick_total;
+
+struct trackq_observer_mode {
+    uint32_t lo_inc, tone_inc[3], center_hz, delta_hz;
+    int amplitude, tone_enabled, due, have_power, fit_ok, limited;
+    uint64_t power[3];
+    int64_t drive_mhz, requested_mhz, demand_mhz;
+    int64_t applied_increment;
+    const char *controller_mode;
+    const char *fit_status;
+};
+static struct {
+    uint32_t id, ref_lo_inc, nco_before, n, fs_hz;
+    uint64_t begin_tick, end_tick;
+    unsigned fifo_before, fifo_after, underflow_after;
+    struct trackq_observer_mode mode[TRACKQ_CHANNELS];
+} trackq_observer;
+
+static uint64_t trackq_observer_ticks(void) {
+    uint32_t now = ce_ticks;
+    trackq_observer_tick_total += (uint32_t)(now - trackq_observer_last_tick);
+    trackq_observer_last_tick = now;
+    return trackq_observer_tick_total;
+}
+
+static void trackq_observer_begin(unsigned n) {
+    memset(&trackq_observer, 0, sizeof(trackq_observer));
+    trackq_observer.id = ++trackq_observer_capture_id;
+    trackq_observer.n = n;
+    trackq_observer.fs_hz = fft_fs_hz;
+    trackq_observer.ref_lo_inc = main_phase_inc_down_ref_read();
+    trackq_observer.nco_before = main_phase_inc_nco_read();
+    trackq_observer.fifo_before = main_ds_fifo_overflow_read();
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) {
+        struct trackq_observer_mode *m = &trackq_observer.mode[i];
+        m->lo_inc = phase_down_read(i);
+        m->center_hz = trackq[i].center_hz;
+        m->delta_hz = trackq[i].delta_hz;
+        m->amplitude = sig3_amp[i];
+        m->tone_enabled = sig3_enable && sig3_channel_enable[i];
+        for (unsigned j = 0; j < 3; ++j) m->tone_inc[j] = sig3_inc[i][j];
+        m->drive_mhz = uc_phase_inc_to_mhz(m->lo_inc, TRACK3_RF_FS_HZ) +
+                      sig3_phase_inc_to_mhz(m->tone_inc[1], 10000u);
+        m->controller_mode = "not_due";
+        m->fit_status = "not_due";
+    }
+    trackq_observer.begin_tick = trackq_observer_ticks();
+}
+
+/* Split before conversion: the shifted half always fits int64_t.
+ * This avoids a __floatundidf dependency absent from the LiteX runtime. */
+static double trackq_observer_power_double(uint64_t power) {
+    return (double)(int64_t)(power >> 1) * 2.0 +
+           (double)(int64_t)(power & 1u);
+}
+
+static void trackq_observer_emit(unsigned iteration,
+    const int64_t *raw_mhz, const uint8_t *raw_valid,
+    int ref_valid, int64_t ref_bb_mhz, int fs_valid, int64_t fs_ref_mhz,
+    uint32_t nco_ref, int crystal_valid, const struct trackq_crystal_estimate *crystal,
+    int temp_valid, int64_t existing_mc, int64_t joint_mc,
+    int ratio_valid, int64_t ratio_mc) {
+    uint64_t processing_tick;
+    /* Complete power diagnostics for channels skipped by the scheduler.
+     * This is deliberately after uc_commit, with no controller state writes. */
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) {
+        struct trackq_observer_mode *m = &trackq_observer.mode[i];
+        if (!m->have_power && m->center_hz > m->delta_hz) {
+            m->power[0] = track_band_power_at_hz_samples(track_samples[i], m->center_hz - m->delta_hz, trackq_observer.n);
+            m->power[1] = track_band_power_at_hz_samples(track_samples[i], m->center_hz, trackq_observer.n);
+            m->power[2] = track_band_power_at_hz_samples(track_samples[i], m->center_hz + m->delta_hz, trackq_observer.n);
+            m->have_power = 1;
+        }
+    }
+    processing_tick = trackq_observer_ticks();
+    printf("trackq observer capture: v=1 session=%lu capture_id=%lu iteration=%u n=%lu fs_nom_hz=%lu rf_fs_nom_hz=%u tone_fs_nom_hz=10000 tick_hz=10000 capture_begin_tick=%llu capture_end_tick=%llu processing_end_tick=%llu ref_lo_inc=%lu nco_before=%lu fifo_ov_before=%u fifo_ov_after=%u fifo_uf_after=%u estimator=hann_log64_centered power=band3\n",
+        (unsigned long)trackq_observer_session, (unsigned long)trackq_observer.id,
+        iteration, (unsigned long)trackq_observer.n, (unsigned long)trackq_observer.fs_hz,
+        TRACK3_RF_FS_HZ, (unsigned long long)trackq_observer.begin_tick,
+        (unsigned long long)trackq_observer.end_tick, (unsigned long long)processing_tick,
+        (unsigned long)trackq_observer.ref_lo_inc, (unsigned long)trackq_observer.nco_before,
+        trackq_observer.fifo_before, trackq_observer.fifo_after, trackq_observer.underflow_after);
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) {
+        struct trackq_observer_mode *m = &trackq_observer.mode[i];
+        double l = trackq_observer_power_double(m->power[0]);
+        double c = trackq_observer_power_double(m->power[1]);
+        double r = trackq_observer_power_double(m->power[2]);
+        double den = l - 2.0 * c + r;
+        double detuning = 0.0;
+        const char *status = "ok";
+        int64_t side_q9 = (l + r > 0.0) ? (int64_t)(1e9 * (r - l) / (r + l)) : 0ll;
+        if (!m->tone_enabled) status = "tone_disabled";
+        else if (!m->have_power || l + c + r == 0.0) status = "no_power";
+        else if (c <= l || c <= r) status = "not_local_max";
+        else if (!(den < 0.0)) status = "not_concave";
+        else {
+            detuning = (double)m->delta_hz * 1000.0 * (l-r) / (2.0*den);
+            if (!isfinite(detuning) || fabs(detuning) > (double)m->delta_hz*1000.0)
+                status = "out_of_span";
+        }
+        printf("trackq observer mode: v=1 session=%lu capture_id=%lu iteration=%u channel=%u lo_inc_before=%lu tone_inc_left=%lu tone_inc_center=%lu tone_inc_right=%lu amplitude=%d tone_enabled=%d center_hz=%lu delta_hz=%lu controller_due=%d P_left=%llu P_center=%llu P_right=%llu side_error_q9=%lld side_valid=%d detuning_status=%s",
+            (unsigned long)trackq_observer_session, (unsigned long)trackq_observer.id,
+            iteration, i+1u, (unsigned long)m->lo_inc, (unsigned long)m->tone_inc[0],
+            (unsigned long)m->tone_inc[1], (unsigned long)m->tone_inc[2], m->amplitude,
+            m->tone_enabled, (unsigned long)m->center_hz, (unsigned long)m->delta_hz,
+            m->due, (unsigned long long)m->power[0], (unsigned long long)m->power[1],
+            (unsigned long long)m->power[2], (long long)side_q9, l+r > 0.0, status);
+        if (!strcmp(status,"ok")) printf(" detuning_quad_raw_mHz=%lld", (long long)detuning);
+        else printf(" detuning_quad_raw_mHz=(na)");
+        printf(" drive_raw_mHz=%lld controller_mode=%s requested_mHz=%lld demand_mHz=%lld applied_increment=%lld limited=%d modal_fit_status=%s",
+            (long long)m->drive_mhz, m->controller_mode, (long long)m->requested_mhz,
+            (long long)m->demand_mhz, (long long)m->applied_increment, m->limited, m->fit_status);
+        if (raw_valid[i]) printf(" raw_mode_frequency_mHz=%lld", (long long)raw_mhz[i]);
+        else printf(" raw_mode_frequency_mHz=(na)");
+        printf("\n");
+    }
+    printf("trackq observer result: v=1 session=%lu capture_id=%lu iteration=%u",
+        (unsigned long)trackq_observer_session, (unsigned long)trackq_observer.id, iteration);
+    trackq_log_milli("ref_bb",ref_valid,ref_bb_mhz,"Hz");
+    trackq_log_milli("fs_ref",fs_valid,fs_ref_mhz,"Hz");
+    trackq_log_milli("fs_crystal",crystal_valid,crystal->fs_mhz,"Hz");
+    trackq_log_milli("temp_raw_joint",crystal_valid,crystal->temp_abs_mc,"C");
+    trackq_log_milli("dtemp_existing",temp_valid,existing_mc,"C");
+    trackq_log_milli("dtemp_joint",temp_valid,joint_mc,"C");
+    trackq_log_milli("dtemp_ratio",ratio_valid,ratio_mc,"C");
+    if (fs_valid) printf(" nco_inc_ref=%lu",(unsigned long)nco_ref);
+    else printf(" nco_inc_ref=(na)");
+    if (crystal_valid) printf(" nco_inc_crystal=%lu",(unsigned long)crystal->nco_inc);
+    else printf(" nco_inc_crystal=(na)");
+    printf("\n");
+    /* Stamp after payload output. UART software/hardware queues may still drain;
+     * this is not a timestamp of the final serial bit on the wire. */
+    printf("trackq observer end: v=1 session=%lu capture_id=%lu iteration=%u logging_end_tick=%llu\n",
+        (unsigned long)trackq_observer_session, (unsigned long)trackq_observer.id,
+        iteration, (unsigned long long)trackq_observer_ticks());
+}
+
+/* Shadow-only synthesis experiment. Timing uses TIMER0 at nominal CPU rate,
+ * independent of interrupt servicing but still board-clock derived. Never writes an output CSR. */
+static struct {
+    int ready;
+    double slow_hz;
+    uint32_t last_good, last_log, started, accepted, rejected;
+} trackq_hybrid;
+
+static void trackq_hybrid_reset(void) {
+    memset(&trackq_hybrid, 0, sizeof(trackq_hybrid));
+    trackq_hybrid.started = trackq_hybrid.last_log = (uint32_t)(ref_fft_cycles() / (CONFIG_CLOCK_FREQUENCY/1000u));
+}
+
+static void trackq_hybrid_step(int modal_ok, int ref_ok, const int64_t raw_modes_mhz[TRACKQ_CHANNELS],
+        int64_t temp_mc, int64_t ref_bb_mhz, uint32_t ref_lo,
+        uint32_t fifo_flags, unsigned modal_mask, uint32_t applied_inc) {
+    if (!trackq_hybrid_enabled) return;
+    const int64_t raw_mhz = raw_modes_mhz[TRACKQ_C300_CHANNEL];
+    uint32_t now = (uint32_t)(ref_fft_cycles() / (CONFIG_CLOCK_FREQUENCY/1000u));
+    uint32_t age = now - trackq_hybrid.last_good;
+    double fs = 0.0, comp = 0.0;
+    int fresh = 0, candidate_ok = 0;
+    uint32_t candidate = 0, ref_round = 0;
+    if (ref_ok) {
+        double ref_sum = (double)ref_lo * (double)TRACK3_RF_FS_HZ / 67108864.0
+                      + (double)ref_bb_mhz / 1000.0;
+        if (ref_sum > 9000000.0 && ref_sum < 11000000.0)
+            fs = (double)TRACK3_RF_FS_HZ * TRACKQ_REF_INPUT_HZ / ref_sum;
+    }
+    if (modal_ok && fs > 0.0 && !fifo_flags) {
+        double g = 1.0 + (double)TRACKQ_TEMP_ALPHA_C300_Q6 *
+                   (double)(temp_mc - 25000ll) / 1.0e15;
+        if (g > 0.9 && g < 1.1 && raw_mhz > 0ll) {
+            comp = ((double)raw_mhz / 1000.0) * fs / TRACK3_RF_FS_HZ / g;
+            double nominal = (double)TRACKQ_TEMP_NOM_C300_MHZ / 1000.0;
+            if (comp > nominal*0.9 && comp < nominal*1.1) {
+                /* Restart after >10 s with no accepted modal observation.
+                 * Backward-Euler low-pass: a=dt/(tau+dt), tau=30 s. */
+                if (!trackq_hybrid.ready || age > 10000u)
+                    trackq_hybrid.slow_hz = comp;
+                else {
+                    double a = (double)age / (30000.0 + (double)age);
+                    trackq_hybrid.slow_hz += a*(comp-trackq_hybrid.slow_hz);
+                }
+                trackq_hybrid.ready = fresh = 1;
+                trackq_hybrid.last_good = now;
+                age = 0u;
+            }
+        }
+    }
+    if (fresh) ++trackq_hybrid.accepted;
+    else ++trackq_hybrid.rejected;
+    if (fs > 0.0 && !fifo_flags && trackq_hybrid.ready && age <= 10000u) {
+        double target = TRACKQ_NCO_TARGET_HZ * trackq_hybrid.slow_hz /
+                        ((double)TRACKQ_TEMP_NOM_C300_MHZ / 1000.0);
+        double inc = 67108864.0 * target / fs;
+        if (inc > 0.0 && inc < 33554431.0) {
+            candidate = (uint32_t)(inc + 0.5);
+            ref_round = (uint32_t)(67108864.0 * TRACKQ_NCO_TARGET_HZ / fs + 0.5);
+            candidate_ok = 1;
+        }
+    }
+    if ((uint32_t)(now-trackq_hybrid.last_log) < 5000u) return;
+    trackq_hybrid.last_log = now;
+    printf("HY2 t_ms=%lu fresh=%d valid=%d age_ms=%lu flags=%lu ok=%lu reject=%lu",
+        (unsigned long)((uint32_t)(now-trackq_hybrid.started)), fresh, candidate_ok,
+        (unsigned long)(trackq_hybrid.ready ? age : 0xffffffffu),
+        (unsigned long)fifo_flags, (unsigned long)trackq_hybrid.accepted,
+        (unsigned long)trackq_hybrid.rejected);
+    unsigned reason = (!modal_ok ? 1u : 0u) | (!ref_ok || fs <= 0.0 ? 2u : 0u) |
+                      (fifo_flags ? 4u : 0u) |
+                      (!trackq_hybrid.ready || age > 10000u ? 8u : 0u);
+    if (modal_ok && fs > 0.0 && !fifo_flags && !fresh) reason |= 16u;
+    printf(" modes=%u reason=%u pre=%lu cap=%lu proc=%lu", modal_mask, reason,
+        (unsigned long)hybrid_fifo_pre, (unsigned long)hybrid_fifo_capture,
+        (unsigned long)hybrid_fifo_process);
+    /* Same capture, nominal RF scale; never print stale fallbacks as valid. */
+    trackq_log_milli("raw_C300", (modal_mask & 1u) != 0u, raw_modes_mhz[0], "Hz");
+    trackq_log_milli("raw_A100", (modal_mask & 2u) != 0u, raw_modes_mhz[1], "Hz");
+    trackq_log_milli("raw_C100", (modal_mask & 4u) != 0u, raw_modes_mhz[2], "Hz");
+    trackq_log_milli("T", fresh, temp_mc, "C");
+    trackq_log_milli("C25", fresh, (int64_t)(comp*1000.0), "Hz");
+    trackq_log_milli("slow", trackq_hybrid.ready,
+        (int64_t)(trackq_hybrid.slow_hz*1000.0), "Hz");
+    trackq_log_milli("fs", fs > 0.0, (int64_t)(fs*1000.0), "Hz");
+    if (candidate_ok) printf(" cand=%lu ref_round=%lu", (unsigned long)candidate,
+        (unsigned long)ref_round);
+    else printf(" cand=(na) ref_round=(na)");
+    printf(" applied=%lu shadow=1\n", (unsigned long)applied_inc);
+    trackq_hybrid.accepted = trackq_hybrid.rejected = 0u;
+}
+
+static void cmd_trackq_hybrid(char *args) {
+    char *v = strtok(args, " \t");
+    if (!v || strtok(NULL, " \t") || (strcmp(v,"0") && strcmp(v,"1"))) {
+        puts("Usage: trackq_hybrid <0|1> (shadow only, tau=30 s)"); return;
+    }
+    if (trackq_hybrid_enabled) {
+#if defined(CSR_TIMER0_BASE)
+        ref_fft_timer_release();
+#endif
+        trackq_hybrid_enabled = 0;
+    }
+    if (v[0] == '1' && (ref_fft_enabled || !ref_fft_timer_start())) {
+        puts("HY: stop ref_fft first; TIMER0 required"); return;
+    }
+    trackq_hybrid_enabled = v[0] == '1';
+    if (trackq_hybrid_enabled) trackq_hybrid_reset();
+    printf("HY config enabled=%d tau_ms=30000 stale_ms=10000 log_ms=5000 shadow=1 timing=TIMER0 nominal_tick_hz=1000 raw_modes=1\n", trackq_hybrid_enabled);
+}
+
 static void trackq_step(void) {
+    if (trackq_hybrid_enabled) (void)ref_fft_cycles();
     unsigned i;
     unsigned capture_n = 0u;
     unsigned capture_settle = TRACK3_DEFAULT_SETTLE;
@@ -1485,11 +1964,29 @@ static void trackq_step(void) {
     if (!any_enabled || !any_due)
         return;
 
+    if (trackq_observer_enabled) trackq_observer_begin(capture_n);
+
+    if (trackq_hybrid_enabled && !hybrid_fresh_capture_prepare()) {
+        puts("HY capture failed: backlog drain limit; tracking stopped");
+        for (i = 0; i < TRACKQ_CHANNELS; i++) trackq[i].enabled = 0;
+        return;
+    }
     if (!capture_ds_track_multi(capture_n, capture_settle)) {
         for (i = 0; i < TRACKQ_CHANNELS; i++)
             trackq[i].enabled = 0;
         return;
     }
+
+    if (trackq_hybrid_enabled) {
+        hybrid_fifo_capture = hybrid_fifo_flags();
+    }
+
+    if (trackq_observer_enabled) {
+        trackq_observer.end_tick = trackq_observer_ticks();
+        trackq_observer.fifo_after = main_ds_fifo_overflow_read();
+        trackq_observer.underflow_after = main_ds_fifo_underflow_read();
+    }
+    if (trackq_hybrid_enabled) hybrid_fifo_boundary();
 
     for (i = 0; i < TRACKQ_CHANNELS; i++) {
         uint64_t left_pwr;
@@ -1527,6 +2024,15 @@ static void trackq_step(void) {
         left_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz - trackq[i].delta_hz, trackq[i].n);
         center_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz, trackq[i].n);
         right_pwr = track_band_power_at_hz_samples(track_samples[i], trackq[i].center_hz + trackq[i].delta_hz, trackq[i].n);
+
+        if (trackq_observer_enabled) {
+            struct trackq_observer_mode *m = &trackq_observer.mode[i];
+            m->due = 1;
+            m->have_power = 1;
+            m->power[0] = left_pwr;
+            m->power[1] = center_pwr;
+            m->power[2] = right_pwr;
+        }
 
         vertex_hz_milli = center_hz_milli;
         correction_hz = 0;
@@ -1584,6 +2090,16 @@ static void trackq_step(void) {
             bin_vertex_hf_mhz_log[i] = phase_hz_milli + center_base_hz_milli + (bin_vertex_hz_milli - center_hz_milli);
             bin_vertex_valid_log[i] = 1u;
         }
+        if (trackq_observer_enabled) {
+            struct trackq_observer_mode *m = &trackq_observer.mode[i];
+            m->requested_mhz = (int64_t)correction_hz * 1000ll;
+            m->demand_mhz = ctrl_mhz;
+            m->applied_increment = (int64_t)next_phase_inc - phase_inc;
+            m->limited = limited;
+            m->controller_mode = confident ? "quad" : (weak_mode ? "side" : "deadband");
+            m->fit_ok = bin_vertex_valid_log[i];
+            m->fit_status = m->fit_ok ? "ok" : "binfit_rejected";
+        }
         if (trackq_control_diag) {
             uint64_t sum = left_pwr + right_pwr;
             int64_t diff = (int64_t)right_pwr - (int64_t)left_pwr;
@@ -1610,9 +2126,13 @@ static void trackq_step(void) {
         trackq[i].next_tick = ce_ticks + TRACKQ_INTERVAL_TICKS;
     }
 
-    if (trackq_fft_peak_vertex_estimate_mhz(track_samples_ref,
-                                            (capture_n >= TRACKQ_REF_FFT_N) ? TRACKQ_REF_FFT_N : capture_n,
-                                            &ref_bin_vertex_baseband_mhz_log)) {
+    /* Center the 64-sample reference window within the modal capture,
+     * matching the centered-window reference comparison experiment. */
+    if (capture_n >= TRACKQ_REF_FFT_N &&
+        ref_fft_hann_log_estimate_mhz(
+            track_samples_ref + (capture_n - TRACKQ_REF_FFT_N) / 2u,
+            TRACKQ_REF_FFT_N, 0ll, 0u,
+            &ref_bin_vertex_baseband_mhz_log)) {
         ref_bin_vertex_valid_log = 1u;
     }
 
@@ -1668,9 +2188,20 @@ static void trackq_step(void) {
         }
     }
 
+    if (trackq_hybrid_enabled) hybrid_fifo_process = hybrid_fifo_flags();
+    trackq_hybrid_step(crystal_valid_log, fs_valid_log,
+        bin_vertex_hf_mhz_log, crystal_log.temp_abs_mc,
+        ref_bin_vertex_baseband_mhz_log, main_phase_inc_down_ref_read(),
+        hybrid_fifo_capture | (hybrid_fifo_process & 12u),
+        (bin_vertex_valid_log[0] ? 1u : 0u) |
+        (bin_vertex_valid_log[1] ? 2u : 0u) |
+        (bin_vertex_valid_log[2] ? 4u : 0u), main_phase_inc_nco_read());
+    /* Keep post-capture history until next preparation. DS overflow during
+     * processing concerns samples not used in this record; UPS faults still
+     * reject the candidate conservatively and trigger next-step recovery. */
     uc_commit();
     trackq_log_iteration++;
-    if ((trackq_log_iteration % 5u) == 0u) {
+    if (!trackq_hybrid_enabled && (trackq_log_iteration % 5u) == 0u) {
         printf("trackq hf binfit: C300=%s%ld.%03ldHz A100=%s%ld.%03ldHz C100=%s%ld.%03ldHz ref=%s%ld.%03ldHz fs=%s%ld.%03ldHz dtemp=%s%s%ld.%03ldC\n",
                bin_vertex_valid_log[0] ? "" : "(na)",
                (long)(corr_vertex_hf_mhz_log[0] / 1000ll), (long)llabs(corr_vertex_hf_mhz_log[0] % 1000ll),
@@ -1729,6 +2260,12 @@ static void trackq_step(void) {
             printf(" nco_inc_ref=(na)");
         printf("\n");
     }
+    if (trackq_observer_enabled)
+        trackq_observer_emit(trackq_log_iteration, bin_vertex_hf_mhz_log,
+            bin_vertex_valid_log, ref_bin_vertex_valid_log, ref_bin_vertex_baseband_mhz_log,
+            fs_valid_log, ref_real_fs_mhz_log, ref_nco_inc_log, crystal_valid_log,
+            &crystal_log, temp_delta_valid_log, temp_delta_mc_log, temp_joint_mc_log,
+            temp_ratio_valid_log, temp_ratio_mc_log);
 }
 
 static void cmd_track3(char *args) {
@@ -1916,8 +2453,8 @@ static void cmd_trackq_start(char *args) {
     uint32_t delta_ch2_hz = tok_delta2 ? (uint32_t)strtoul(tok_delta2, NULL, 0) : trackq_default_delta_hz(1u);
     uint32_t delta_ch3_hz = tok_delta3 ? (uint32_t)strtoul(tok_delta3, NULL, 0) : trackq_default_delta_hz(2u);
 
-    if (!is_pow2_u(n) || n < 8u || n > FFT_MAX_N) {
-        printf("trackq_start requires N to be power-of-2 and <= %u\n", FFT_MAX_N);
+    if (!is_pow2_u(n) || n < TRACKQ_REF_FFT_N || n > FFT_MAX_N) {
+        printf("trackq_start requires N to be power-of-2, >= 64 and <= %u\n", FFT_MAX_N);
         return;
     }
     if (delta_ch1_hz == 0u || delta_ch2_hz == 0u || delta_ch3_hz == 0u) {
@@ -1933,6 +2470,7 @@ static void cmd_trackq_start(char *args) {
         return;
     }
 
+    if (trackq_hybrid_enabled) trackq_hybrid_reset();
     sig3_set_channel_symmetric(0u, center_hz, delta_ch1_hz);
     sig3_set_channel_symmetric(1u, center_hz, delta_ch2_hz);
     sig3_set_channel_symmetric(2u, center_hz, delta_ch3_hz);
@@ -1963,7 +2501,7 @@ static void cmd_trackq_start(char *args) {
         trackq_inc_remainder[i] = 0ll;
     }
 
-    printf("trackq_start: C300=%lu Hz A100=%lu Hz C100=%lu Hz N=%u center=%lu Hz delta={%lu,%lu,%lu} Hz sig3={{%lu,%lu,%lu},{%lu,%lu,%lu},{%lu,%lu,%lu}} Hz interval=1 s\n",
+    printf("trackq_start: C300=%lu Hz A100=%lu Hz C100=%lu Hz N=%u center=%lu Hz delta={%lu,%lu,%lu} Hz sig3={{%lu,%lu,%lu},{%lu,%lu,%lu},{%lu,%lu,%lu}} Hz interval=1 s ref=Hann/log-power FFT64 centered\n",
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(0), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(1), TRACK3_RF_FS_HZ),
            (unsigned long)uc_phase_inc_to_hz(phase_down_read(2), TRACK3_RF_FS_HZ),
@@ -2088,12 +2626,717 @@ static void cmd_trackq_diag(char *args) {
     printf("trackq control diagnostics %s\n", trackq_control_diag ? "enabled" : "disabled");
 }
 
+static void cmd_trackq_observer_diag(char *args) {
+    char *value = strtok(args, " \t");
+    if (!value || strtok(NULL, " \t") || (strcmp(value,"0") && strcmp(value,"1"))) {
+        puts("Usage: trackq_observer_diag <0|1>");
+        return;
+    }
+    trackq_observer_enabled = value[0] == '1';
+    if (trackq_observer_enabled) {
+        ++trackq_observer_session;
+        trackq_observer_capture_id = 0;
+        trackq_observer_last_tick = ce_ticks;
+        trackq_observer_tick_total = 0;
+    }
+    printf("trackq observer config: v=1 enabled=%d session=%lu tick_hz=10000 timestamps=cpu_boundaries estimator=hann_log64_centered\n",
+        trackq_observer_enabled,(unsigned long)trackq_observer_session);
+}
+
 static void cmd_trackq_stop(char *args) {
     (void)args;
+    if (trackq_hybrid_enabled) {
+#if defined(CSR_TIMER0_BASE)
+        ref_fft_timer_release();
+#endif
+        trackq_hybrid_enabled = 0;
+    }
     for (unsigned i = 0; i < TRACKQ_CHANNELS; i++)
         trackq[i].enabled = 0;
     puts("trackq_stop: quadratic tracking disabled on ch1..ch3");
 }
+/* Quiet, finite sweep: buffer results, restore mixer, then print. */
+#define QS_MAX_ROWS 128u
+#define QS_N 2048u
+static struct {
+    uint64_t power[3];
+    uint32_t lo, t_ms, duration_us, flags;
+    uint32_t modal_hash, ref_hash, samples_read;
+    uint32_t center_lo, next_center_lo;
+    unsigned follow_status;
+    int32_t compare_row;
+    uint32_t compare_n, modal_diff_n, modal_max_abs_diff;
+    int32_t modal_min, modal_max;
+    uint32_t lag10_n, lag10_diff_n, lag10_max_abs_diff;
+    int64_t rf_target_mhz;
+    uint32_t ref_updates;
+    int32_t ref_control_mhz;
+    uint64_t power_y, power_iq, ac_x_mcounts2, ac_y_mcounts2;
+    int32_t mean_x_mcounts, mean_y_mcounts, y_min, y_max;
+    int32_t bb_x_mhz, bb_y_mhz;
+    uint32_t bb_x_flags, bb_y_flags;
+    int32_t offset_hz, ref_mhz, det_mhz;
+    int32_t ref_first_mhz, ref_last_mhz;
+    int32_t loop_bb_mhz, loop_ref_mhz, modal_fit_bb_mhz;
+    unsigned vertex_ok;
+    uint32_t ups_wait, ups_capture, ups_process, ups_power, ups_ref;
+} qs_rows[QS_MAX_ROWS];
+
+/* Previous complete modal record at each of the three cycle LO positions.
+ * Static storage avoids putting 12 KiB on the CPU stack. */
+static int16_t qs_cycle_previous[3][QS_N];
+static int32_t qs_cycle_previous_row[3];
+
+/* FNV-1a over raw int16 sample bits, low byte then high byte.
+ * Unsigned wraparound is intentional; no FFT or sample modification. */
+static uint32_t qs_sample_hash(uint32_t hash, int16_t sample) {
+    uint16_t bits = (uint16_t)sample;
+    hash = (hash ^ (uint32_t)(bits & 255u)) * 16777619u;
+    return (hash ^ (uint32_t)(bits >> 8)) * 16777619u;
+}
+
+static unsigned qs_flags(void) {
+    return (main_ds_fifo_overflow_read() ? 1u : 0u) |
+           (main_ds_fifo_underflow_read() ? 2u : 0u) |
+           (main_ups_fifo_overflow_read() ? 4u : 0u) |
+           (main_ups_fifo_underflow_read() ? 8u : 0u);
+}
+
+static int qs_wait_sample(void) {
+    uint64_t start = ref_fft_cycles();
+    while (!(main_ds_fifo_flags_read() & 1u)) {
+        track3_service_background_budget(4u);
+        if (ref_fft_cycles() - start > CONFIG_CLOCK_FREQUENCY / 2u) return 0;
+    }
+    return 1;
+}
+
+static int qs_drain(void) {
+    for (unsigned i = 0; i < 65536u; ++i) {
+        if (!(main_ds_fifo_flags_read() & 1u)) return 1;
+        main_ds_fifo_pop_write(1);
+        (void)main_ds_fifo_yref_read();
+        track3_service_background_budget(4u);
+    }
+    return 0;
+}
+
+/* Return the preceding phase's UPS flags, then start a new interval.
+ * A short serviced delay lets clear/status synchronize across clock domains.
+ * These are interval flags, not counts of starvation events. */
+static unsigned qs_ups_boundary(void) {
+    unsigned flags = qs_flags() & 12u;
+    main_ups_fifo_clear_write(1);
+    uint64_t until = ref_fft_cycles() + CONFIG_CLOCK_FREQUENCY/100000u;
+    while (ref_fft_cycles() < until) track3_service_background_budget(4u);
+    return flags;
+}
+
+/* Explicit physical RF center for the reference-controlled single sweep. */
+static uint32_t qs_ref_center_hz;
+static int16_t qs_ref_control_samples[64];
+
+/* Shared physical-axis model. Software DDS rate scales with DSP fs/6500. */
+static int qs_ref_drive_model(uint32_t lo, uint32_t tone_inc, uint32_t ref_lo,
+                              int64_t ref_mhz, double *fs_out, double *rf_out) {
+    double fs=0.0;
+    if (!ref_reconstruct_fs(ref_lo,ref_mhz,&fs)) return 0;
+    *fs_out = fs;
+    *rf_out = ((double)lo/(double)(1ul<<26) +
+               (double)tone_inc/(4294967296.0*6500.0))*fs;
+    return 1;
+}
+
+/* Fresh reference-only record during settling; no UART and no modal FFT. */
+static int qs_ref_control_measure(int64_t *ref) {
+    if (!qs_drain()) return 0;
+    for (unsigned i = 0; i < 64u; ++i) {
+        if (!qs_wait_sample()) return 0;
+        main_ds_fifo_pop_write(1);
+        qs_ref_control_samples[i] = (int16_t)(main_ds_fifo_yref_read() & 0xffffu);
+        track3_service_background_budget(4u);
+    }
+    return ref_fft_hann_log_estimate_mhz(qs_ref_control_samples, 64u, 0ll, 0u, ref);
+}
+
+/* single: 0=normal, 1=crystal sweep, 2=DAC1 loopback sweep,
+ * 3=repeated fixed triplets, 4=adaptive peak, 5=reference-controlled sweep. */
+static void qs_run(char *args, int fixed, int single) {
+    const int cyclic = single == 3 || single == 4;
+    if (trackq_hybrid_enabled) { puts("Run trackq_hybrid 0 before quiet tests"); return; }
+    uint32_t v[4] = {0u, 0u, 0u, 1000u};
+    if (fixed) { v[1] = fixed == 2 ? 2u : 90u; v[2] = 2000u; }
+    char *tok = strtok(args, " \t"), *end;
+    unsigned argc = 0u;
+    while (tok && argc < 4u) {
+        if (*tok < '0' || *tok > '9') break;
+        unsigned long x = strtoul(tok, &end, 10);
+        if (*end || x > 10000ul) break;
+        v[argc++] = (uint32_t)x;
+        tok = strtok(NULL, " \t");
+    }
+    if (fixed == 2 && (tok || argc != 1u || v[0] < 1u || v[0] > 3u)) {
+        puts("Usage: trackq_check <ch 1..3>");
+        return;
+    }
+    if (fixed) {
+        if (tok || argc < 1u || argc > 3u || v[0] < 1u || v[0] > 3u ||
+            v[1] < 2u || v[1] > QS_MAX_ROWS || v[2] < 100u || v[2] > 5000u) {
+            puts("Usage: trackq_hold <ch 1..3> [samples 2..128=90] [wait_ms 100..5000=2000]");
+            return;
+        }
+        v[3] = v[2];
+    } else if (cyclic) {
+        if (tok || argc < 3u || v[0] < 1u || v[0] > 3u ||
+            v[1] < 1u || v[1] > 2000u || v[2] < 1u || v[2] > QS_MAX_ROWS/6u ||
+            v[3] < 100u || v[3] > 5000u) {
+            puts("Usage: trackq_single_cycle / trackq_single_follow <ch 1..3> <span_Hz 1..2000> <cycles 1..21> [settle_ms 100..5000, default 1000]");
+            return;
+        }
+    } else if (tok || argc < 3u || v[0] < 1u || v[0] > 3u ||
+        v[1] < 1u || v[1] > 2000u || v[2] < 1u ||
+        v[2] > 2u*v[1] || (2u*v[1]) % v[2] ||
+        v[3] < 100u || v[3] > 5000u ||
+        2u*(2u*v[1]/v[2]+1u) > QS_MAX_ROWS) {
+        puts("Usage: trackq_sweep <ch 1..3> <span_Hz 1..2000> <step_Hz> [settle_ms 100..5000, default 1000]; step divides 2*span; <=128 rows including return sweep");
+        return;
+    }
+    unsigned ch = v[0]-1u, points = (fixed || cyclic) ? 0u : 2u*v[1]/v[2]+1u, count = 0u;
+    unsigned total = cyclic ? 6u*v[2] : (fixed ? v[1] : 2u*points);
+    /* Single selected channel only: borrow another stopped mode buffer for Y. */
+    int16_t *modal_y = track_samples[(ch+1u)%TRACKQ_CHANNELS];
+    uint32_t center = sig3_freq_hz[ch][1];
+    uint32_t left = sig3_freq_hz[ch][0], right = sig3_freq_hz[ch][2];
+    if (ref_fft_enabled || fft_fs_hz != 10000u || !sig3_enable ||
+        !sig3_channel_enable[ch] || !sig3_amp[ch] ||
+        center <= left || right <= center || center-left != right-center || right >= 5000u) {
+        puts("trackq_sweep: stop ref_fft; require enabled symmetric triple tones and fft_fs=10000");
+        return;
+    }
+    if (fixed == 3 && (main_input_select_read() != 0u ||
+        main_upsampler_input_mux_read() != 1u || main_output_select_ch2_read() != ch+5u ||
+        center-left < 40u)) {
+        puts("loopback_check: require input_select 0, upsampler_input_mux 1, DAC2 select=channel+4, tone spacing >=40 Hz");
+        return;
+    }
+    if (single && (main_input_select_read() != 0u ||
+        main_upsampler_input_mux_read() != 1u || main_output_select_ch1_read() != 15u)) {
+        puts("single sweep: require input_select 0, upsampler_input_mux 1, output_select_ch1 15; ADC1=crystal response for ST / DAC1 for SL; reference on ADC2");
+        return;
+    }
+    if ((single == 1 || single == 2) && center-left < 40u) {
+        puts("single sweep: configure diagnostic tone spacing >=40 Hz for central FFT search");
+        return;
+    }
+    uint32_t saved_lo = phase_down_read(ch), follow_lo = saved_lo;
+    int64_t step_bound = fixed ? 0ll : (int64_t)uc_phase_inc_from_hz(v[1], TRACK3_RF_FS_HZ);
+    if ((int64_t)saved_lo <= step_bound || (int64_t)saved_lo+step_bound >= (1ll<<25)) {
+        puts("trackq_sweep: mixer sweep exceeds positive RF Nyquist range");
+        return;
+    }
+    if (single == 5 && (v[3] < 1000u || qs_ref_center_hz <= v[1]+center ||
+        qs_ref_center_hz+v[1] >= 32000000u)) {
+        puts("trackq_ref_sweep: require settle_ms >=1000 and physical RF targets inside (center tone,32 MHz)");
+        return;
+    }
+    if (!ref_fft_timer_start()) return;
+    for (unsigned i = 0; i < TRACKQ_CHANNELS; ++i) trackq[i].enabled = 0;
+    if (single) sig3_single_channel = (int)ch;
+    uint32_t ref_lo = main_phase_inc_down_ref_read();
+    uint32_t nco = main_phase_inc_nco_read();
+    if (fixed == 2) {
+        printf("trackq_check: ch=%u lo_inc=%lu drive_raw_mHz=%lld tones=%lu/%lu/%lu Hz; 2 s recovery + two captures (~7 s); tracking stopped\n",
+            ch+1u, (unsigned long)saved_lo,
+            (long long)(uc_phase_inc_to_mhz(saved_lo, TRACK3_RF_FS_HZ) + sig3_phase_inc_to_mhz(sig3_inc[ch][1], 10000u)),
+            (unsigned long)left, (unsigned long)center, (unsigned long)right);
+    } else if (single == 5) {
+        printf("RS2 ch=%u rf_center_Hz=%lu reflo=%lu nco=%lu amp=%d tone_inc=%lu span_Hz=%lu step_Hz=%lu settle_ms=%lu points=%u fs_nom=65000000 ref_hz=%u\n",
+            ch+1u, (unsigned long)qs_ref_center_hz, (unsigned long)ref_lo, (unsigned long)nco,
+            (int)sig3_amp[ch], (unsigned long)sig3_inc[ch][1], (unsigned long)v[1],
+            (unsigned long)v[2], (unsigned long)v[3], total, TRACKQ_REF_INPUT_HZ);
+        puts("RS columns: index,dir,offset_Hz,target_RF_mHz,LO_inc,t_ms,read_us,PC,ref_center_mHz,ref_first_mHz,ref_last_mHz,achieved_RF_center_mHz,achieved_RF_first_mHz,achieved_RF_last_mHz,flags,ref_updates,control_ref_mHz,ups_wait,ups_capture,ups_power,ups_ref,PY,PIQ,mean_X_mcounts,mean_Y_mcounts,min_X,max_X,min_Y,max_Y,AC_X_mcounts2,AC_Y_mcounts2,bb_X_mHz,bb_Y_mHz,bb_X_flags,bb_Y_flags,hash_X,hash_Y,samples_read");
+        puts("RS: reference-controlled single-tone RF sweep; updates about every 100 ms during settling; final 250 ms and capture hold LO; capture reference from same record; flags 1..256 as quiet tests, 4096=control failure 8192=reference endpoint change >10 Hz 16384=achieved target error >5 Hz at any window; RF achievement inferred from reference, not independent measurement; initial LO restored; output buffered");
+    } else if (cyclic) {
+        printf("%s ch=%u base=%lu reflo=%lu nco=%lu amp=%d center_Hz=%lu center_inc=%lu span_Hz=%lu cycles=%lu settle_ms=%lu n=2048 fs_nom=10000 rf_nom=65000000 ref_hz=%u points=%u\n",
+            single == 4 ? "AT2" : "CY4", ch+1u, (unsigned long)saved_lo, (unsigned long)ref_lo, (unsigned long)nco,
+            (int)sig3_amp[ch], (unsigned long)center, (unsigned long)sig3_inc[ch][1],
+            (unsigned long)v[1], (unsigned long)v[2], (unsigned long)v[3], TRACKQ_REF_INPUT_HZ, total);
+        puts("CY columns: index,cycle,dir(0=up/1=down),offset_Hz,LO_inc,t_ms,read_us,PC,ref64_center_mHz,ref64_first_mHz,ref64_last_mHz,flags,ups_wait,ups_capture,ups_power,ups_ref,modal_hash_hex,ref_hash_hex,samples_read,compare_row,compare_n,modal_diff_n,modal_max_abs_diff");
+        puts("CY: sequence -span,0,+span,+span,0,-span; single selected central tone; reference windows from same record; flags 1=DSov 2=DSuf 4=UPSov 8=UPSuf 16=timeout 32=drain 64=center_ref_invalid 128=first_ref_invalid 256=last_ref_invalid; 4 s recovery; output buffered; estimate maxima offline from each triplet; t_ms=capture start");
+    } else {
+    printf("%s ch=%u base=%lu reflo=%lu nco=%lu amp=%d tones=%lu,%lu,%lu inc=%lu,%lu,%lu n=2048 fs=10000 rf=65000000 ref_hz=%u span=%lu step=%lu settle_ms=%lu points=%u\n",
+        fixed == 3 ? "LB1" : (fixed ? "QH3" : (single == 2 ? "SL1" : (single ? "ST2" : "QS1"))), ch+1u, (unsigned long)saved_lo, (unsigned long)ref_lo, (unsigned long)nco,
+        (int)sig3_amp[ch], (unsigned long)left, (unsigned long)center, (unsigned long)right,
+        (unsigned long)sig3_inc[ch][0], (unsigned long)sig3_inc[ch][1], (unsigned long)sig3_inc[ch][2],
+        TRACKQ_REF_INPUT_HZ, (unsigned long)(fixed ? 0u : v[1]), (unsigned long)(fixed ? 0u : v[2]), (unsigned long)v[3], total);
+    puts("QS columns: index,dir(0=up/1=down),offset_Hz,LO_inc,t_ms,read_us,PL,PC,PR,ref_mHz,det_mHz,vertex_ok,flags; flags DSov=1 DSuf=2 UPSov=4 UPSuf=8 timeout=16 drain=32 ref_invalid=64; det=0 unless vertex_ok=1; output buffered until sweep ends");
+    if (fixed) puts("QH uses same columns, dir=2 offset=0; appends ref_first_mHz,ref_last_mHz,ups_wait,ups_capture,ups_process,ups_power,ups_ref; flags 128=first_ref_invalid 256=last_ref_invalid; UPS phase bits 4=overflow 8=underflow; flags aggregate this row; startup logged at end; no LO or NCO writes");
+    }
+    if (single == 1) puts("ST: only selected channel central tone enabled; PL/PR are unexcited diagnostic bands; det/vertex disabled. Appends ref_first_mHz,ref_last_mHz,ups_wait,ups_capture,ups_process,ups_power,ups_ref,ref2048_mHz,response_bb2048_mHz,trackq_binfit_bb_mHz; invalid bits=128/256/1024/512/2048; 4 s FIFO recovery; tone selection and mixer restored before output.");
+    if (single == 2) puts("SL: DAC1 sum output -> ADC1; external reference -> ADC2; only selected central tone active. Appends ref_first_mHz,ref_last_mHz,ups_wait,ups_capture,ups_process,ups_power,ups_ref,dac_bb2048_mHz,ref_bb2048_mHz; invalid bits=128/256/512/1024; det/vertex disabled; 4 s recovery; tone selection and mixer restored before output.");
+    if (fixed == 3) puts("LB appends dac_bb2048_mHz,ref_bb2048_mHz to QH3 columns; flags 512=DAC FFT invalid, 1024=reference FFT2048 invalid; same capture, central tone search limited to +/- delta/3");
+    if (cyclic) puts("CY2 fingerprints: FNV1a32 over ordered raw int16 samples (low byte then high byte); compare complete records only; equal hashes suggest repeated samples but do not prove freshness or duplication");
+    if (cyclic) {
+        puts("CY3 comparison: previous complete record at same LO; compare_row=-1 means no baseline; compare_n=2048 with modal_diff_n=0 means all raw modal samples identical; max_abs_diff in ADC counts; reference hashes remain diagnostic");
+        for (unsigned slot = 0; slot < 3u; ++slot) qs_cycle_previous_row[slot] = -1;
+    }
+    if (single == 4) puts("AT appends center_LO_inc; AP after each complete triplet: last_index,center_LO_inc,next_center_LO_inc,status,peak_offset_mHz; status 0=bad power/capture 1=bracketed fit 2=left strongest 3=right strongest 4=tie 5=travel bound; peak_offset only valid status=1; side move=half span; total travel bounded to +/-2000 nominal Hz; reference not used for steering; original LO restored at end");
+    if (cyclic) puts("Periodicity: five trailing fields modal_min,modal_max,lag10_n,lag10_diff_n,lag10_max_abs_diff; compare x[i] with x[i-10] within same record; complete capture has 2038 pairs; ADC counts; zero lag differences can also mean constant data");
+    if (single == 5) puts("RS2: PC=PX; PY same narrow-band estimator on raw Y; PIQ=PX+PY; means/counts x1000, AC variance counts_squared x1000; bb X/Y from rising-crossing regression (flags 1=few 2=small range 4=period spread 8=slope); added flags 32768=bb offset >10 Hz 65536=X frequency unreliable 131072=Y frequency unreliable 262144=power sum overflow; hashes FNV1a raw samples; no extra capture; LO/NCO control unchanged");
+    uint64_t origin = ref_fft_cycles();
+    unsigned startup_ups = 0u, history_ups = 0u;
+    if (fixed || single) {
+        /* Recover from UART/console starvation before measurement intervals.
+         * Retain old flags for the final startup report; no UART here. */
+        uint64_t until = ref_fft_cycles() + (single ? 4ull : 2ull)*CONFIG_CLOCK_FREQUENCY;
+        while (ref_fft_cycles() < until) {
+            track3_service_background_budget(4u);
+            if (main_ds_fifo_flags_read() & 1u) {
+                main_ds_fifo_pop_write(1);
+                (void)main_ds_fifo_yref_read();
+            }
+        }
+        startup_ups = qs_ups_boundary();
+    }
+    for (unsigned row = 0; row < total; ++row) {
+        unsigned pos = (fixed || cyclic) ? 0u : (row < points ? row : 2u*points-1u-row);
+        int32_t offset = fixed ? 0 : -(int32_t)v[1] + (int32_t)(pos*v[2]);
+        if (cyclic) {
+            static const int8_t order[6] = {-1, 0, 1, 1, 0, -1};
+            offset = (int32_t)order[row % 6u] * (int32_t)v[1];
+        }
+        int64_t di = ((int64_t)offset * (1ll<<26)) / TRACK3_RF_FS_HZ;
+        memset(&qs_rows[row], 0, sizeof(qs_rows[row]));
+        qs_rows[row].compare_row = -1;
+        unsigned compare_slot = offset < 0 ? 0u : (offset > 0 ? 2u : 1u);
+        if (cyclic) qs_rows[row].compare_row = qs_cycle_previous_row[compare_slot];
+        qs_rows[row].center_lo = single == 4 ? follow_lo : saved_lo;
+        qs_rows[row].offset_hz = offset;
+        qs_rows[row].lo = (uint32_t)((int64_t)qs_rows[row].center_lo+di);
+        if (single == 4 && qs_rows[row].compare_row >= 0 &&
+            qs_rows[qs_rows[row].compare_row].lo != qs_rows[row].lo)
+            qs_rows[row].compare_row = -1;
+        if (single == 5) {
+            qs_rows[row].rf_target_mhz = ((int64_t)qs_ref_center_hz+offset)*1000ll;
+            qs_rows[row].lo = phase_down_read(ch);
+        }
+        if (!fixed && single != 5) {
+            phase_down_write(ch, qs_rows[row].lo);
+            uc_commit();
+        }
+        /* Keep software excitation fed during settling. Clear UPS flags here,
+         * retaining any starvation during settling AND acquisition. */
+        if (!fixed && !single) main_ups_fifo_clear_write(1);
+        uint64_t until = ref_fft_cycles() + (uint64_t)v[3]*(CONFIG_CLOCK_FREQUENCY/1000u);
+        uint64_t control_next = ref_fft_cycles();
+        uint32_t control_flags = 0u;
+        while (ref_fft_cycles() < until) {
+            uint64_t now = ref_fft_cycles();
+            if (single == 5 && now < until && now >= control_next &&
+                until-now > CONFIG_CLOCK_FREQUENCY/4u) {
+                int64_t measured = 0;
+                double fs = 0.0, rf = 0.0;
+                if (qs_ref_control_measure(&measured) &&
+                    qs_ref_drive_model(qs_rows[row].lo, sig3_inc[ch][1], ref_lo, measured, &fs, &rf)) {
+                    double desired = ((double)qs_rows[row].rf_target_mhz/1000.0/fs -
+                        (double)sig3_inc[ch][1]/(4294967296.0*6500.0))*(double)(1ul<<26);
+                    if (desired >= 0.5 && desired < (double)(1ul<<25)-0.5) {
+                        qs_rows[row].lo = (uint32_t)(desired+0.5);
+                        phase_down_write(ch, qs_rows[row].lo);
+                        uc_commit();
+                        ++qs_rows[row].ref_updates;
+                        qs_rows[row].ref_control_mhz = (int32_t)measured;
+                    } else control_flags |= 4096u;
+                } else control_flags |= 4096u;
+                control_next = ref_fft_cycles() + CONFIG_CLOCK_FREQUENCY/10u;
+            }
+            track3_service_background_budget(4u);
+            if (main_ds_fifo_flags_read() & 1u) {
+                main_ds_fifo_pop_write(1);
+                (void)main_ds_fifo_yref_read();
+            }
+        }
+        if (!qs_drain()) {
+            qs_rows[row].ups_wait = (fixed || single) ? (qs_flags() & 12u) : 0u;
+            qs_rows[row].flags = 32u | qs_rows[row].ups_wait | control_flags;
+            history_ups |= qs_rows[row].ups_wait;
+            count = row+1u;
+            break;
+        }
+        if (fixed || single) qs_rows[row].ups_wait = qs_ups_boundary();
+        main_ds_fifo_clear_write(1);
+        /* Let the clear pulse and status cross clock domains. */
+        until = ref_fft_cycles() + CONFIG_CLOCK_FREQUENCY/100000u;
+        while (ref_fft_cycles() < until) track3_service_background_budget(4u);
+        uint64_t started = ref_fft_cycles();
+        qs_rows[row].t_ms = (uint32_t)((started-origin)/(CONFIG_CLOCK_FREQUENCY/1000u));
+        unsigned i;
+        int32_t sum_x=0, sum_y=0;
+        int64_t sum_xx=0ll, sum_yy=0ll;
+        if (single == 5) {
+            qs_rows[row].modal_min=32767; qs_rows[row].modal_max=-32768;
+            qs_rows[row].y_min=32767; qs_rows[row].y_max=-32768;
+            qs_rows[row].modal_hash=2166136261u;
+            qs_rows[row].ref_hash=2166136261u; /* RS2 reuses field for modal Y hash. */
+        }
+        if (cyclic) {
+            qs_rows[row].modal_min = 32767;
+            qs_rows[row].modal_max = -32768;
+            qs_rows[row].modal_hash = 2166136261u;
+            qs_rows[row].ref_hash = 2166136261u;
+        }
+        for (i = 0; i < QS_N; ++i) {
+            iq6_frame_t frame;
+            if (!qs_wait_sample()) break;
+            ds_fifo_read_frame(&frame);
+            track_samples[ch][i] = frame.x[ch];
+            track_samples_ref[i] = frame.y[5];
+            if (single == 5) {
+                int32_t x=frame.x[ch], y=frame.y[ch];
+                modal_y[i]=(int16_t)y;
+                sum_x+=x; sum_y+=y;
+                sum_xx+=(int64_t)x*x; sum_yy+=(int64_t)y*y;
+                if (x<qs_rows[row].modal_min) qs_rows[row].modal_min=x;
+                if (x>qs_rows[row].modal_max) qs_rows[row].modal_max=x;
+                if (y<qs_rows[row].y_min) qs_rows[row].y_min=y;
+                if (y>qs_rows[row].y_max) qs_rows[row].y_max=y;
+                qs_rows[row].modal_hash=qs_sample_hash(qs_rows[row].modal_hash,(int16_t)x);
+                qs_rows[row].ref_hash=qs_sample_hash(qs_rows[row].ref_hash,(int16_t)y);
+            }
+            if (cyclic) {
+                int16_t sample = track_samples[ch][i];
+                if ((int32_t)sample < qs_rows[row].modal_min) qs_rows[row].modal_min = sample;
+                if ((int32_t)sample > qs_rows[row].modal_max) qs_rows[row].modal_max = sample;
+                if (i >= 10u) {
+                    int32_t diff = (int32_t)sample - (int32_t)track_samples[ch][i-10u];
+                    uint32_t magnitude = (uint32_t)(diff < 0 ? -diff : diff);
+                    ++qs_rows[row].lag10_n;
+                    if (magnitude) ++qs_rows[row].lag10_diff_n;
+                    if (magnitude > qs_rows[row].lag10_max_abs_diff)
+                        qs_rows[row].lag10_max_abs_diff = magnitude;
+                }
+                if (qs_rows[row].compare_row >= 0) {
+                    int32_t diff = (int32_t)sample - (int32_t)qs_cycle_previous[compare_slot][i];
+                    uint32_t magnitude = (uint32_t)(diff < 0 ? -diff : diff);
+                    ++qs_rows[row].compare_n;
+                    if (magnitude) ++qs_rows[row].modal_diff_n;
+                    if (magnitude > qs_rows[row].modal_max_abs_diff)
+                        qs_rows[row].modal_max_abs_diff = magnitude;
+                }
+                qs_cycle_previous[compare_slot][i] = sample;
+                qs_rows[row].modal_hash = qs_sample_hash(qs_rows[row].modal_hash, track_samples[ch][i]);
+                qs_rows[row].ref_hash = qs_sample_hash(qs_rows[row].ref_hash, track_samples_ref[i]);
+            }
+            track3_service_background_budget(4u);
+        }
+        if (cyclic)
+            qs_cycle_previous_row[compare_slot] = i == QS_N ? (int32_t)row : -1;
+        qs_rows[row].samples_read = i;
+        qs_rows[row].duration_us = (uint32_t)((ref_fft_cycles()-started)/(CONFIG_CLOCK_FREQUENCY/1000000u));
+        qs_rows[row].flags = qs_flags() | (i == QS_N ? 0u : 16u) | control_flags;
+        if (fixed || single) {
+            qs_rows[row].ups_capture = qs_ups_boundary();
+            qs_rows[row].flags |= qs_rows[row].ups_wait | qs_rows[row].ups_capture;
+            history_ups |= qs_rows[row].ups_wait | qs_rows[row].ups_capture;
+        }
+        count = row+1u;
+        if (i != QS_N) break;
+        qs_prime_excitation();
+        if (!cyclic && single != 5)
+            qs_rows[row].power[0] = track_band_power_at_hz_samples(track_samples[ch], left, QS_N);
+        qs_rows[row].power[1] = track_band_power_at_hz_samples(track_samples[ch], center, QS_N);
+        if (single == 5) {
+            qs_rows[row].power_y=track_band_power_at_hz_samples(modal_y,center,QS_N);
+            uint64_t px=qs_rows[row].power[1], py=qs_rows[row].power_y;
+            if (UINT64_MAX-px<py) {
+                qs_rows[row].flags |= 262144u;
+                qs_rows[row].power_iq=UINT64_MAX;
+            } else qs_rows[row].power_iq=px+py;
+            qs_rows[row].mean_x_mcounts=(int32_t)(((int64_t)sum_x*1000ll)/QS_N);
+            qs_rows[row].mean_y_mcounts=(int32_t)(((int64_t)sum_y*1000ll)/QS_N);
+            /* Full int16 range: variance numerator *1000 fits signed int64. */
+            qs_rows[row].ac_x_mcounts2=(uint64_t)(((sum_xx*QS_N-(int64_t)sum_x*sum_x)*1000ll)/((int64_t)QS_N*QS_N));
+            qs_rows[row].ac_y_mcounts2=(uint64_t)(((sum_yy*QS_N-(int64_t)sum_y*sum_y)*1000ll)/((int64_t)QS_N*QS_N));
+            int64_t measured=0ll;
+            struct ref_zc_diag diagnostic;
+            int valid=ref_zc_estimate_mhz(track_samples[ch],QS_N,&measured,&diagnostic);
+            qs_rows[row].bb_x_flags=diagnostic.flags;
+            if (valid) qs_rows[row].bb_x_mhz=(int32_t)measured;
+            if (!valid || diagnostic.flags) qs_rows[row].flags |= 65536u;
+            if (valid && (measured < (int64_t)center*1000ll-10000ll ||
+                          measured > (int64_t)center*1000ll+10000ll)) qs_rows[row].flags |= 32768u;
+            valid=ref_zc_estimate_mhz(modal_y,QS_N,&measured,&diagnostic);
+            qs_rows[row].bb_y_flags=diagnostic.flags;
+            if (valid) qs_rows[row].bb_y_mhz=(int32_t)measured;
+            if (!valid || diagnostic.flags) qs_rows[row].flags |= 131072u;
+            if (valid && (measured < (int64_t)center*1000ll-10000ll ||
+                          measured > (int64_t)center*1000ll+10000ll)) qs_rows[row].flags |= 32768u;
+        }
+        if (!cyclic && single != 5)
+            qs_rows[row].power[2] = track_band_power_at_hz_samples(track_samples[ch], right, QS_N);
+        double l = trackq_observer_power_double(qs_rows[row].power[0]);
+        double c = trackq_observer_power_double(qs_rows[row].power[1]);
+        double r = trackq_observer_power_double(qs_rows[row].power[2]);
+        double den = l-2.0*c+r;
+        if (!single && c > l && c > r && den < 0.0) {
+            double det = (double)(center-left)*(l-r)/(2.0*den);
+            if (det >= -(double)(center-left) && det <= (double)(center-left)) {
+                qs_rows[row].vertex_ok = 1u;
+                qs_rows[row].det_mhz = (int32_t)(det*1000.0);
+            }
+        }
+        if (fixed || single) qs_rows[row].ups_power = qs_ups_boundary();
+        int64_t ref = 0;
+        track3_service_background_budget(16u);
+        if (ref_fft_hann_log_estimate_mhz(track_samples_ref+(QS_N-64u)/2u, 64u, 0ll, 0u, &ref))
+            qs_rows[row].ref_mhz = (int32_t)ref;
+        else qs_rows[row].flags |= 64u;
+        track3_service_background_budget(16u);
+        if (fixed || single) {
+            /* Same record: endpoint windows expose changes hidden by the
+             * centered reference estimate; no extra acquisition. */
+            if (ref_fft_hann_log_estimate_mhz(track_samples_ref, 64u, 0ll, 0u, &ref))
+                qs_rows[row].ref_first_mhz = (int32_t)ref;
+            else qs_rows[row].flags |= 128u;
+            track3_service_background_budget(16u);
+            if (ref_fft_hann_log_estimate_mhz(track_samples_ref+QS_N-64u, 64u, 0ll, 0u, &ref))
+                qs_rows[row].ref_last_mhz = (int32_t)ref;
+            else qs_rows[row].flags |= 256u;
+            track3_service_background_budget(16u);
+            if (fixed == 3 || single == 1 || single == 2) {
+                int64_t measured = 0;
+                unsigned width = (center-left)/3u;
+                if (ref_fft_hann_log_estimate_mhz(track_samples[ch], QS_N,
+                        (int64_t)center*1000ll, width, &measured) &&
+                    measured >= (int64_t)(center-width)*1000ll &&
+                    measured <= (int64_t)(center+width)*1000ll)
+                    qs_rows[row].loop_bb_mhz = (int32_t)measured;
+                else qs_rows[row].flags |= 512u;
+                track3_service_background_budget(16u);
+                if (ref_fft_hann_log_estimate_mhz(track_samples_ref, QS_N, 0ll, 0u, &measured))
+                    qs_rows[row].loop_ref_mhz = (int32_t)measured;
+                else qs_rows[row].flags |= 1024u;
+                track3_service_background_budget(16u);
+            }
+            if (single == 1) {
+                /* Test the actual tracking estimator, not only Hann/log FFT.
+                 * Both use the same untouched time-domain modal record. */
+                int64_t measured = 0;
+                qs_prime_excitation();
+                if (trackq_bin_vertex_estimate_mhz(track_samples[ch], center, QS_N, &measured))
+                    qs_rows[row].modal_fit_bb_mhz = (int32_t)measured;
+                else qs_rows[row].flags |= 2048u;
+                track3_service_background_budget(16u);
+            }
+            qs_rows[row].ups_ref = qs_ups_boundary();
+            qs_rows[row].ups_process = qs_rows[row].ups_power | qs_rows[row].ups_ref;
+            qs_rows[row].flags |= qs_rows[row].ups_process;
+            history_ups |= qs_rows[row].ups_process;
+        }
+        if (single == 5) {
+            int32_t refs[3] = {qs_rows[row].ref_mhz, qs_rows[row].ref_first_mhz, qs_rows[row].ref_last_mhz};
+            if (!qs_rows[row].ref_updates) qs_rows[row].flags |= 4096u;
+            if (!(qs_rows[row].flags & (64u|128u|256u))) {
+                int64_t delta = (int64_t)refs[2]-refs[1];
+                if (delta > 10000ll || delta < -10000ll) qs_rows[row].flags |= 8192u;
+                for (unsigned j = 0; j < 3u; ++j) {
+                    double fs = 0.0, rf = 0.0;
+                    if (!qs_ref_drive_model(qs_rows[row].lo, sig3_inc[ch][1], ref_lo, refs[j], &fs, &rf)) {
+                        qs_rows[row].flags |= 4096u;
+                        continue;
+                    }
+                    double error = rf - (double)qs_rows[row].rf_target_mhz/1000.0;
+                    if (error > 5.0 || error < -5.0) qs_rows[row].flags |= 16384u;
+                }
+            }
+        }
+        if (single == 4 && row % 3u == 2u) {
+            unsigned first = row-2u, middle = row-1u;
+            unsigned li = (row%6u == 2u) ? first : row;
+            unsigned ri = (row%6u == 2u) ? row : first;
+            double pl = trackq_observer_power_double(qs_rows[li].power[1]);
+            double pc = trackq_observer_power_double(qs_rows[middle].power[1]);
+            double pr = trackq_observer_power_double(qs_rows[ri].power[1]);
+            unsigned faults = (qs_rows[first].flags | qs_rows[middle].flags | qs_rows[row].flags) & 63u;
+            double spacing_inc = (double)(qs_rows[ri].lo - qs_rows[middle].lo);
+            double correction_inc = 0.0;
+            unsigned status = 0u;
+            if (!faults && pl > 0.0 && pc > 0.0 && pr > 0.0 && spacing_inc > 0.0) {
+                double den = pl-2.0*pc+pr;
+                if (pc > pl && pc > pr && den < 0.0) {
+                    correction_inc = spacing_inc*(pl-pr)/(2.0*den);
+                    status = 1u;
+                    qs_rows[row].det_mhz = (int32_t)(correction_inc * (double)TRACK3_RF_FS_HZ * 1000.0 / (double)(1ul<<26));
+                    qs_rows[row].vertex_ok = 1u;
+                } else if (pl > pc && pl > pr) {
+                    correction_inc = -spacing_inc/2.0;
+                    status = 2u;
+                } else if (pr > pc && pr > pl) {
+                    correction_inc = spacing_inc/2.0;
+                    status = 3u;
+                } else status = 4u;
+            }
+            /* Strict center dominance bounds a fitted move to half a span.
+             * Round to the RF accumulator's integer resolution. */
+            int64_t move = (int64_t)(correction_inc + (correction_inc >= 0.0 ? 0.5 : -0.5));
+            int64_t next = (int64_t)follow_lo + move;
+            int64_t bound = ((int64_t)2000*(1ll<<26))/TRACK3_RF_FS_HZ;
+            int64_t span_inc = ((int64_t)v[1]*(1ll<<26))/TRACK3_RF_FS_HZ;
+            if (next-(int64_t)saved_lo > bound || (int64_t)saved_lo-next > bound ||
+                next <= span_inc || next+span_inc >= (1ll<<25)) {
+                status = 5u;
+                next = follow_lo;
+            }
+            qs_rows[row].follow_status = status;
+            follow_lo = (uint32_t)next;
+            qs_rows[row].next_center_lo = follow_lo;
+        }
+    }
+    if (!fixed) {
+        phase_down_write(ch, saved_lo);
+        uc_commit();
+    }
+    if (single) {
+        sig3_single_channel = -1;
+        /* Flush queued single-tone frames by continuing normal excitation.
+         * FIFO capacity is 16384 frames (1.6384 s nominal). */
+        uint64_t until = ref_fft_cycles() + 4ull*CONFIG_CLOCK_FREQUENCY;
+        while (ref_fft_cycles() < until) track3_service_background_budget(4u);
+    }
+    #if defined(CSR_TIMER0_BASE)
+    ref_fft_timer_release();
+    #endif
+    if (fixed == 2) {
+        for (unsigned i = 0; i < count; ++i) {
+            uint64_t l = qs_rows[i].power[0], c = qs_rows[i].power[1], r = qs_rows[i].power[2];
+            unsigned usable = (qs_rows[i].flags & 63u) == 0u && (l || c || r);
+            const char *peak = !(l || c || r) ? "none" :
+                (c > l && c > r) ? "center" :
+                (l > c && l > r) ? "left" :
+                (r > l && r > c) ? "right" : "tie";
+            printf("check ch=%u sample=%u PL=%llu PC=%llu PR=%llu peak=%s center_max=%s measurement=%s flags=%lu ups_wait=%lu ups_capture=%lu ups_process=%lu ups_power=%lu ups_ref=%lu\n",
+                ch+1u, i+1u, (unsigned long long)l, (unsigned long long)c,
+                (unsigned long long)r, peak, !(l || c || r) ? "unavailable" :
+                (c > l && c > r) ? "yes" : "no", usable ? "ok" : "unverified",
+                (unsigned long)qs_rows[i].flags, (unsigned long)qs_rows[i].ups_wait,
+                (unsigned long)qs_rows[i].ups_capture, (unsigned long)qs_rows[i].ups_process,
+                (unsigned long)qs_rows[i].ups_power, (unsigned long)qs_rows[i].ups_ref);
+            track3_service_background_budget(16u);
+        }
+        printf("check startup_ups=%u history_ups=%u (bit 4=overflow, 8=underflow; startup includes pre-test history)\n", startup_ups, history_ups);
+        puts("trackq_check done: tracking remains stopped; flags bits 1/2=DS ov/uf, 4/8=UPS ov/uf, 16=timeout, 32=drain; reference-only flags do not invalidate power comparison");
+        return;
+    }
+    for (unsigned i = 0; i < count; ++i) {
+        if (single == 5) {
+            int32_t refs[3] = {qs_rows[i].ref_mhz, qs_rows[i].ref_first_mhz, qs_rows[i].ref_last_mhz};
+            int64_t achieved[3] = {0ll,0ll,0ll};
+            unsigned invalid[3] = {64u,128u,256u};
+            for (unsigned j=0; j<3u; ++j) {
+                double fs=0.0, rf=0.0;
+                if (!(qs_rows[i].flags & (16u|32u|invalid[j])) &&
+                    qs_ref_drive_model(qs_rows[i].lo, sig3_inc[ch][1], ref_lo, refs[j], &fs, &rf))
+                    achieved[j] = (int64_t)(rf*1000.0+0.5);
+            }
+            printf("RS,%u,%u,%ld,%lld,%lu,%lu,%lu,%llu,%ld,%ld,%ld,%lld,%lld,%lld,%lu,%lu,%ld,%lu,%lu,%lu,%lu",
+                i, i<points ? 0u : 1u, (long)qs_rows[i].offset_hz,
+                (long long)qs_rows[i].rf_target_mhz, (unsigned long)qs_rows[i].lo,
+                (unsigned long)qs_rows[i].t_ms, (unsigned long)qs_rows[i].duration_us,
+                (unsigned long long)qs_rows[i].power[1], (long)refs[0], (long)refs[1], (long)refs[2],
+                (long long)achieved[0], (long long)achieved[1], (long long)achieved[2],
+                (unsigned long)qs_rows[i].flags, (unsigned long)qs_rows[i].ref_updates,
+                (long)qs_rows[i].ref_control_mhz, (unsigned long)qs_rows[i].ups_wait,
+                (unsigned long)qs_rows[i].ups_capture, (unsigned long)qs_rows[i].ups_power,
+                (unsigned long)qs_rows[i].ups_ref);
+            printf(",%llu,%llu,%ld,%ld,%ld,%ld,%ld,%ld,%llu,%llu,%ld,%ld,%lu,%lu,%08lx,%08lx,%lu\n",
+                (unsigned long long)qs_rows[i].power_y,(unsigned long long)qs_rows[i].power_iq,
+                (long)qs_rows[i].mean_x_mcounts,(long)qs_rows[i].mean_y_mcounts,
+                (long)qs_rows[i].modal_min,(long)qs_rows[i].modal_max,
+                (long)qs_rows[i].y_min,(long)qs_rows[i].y_max,
+                (unsigned long long)qs_rows[i].ac_x_mcounts2,(unsigned long long)qs_rows[i].ac_y_mcounts2,
+                (long)qs_rows[i].bb_x_mhz,(long)qs_rows[i].bb_y_mhz,
+                (unsigned long)qs_rows[i].bb_x_flags,(unsigned long)qs_rows[i].bb_y_flags,
+                (unsigned long)qs_rows[i].modal_hash,(unsigned long)qs_rows[i].ref_hash,
+                (unsigned long)qs_rows[i].samples_read);
+            track3_service_background_budget(16u);
+            continue;
+        }
+        if (cyclic) {
+            printf("%s,%u,%u,%u,%ld,%lu,%lu,%lu,%llu,%ld,%ld,%ld,%lu,%lu,%lu,%lu,%lu,%08lx,%08lx,%lu,%ld,%lu,%lu,%lu",
+                single == 4 ? "AT" : "CY", i, i/6u, (i%6u)/3u, (long)qs_rows[i].offset_hz,
+                (unsigned long)qs_rows[i].lo, (unsigned long)qs_rows[i].t_ms,
+                (unsigned long)qs_rows[i].duration_us, (unsigned long long)qs_rows[i].power[1],
+                (long)qs_rows[i].ref_mhz, (long)qs_rows[i].ref_first_mhz, (long)qs_rows[i].ref_last_mhz,
+                (unsigned long)qs_rows[i].flags, (unsigned long)qs_rows[i].ups_wait,
+                (unsigned long)qs_rows[i].ups_capture, (unsigned long)qs_rows[i].ups_power,
+                (unsigned long)qs_rows[i].ups_ref, (unsigned long)qs_rows[i].modal_hash,
+                (unsigned long)qs_rows[i].ref_hash, (unsigned long)qs_rows[i].samples_read,
+                (long)qs_rows[i].compare_row, (unsigned long)qs_rows[i].compare_n,
+                (unsigned long)qs_rows[i].modal_diff_n, (unsigned long)qs_rows[i].modal_max_abs_diff);
+            if (single == 4) printf(",%lu", (unsigned long)qs_rows[i].center_lo);
+            printf(",%ld,%ld,%lu,%lu,%lu", (long)qs_rows[i].modal_min,
+                (long)qs_rows[i].modal_max, (unsigned long)qs_rows[i].lag10_n,
+                (unsigned long)qs_rows[i].lag10_diff_n, (unsigned long)qs_rows[i].lag10_max_abs_diff);
+            puts("");
+            if (single == 4 && i%3u == 2u)
+                printf("AP,%u,%lu,%lu,%u,%ld\n", i, (unsigned long)qs_rows[i].center_lo,
+                    (unsigned long)qs_rows[i].next_center_lo, qs_rows[i].follow_status,
+                    (long)qs_rows[i].det_mhz);
+            track3_service_background_budget(16u);
+            continue;
+        }
+        printf("%s,%u,%u,%ld,%lu,%lu,%lu,%llu,%llu,%llu,%ld,%ld,%u,%lu",
+            fixed == 3 ? "LB" : (fixed ? "QH" : (single == 2 ? "SL" : (single ? "ST" : "QS"))), i, fixed ? 2u : (i < points ? 0u : 1u), (long)qs_rows[i].offset_hz,
+            (unsigned long)qs_rows[i].lo, (unsigned long)qs_rows[i].t_ms,
+            (unsigned long)qs_rows[i].duration_us,
+            (unsigned long long)qs_rows[i].power[0], (unsigned long long)qs_rows[i].power[1],
+            (unsigned long long)qs_rows[i].power[2], (long)qs_rows[i].ref_mhz,
+            (long)qs_rows[i].det_mhz, qs_rows[i].vertex_ok, (unsigned long)qs_rows[i].flags);
+        if (fixed || single) printf(",%ld,%ld,%lu,%lu,%lu,%lu,%lu", (long)qs_rows[i].ref_first_mhz, (long)qs_rows[i].ref_last_mhz,
+            (unsigned long)qs_rows[i].ups_wait, (unsigned long)qs_rows[i].ups_capture, (unsigned long)qs_rows[i].ups_process,
+                (unsigned long)qs_rows[i].ups_power, (unsigned long)qs_rows[i].ups_ref);
+        if (fixed == 3 || single == 2) printf(",%ld,%ld", (long)qs_rows[i].loop_bb_mhz, (long)qs_rows[i].loop_ref_mhz);
+        if (single == 1) printf(",%ld,%ld,%ld", (long)qs_rows[i].loop_ref_mhz,
+            (long)qs_rows[i].loop_bb_mhz, (long)qs_rows[i].modal_fit_bb_mhz);
+        puts("");
+        track3_service_background_budget(16u);
+    }
+    if (fixed || single) printf("QH diagnostics: startup_ups=%u history_ups=%u\n", startup_ups, history_ups);
+    puts(fixed ? "QH end: fixed mixer retained; trackq remains stopped; NCO unchanged" : "QS end: mixer restored; trackq remains stopped; NCO unchanged");
+}
+
+static void cmd_trackq_ref_sweep(char *args) {
+    uint32_t values[5] = {0u,0u,0u,0u,4000u};
+    unsigned argc=0u;
+    char *tok=strtok(args, " \t"), *end;
+    while (tok && argc<5u) {
+        if (*tok<'0' || *tok>'9') break;
+        unsigned long value=strtoul(tok,&end,10);
+        if (*end || value>32000000ul) break;
+        values[argc++]=(uint32_t)value;
+        tok=strtok(NULL," \t");
+    }
+    if (tok || argc<4u || values[0]<1u || values[0]>3u ||
+        values[1]<10000u || values[1]>=32000000u) {
+        puts("Usage: trackq_ref_sweep <ch 1..3> <physical_center_RF_Hz> <span_Hz> <step_Hz> [settle_ms 1000..5000, default 4000]");
+        return;
+    }
+    qs_ref_center_hz=values[1];
+    char normalized[80];
+    snprintf(normalized,sizeof(normalized),"%lu %lu %lu %lu", (unsigned long)values[0],
+        (unsigned long)values[2],(unsigned long)values[3],(unsigned long)values[4]);
+    qs_run(normalized,0,5);
+}
+
+static void cmd_loopback_single_sweep(char *args) { qs_run(args, 0, 2); }
+static void cmd_trackq_single_sweep(char *args) { qs_run(args, 0, 1); }
+static void cmd_trackq_single_cycle(char *args) { qs_run(args, 0, 3); }
+static void cmd_trackq_single_follow(char *args) { qs_run(args, 0, 4); }
+static void cmd_trackq_sweep(char *args) { qs_run(args, 0, 0); }
+static void cmd_trackq_hold(char *args) { qs_run(args, 1, 0); }
+static void cmd_trackq_check(char *args) { qs_run(args, 2, 0); }
+static void cmd_loopback_check(char *args) { qs_run(args, 3, 0); }
+
 static void cmd_fft64_peak(char *args) {
     (void)args;
 
@@ -2239,8 +3482,19 @@ static void uc_help(char *args) {
     puts("  trackq_probe [N] [center_hz] [delta_hz]");
     puts("  trackq_stop                 (stop 3-point quadratic tracking)");
     puts("  trackq_deadband [ch pct]    (show/set side deadband; ch 1..3, percent 0..100)");
+    puts("  trackq_check <ch 1..3> (two quiet captures; compare three powers)");
+    puts("  loopback_check <ch> [samples=90] [wait_ms=2000] (DAC2 to ADC1 vs reference)");
+    puts("  trackq_hold <ch> [samples=90] [wait_ms=2000] (quiet fixed mixer test)");
+    puts("  loopback_single_sweep <ch> <span_Hz> <step_Hz> [settle_ms] (DAC1 to ADC1, central tone FFT) ");
+    puts("  trackq_ref_sweep <ch> <physical_center_RF_Hz> <span_Hz> <step_Hz> [settle_ms=4000]");
+    puts("  trackq_single_follow <ch> <span_Hz> <cycles> [settle_ms] (quiet adaptive amplitude peak test)");
+    puts("  trackq_single_cycle <ch> <span_Hz> <cycles> [settle_ms] (repeated quiet single-tone triplets)");
+    puts("  trackq_single_sweep <ch> <span_Hz> <step_Hz> [settle_ms] (central tone only, settings restored)");
+    puts("  trackq_sweep <ch> <span_Hz> <step_Hz> [settle_ms] (quiet buffered sweep)");
+    puts("  trackq_observer_diag <0|1> (coherent observer measurements; default off)");
+    puts("  trackq_hybrid <0|1>       (shadow synthesis, tau=30 s, compact 5 s log)");
     puts("  trackq_diag <0|1>          (per-update powers and requested/applied correction)");
-    puts("  ref_fft_start               (stop trackq; log reference FFT64 and FFT2048 every second)");
+    puts("  ref_fft_start               (stop trackq; compare reference FFT64/FFT2048/ZC2048)");
     puts("  ref_fft_stop                (stop reference-only measurement)");
 
     puts("  cap_arm              (pulse arm capture)");
@@ -3143,10 +4397,21 @@ static const struct cmd_entry uc_tbl[] = {
     {"track3",               cmd_track3,              "Sweep phase_down_<ch> until the 3-tone pattern is found"},
     {"trackq_start",         cmd_trackq_start,        "Start 3-point quadratic tracking: trackq_start <C300_mixer_hz> <A100_mixer_hz> <C100_mixer_hz> [N] [center] [delta1] [delta2] [delta3]"},
     {"trackq_probe",         cmd_trackq_probe,        "Capture one 3-point tracking snapshot"},
+    {"loopback_single_sweep", cmd_loopback_single_sweep, "DAC1 to ADC1 single-tone sweep: <ch> <span_Hz> <step_Hz> [settle_ms]"},
+    {"trackq_ref_sweep", cmd_trackq_ref_sweep, "Reference-controlled RF sweep: <ch> <center_RF_Hz> <span_Hz> <step_Hz> [settle_ms]"},
+    {"trackq_single_follow", cmd_trackq_single_follow, "Quiet adaptive peak: <ch> <span_Hz> <cycles 1..21> [settle_ms]"},
+    {"trackq_single_cycle", cmd_trackq_single_cycle, "Quiet repeated triplets: <ch> <span_Hz> <cycles 1..21> [settle_ms]"},
+    {"trackq_single_sweep", cmd_trackq_single_sweep, "Quiet single-tone up/down sweep: <ch> <span_Hz> <step_Hz> [settle_ms]"},
+    {"trackq_sweep",         cmd_trackq_sweep,        "Quiet buffered up/down sweep: <ch> <span_Hz> <step_Hz> [settle_ms]"},
+    {"trackq_hold",          cmd_trackq_hold,         "Quiet fixed mixer test: <ch> [samples=90] [wait_ms=2000]"},
+    {"loopback_check",       cmd_loopback_check,      "DAC2 to ADC1 vs reference: <ch> [samples=90] [wait_ms=2000]"},
+    {"trackq_check",         cmd_trackq_check,        "Check three powers near resonance: <ch 1..3>"},
     {"trackq_stop",          cmd_trackq_stop,         "Stop 3-point quadratic tracking"},
     {"trackq_deadband",      cmd_trackq_deadband,     "Show/set fallback deadband: [channel 1..3] [percent 0..100]"},
+    {"trackq_observer_diag", cmd_trackq_observer_diag, "Enable coherent observer measurements: 0|1"},
+    {"trackq_hybrid", cmd_trackq_hybrid, "Shadow C300 temperature/reference synthesis experiment: 0|1"},
     {"trackq_diag",          cmd_trackq_diag,         "Enable/disable per-update tracking decisions: 0|1"},
-    {"ref_fft_start",        cmd_ref_fft_start,       "Measure reference BB with FFT64/FFT2048 every second; stops trackq"},
+    {"ref_fft_start",        cmd_ref_fft_start,       "Compare reference FFT64/FFT2048/time-domain crossings every second; stops trackq"},
     {"ref_fft_stop",         cmd_ref_fft_stop,        "Stop reference FFT comparison"},
 
     {"gain1",                cmd_gain1,               "Set gain1"},
