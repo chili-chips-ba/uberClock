@@ -24,6 +24,8 @@ Design intent:
 
 from __future__ import annotations
 
+import os
+
 from migen import *
 from litex.gen import *
 
@@ -107,6 +109,65 @@ class BaseSoC(SoCCore):
         kwargs.setdefault("uart_name", "serial")
 
         platform = alinx_ax7203.Platform(toolchain=toolchain)
+
+        if toolchain in ("openxc7", "yosys+nextpnr"):
+            # LiteX hardcodes "--placer sa" with no CLI override. On this
+            # design's LUT-dense fracturable-LUT packing (VexRiscv + DSP
+            # chain), the SA placer's post-placement fixupPlacement pass can
+            # leave a LUT5/LUT6 pair unbound to any BEL when it can't legalize
+            # the pairing ("fixupPlacement: slot with N unique inputs (>6):
+            # ... skip"), which then fails routing with
+            # "No wire found for port O6 on source cell ...". The heap
+            # placer does not hit this failure mode.
+            # TEMPORARY (env-gated): allow overriding the placer choice
+            # while bisecting nextpnr-xilinx placement-legality bugs
+            # (sa: fracturable-LUT-pair fixupPlacement bug; heap: CARRY4
+            # legalization bug on abc9's alumacc/replace_alu shapes -- see
+            # docs/openxc7_port/main.tex).
+            _placer = os.environ.get("OPENXC7_PLACER", "heap")
+            platform.toolchain._pnr_opts = platform.toolchain._pnr_opts.replace(
+                "--placer sa", f"--placer {_placer}"
+            )
+
+            # LiteX's default synth_opts include "-flatten". synth_xilinx
+            # applies that flatten in its "prepare:" stage, i.e. before any
+            # of the optimization passes (opt_muxtree, opt_reduce, DSP/BRAM
+            # mapping, LUT mapping, ...). This design instantiates ~11
+            # near-identical rx/tx channel modules (CORDIC + CIC/HB filter
+            # chains); flattening before optimization makes Yosys re-run
+            # that whole optimization pipeline on ~11x the cells instead of
+            # optimizing each unique module once, turning synthesis from
+            # minutes into a multi-hour run. Keep hierarchy through
+            # synth_xilinx and flatten only right before nextpnr's
+            # required-flat JSON output.
+            platform.toolchain._synth_opts = platform.toolchain._synth_opts.replace(
+                "-flatten ", ""
+            )
+            platform.toolchain._yosys_template = [
+                "verilog_defaults -push",
+                "verilog_defaults -add -defer",
+                "{read_files}",
+                "verilog_defaults -pop",
+                "attrmap -tocase keep -imap keep=\"true\" keep=1 -imap keep=\"false\" keep=0 -remove keep=0",
+                "{yosys_cmds}",
+                "synth_{target} {synth_opts} -top {build_name}",
+                "flatten",
+                "clean",
+                "write_{write_fmt} {write_opts} {output_name}.{synth_fmt}",
+            ]
+
+            # EXPERIMENTAL / TEMPORARY (env-gated): nextpnr-xilinx's HeAP
+            # placer cannot legalize a CARRY4 chain shape that Yosys abc9's
+            # alumacc/replace_alu ALU-extraction produces for the CORDIC
+            # pipeline's adders ("Unable to find legal placement for cell
+            # ...carry4...") -- reproducible across seeds, so not placement
+            # luck. -nocarry forces those adders into plain LUT logic
+            # instead of CARRY4 chains, sidestepping the buggy primitive.
+            # Known to only relocate the underlying placer bug rather than
+            # fix it (see docs/openxc7_port/main.tex, Issue 9) -- kept
+            # env-gated, not a default.
+            if os.environ.get("OPENXC7_NOCARRY"):
+                platform.toolchain._synth_opts += "-nocarry "
 
         # ---------------------------------------------------------------------
         # CRG (clocks/resets)
