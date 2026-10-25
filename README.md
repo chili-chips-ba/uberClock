@@ -99,8 +99,77 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  - [ ] Conducting additional experiments with the corrected DSP algorithm (in simulation and on hardware).
  
 #### 7. Port from Vivado to openXC7
- - [ ] Port from Vivado to openXC.
- 
+ - [x] CPU + UART + integrated RAM builds and routes end-to-end with openXC7
+   (Yosys + nextpnr-xilinx + prjxray), no Vivado involved.
+ - [ ] `--with-uberclock` (the DSP core) does not build cleanly under openXC7 yet:
+   it hits upstream nextpnr-xilinx placement-legality bugs. See
+   [Building with openXC7](#building-with-openxc7-vivado-free-toolchain) below.
+ - [ ] `--with-uberddr3`, `--with-ethernet`, `--with-hdmi` are not expected to work
+   under openXC7 regardless (Vivado-only I/O constraints and primitives); untested.
+
+--------------------
+
+# Building with openXC7 (Vivado-free toolchain)
+
+In addition to Vivado, this project can be built with
+[openXC7](https://github.com/openXC7/toolchain-installer) -- a fully open-source
+Yosys → nextpnr-xilinx → prjxray flow -- for the Alinx AX7203
+(`xc7a200tfbg484-2`). LiteX already supports this via its
+`XilinxYosysNextpnrToolchain`; no RTL changes were needed for the CPU-only
+configuration below, beyond a few pre-existing bugs (unrelated to the
+toolchain choice) that had to be fixed first -- see
+[`docs/openxc7_port/main.tex`](docs/openxc7_port/main.tex) for the full,
+chronological debugging log, root causes, and fixes.
+
+## What works
+
+RISC-V CPU + UART + 64 KiB integrated RAM builds and routes to a working
+`.bit` file, fully through the open flow:
+
+```bash
+cd 3.build
+make build-board TOOLCHAIN=openxc7 \
+  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=42'
+```
+
+This requires an openXC7 install (tested with the toolchain-installer layout
+under `/opt/openxc7`) and a pre-generated chip database for
+`xc7a200tfbg484`. Run `2.soc/setup_dev.sh --with-openxc7` once to also install
+`fasm2frames` (from `f4pga/prjxray`), which the openXC7 packer stage needs but
+which the toolchain-installer binary install does not ship.
+
+The 64 KiB RAM size is a required workaround, not a free choice: the default
+256 KiB integrated RAM makes Yosys infer a depth-cascaded BRAM pair, and
+nextpnr-xilinx does not enforce the cascade pair's column-adjacency
+constraint, producing an unroutable placement. 64 KiB avoids BRAM cascading
+entirely.
+
+## What doesn't work, and why
+
+`--with-uberclock` (the 11-channel DSP core) does not build cleanly under
+openXC7. Synthesis completes (after disabling LiteX's default `-flatten`
+before optimization, and switching to Yosys's `abc9` LUT mapper to stay
+within LUT capacity), but placement then hits a genuine, reproducible
+**nextpnr-xilinx placement-legality bug**: its placer cannot legalize a
+CARRY4 chain shape produced by Yosys abc9's ALU-extraction pass for the
+CORDIC pipeline's adders. Every placer/option combination tried (`heap`;
+`heap` with `-nocarry`; `sa`) hits an independent variant of this bug class,
+with one signature reproduced on two unrelated netlists. This is a toolchain
+maturity gap, not something fixable from this project's RTL or LiteX
+integration -- see `docs/openxc7_port/main.tex` for the full bisection and
+the three distinct bug signatures found.
+
+`--with-uberddr3`, `--with-ethernet`, and `--with-hdmi` are expected to need
+Vivado regardless of the above: LiteX silently drops the Vivado-only I/O
+properties UberDDR3's PHY needs (`INTERNAL_VREF`, etc.) under this toolchain,
+and `XilinxYosysNextpnrToolchain` has no real static timing analysis or false-
+path support, so a 400 MHz DDR3 PHY domain would be effectively unconstrained.
+
+**Until the upstream nextpnr-xilinx bugs are fixed, use Vivado for any build
+that includes `--with-uberclock`, `--with-uberddr3`, `--with-ethernet`, or
+`--with-hdmi`.** openXC7 is solid for the CPU-only bring-up case above, and
+for any future peripheral-free RTL work where a fully open flow matters.
+
 --------------------
 
 # DSP Theory of Operation
