@@ -140,7 +140,6 @@ class BaseSoC(SoCCore):
         # Timer CSR (handy for firmware delays / profiling)
         # ---------------------------------------------------------------------
         self.submodules.timer1 = Timer()
-        self.add_csr("timer1")
 
         # ---------------------------------------------------------------------
         # Standard LiteDRAM path (only when main RAM is external AND not UberDDR3)
@@ -246,7 +245,6 @@ class BaseSoC(SoCCore):
         self.bus.add_slave("ub_ram", self.ubddr3.wb, region)
 
         self.add_constant("UBDDR3_MEM_BASE", self.UBDDR3_BASE)
-        self.add_csr("ubddr3")
 
         # LED1 shows DDR calibration done (useful sanity indicator)
         self.comb += leds[1].eq(self.ubddr3.calib_done.status)

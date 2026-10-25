@@ -102,7 +102,6 @@ def add_uberclock_fullrate(soc, leds):
     # CSRs: UberClock configuration surface (SYS domain)
     # -------------------------------------------------------------------------
     soc.submodules.main = UberClockCSRBank()
-    soc.add_csr("main")
     m = soc.main
 
     # -------------------------------------------------------------------------
@@ -112,7 +111,6 @@ def add_uberclock_fullrate(soc, leds):
     soc.evm.ce_down = EventSourcePulse(description="Downsample ready pulse (uc->sys).")
     soc.evm.finalize()
     soc.irq.add("evm")
-    soc.add_csr("evm")
 
     # -------------------------------------------------------------------------
     # SYS->UC configuration snapshot FIFO
@@ -187,7 +185,6 @@ def add_uberclock_fullrate(soc, leds):
     }
 
     soc.submodules.cfg_link = CsrConfigSnapshotFIFO(cfg_sys, cd_write="sys", cd_read="uc", fifo_depth=4)
-    soc.add_csr("cfg_link")
     uc = soc.cfg_link  # convenience alias
 
     # -------------------------------------------------------------------------

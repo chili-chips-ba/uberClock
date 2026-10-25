@@ -122,7 +122,6 @@ class SimSoC(SoCCore):
         )
 
         self.submodules.timer1 = Timer()
-        self.add_csr("timer1")
 
         leds = Cat(*platform.request_all("user_led"))
         heartbeat = Signal(24)
