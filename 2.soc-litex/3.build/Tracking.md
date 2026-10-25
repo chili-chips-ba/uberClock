@@ -1,5 +1,33 @@
 # 3 Tone tracking 
 
+### Standalone reference-driven output NCO
+
+Per-gate `RNW` streaming for gap-aware Allan analysis is enabled with
+`ref_nco_start 10000000 1000000 16 0`. See [REF_NCO_ALLAN.md](REF_NCO_ALLAN.md).
+
+`ref_nco_start` uses the existing raw ADC2 gate counter independently of tracking
+to reconstruct Fs and round the output NCO increment. DAC2 is selected to NCO
+cosine automatically. `ref_nco_hold` provides an uncorrected baseline while
+measurement continues; `ref_nco_stop` restores the previous increment/source.
+No temperature/sawtooth model is used. See [REF_NCO_CONTROL.md](REF_NCO_CONTROL.md)
+for cadence, count/NCO resolution, flags and independent output measurements.
+
+### 2026-10-11: serviced tracking output and C100 triplet positioning
+
+The oct11 fresh-capture log has clean capture/processing flags but recurring
+historical UPS underflow. Tracking/HY/observer UART output now services the
+software excitation between bytes, with a bounded formatting buffer and a small
+reserve before log groups. Fault history and the existing recovery remain.
+Observer records append actual controller error, filtered error, deadband,
+demand clipping and UPS status after the log payload.
+
+C100's left tracking tone was strongest in all 118 captures. Use the actual
+980/1000/1020 Hz triplet in the existing quiet `trackq_sweep`, rather than select
+its center from a single-tone maximum. The exact commands and board acceptance
+criteria are in [OCT11_TRACKQ_FIX.md](OCT11_TRACKQ_FIX.md). Physical centering and
+the resulting cadence still require the user's board test. Host helper and
+existing Python regression checks passed; no firmware/FPGA build was run.
+
 In this file the tracking of the three tones/modes of our oscillator is presented. Each tone can drift in frequnecy as time passes, or temperature and other parameters change. 
 The challange is to lock onto these modes and always track how and where they move. To discover and roughly find the resonant frequency of single modes a `track3` [algortihm](https://chili-chips-ba.github.io/uberClock/examples/tracking_algorithm.html) is used.
 It positions the CPU genarated tones and the CORDIC mixer frequencies near the resonant frequnecy so that `trackQ` [algortihm](https://chili-chips-ba.github.io/uberClock/examples/tracking_algorithm.html) can take over from that starting point.  
@@ -860,3 +888,85 @@ See IQ_RESPONSE_EXPERIMENT.md for source audit, RS2 field units, flag semantics,
 setup and hypothesis interpretation. TX is real modulation with both RF
 sidebands, not SSB; RX produces two phase projections. I/Q sum is a diagnostic
 of projection dependence, not yet a calibrated resonance estimator.
+
+## Raw ADC2 reference period counter (hardware addition)
+
+Added raw ADC2 tap before mixer/filter in uberclock.v and raw_ref_counter.py
+with UC-domain Schmitt crossings, known-period gated cycle counts and atomic
+256-bit result FIFO to SYS. Configuration uses the existing snapshot FIFO.
+Added appended main CSRs and firmware ref_count_start/ref_count_stop, about
+one log/second with ADC range, edge spacing, timeout, result overflow and
+sequence diagnostics. No LO/NCO writes or estimator feedback. Both gateware
+and matching firmware rebuild required. See RAW_REFERENCE_COUNTER.md for build,
+setup, units, validation limits and tests. Nine actual Migen counter/CDC tests
+and fourteen existing regressions pass; no FPGA or firmware build by agent.
+
+## RS3 paired raw clock / modal capture
+
+Reference sweep now restarts raw ADC2 counter per point immediately before
+capture, reads fresh seq1/seq2 during acquisition, and logs counts/timestamps/
+arrival sample indices plus raw average clock/RF axis against centered FFT64
+and full-record reference ZC2048. Two contiguous 100 ms gates are associated
+with the ~205 ms filtered record; they are not exact same windows. Separate
+raw_status rejects missing, stale, late, faulty or overflowing results. Raw
+counter settings are restored and left disabled at end. Control remains FFT64;
+standalone counter must be stopped. No gateware changes; latest raw-counter
+bitstream required. See RS3_PAIRED_CLOCK_CAPTURE.md for field order, validity,
+units, build/test commands and alignment limitations. No build/staging/commit
+by agent.
+
+## RH3 quiet reference-stabilized fixed RF hold (2026-10-11)
+
+Added `trackq_ref_hold <ch> <physical_RF_Hz> [samples=40] [settle_ms=4000]`.
+Allowed samples 2..128 and settling 1000..5000 ms. It reuses RS3 acquisition,
+reference-driven LO updates during settling, final 250 ms/capture LO freeze,
+paired fresh raw-counter windows, I/Q powers/statistics and frequency checks.
+No commanded frequency sweep: target RF is identical for every point, while
+LO still moves to compensate the reference-derived board clock.
+
+Header RH3, rows RH with SAME field order/units as RS3; dir=2, offset=0,
+span=0, step=0, points=number of repeated captures. All results are buffered
+until completion; timestamps show actual capture spacing, not a fixed cadence.
+Typical 40 captures take roughly three minutes plus recovery/processing.
+No UART during capture or inter-point settling. Original mixer and normal
+configured tones are restored at end; raw counter disabled, tracking stopped,
+NCO unchanged. No gateware changes required beyond the already loaded raw
+reference counter. See RS3_PAIRED_CLOCK_CAPTURE.md for validity/alignment.
+
+Keep crystal board connected DAC1->board->ADC1 and stable 10 MHz on ADC2.
+After firmware rebuild/load, short validation:
+
+```text
+ref_count_stop
+ref_fft_stop
+sig3_freqs 2 900 1000 1100
+sig3_amp 2 10900
+trackq_ref_hold 2 6270900 6 4000
+```
+
+When RH3 raw_count=2/raw_status=0 and RF/capture checks are usable, run:
+
+`trackq_ref_hold 2 6270900 40 4000`
+
+Save the full RH3 header and rows in ref_hold_log.txt. Do not separately start
+ref_count, trackq or ref_fft during acquisition. This selected RF is a fixed
+working point, not a new nominal or confirmed resonance. Analyze PIQ and AC
+sum versus time, with raw-clock RF deviation/clock transitions annotated.
+Changing power at a verified fixed target implicates response/excitation
+history or dynamics rather than requested sweep coordinates; stationary power
+motivates checking sweep settling/history. The hold is still subject to the
+RF waveform/sideband-model and measurement limitations documented for RS3.
+Fourteen existing quiet-test regressions pass; no firmware build by agent.
+
+## RH4 / RS4 signed complex baseband diagnostic (2026-10-11)
+
+Added DC-removed projections of Z=Y+jX at +/- configured baseband tone,
+separate signed-component powers/coefficients, phases and wrapped phase sum,
+weak-component/numeric flags and inferred lower RF sideband axis. Individual
+phases depend on capture origin; phase sum is a relation indicator, not a
+calibrated crystal transfer phase. Current excitation is not assumed resonant.
+Existing I/Q/raw clock diagnostics and control unchanged. No gateware change;
+software rebuild only. See COMPLEX_BASEBAND_TEST.md for column order, scaling,
+flags, sign convention and first six-record hold test. No additional sample
+buffers; 4 KiB buffered row metadata. Fourteen existing regressions and
+synthetic method/bounds checks pass; no build/staging/commit by agent.

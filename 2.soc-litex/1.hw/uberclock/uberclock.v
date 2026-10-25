@@ -95,6 +95,7 @@ module uberclock#(
     output reg         cap_done,       // 1 when 512 samples captured
     output     [15:0]  cap_data,         // sign-extended read data
 
+    output wire signed [11:0] raw_reference_adc, // ADC2 before mixing/filtering
     output wire        [IW-1:0]    cap_selected_input //hs output signal
     );
     //======================================================================
@@ -150,6 +151,8 @@ module uberclock#(
         filter_in <= {~ad_data_ch0_12[11], ad_data_ch0_12[10:0]};
         filter_in_1 <= {~ad_data_ch1_12[11], ad_data_ch1_12[10:0]};
     end
+
+    assign raw_reference_adc = filter_in_1;
 
     wire signed [IW-1:0] selected_input =
                         (input_select == 2'b00) ? $signed(filter_in) :
