@@ -23,7 +23,7 @@ BAUD          ?= 115200
 PORT          ?= /dev/ttyUSB0
 
 # Python / environment selection
-DEFAULT_VENV  := $(firstword $(wildcard $(REPO_ROOT)/.venv $(HOME)/litex-venv))
+DEFAULT_VENV  := $(firstword $(wildcard $(REPO_ROOT)/.venv $(HOME)/litex-venv $(HOME)/.venv/litex))
 PYTHON        ?= $(if $(VIRTUAL_ENV),$(VIRTUAL_ENV)/bin/python3,$(if $(DEFAULT_VENV),$(DEFAULT_VENV)/bin/python3,python3))
 PYTHON_BIN_DIR := $(dir $(PYTHON))
 PYTHONPATH_REPO ?= $(PYTHON_PKG_DIR)/src
@@ -40,6 +40,16 @@ SW_DATA_MEM   ?= main_ram
 SIM_CFLAGS    ?= -Wno-error=incompatible-pointer-types
 SIM_CYCLES    ?= 100000
 
+# Toolchain: vivado (default) or openxc7 (Yosys + nextpnr-xilinx + prjxray,
+# no Vivado; see docs/openxc7_port/main.tex for the issues this works around)
+TOOLCHAIN     ?= vivado
+
+# openXC7 install (installer layout on this machine: /opt/openxc7)
+OPENXC7_DIR               ?= /opt/openxc7
+CHIPDB                    ?= $(HOME)/openxc7-chipdb
+PRJXRAY_DB_DIR            ?= $(OPENXC7_DIR)/share/prjxray-db
+NEXTPNR_XILINX_PYTHON_DIR ?= $(OPENXC7_DIR)/share/nextpnr-xilinx/python
+
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
 
@@ -49,7 +59,7 @@ CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv
 
 help:
 	@echo "Targets:"
-	@echo "  make build-board [FREQ=100e6] [OPTIONS='...']"
+	@echo "  make build-board [TOOLCHAIN=vivado|openxc7] [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make sim-soc     [SIM_OPTIONS='...']"
 	@echo "  make sim-soc-run [SIM_OPTIONS='...']"
 	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
@@ -81,11 +91,18 @@ install-python:
 build-board:
 	@echo "[build] module=$(SOC_MODULE)"
 	@echo "[build] python=$(PYTHON)"
-	@echo "[build] sys_clk=$(FREQ) options=$(OPTIONS)"
+	@echo "[build] toolchain=$(TOOLCHAIN) sys_clk=$(FREQ) options=$(OPTIONS)"
+	if [ "$(TOOLCHAIN)" = "openxc7" ]; then \
+	  mkdir -p "$(CHIPDB)"; \
+	  export PATH="$(OPENXC7_DIR)/bin:$(PYTHON_BIN_DIR):$$PATH"; \
+	  export CHIPDB="$(CHIPDB)"; \
+	  export PRJXRAY_DB_DIR="$(PRJXRAY_DB_DIR)"; \
+	  export NEXTPNR_XILINX_PYTHON_DIR="$(NEXTPNR_XILINX_PYTHON_DIR)"; \
+	fi; \
 	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
 	$(PYTHON) -m $(SOC_MODULE) \
 	  --build \
-	  --toolchain=vivado \
+	  --toolchain=$(TOOLCHAIN) \
 	  --sys-clk-freq=$(FREQ) \
 	  $(OPTIONS)
 

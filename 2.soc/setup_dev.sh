@@ -10,11 +10,17 @@
 #   - installs LiteX into that virtualenv
 #
 # Usage:
-#   ./setup_dev.sh [--litex-dir PATH] [--venv-dir PATH] [--no-gcc]
+#   ./setup_dev.sh [--litex-dir PATH] [--venv-dir PATH] [--no-gcc] [--with-openxc7]
 #
 # Defaults:
 #   --litex-dir  ~/litex
 #   --venv-dir   ~/litex-venv
+#
+# --with-openxc7 additionally installs the `fasm2frames` tool (from
+# f4pga/prjxray's utils/) into the venv. This is required by LiteX's
+# --toolchain=openxc7 build path (FASM -> frames conversion before
+# xc7frames2bit) but isn't shipped by the openXC7 toolchain-installer
+# binary install, nor published to PyPI under that name.
 #
 set -euo pipefail
 
@@ -22,17 +28,19 @@ LITEX_DIR="${HOME}/litex"
 VENV_DIR="${HOME}/litex-venv"
 PYTHON_VERSION="3.11.8"
 NO_GCC=0
+WITH_OPENXC7=0
 
 usage() {
-  echo "Usage: $0 [--litex-dir PATH] [--venv-dir PATH] [--no-gcc]"
+  echo "Usage: $0 [--litex-dir PATH] [--venv-dir PATH] [--no-gcc] [--with-openxc7]"
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --litex-dir) LITEX_DIR="$2"; shift 2 ;;
-    --venv-dir)  VENV_DIR="$2"; shift 2 ;;
-    --no-gcc)    NO_GCC=1; shift ;;
-    -h|--help)   usage; exit 0 ;;
+    --litex-dir)    LITEX_DIR="$2"; shift 2 ;;
+    --venv-dir)     VENV_DIR="$2"; shift 2 ;;
+    --no-gcc)       NO_GCC=1; shift ;;
+    --with-openxc7) WITH_OPENXC7=1; shift ;;
+    -h|--help)      usage; exit 0 ;;
     *) echo "Unknown argument: $1"; usage; exit 1 ;;
   esac
 done
@@ -126,6 +134,29 @@ if [[ "${NO_GCC}" -eq 0 ]]; then
 fi
 
 python litex_setup.py --init --install --config=full "${GCC_ARGS[@]}"
+
+# ---------------------------------------------------------------------------
+# openXC7 support: fasm2frames
+# ---------------------------------------------------------------------------
+if [[ "${WITH_OPENXC7}" -eq 1 ]]; then
+  echo "--- Installing fasm2frames (prjxray) for openXC7 ---"
+  PRJXRAY_SRC_DIR="${LITEX_DIR}/prjxray_fasm2frames"
+  if ! python -c "import utils.fasm2frames" >/dev/null 2>&1; then
+    rm -rf "${PRJXRAY_SRC_DIR}"
+    git clone --depth 1 --filter=blob:none --sparse \
+      https://github.com/f4pga/prjxray.git "${PRJXRAY_SRC_DIR}"
+    (cd "${PRJXRAY_SRC_DIR}" && git sparse-checkout set utils prjxray)
+    # Upstream setup.py declares the "prjxray" package but the fasm2frames
+    # console_script entry point lives in "utils", which isn't listed, so
+    # an editable install leaves the script broken. Patch it in.
+    sed -i "s/packages=\['prjxray'\]/packages=['prjxray', 'utils']/" \
+      "${PRJXRAY_SRC_DIR}/setup.py"
+    pip install -e "${PRJXRAY_SRC_DIR}"
+  fi
+  command -v fasm2frames >/dev/null 2>&1 \
+    && echo "fasm2frames OK: $(command -v fasm2frames)" \
+    || echo "WARNING: fasm2frames still not on PATH after install."
+fi
 
 # ---------------------------------------------------------------------------
 # Done
