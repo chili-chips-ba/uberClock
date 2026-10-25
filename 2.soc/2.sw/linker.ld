@@ -66,5 +66,8 @@ PROVIDE(__heap_start = _end);
 PROVIDE(__heap_end = __stack - (DEFINED(__stack_size) ? __stack_size : 0x800));
 PROVIDE(__heap_size = __heap_end - __heap_start);
 
-PROVIDE(_fdata_rom = LOADADDR(.data));
-PROVIDE(_edata_rom = LOADADDR(.data) + SIZEOF(.data));
+/* _fdata may follow leading alignment padding inside .data. crt0 copies
+ * [_fdata, _edata), so the source must include the same offset. Without it,
+ * a RAM-loaded image can copy forward over itself and corrupt initializers. */
+PROVIDE(_fdata_rom = LOADADDR(.data) + (_fdata - ADDR(.data)));
+PROVIDE(_edata_rom = _fdata_rom + (_edata - _fdata));

@@ -41,6 +41,20 @@ __pycache__/
 # Main build folder (IGNORE EVERYTHING)
 # =========================
 3.build/build/*
+*.jou
+.vscode/
+#2.soc-litex/3.build/
+*.bin
+*.txt
+*.o
+*.d
+*.elf
+*.bin
+*.fbi
+*.map
+*.elf
+*.map
+*.fbi
 
 # Allow board directory
 !3.build/build/alinx_ax7203/

@@ -95,3 +95,24 @@ The python scripts under ``3.build/scripts`` are kept separate from the Makefile
 
 ``plot_csv_fft_coherent.py``
    Fixed-parameter FFT view for coherent-tone experiments and frequency labeling.
+
+
+Firmware Memory Placement and In-place Builds
+--------------------------------------------
+
+``make build-sw`` builds the source files directly in ``2.soc/2.sw``.
+The nested ``2.soc/2.sw/uberClock`` directory is an older generated application
+copy and is not used by this target. The source linker script is restored after
+the build, including when a build command fails. This target uses
+``SW_CODE_MEM``, ``SW_DATA_MEM`` and ``WITH_CXX`` rather than ``DEMO_FLAGS``.
+
+.. code-block:: bash
+
+   cd 3.build
+   make build-sw SW_CODE_MEM=main_ram SW_DATA_MEM=main_ram
+
+The default SoC keeps ``main_ram`` in 512 KiB of integrated BRAM.
+External DDR3 can instead serve as CPU memory with ``--with-sdram-main-ram``.
+That option is mutually exclusive with ``--with-uberddr3`` because both use
+the same physical DDR3 device. Select memory regions that exist in the
+generated memory map, and rebuild firmware against matching generated CSRs.

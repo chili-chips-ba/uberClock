@@ -231,11 +231,11 @@ class UberClockCSRBank(LiteXModule):
             description="Direct Y (Q) input sample for upsampler channel 5."
         )
         # =====================================================================
-        #        Downsampled 5-channel frame FIFO (UC->SYS, CPU readback)
+        #        Downsampled 6-channel frame FIFO (UC->SYS, CPU readback)
         # =====================================================================
         self.ds_fifo_pop = CSRStorage(
             1,
-            description="Write (strobe) to pop one 5-channel downsampled frame from the FIFO."
+            description="Write (strobe) to pop one 6-channel downsampled frame from the FIFO."
         )
 
         self.ds_fifo_x1 = CSRStatus(
@@ -286,6 +286,16 @@ class UberClockCSRBank(LiteXModule):
         self.ds_fifo_y5 = CSRStatus(
             self.SAMPLE_WIDTH,
             description="Latched Y sample for channel 5 from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_xref = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched X sample for the reference channel from the last popped downsample FIFO frame."
+        )
+
+        self.ds_fifo_yref = CSRStatus(
+            self.SAMPLE_WIDTH,
+            description="Latched Y sample for the reference channel from the last popped downsample FIFO frame."
         )
 
         self.ds_fifo_overflow = CSRStatus(
@@ -440,3 +450,20 @@ class UberClockCSRBank(LiteXModule):
 
         self.magnitude           = CSRStatus(16, description="Downsampled magnitude")
         self.phase               = CSRStatus(25, description="Downsampled phase")
+
+        # Raw ADC2 edge-gated DSP clock measurement. Appended to preserve old
+        # main-bank offsets; a new gateware build and matching firmware needed.
+        self.ref_count_enable = CSRStorage(1, description="Enable raw ADC2 clock counter; commit configuration.")
+        self.ref_count_periods = CSRStorage(32, reset=1000000, description="Reference periods per measurement window; commit configuration.")
+        self.ref_count_hysteresis = CSRStorage(12, reset=16, description="Signed ADC Schmitt thresholds +/- this count; commit configuration.")
+        self.ref_count_pop = CSRStorage(1, description="Pop and atomically latch one raw counter result.")
+        self.ref_count_flags = CSRStatus(8, description="bit0 readable, bit1 sticky result FIFO overflow, bit2 enabled in UC domain.")
+        self.ref_count_cycles = CSRStatus(32, description="DSP clock cycles between first and Nth subsequent raw ADC reference crossings.")
+        self.ref_count_actual_periods = CSRStatus(32, description="Complete reference periods counted in latched result.")
+        self.ref_count_adc_min = CSRStatus(12, description="Signed raw ADC2 minimum in result window.")
+        self.ref_count_adc_max = CSRStatus(12, description="Signed raw ADC2 maximum in result window.")
+        self.ref_count_min_period = CSRStatus(32, description="Smallest single-reference-period spacing in DSP cycles.")
+        self.ref_count_max_period = CSRStatus(32, description="Largest single-reference-period spacing in DSP cycles.")
+        self.ref_count_result_flags = CSRStatus(8, description="Window flags: 1 timeout, 2 invalid config, 4 period spacing outside 3..16 cycles.")
+        self.ref_count_end_tick = CSRStatus(64, description="UC free-running cycle timestamp of result ending edge.")
+        self.ref_count_sequence = CSRStatus(32, description="Window sequence number; reset on disable, increments even for dropped results.")

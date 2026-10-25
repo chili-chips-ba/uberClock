@@ -52,6 +52,7 @@ from migen.genlib.fifo import AsyncFIFO
 
 from .uberclock_csrs import UberClockCSRBank
 from .csr_snapshot_fifo import CsrConfigSnapshotFIFO
+from .raw_ref_counter import RawReferenceCounterCDC
 from .rtl_sources import add_sources
 from .rtl_filelist import UBERCLOCK_RTL_FILES
 
@@ -180,6 +181,9 @@ def add_uberclock_fullrate(soc, leds):
         # Low-speed capture RAM control (if present in uberclock.v)
         "cap_arm":              m.cap_arm.storage,
         "cap_idx":              m.cap_idx.storage,
+        "ref_count_enable":     m.ref_count_enable.storage,
+        "ref_count_periods":    m.ref_count_periods.storage,
+        "ref_count_hysteresis": m.ref_count_hysteresis.storage,
     }
 
     soc.submodules.cfg_link = CsrConfigSnapshotFIFO(cfg_sys, cd_write="sys", cd_read="uc", fifo_depth=4)
@@ -213,6 +217,9 @@ def add_uberclock_fullrate(soc, leds):
     ds_y_uc4    = Signal(16, name="downsampled_y_uc4")
     ds_x_uc5    = Signal(16, name="downsampled_x_uc5")
     ds_y_uc5    = Signal(16, name="downsampled_y_uc5")
+    ds_x_ucref  = Signal(16, name="downsampled_x_ucref")
+    ds_y_ucref  = Signal(16, name="downsampled_y_ucref")
+    raw_ref_uc = Signal((12, True), name="raw_reference_adc_uc")
     cap_sel_uc = Signal(12, name="cap_selected_uc")  # selected sample for HS capture
 
     # UC-domain upsampler FIFO hold registers
@@ -317,6 +324,7 @@ def add_uberclock_fullrate(soc, leds):
 
         # Outputs
         o_ce_down=ce_down_uc,
+        o_raw_reference_adc=raw_ref_uc,
         o_downsampled_data_x1=ds_x_uc1,
         o_downsampled_data_y1=ds_y_uc1,
         o_downsampled_data_x2=ds_x_uc2,
@@ -327,6 +335,8 @@ def add_uberclock_fullrate(soc, leds):
         o_downsampled_data_y4=ds_y_uc4,
         o_downsampled_data_x5=ds_x_uc5,
         o_downsampled_data_y5=ds_y_uc5,
+        o_downsampled_data_xref=ds_x_ucref,
+        o_downsampled_data_yref=ds_y_ucref,
 
         # High-speed capture sample out
         o_cap_selected_input=cap_sel_uc,
@@ -341,6 +351,26 @@ def add_uberclock_fullrate(soc, leds):
     )
 
     soc.specials += Instance("uberclock", **ports)
+
+    # Raw ADC2 edge-gated counter; configuration arrives atomically via cfg_link.
+    soc.submodules.raw_ref_counter = raw = RawReferenceCounterCDC()
+    soc.comb += [
+        raw.sample.eq(raw_ref_uc),
+        raw.enable.eq(_uc_out("ref_count_enable")),
+        raw.periods.eq(_uc_out("ref_count_periods")),
+        raw.hysteresis.eq(_uc_out("ref_count_hysteresis")),
+        raw.pop.eq(m.ref_count_pop.re),
+        m.ref_count_flags.status.eq(Cat(raw.readable, raw.overflow, raw.running, C(0, 5))),
+        m.ref_count_cycles.status.eq(raw.record[0:32]),
+        m.ref_count_actual_periods.status.eq(raw.record[32:64]),
+        m.ref_count_adc_min.status.eq(raw.record[64:76]),
+        m.ref_count_adc_max.status.eq(raw.record[76:88]),
+        m.ref_count_min_period.status.eq(raw.record[88:120]),
+        m.ref_count_max_period.status.eq(raw.record[120:152]),
+        m.ref_count_result_flags.status.eq(raw.record[152:160]),
+        m.ref_count_end_tick.status.eq(raw.record[160:224]),
+        m.ref_count_sequence.status.eq(raw.record[224:256]),
+    ]
 
     # -------------------------------------------------------------------------
     # UC->SYS: low-speed capture readback into CSRs (safe CDC)
@@ -370,7 +400,7 @@ def add_uberclock_fullrate(soc, leds):
     # -------------------------------------------------------------------------
     DS_FIFO_DEPTH = 16384
 
-    ds_fifo_width = 16 * 10
+    ds_fifo_width = 16 * 12
     ds_fifo = AsyncFIFO(width=ds_fifo_width, depth=DS_FIFO_DEPTH)
     soc.submodules.ds_fifo = ClockDomainsRenamer({"write": "uc", "read": "sys"})(ds_fifo)
 
@@ -387,6 +417,7 @@ def add_uberclock_fullrate(soc, leds):
             ds_x_uc3, ds_y_uc3,
             ds_x_uc4, ds_y_uc4,
             ds_x_uc5, ds_y_uc5,
+            ds_x_ucref, ds_y_ucref,
         )),
         ds_fifo.we.eq(ce_down_uc & ds_fifo.writable),
     ]
@@ -438,6 +469,8 @@ def add_uberclock_fullrate(soc, leds):
         m.ds_fifo_y4.status.eq(ds_data_sys[112:128]),
         m.ds_fifo_x5.status.eq(ds_data_sys[128:144]),
         m.ds_fifo_y5.status.eq(ds_data_sys[144:160]),
+        m.ds_fifo_xref.status.eq(ds_data_sys[160:176]),
+        m.ds_fifo_yref.status.eq(ds_data_sys[176:192]),
         m.ds_fifo_overflow.status.eq(ds_overflow_sys),
         m.ds_fifo_underflow.status.eq(ds_underflow_sys),
         m.ds_fifo_flags.status.eq(Cat(ds_fifo.readable, C(0, 7))),

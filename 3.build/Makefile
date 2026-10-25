@@ -35,6 +35,8 @@ BOARD         := alinx_ax7203
 # Defaults
 FREQ          ?= 100e6
 OPTIONS       ?= --with-uberddr3 --with-uberclock --with-ethernet
+SW_CODE_MEM   ?= main_ram
+SW_DATA_MEM   ?= main_ram
 SIM_CFLAGS    ?= -Wno-error=incompatible-pointer-types
 SIM_CYCLES    ?= 100000
 
@@ -52,7 +54,7 @@ help:
 	@echo "  make sim-soc-run [SIM_OPTIONS='...']"
 	@echo "  make load        [FREQ=100e6] [OPTIONS='...']"
 	@echo "  make term        [PORT=/dev/ttyUSB0]"
-	@echo "  make build-sw    [DEMO_FLAGS='..']"
+	@echo "  make build-sw    [SW_CODE_MEM=main_ram] [SW_DATA_MEM=main_ram] [WITH_CXX=1]"
 	@echo "  make clean-sw        (remove software build outputs only)"
 	@echo "  make clean-sw-deep   (remove software outputs + maps)"
 	@echo "  make docs            (build Sphinx docs)"
@@ -118,15 +120,18 @@ sim-soc-run:
 # Build software under 2.sw/
 # ----------------------------
 build-sw:
-	@echo "[software build] DEMO_FLAGS='$(DEMO_FLAGS)'"
-	@echo "→ Executing demo.py in $(SW_DIR)"
-	cd $(SW_DIR) && \
-	PYTHONPATH=$(PYTHONPATH_REPO):$$PYTHONPATH \
-	$(PYTHON) ./demo.py \
-	  --build-path=$(BUILD_DIR)/build/$(BOARD) \
-	  --mem=main_ram \
-	  --data-mem=main_ram \
-	  $(DEMO_FLAGS)
+	@echo "[software build] code_mem=$(SW_CODE_MEM) data_mem=$(SW_DATA_MEM) WITH_CXX=$(WITH_CXX)"
+	@echo "→ Building software in place from $(SW_DIR)"
+	export BUILD_DIR=$(BUILD_DIR)/build/$(BOARD) && \
+	export WITH_CXX=$(WITH_CXX) && \
+	tmp_linker=$$(mktemp) && \
+	cp $(SW_DIR)/linker.ld $$tmp_linker && \
+	trap 'cp $$tmp_linker $(SW_DIR)/linker.ld; rm -f $$tmp_linker' EXIT && \
+	sed -i 's/main_ram/$(SW_CODE_MEM)/g; s/data_ram/$(SW_DATA_MEM)/g' $(SW_DIR)/linker.ld && \
+	$(MAKE) -C $(SW_DIR) clean && \
+	$(MAKE) -C $(SW_DIR) && \
+	$(PYTHON) -m litex.soc.software.crcfbigen \
+	  $(SW_DIR)/demo.bin -o $(SW_DIR)/demo.fbi --fbi --little
 
 load:
 	@echo "[load] module=$(SOC_MODULE)"

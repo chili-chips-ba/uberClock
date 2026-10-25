@@ -1,0 +1,23 @@
+{
+  "action": "send",
+  "addr": 2684354560,
+  "baud": 115200,
+  "byte_count": 134217728,
+  "capture_seconds_at_65mhz": 1.0324440615384616,
+  "chunk_bytes": 4096,
+  "ddr_beats": 4194304,
+  "dump_format": "raw bytes from UBD3 UDP stream",
+  "host_ip": "192.168.0.2",
+  "port": "/dev/ttyUSB4",
+  "requested_samples": 67108864,
+  "sample_encoding": "little-endian signed int16",
+  "sample_rate_hz": 65000000,
+  "samples_per_beat": 16,
+  "source": 0,
+  "source_name": "filter_in",
+  "stored_samples": 67108864,
+  "transport": "udp",
+  "udp_chunk_bytes": 1048576,
+  "udp_inter_chunk_gap_s": 1.0,
+  "udp_port": 5000
+}
