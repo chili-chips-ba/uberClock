@@ -81,35 +81,37 @@ Typical Workflow
 openXC7 Toolchain (Vivado-free build)
 --------------------------------------
 
-``make build-board`` also supports `openXC7
-<https://github.com/openXC7/toolchain-installer>`_ (Yosys + nextpnr-xilinx +
-prjxray) as a fully open-source alternative to Vivado, via
-``TOOLCHAIN=openxc7``:
+``make build-board`` also supports `openXC7 1.0.0
+<https://github.com/openXC7/toolchain-installer>`_ (Yosys 0.69 +
+nextpnr-himbaechel + prjxray) as a fully open-source alternative to Vivado,
+via ``TOOLCHAIN=openxc7``:
 
 .. code-block:: bash
 
    make build-board TOOLCHAIN=openxc7 \
-     OPTIONS="--integrated-main-ram-size=0x10000 --nextpnr-seed=42"
+     OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=1'
 
-This builds RISC-V CPU + UART + 64 KiB integrated RAM end to end with zero
-placement/routing errors. The reduced RAM size works around a nextpnr-xilinx
-bug that leaves the default 256 KiB config's BRAM cascade pair unroutable.
-Run ``2.soc/setup_dev.sh --with-openxc7`` once first, to install
-``fasm2frames`` (needed by the packer stage, not shipped by the openXC7
-binary install).
+One-time setup first: ``2.soc/setup_dev.sh --with-openxc7``, copy
+``2.soc/6.migen/platforms/alinx_ax7203.py`` into litex-boards, build the
+openXC7 1.0.0 toolchain, and generate ``~/openxc7-chipdb/xc7a200tfbg484.bin``.
+Use ``OPENXC7_DIR=...`` / ``CHIPDB=...`` if they are not in the default
+locations (``/opt/openxc7``, ``~/openxc7-chipdb``). The full step-by-step
+instructions are in ``0.doc/docs/source/build/build_soc.rst`` and the
+repository ``README.md``.
 
-``--with-uberclock`` does **not** build cleanly under openXC7: synthesis
-completes, but nextpnr-xilinx's placer cannot legalize a CARRY4 chain shape
-that Yosys abc9 produces from the CORDIC pipeline's adders -- a genuine,
-reproducible upstream toolchain bug, not something fixable here.
-``--with-uberddr3``, ``--with-ethernet``, and ``--with-hdmi`` are expected to
-need Vivado regardless (dropped I/O properties, no real timing closure under
-this toolchain). Use Vivado for any of those; openXC7 is solid for the
-CPU-only configuration above.
+This builds RISC-V CPU + UART + 64 KiB integrated RAM end to end, and with
+seed 1 meets 100 MHz timing. Other seeds may not: check the last
+``Max frequency`` line for ``s7mmcm0_clkout_buf``, because a bitstream is
+written even when timing fails.
+
+``--with-uberclock`` does **not** build under openXC7 1.0.0: synthesis
+completes, but nextpnr cannot legally place a CARRY4 from the CORDIC
+pipeline's adders, the same upstream bug as in the older nextpnr-xilinx.
+``--with-uberddr3``, ``--with-ethernet`` and ``--with-hdmi`` are expected to
+need Vivado regardless. Use Vivado for any of those.
 
 Full debugging log, root causes, and fixes:
-``docs/openxc7_port/main.tex`` at the repository root. See also
-``0.doc/docs/source/build/build_soc.rst`` for the published docs version.
+``docs/openxc7_port/main.tex`` at the repository root.
 
 Scripts
 -------

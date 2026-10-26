@@ -99,10 +99,10 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
  - [ ] Conducting additional experiments with the corrected DSP algorithm (in simulation and on hardware).
  
 #### 7. Port from Vivado to openXC7
- - [x] CPU + UART + integrated RAM builds and routes end-to-end with openXC7
-   (Yosys + nextpnr-xilinx + prjxray), no Vivado involved.
- - [ ] `--with-uberclock` (the DSP core) does not build cleanly under openXC7 yet:
-   it hits upstream nextpnr-xilinx placement-legality bugs. See
+ - [x] CPU + UART + integrated RAM builds and routes end-to-end with openXC7 1.0.0
+   (Yosys + nextpnr-himbaechel + prjxray), no Vivado involved; meets 100 MHz with seed 1.
+ - [ ] `--with-uberclock` (the DSP core) does not build under openXC7 yet: it hits an
+   upstream nextpnr placement-legality bug, still present in openXC7 1.0.0. See
    [Building with openXC7](#building-with-openxc7-vivado-free-toolchain) below.
  - [ ] `--with-uberddr3`, `--with-ethernet`, `--with-hdmi` are not expected to work
    under openXC7 regardless (Vivado-only I/O constraints and primitives); untested.
@@ -111,64 +111,122 @@ This is a Proof-of-Concept (PoC) and stepping stone for future applied research 
 
 # Building with openXC7 (Vivado-free toolchain)
 
-In addition to Vivado, this project can be built with
-[openXC7](https://github.com/openXC7/toolchain-installer) -- a fully open-source
-Yosys → nextpnr-xilinx → prjxray flow -- for the Alinx AX7203
-(`xc7a200tfbg484-2`). LiteX already supports this via its
-`XilinxYosysNextpnrToolchain`; no RTL changes were needed for the CPU-only
-configuration below, beyond a few pre-existing bugs (unrelated to the
-toolchain choice) that had to be fixed first -- see
-[`docs/openxc7_port/main.tex`](docs/openxc7_port/main.tex) for the full,
-chronological debugging log, root causes, and fixes.
+Besides Vivado, the SoC can be built with
+[openXC7](https://github.com/openXC7/toolchain-installer) **1.0.0**, a fully
+open-source flow for the Alinx AX7203 (`xc7a200tfbg484-2`):
+Yosys 0.69 → `nextpnr-himbaechel` ([openXC7/nextpnr](https://github.com/openXC7/nextpnr)
+1.0.0) → prjxray `fasm2frames` / `xc7frames2bit`. LiteX drives it through
+`XilinxYosysNextpnrToolchain` (`TOOLCHAIN=openxc7`).
+
+The full debugging log (every error, its cause, and its fix) is
+[`docs/openxc7_port/main.tex`](docs/openxc7_port/main.tex); the openXC7 1.0.0
+section there is the current reference.
 
 ## What works
 
-RISC-V CPU + UART + 64 KiB integrated RAM builds and routes to a working
-`.bit` file, fully through the open flow:
+| Configuration | Result |
+|---|---|
+| RISC-V CPU + UART + 64 KiB integrated RAM | ✅ Builds a `.bit` in 1–2 min; seed 1 meets 100 MHz timing |
+| `--with-uberclock` (DSP core) | ❌ nextpnr placement-legality bug (see below) |
+| `--with-uberddr3`, `--with-ethernet`, `--with-hdmi` | ⚠️ Untested; expected to need Vivado |
 
+The 1.0.0 bitstreams have not been tested on hardware yet.
+
+## Install and build, step by step
+
+Tested on Ubuntu. Run from the repository root.
+
+**1. LiteX environment** (creates `~/litex-venv`, installs `fasm2frames`):
 ```bash
-cd 3.build
-make build-board TOOLCHAIN=openxc7 \
-  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=42'
+2.soc/setup_dev.sh --with-openxc7
+```
+Add `--no-gcc` if a RISC-V GCC is already installed or you have no `sudo`;
+otherwise the script stops at the failing `apt install` before it gets to the
+openXC7 step.
+
+**2. Copy the project's board file into litex-boards** (defines the ADC/DAC
+pins and accepts `toolchain=`; repeat after every `litex_setup.py --update`):
+```bash
+cp 2.soc/6.migen/platforms/alinx_ax7203.py \
+   ~/litex/litex-boards/litex_boards/platforms/alinx_ax7203.py
 ```
 
-This requires an openXC7 install (tested with the toolchain-installer layout
-under `/opt/openxc7`) and a pre-generated chip database for
-`xc7a200tfbg484`. Run `2.soc/setup_dev.sh --with-openxc7` once to also install
-`fasm2frames` (from `f4pga/prjxray`), which the openXC7 packer stage needs but
-which the toolchain-installer binary install does not ship.
+**3. Build openXC7 1.0.0 from source:**
+```bash
+git clone --branch 1.0.0 https://github.com/openXC7/toolchain-installer
+cd toolchain-installer
+./toolchain-sources-builder.sh all     # installs into /opt/openxc7
+# without sudo: INSTALL_PREFIX=$HOME/opt/openxc7-1.0 ./toolchain-sources-builder.sh all
+```
 
-The 64 KiB RAM size is a required workaround, not a free choice: the default
-256 KiB integrated RAM makes Yosys infer a depth-cascaded BRAM pair, and
-nextpnr-xilinx does not enforce the cascade pair's column-adjacency
-constraint, producing an unroutable placement. 64 KiB avoids BRAM cascading
-entirely.
+**4. Generate the chip database once** (LiteX can't do this itself with 1.0.0;
+about 2.5 min and 7 GB RAM):
+```bash
+P=/opt/openxc7                         # or your INSTALL_PREFIX
+source $P/export.sh                    # puts the 1.0.0 python3/bbasm first on PATH
+mkdir -p ~/openxc7-chipdb
+python3 $P/share/nextpnr/himbaechel/uarch/xilinx/gen/xilinx_gen.py \
+  --xray $P/share/nextpnr/prjxray-db/artix7 \
+  --device xc7a200t --bba /tmp/xc7a200t.bba
+bbasm -l /tmp/xc7a200t.bba ~/openxc7-chipdb/xc7a200tfbg484.bin
+rm /tmp/xc7a200t.bba
+```
+`--device` is the fabric (`xc7a200t`), not the part. The output must be
+named `xc7a200tfbg484.bin`.
 
-## What doesn't work, and why
+**5. Build:**
+```bash
+source ~/litex-venv/bin/activate
+cd 3.build
+make build-board TOOLCHAIN=openxc7 \
+  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=1'
+```
+For a custom install prefix or chipdb folder, add
+`OPENXC7_DIR=$HOME/opt/openxc7-1.0 CHIPDB=...`. In zsh, pass these as separate
+words (or `export` them); `make build-board $VARS` with all of them in one
+variable does not work there.
 
-`--with-uberclock` (the 11-channel DSP core) does not build cleanly under
-openXC7. Synthesis completes (after disabling LiteX's default `-flatten`
-before optimization, and switching to Yosys's `abc9` LUT mapper to stay
-within LUT capacity), but placement then hits a genuine, reproducible
-**nextpnr-xilinx placement-legality bug**: its placer cannot legalize a
-CARRY4 chain shape produced by Yosys abc9's ALU-extraction pass for the
-CORDIC pipeline's adders. Every placer/option combination tried (`heap`;
-`heap` with `-nocarry`; `sa`) hits an independent variant of this bug class,
-with one signature reproduced on two unrelated netlists. This is a toolchain
-maturity gap, not something fixable from this project's RTL or LiteX
-integration -- see `docs/openxc7_port/main.tex` for the full bisection and
-the three distinct bug signatures found.
+**6. Check timing before using the bitstream.** LiteX lets nextpnr write a
+bitstream even when timing fails, so look at the last
+`Max frequency for clock 's7mmcm0_clkout_buf'` line in the output. If it says
+`FAIL`, try another `--nextpnr-seed` or lower the clock with `FREQ=90e6`. The
+bitstream is `3.build/build/alinx_ax7203/gateware/alinx_ax7203.bit`
+(`make load` to program it).
 
-`--with-uberddr3`, `--with-ethernet`, and `--with-hdmi` are expected to need
-Vivado regardless of the above: LiteX silently drops the Vivado-only I/O
-properties UberDDR3's PHY needs (`INTERNAL_VREF`, etc.) under this toolchain,
-and `XilinxYosysNextpnrToolchain` has no real static timing analysis or false-
-path support, so a 400 MHz DDR3 PHY domain would be effectively unconstrained.
+Builds regenerate tracked files under `3.build/build/alinx_ax7203/`; run
+`git checkout -- 3.build/build` before committing.
 
-**Until the upstream nextpnr-xilinx bugs are fixed, use Vivado for any build
-that includes `--with-uberclock`, `--with-uberddr3`, `--with-ethernet`, or
-`--with-hdmi`.** openXC7 is solid for the CPU-only bring-up case above, and
-for any future peripheral-free RTL work where a fully open flow matters.
+## What was changed to make it work
+
+- `soc.py`: the platform is built by `_make_platform()`, which also works with
+  stock litex-boards (for CPU-only builds) and uses the dash-free part name
+  `xc7a200tfbg484-2` that prjxray-db, the chipdb and nextpnr expect.
+- `soc.py` / `clocking.py`: `IDELAYCTRL` is only instantiated when DDR3 or
+  Ethernet uses I/ODELAYs; nextpnr-himbaechel rejects an unused one.
+- `soc.py`: the `OPENXC7_PLACER` override now actually reaches nextpnr (current
+  LiteX passes no `--placer`, so the old text replacement did nothing).
+- `3.build/Makefile`: openXC7 paths follow the 1.0.0 install layout.
+
+## Known problems
+
+- **`--with-uberclock` does not build.** Synthesis completes (70% LUTs, 48%
+  CARRY4, so not a capacity issue), but nextpnr cannot legally place a CARRY4
+  from a CORDIC stage adder (`Unable to find legal placement for cell
+  '...cordic_stages[17]...carry4...' of type 'CARRY4'`). `OPENXC7_NOCARRY=1`
+  moves the same failure to a flip-flop cell, and `OPENXC7_PLACER=sa` stalls
+  in initial placement. This is the same upstream bug the old nextpnr-xilinx
+  had; openXC7 1.0.0 doesn't fix it.
+- **Timing at 100 MHz is marginal.** Sys-clock Fmax across seeds was
+  86–107 MHz; only seed 1 passed. The critical path is inside VexRiscv and
+  mostly routing.
+- **64 KiB RAM is required.** The default 256 KiB RAM made the old toolchain
+  mis-place a cascaded BRAM pair; this hasn't been re-tested with 1.0.0.
+- **`--with-uberddr3`, `--with-ethernet`, `--with-hdmi`** are expected to need
+  Vivado: LiteX drops Vivado-only I/O properties such as `INTERNAL_VREF` for
+  this toolchain, and there is no false-path support for the 400 MHz DDR3 PHY.
+
+**Use Vivado for any build that includes `--with-uberclock`, `--with-uberddr3`,
+`--with-ethernet`, or `--with-hdmi`.**
 
 --------------------
 

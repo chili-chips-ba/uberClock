@@ -41,7 +41,7 @@
 \title{Porting the UberClock LiteX SoC Build to openXC7:\\
 Debugging Log, Fixes, and Status}
 \author{}
-\date{October 11, 2026}
+\date{October 11, 2026\\(updated October 26, 2026: re-tested with openXC7 1.0.0)}
 
 \begin{document}
 \maketitle
@@ -62,6 +62,20 @@ full design with the UberClock DSP core enabled
 exposes a reproducible nextpnr-xilinx placement-legality bug, independent
 of the earlier capacity/performance issues already fixed. Section
 \ref{sec:status} gives the current status and recommended path forward.
+
+\medskip\noindent
+\textbf{Update (October 26, 2026).} Sections~\ref{sec:stage1} and
+\ref{sec:stage2} were done with the original openXC7 toolchain
+(nextpnr-xilinx 0.8.2). Section~\ref{sec:v100} repeats the port with
+\textbf{openXC7 1.0.0} (Yosys 0.69, \lstinline{openXC7/nextpnr} 1.0.0, which
+replaces nextpnr-xilinx with the \lstinline{nextpnr-himbaechel} engine). It
+contains step-by-step install and build instructions
+(Section~\ref{sec:v100-install}), the six new integration issues found and
+fixed, and the results: the CPU-only SoC builds and meets 100~MHz timing
+(seed~1), while \lstinline{--with-uberclock} still fails placement with the
+same class of legalization bug, so 1.0.0 does not resolve
+Issues~8--10. \textbf{Section~\ref{sec:v100} is the current reference;}
+the rest of the document is kept as the historical log.
 \end{abstract}
 
 \tableofcontents
@@ -84,6 +98,12 @@ at all, and if not, why.
 
 \subsection{Toolchain environment discovered on this machine}
 
+\noindent\textit{Historical: this describes the pre-1.0.0 install used for
+Sections~\ref{sec:stage1}--\ref{sec:stage2}. For openXC7 1.0.0, follow
+Section~\ref{sec:v100-install} instead; its file layout and chip database
+format are different.}
+
+\smallskip\noindent
 openXC7 was already installed, but not where LiteX's toolchain wrapper
 defaults expect it (a snap path). The actual layout:
 
@@ -158,8 +178,7 @@ recipe, never exported into the interactive shell.
 
 \textbf{Fix.} Two options, both now valid: run
 \lstinline{source /opt/openxc7/setup_env.sh} (a ready-made script already
-present on disk), or simply go through \lstinline{make build-board
-TOOLCHAIN=openxc7}, which now exports these variables itself (see
+present on disk), or simply go through \lstinline{make build-board TOOLCHAIN=openxc7}, which now exports these variables itself (see
 Appendix~\ref{app:makefile}).
 
 \subsection{Issue 3 -- SA placer leaves a fracturable LUT pair unbound,
@@ -336,8 +355,7 @@ make: *** [Makefile:63: build-board] Terminated
 
 \textbf{Cause.} LiteX's default synth options are
 \lstinline{"-flatten -nosrl -arch xc7 "}. Yosys's own
-\lstinline{synth_xilinx} documentation (\lstinline{yosys -p "help
-synth_xilinx"}) confirms \lstinline{-flatten} is applied in the
+\lstinline{synth_xilinx} documentation (\lstinline{yosys -p "help synth_xilinx"}) confirms \lstinline{-flatten} is applied in the
 \textbf{\lstinline{prepare:}} stage -- i.e.\ \emph{before}
 \lstinline{map_dsp:}, \lstinline{coarse:}, \lstinline{map_memory:},
 \lstinline{fine:}, and every \lstinline{opt_*} pass. Because the design
@@ -518,8 +536,7 @@ ERROR: Unable to find legal placement for cell
   check constraints and utilisation.
 \end{lstlisting}
 As before, utilization at the point of failure was comfortably within
-budget (\lstinline{SLICE_LUTX: 152441/269200 56%}, \lstinline{CARRY4:
-0/33650 0%}) -- not a capacity problem -- and, as in both Issue~8 cases,
+budget (\lstinline{SLICE_LUTX: 152441/269200 56%}, \lstinline{CARRY4: 0/33650 0%}) -- not a capacity problem -- and, as in both Issue~8 cases,
 \emph{zero} ``at iteration \#1...'' lines were ever printed; the failure
 happens before annealing proper even starts.
 
@@ -591,8 +608,7 @@ of the \lstinline{abc9}-mapped netlist worth tracking if timing closure
 is attempted later.
 
 \textbf{This is a third, independently reproducible bug signature.} The
-exact message \lstinline{"post-placement validity check failed for Bel
-'<slice>/A5FF' (no cell)"} was also seen, on a \emph{different, earlier}
+exact message \lstinline{"post-placement validity check failed for Bel '<slice>/A5FF' (no cell)"} was also seen, on a \emph{different, earlier}
 netlist, during Stage~1 seed-rolling: the very first attempt to use the
 \lstinline{heap} placer on the (pre-\lstinline{abc9}) 256~KiB-RAM
 CPU-only build hit \lstinline{"SLICE_X10Y181/A5FF"} in exactly the same
@@ -616,6 +632,334 @@ across two unrelated netlist configurations. This is strong evidence of
 a genuine, multi-faceted toolchain maturity gap rather than a single
 fixable misconfiguration on this project's side.
 
+\section{Re-test with openXC7 1.0.0 (October 26, 2026)}
+\label{sec:v100}
+
+The port was repeated on a second machine with a clean install of the
+openXC7 \textbf{toolchain-installer 1.0.0} release (published
+2026-09-25), to find out whether the new place-and-route engine fixes the
+Stage~2 placement bugs. Everything in this section was built and run on
+that machine; the earlier sections were not re-done with the old
+toolchain.
+
+\subsection{What changed in openXC7 1.0.0}
+
+\begin{itemize}[nosep]
+  \item \textbf{New place-and-route engine.} The archived
+  \lstinline{nextpnr-xilinx} fork (last release 0.9.8) is replaced by
+  \href{https://github.com/openXC7/nextpnr}{\texttt{openXC7/nextpnr}}
+  1.0.0, built as \lstinline{nextpnr-himbaechel} with the
+  \lstinline{xilinx} micro-architecture. A shell shim installed as
+  \lstinline{bin/nextpnr-xilinx} translates the old command-line flags
+  (\lstinline{--chipdb}, \lstinline{--xdc}, \lstinline{--fasm}) to
+  himbaechel's (\lstinline{--device}, \lstinline{-o xdc=}, \lstinline{-o fasm=}),
+  so LiteX's generated build script works without changes. The shim takes
+  the device name from the chip database's file name.
+  \item \textbf{New chip database format and generator.} Chip databases
+  for the old engine cannot be reused. \lstinline{bbaexport.py} (which
+  LiteX calls to generate a missing chipdb automatically) is gone; the new
+  generator is
+  \lstinline{share/nextpnr/himbaechel/uarch/xilinx/gen/xilinx_gen.py}.
+  \item \textbf{New install layout.} The prjxray database moved to
+  \lstinline{share/nextpnr/prjxray-db}; Python tools (including a
+  \lstinline{fasm2frames} with the fast ANTLR parser) live in a venv under
+  the install prefix; \lstinline{export.sh} sets \lstinline{PATH},
+  \lstinline{NEXTPNR_XILINX_DIR}, \lstinline{NEXTPNR_XILINX_PYTHON_DIR} and
+  \lstinline{PRJXRAY_DB_DIR}.
+  \item \textbf{Pinned versions.} Installer tag \lstinline{1.0.0}
+  (\lstinline{f1f1c0c}); \lstinline{openXC7/nextpnr} tag \lstinline{1.0.0}
+  (\lstinline{e860c9c8}); prjxray-db \lstinline{a90f27c}; Yosys 0.69
+  (\lstinline{9f75ca1f9}).
+\end{itemize}
+
+\subsection{Installation and build, step by step}
+\label{sec:v100-install}
+
+Tested on Ubuntu with zsh. Paths below use the defaults; the tested
+machine used \lstinline{INSTALL_PREFIX=$HOME/opt/openxc7-1.0}, which only
+changes \lstinline{OPENXC7_DIR} in step~5.
+
+\paragraph{1. LiteX environment.} From the repository root:
+\begin{lstlisting}[style=termout]
+2.soc/setup_dev.sh --with-openxc7
+\end{lstlisting}
+This creates \lstinline{~/litex-venv}, installs LiteX into
+\lstinline{~/litex}, and installs \lstinline{fasm2frames} into the venv
+(Issue~5). If a RISC-V GCC is already installed (or you have no
+\lstinline{sudo}), add \lstinline{--no-gcc}; otherwise the script stops at
+the failing \lstinline{apt install} \emph{before} the
+\lstinline{--with-openxc7} step (Issue~11).
+
+\paragraph{2. Copy the board file into litex-boards.} The repository's own
+AX7203 board file defines the ADC/DAC pins and accepts a
+\lstinline{toolchain=} argument; the stock litex-boards file does neither
+(Issue~13):
+\begin{lstlisting}[style=termout]
+cp 2.soc/6.migen/platforms/alinx_ax7203.py \
+   ~/litex/litex-boards/litex_boards/platforms/alinx_ax7203.py
+\end{lstlisting}
+This is the same manual step described in
+\lstinline{2.soc/0.doc/Installation.md}. Re-run it after every
+\lstinline{litex_setup.py --update}.
+
+\paragraph{3. Build the openXC7 1.0.0 toolchain from source.}
+\begin{lstlisting}[style=termout]
+git clone --branch 1.0.0 https://github.com/openXC7/toolchain-installer
+cd toolchain-installer
+./toolchain-sources-builder.sh all          # installs into /opt/openxc7
+# or, without sudo:
+# INSTALL_PREFIX=$HOME/opt/openxc7-1.0 JOBS=$(nproc) \
+#   ./toolchain-sources-builder.sh all
+\end{lstlisting}
+This builds Yosys, nextpnr-himbaechel, prjxray, prjxray-db and fpga-as.
+(Nix and Apio are the installer's other supported options; they were not
+tested here.)
+
+\paragraph{4. Generate the chip database (once).} LiteX cannot do this
+itself under 1.0.0 (Issue~12):
+\begin{lstlisting}[style=termout]
+P=/opt/openxc7                    # or $HOME/opt/openxc7-1.0
+source $P/export.sh
+mkdir -p ~/openxc7-chipdb
+python3 $P/share/nextpnr/himbaechel/uarch/xilinx/gen/xilinx_gen.py \
+  --xray $P/share/nextpnr/prjxray-db/artix7 \
+  --device xc7a200t --bba /tmp/xc7a200t.bba
+bbasm -l /tmp/xc7a200t.bba ~/openxc7-chipdb/xc7a200tfbg484.bin
+rm /tmp/xc7a200t.bba
+\end{lstlisting}
+\lstinline{--device} is the \emph{fabric} name (\lstinline{xc7a200t}), not
+the part. The output file name must be \lstinline{xc7a200tfbg484.bin}:
+LiteX looks for that name, and the shim turns it into nextpnr's
+\lstinline{--device}. On the test machine this took 150~s and 6.9~GB peak
+RAM, producing a 245~MB \lstinline{.bba} and a 57~MB \lstinline{.bin}.
+Make sure the \lstinline{bbasm} on your \lstinline{PATH} is the 1.0.0 one
+(sourcing \lstinline{export.sh} does this): an old snap \lstinline{bbasm}
+aborts with \lstinline{Assertion `fileIn != nullptr' failed}.
+
+\paragraph{5. Build the CPU-only SoC.}
+\begin{lstlisting}[style=termout]
+source ~/litex-venv/bin/activate
+cd 3.build
+make build-board TOOLCHAIN=openxc7 \
+  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=1'
+# custom prefix / chipdb location:
+#   make build-board TOOLCHAIN=openxc7 OPENXC7_DIR=$HOME/opt/openxc7-1.0 \
+#     CHIPDB=$HOME/openxc7-chipdb OPTIONS='...'
+\end{lstlisting}
+The Makefile derives \lstinline{PRJXRAY_DB_DIR} and
+\lstinline{NEXTPNR_XILINX_PYTHON_DIR} from \lstinline{OPENXC7_DIR} using
+the 1.0.0 layout and puts \lstinline{$OPENXC7_DIR/bin} first on
+\lstinline{PATH}. In zsh, pass these variables individually or
+\lstinline{export} them: storing them in one variable and writing
+\lstinline{make build-board $X} does \emph{not} split them into separate
+arguments in zsh, so \lstinline{make} sets \lstinline{TOOLCHAIN} to the
+whole string and the openXC7 branch is skipped.
+
+\paragraph{6. Check timing.} LiteX passes
+\lstinline{--timing-allow-fail}, so a bitstream is written even when timing
+fails. Always check nextpnr's final report (the \emph{last} pair of
+\lstinline{Max frequency} lines; the first pair is a post-placement
+estimate):
+\begin{lstlisting}[style=termout]
+Info: Max frequency for clock 's7mmcm0_clkout_buf': 101.83 MHz (PASS at 100.00 MHz)
+\end{lstlisting}
+If the sys clock (\lstinline{s7mmcm0_clkout_buf}) fails, try other seeds
+(Section~\ref{sec:v100-stage1}) or lower the clock with
+\lstinline{FREQ=90e6}. The bitstream is
+\lstinline{3.build/build/alinx_ax7203/gateware/alinx_ax7203.bit}; load it
+with \lstinline{make load} (OpenFPGALoader). The 1.0.0 bitstreams were
+\emph{not} tested on hardware in this session.
+
+\noindent\textbf{Note.} Builds regenerate files under
+\lstinline{3.build/build/alinx_ax7203/} that are tracked in git; restore
+them with \lstinline{git checkout -- 3.build/build} before committing.
+
+\subsection{New issues found with 1.0.0}
+
+Issues are numbered after the original log. None of them is a
+place-and-route bug; they are integration problems between LiteX, the
+board file, this project's SoC code and the new toolchain, and all are
+fixed or documented in the steps above.
+
+\subsubsection*{Issue 11 -- \texttt{setup\_dev.sh} stops before installing
+\texttt{fasm2frames}}
+\begin{lstlisting}[style=termout]
+Error: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)
+[1213.556] RISC-V GCC toolchain could not be installed.
+\end{lstlisting}
+\textbf{Cause.} \lstinline{litex_setup.py --gcc=riscv} runs
+\lstinline{apt install} without \lstinline{sudo}. The script runs with
+\lstinline{set -e}, so it exits before the \lstinline{--with-openxc7} step.
+LiteX itself was installed correctly, and the machine already had
+\lstinline{riscv64-unknown-elf-gcc} 14.2.0.
+\textbf{Fix.} Re-run with \lstinline{--no-gcc --with-openxc7}.
+
+\subsubsection*{Issue 12 -- LiteX cannot generate a 1.0.0 chip database}
+\begin{lstlisting}[style=termout]
+Chip database file '.../xc7a200t-fbg484.bin' not found, generating...
+/usr/bin/pypy3: can't open file .../lib/python/bbaexport.py
+OSError: Error occured during bbaexport's execution
+\end{lstlisting}
+\textbf{Cause.} LiteX's \lstinline{XilinxYosysNextpnrToolchain} generates a
+missing chipdb by calling \lstinline{bbaexport.py}, which 1.0.0 no longer
+ships, and the old format would not load in himbaechel anyway.
+\textbf{Fix.} Generate the chipdb once with \lstinline{xilinx_gen.py}
+(step~4). Two mistakes to avoid: passing the part
+(\lstinline{xc7a200tfbg484-2}) as \lstinline{--device} fails with
+\lstinline{FileNotFoundError: .../xc7a200tfbg484-2/tilegrid.json}, because
+the generator wants the fabric name; and the file name must be dash-free
+(Issue~14).
+
+\subsubsection*{Issue 13 -- stock litex-boards board file: no
+\texttt{toolchain=} argument, no ADC/DAC pins}
+\begin{lstlisting}[style=termout]
+TypeError: Platform.__init__() got an unexpected keyword argument 'toolchain'
+...
+ConstraintError: Resource not found: adc_clk_ch0:None
+\end{lstlisting}
+\textbf{Cause.} \lstinline{soc.py} has always called
+\lstinline{alinx_ax7203.Platform(toolchain=toolchain)} and requests the
+ADC/DAC pins in \lstinline{uberclock_core.py}. Both only exist in the
+repository's own board file, \lstinline{2.soc/6.migen/platforms/alinx_ax7203.py},
+which must be copied into litex-boards by hand. Upstream
+litex-boards' \lstinline{Platform()} takes no arguments, hardcodes
+\lstinline{toolchain="vivado"} and defines no ADC/DAC pins. On a machine
+without the copy, \emph{every} build fails, including Vivado builds.
+\textbf{Fix.} Copy the board file (step~2). In addition,
+\lstinline{soc.py} now builds the platform through a new
+\lstinline{_make_platform()} helper: when the board file does not accept
+\lstinline{toolchain=}, it builds the stock platform and replaces its
+toolchain object with \lstinline{XilinxYosysNextpnrToolchain}, re-adding
+the platform commands so LiteX's filter drops the Vivado-only
+\lstinline{INTERNAL_VREF}. CPU-only builds therefore work even without the
+copied file; \lstinline{--with-uberclock} still needs it for the pins.
+
+\subsubsection*{Issue 14 -- dashed part name breaks chipdb, nextpnr and
+prjxray lookups}
+\begin{lstlisting}[style=termout]
+AssertionError: Part None not found in {'xc7a100tcsg324-1': ..., 'xc7a200tfbg484-2': ...}
+\end{lstlisting}
+\textbf{Cause.} The stock board file names the part
+\lstinline{xc7a200t-fbg484-2}. LiteX maps only two specific parts to the
+dash-free spelling and passes this one through as-is, so it looks for
+\lstinline{xc7a200t-fbg484.bin}, the shim passes
+\lstinline{--device xc7a200t-fbg484} (rejected by himbaechel's device
+regex \lstinline{(xc7[azks]\d+t?|xc7vx\d+t?)([a-z0-9]*)(?:-([0-9]L?))?}),
+and \lstinline{fasm2frames}/\lstinline{xc7frames2bit} get a part that is not
+in prjxray-db's \lstinline{mapping/parts.yaml}.
+\textbf{Fix.} For the open toolchains, \lstinline{_make_platform()} removes
+the die--package dash (\lstinline{xc7a200tfbg484-2}), which makes all three
+names right. The repository's board file already uses this spelling.
+
+\subsubsection*{Issue 15 -- \texttt{IDELAYCTRL} without delays is an error}
+\begin{lstlisting}[style=termout]
+Info: Packing IOLOGIC...
+ERROR: Found IDELAYCTRL but no I/ODELAYs
+\end{lstlisting}
+\textbf{Cause.} \lstinline{UberClockCRG} always instantiated
+\lstinline{S7IDELAYCTRL}, but only the DDR3 PHYs (UberDDR3, LiteDRAM) and the
+RGMII Ethernet PHY use I/ODELAYs. Vivado silently removes an unused
+\lstinline{IDELAYCTRL}; nextpnr-himbaechel rejects it.
+\textbf{Fix.} \lstinline{UberClockCRG} takes a new
+\lstinline{with_idelayctrl} argument, and \lstinline{BaseSoC} sets it only
+when DDR clocks, Ethernet or Etherbone are enabled. The 200~MHz
+\lstinline{idelay} clock domain is still always created (UberDDR3 uses it).
+
+\subsubsection*{Issue 16 -- \texttt{OPENXC7\_PLACER} override silently did
+nothing}
+\textbf{Cause.} The override (Issue~3) replaced the text
+\lstinline{--placer sa} in LiteX's nextpnr options. Current LiteX no longer
+passes \lstinline{--placer} at all, so the replacement matched nothing and
+nextpnr always used its default (heap). This was found because a run with
+\lstinline{OPENXC7_PLACER=sa} printed ``Running main analytical placer''
+(heap) instead of simulated annealing.
+\textbf{Fix.} \lstinline{soc.py} now removes any existing
+\lstinline{--placer} option and appends \lstinline{--placer <choice>}
+(default \lstinline{heap}).
+
+\subsection{Stage 1 result with 1.0.0: CPU-only builds and meets timing}
+\label{sec:v100-stage1}
+
+With Issues~11--16 fixed, RISC-V CPU + UART + 64~KiB integrated RAM builds
+end to end: Yosys 0.69 $\to$ nextpnr-himbaechel $\to$
+\lstinline{fasm2frames} $\to$ \lstinline{xc7frames2bit}, producing a
+9.3~MB \lstinline{.bit}. Each build takes 1.2--2 minutes. Timing on the
+100~MHz sys clock depends strongly on the placement seed:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{rrl}
+\toprule
+Seed & Sys-clock Fmax (post-route) & Result at 100~MHz \\
+\midrule
+\textbf{1} & \textbf{101.83~MHz} (107.43~MHz$^{*}$) & \textbf{PASS} \\
+42 & 97.33~MHz & FAIL \\
+5 & 94.78~MHz & FAIL \\
+3 & 92.01~MHz & FAIL \\
+2 & 91.57~MHz & FAIL \\
+4 & 86.24~MHz & FAIL \\
+\bottomrule
+\end{tabular}
+\caption{openXC7 1.0.0, CPU-only SoC, \lstinline{--integrated-main-ram-size=0x10000}.
+The 200~MHz input clock passes easily (828~MHz).
+$^{*}$Final verification run of step~5 with the committed code, which
+passes \lstinline{--placer heap} explicitly (Issue~16 fix); the sweep ran
+before that change and used heap as nextpnr's default.}
+\end{table}
+
+The critical path (seed~42) is entirely inside VexRiscv: from the
+data-cache write-back stage through the stall logic to
+\lstinline{CsrPlugin_mepc}, 10.27~ns of which 8.27~ns is routing. Seed~1
+passes by only 0.18~ns, so any change to the design will likely need a new
+seed search; \lstinline{FREQ=90e6} is the stable alternative. The 64~KiB RAM
+workaround (Issue~4) was kept; whether 1.0.0 still mis-places the 256~KiB
+cascaded BRAM pair was not tested.
+
+\subsection{Stage 2 result with 1.0.0: \texttt{--with-uberclock} still
+fails placement}
+\label{sec:v100-stage2}
+
+All runs used the command from step~5 plus \lstinline{--with-uberclock},
+seed~1, 64~KiB RAM, the hierarchy-preserving Yosys script (Issue~6), and
+\lstinline{abc9} (now LiteX's default synthesis option, so
+\lstinline{--yosys-abc9} is no longer needed). Synthesis completes in all
+cases. Utilization after packing, with \lstinline{CARRY4} enabled:
+\lstinline{SLICE_LUTX} 190615/269200 (70\%), \lstinline{SLICE_FFX}
+106650/269200 (39\%), \lstinline{CARRY4} 16343/33650 (48\%),
+\lstinline{RAMB36E1} 179/365 (49\%), \lstinline{RAMB18E1} 19/730,
+\lstinline{DSP48E1} 168/740 (22\%) -- essentially identical to the old
+toolchain, and not a capacity problem.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{0.24\textwidth}p{0.10\textwidth}p{0.56\textwidth}}
+\toprule
+Placer / option & Time & Result \\
+\midrule
+\lstinline{heap} (default) & 6~min & Fail: \lstinline{Unable to find legal placement for cell '...uberclock.tx_5.cordic_up.cordic_stages[17]...replace_alu...carry4$split$muxcy0$PACKED_CARRY4$' of type 'CARRY4' after 7103037 attempts} \\
+\lstinline{heap}, \lstinline{OPENXC7_NOCARRY=1} & 22~min & Fail: same error on a \lstinline{SLICE_FFX} cell (\lstinline{CARRY4} 0\%, \lstinline{SLICE_LUTX} 148833 = 55\%) \\
+\lstinline{sa}, \lstinline{OPENXC7_PLACER=sa} & $>$1~h~52~min & Hung: initial placement stopped at 220{,}500 / 314{,}197 cells, then no output for 1~h~44~min at 100\% CPU; killed \\
+\bottomrule
+\end{tabular}
+\caption{openXC7 1.0.0, \lstinline{--with-uberclock}. (A first ``sa'' run
+actually used heap because of Issue~16 and failed like the first row on
+\lstinline{tx_4.cordic_up.cordic_stages[4]}.)}
+\end{table}
+
+\textbf{Conclusion.} The new engine fails in the same way as the old one.
+The heap failure is the same signature as Issue~8 (a \lstinline{CARRY4}
+from Yosys's \lstinline{alumacc}/\lstinline{replace_alu} in a CORDIC stage,
+during the first legalization pass); \lstinline{-nocarry} moves it to
+another cell type, as in Issue~9. SA behaves differently from Issue~10: it
+no longer reaches annealing at all, but stalls in initial placement. So
+openXC7 1.0.0 does \textbf{not} make \lstinline{--with-uberclock}
+buildable, and Vivado remains required for it. The \lstinline{heap}
+\lstinline{CARRY4} failure is now the best upstream bug-report candidate
+against \href{https://github.com/openXC7/nextpnr}{\texttt{openXC7/nextpnr}}:
+it reproduces in about 6 minutes on a single pinned toolchain version, and
+the synthesized JSON netlist can be attached without needing LiteX.
+
 \section{Summary of attempts}
 
 \begin{table}[H]
@@ -634,6 +978,13 @@ CPU+UART+64KiB RAM & \lstinline{heap} placer & \textbf{Success} & Working \lstin
 +UberClock & \lstinline{heap}, +\lstinline{abc9}, seed 7 & Fail & Same bug class, different CARRY4 instance (Issue~8) \\
 +UberClock & \lstinline{heap}, +\lstinline{abc9}, +\lstinline{-nocarry} & Fail (2$\times$) & Same bug class on a different cell; hang vs.\ instant crash, non-deterministic (Issue~9) \\
 +UberClock & \lstinline{sa}, +\lstinline{abc9} & Fail & Full 92-min anneal converges, then \texttt{A5FF (no cell)} legalization bug -- 3rd distinct bug signature (Issue~10) \\
+\midrule
+\multicolumn{4}{l}{\textit{openXC7 1.0.0 (nextpnr-himbaechel), Section~\ref{sec:v100}}} \\
+CPU+UART+64KiB RAM & \lstinline{heap}, seed 1 & \textbf{Success} & Working \lstinline{.bit}, 101.8--107.4~MHz (PASS) \\
+CPU+UART+64KiB RAM & \lstinline{heap}, seeds 2--5, 42 & Success & \lstinline{.bit} written but sys clock 86--97~MHz (FAIL) \\
++UberClock & \lstinline{heap}, \lstinline{abc9} & Fail & Same \lstinline{CARRY4} legalization bug as Issue~8 \\
++UberClock & \lstinline{heap}, \lstinline{abc9}, \lstinline{-nocarry} & Fail & Same bug on a \lstinline{SLICE_FFX} cell, as in Issue~9 \\
++UberClock & \lstinline{sa}, \lstinline{abc9} & Fail (hang) & Stalls in initial placement at 70\% of cells, killed after 1~h~52~min \\
 \bottomrule
 \end{tabular}
 \caption{All configurations attempted, in chronological order.}
@@ -645,12 +996,15 @@ CPU+UART+64KiB RAM & \lstinline{heap} placer & \textbf{Success} & Working \lstin
 \subsection{What works today}
 
 A complete, Vivado-free build for RISC-V CPU~+~UART~+~64~KiB integrated
-RAM on the Alinx AX7203, via:
+RAM on the Alinx AX7203, with openXC7 1.0.0 set up as in
+Section~\ref{sec:v100-install}:
 \begin{lstlisting}[style=termout]
 make build-board TOOLCHAIN=openxc7 \
-  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=42'
+  OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=1'
 \end{lstlisting}
-This exercises the full open flow -- Yosys, nextpnr-xilinx, prjxray's
+Seed~1 meets 100~MHz timing on the sys clock; other seeds tested do not
+(Section~\ref{sec:v100-stage1}).
+This exercises the full open flow -- Yosys, nextpnr, prjxray's
 \lstinline{fasm2frames} and \lstinline{xc7frames2bit} -- end to end, and
 is loadable via the existing \lstinline{OpenFPGALoader}-based programmer
 (\lstinline{alinx_ax7203.py}'s \lstinline{create_programmer}, unchanged by
@@ -675,10 +1029,15 @@ nextpnr-xilinx placement-legalization bugs, and testing has now turned up
   \item Switching to the \lstinline{sa} placer (Issue~10) avoids both of
   the above -- it completes a full, successful 92-minute anneal -- but
   then hits a \emph{third}, independent bug during post-placement
-  legalization (\lstinline{"post-placement validity check failed for Bel
-  '<slice>/A5FF' (no cell)"}), the same exact signature already seen once
+  legalization (\lstinline{"post-placement validity check failed for Bel '<slice>/A5FF' (no cell)"}), the same exact signature already seen once
   before, on an unrelated netlist, during Stage~1 seed-rolling.
 \end{itemize}
+\textbf{Re-tested with openXC7 1.0.0 (Section~\ref{sec:v100-stage2}): still
+failing.} The new nextpnr-himbaechel engine reproduces the heap
+\lstinline{CARRY4} failure and the \lstinline{-nocarry} relocation, and the
+\lstinline{sa} placer now stalls in initial placement instead of reaching
+annealing.
+
 No placer/synthesis-option combination tried gets past placement for the
 full design, and one bug signature (\lstinline{A5FF (no cell)}) has now
 been independently reproduced on two different netlists, which makes it
@@ -726,7 +1085,12 @@ above:
   \href{https://github.com/openXC7/toolchain-installer}{openXC7} or
   \href{https://github.com/gatecat/nextpnr-xilinx}{nextpnr-xilinx}
   upstream, and check whether a newer toolchain build already fixes
-  either.
+  either. \emph{Update:} openXC7 1.0.0 does not fix them
+  (Section~\ref{sec:v100-stage2}). nextpnr-xilinx is now archived, so
+  reports should go to
+  \href{https://github.com/openXC7/nextpnr}{\texttt{openXC7/nextpnr}};
+  with 1.0.0 the heap \lstinline{CARRY4} failure is the easiest to
+  reproduce (about 6 minutes).
   \item \textbf{In the meantime}, keep Vivado as the synthesis path for
   any configuration that includes \lstinline{--with-uberclock},
   \lstinline{--with-uberddr3}, \lstinline{--with-ethernet}, or
@@ -836,6 +1200,64 @@ default before knowing which combination (if any) actually works. Once
 Issue~10 resolves, these should be collapsed into either a fixed default
 or a proper \lstinline{--yosys-nocarry}-style CLI flag, not left as
 undocumented environment variables.
+
+\section{openXC7 1.0.0 code changes}
+\label{app:v100}
+
+\paragraph{\texttt{3.build/Makefile}} -- defaults switched to the 1.0.0
+install layout (Section~\ref{sec:v100}):
+\begin{lstlisting}[style=codeblk]
+OPENXC7_DIR               ?= /opt/openxc7
+CHIPDB                    ?= $(HOME)/openxc7-chipdb
+PRJXRAY_DB_DIR            ?= $(OPENXC7_DIR)/share/nextpnr/prjxray-db
+NEXTPNR_XILINX_PYTHON_DIR ?= $(OPENXC7_DIR)/lib/python
+\end{lstlisting}
+
+\paragraph{\texttt{uberclock\_soc/soc.py}} -- platform construction
+(Issues~13 and 14):
+\begin{lstlisting}[style=codeblk]
+def _make_platform(toolchain: str):
+    try:
+        platform = alinx_ax7203.Platform(toolchain=toolchain)
+    except TypeError:
+        platform = alinx_ax7203.Platform()
+        if toolchain not in ("vivado", "yosys+nextpnr", "openxc7"):
+            raise ValueError(...)
+        if toolchain != "vivado":
+            from litex.build.xilinx import yosys_nextpnr
+            platform.toolchain = yosys_nextpnr.XilinxYosysNextpnrToolchain(toolchain)
+            commands = list(platform.constraint_manager.platform_commands)
+            platform.constraint_manager.platform_commands.clear()
+            for command, signals in commands:
+                platform.add_platform_command(command, **signals)
+
+    if toolchain in ("yosys+nextpnr", "openxc7"):
+        platform.device = re.sub(r"^(xc7[a-z]\d+t?)-", r"\1", platform.device)
+    return platform
+\end{lstlisting}
+placer override (Issue~16):
+\begin{lstlisting}[style=codeblk]
+_placer = os.environ.get("OPENXC7_PLACER", "heap")
+platform.toolchain._pnr_opts = (
+    re.sub(r"--placer\s+\S+\s*", "", platform.toolchain._pnr_opts)
+    + f" --placer {_placer} "
+)
+\end{lstlisting}
+and \lstinline{IDELAYCTRL} gating (Issue~15):
+\begin{lstlisting}[style=codeblk]
+with_idelayctrl = need_ddr_clks or bool(with_ethernet) or bool(with_etherbone)
+self.submodules.crg = UberClockCRG(
+    platform, need_ddr_clks=need_ddr_clks, with_idelayctrl=with_idelayctrl
+)
+\end{lstlisting}
+
+\paragraph{\texttt{uberclock\_soc/clocking.py}}:
+\begin{lstlisting}[style=codeblk]
+def __init__(self, platform, need_ddr_clks: bool = True, with_idelayctrl: bool = True):
+    ...
+    if with_idelayctrl:
+        self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
+\end{lstlisting}
 
 \section{\texttt{setup\_dev.sh} changes}
 \label{app:setupdev}

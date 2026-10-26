@@ -101,79 +101,160 @@ The python scripts under ``3.build/scripts`` are kept separate from the Makefile
 openXC7 Toolchain (Vivado-free build)
 --------------------------------------
 
-Besides Vivado, ``make build-board`` also supports a fully open-source
-toolchain: `openXC7 <https://github.com/openXC7/toolchain-installer>`_
-(Yosys + nextpnr-xilinx + prjxray). LiteX exposes this through its
+Besides Vivado, ``make build-board`` supports a fully open-source toolchain:
+`openXC7 <https://github.com/openXC7/toolchain-installer>`_ **1.0.0** --
+Yosys 0.69, ``nextpnr-himbaechel`` (`openXC7/nextpnr
+<https://github.com/openXC7/nextpnr>`_ 1.0.0) and prjxray's
+``fasm2frames``/``xc7frames2bit``. LiteX drives it through its
 ``XilinxYosysNextpnrToolchain``, selected with ``TOOLCHAIN=openxc7``.
 
-Setup (one-time)
-~~~~~~~~~~~~~~~~~
+The full debugging log -- every error hit, its root cause, and its fix -- is
+``docs/openxc7_port/main.tex`` at the repository root. Its "Re-test with
+openXC7 1.0.0" section is the current reference.
 
-The Makefile expects an openXC7 install under ``/opt/openxc7`` (or wherever
-``OPENXC7_DIR`` points), with a pre-generated chip database for the target
-part under ``CHIPDB`` (default ``~/openxc7-chipdb``). It exports ``PATH``,
-``CHIPDB``, ``PRJXRAY_DB_DIR`` and ``NEXTPNR_XILINX_PYTHON_DIR`` for the
-build automatically when ``TOOLCHAIN=openxc7`` is selected.
+Status
+~~~~~~
 
-The openXC7 packer stage also needs ``fasm2frames``, which is *not* shipped
-by the toolchain-installer binary install and is *not* the ``fasm`` PyPI
-package. Install it once via:
+.. list-table::
+   :header-rows: 1
+   :widths: 45 55
 
-.. code-block:: bash
+   * - Configuration
+     - Result
+   * - RISC-V CPU + UART + 64 KiB integrated RAM
+     - Builds a ``.bit`` in 1--2 minutes; seed 1 meets 100 MHz timing
+   * - ``--with-uberclock`` (DSP core)
+     - Fails: nextpnr placement-legality bug (see `Known problems`_)
+   * - ``--with-uberddr3``, ``--with-ethernet``, ``--with-hdmi``
+     - Untested; expected to need Vivado
 
-   2.soc/setup_dev.sh --with-openxc7
+The openXC7 1.0.0 bitstreams have not yet been tested on hardware.
 
-This sparse-clones ``f4pga/prjxray``, patches its ``setup.py`` (the
-``utils`` package that the ``fasm2frames`` console-script entry point
-depends on is not listed there upstream), and installs it editable into the
-LiteX venv.
+Install and build, step by step
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Building the CPU-only configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tested on Ubuntu. Run the commands from the repository root.
 
-.. code-block:: bash
+1. **LiteX environment.** Creates ``~/litex-venv`` and installs
+   ``fasm2frames`` (from ``f4pga/prjxray``) into it:
 
-   cd 3.build
-   make build-board TOOLCHAIN=openxc7 \
-     OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=42'
+   .. code-block:: bash
 
-This builds RISC-V CPU + UART + 64 KiB integrated RAM end to end -- Yosys,
-nextpnr-xilinx, and prjxray's ``fasm2frames``/``xc7frames2bit`` -- with zero
-placement or routing errors, and produces a working ``.bit`` loadable through
-the existing ``OpenFPGALoader``-based programmer.
+      2.soc/setup_dev.sh --with-openxc7
 
-The reduced 64 KiB RAM size is required, not optional: at the default
-256 KiB, Yosys infers a depth-cascaded BRAM pair, and nextpnr-xilinx does not
-enforce that pair's required column adjacency, producing an unroutable
-placement.
+   Add ``--no-gcc`` if a RISC-V GCC is already installed or you have no
+   ``sudo``. Otherwise the script stops at the failing ``apt install``
+   before it reaches the openXC7 step.
 
-Known limitations
-~~~~~~~~~~~~~~~~~~
+2. **Copy the project's board file into litex-boards.** It defines the
+   ADC/DAC pins and accepts a ``toolchain=`` argument; the stock file does
+   neither. Repeat after every ``litex_setup.py --update``.
 
-``--with-uberclock`` (the DSP core) does **not** build cleanly under openXC7.
-Synthesis itself completes (after keeping hierarchy through
-``synth_xilinx`` instead of flattening before optimization, and switching to
-Yosys's ``abc9`` LUT mapper via ``--yosys-abc9`` to stay within LUT
-capacity), but placement then hits a reproducible **nextpnr-xilinx
-placement-legality bug**: its placer cannot legalize a ``CARRY4`` chain
-shape that Yosys abc9's ALU-extraction pass produces for the CORDIC
-pipeline's adders. This was tested across placers (``heap``, ``sa``) and
-with ``-nocarry``; every combination hits an independent variant of the same
-bug class. This is an upstream toolchain maturity gap, not something
-fixable from this project's RTL or LiteX integration.
+   .. code-block:: bash
 
-``--with-uberddr3``, ``--with-ethernet``, and ``--with-hdmi`` are expected to
-need Vivado regardless: ``XilinxYosysNextpnrToolchain`` silently drops the
-Vivado-only I/O properties UberDDR3's PHY needs (e.g. ``INTERNAL_VREF``), and
-has no real static timing analysis or false-path support, so the DDR3 PHY's
-400 MHz domain would be effectively unconstrained and unverified.
+      cp 2.soc/6.migen/platforms/alinx_ax7203.py \
+         ~/litex/litex-boards/litex_boards/platforms/alinx_ax7203.py
+
+3. **Build openXC7 1.0.0 from source:**
+
+   .. code-block:: bash
+
+      git clone --branch 1.0.0 https://github.com/openXC7/toolchain-installer
+      cd toolchain-installer
+      ./toolchain-sources-builder.sh all     # installs into /opt/openxc7
+      # without sudo:
+      # INSTALL_PREFIX=$HOME/opt/openxc7-1.0 ./toolchain-sources-builder.sh all
+
+4. **Generate the chip database once.** LiteX cannot generate it itself with
+   1.0.0 (its generator, ``bbaexport.py``, was removed). This takes about
+   2.5 minutes and 7 GB of RAM:
+
+   .. code-block:: bash
+
+      P=/opt/openxc7                     # or your INSTALL_PREFIX
+      source $P/export.sh                # 1.0.0 python3 and bbasm first on PATH
+      mkdir -p ~/openxc7-chipdb
+      python3 $P/share/nextpnr/himbaechel/uarch/xilinx/gen/xilinx_gen.py \
+        --xray $P/share/nextpnr/prjxray-db/artix7 \
+        --device xc7a200t --bba /tmp/xc7a200t.bba
+      bbasm -l /tmp/xc7a200t.bba ~/openxc7-chipdb/xc7a200tfbg484.bin
+      rm /tmp/xc7a200t.bba
+
+   ``--device`` is the fabric (``xc7a200t``), not the part. The output must
+   be named ``xc7a200tfbg484.bin``: LiteX looks for that name, and the
+   ``nextpnr-xilinx`` compatibility shim derives nextpnr's ``--device`` from
+   it.
+
+5. **Build the CPU-only SoC:**
+
+   .. code-block:: bash
+
+      source ~/litex-venv/bin/activate
+      cd 3.build
+      make build-board TOOLCHAIN=openxc7 \
+        OPTIONS='--integrated-main-ram-size=0x10000 --nextpnr-seed=1'
+
+   The Makefile exports ``PATH``, ``CHIPDB``, ``PRJXRAY_DB_DIR`` and
+   ``NEXTPNR_XILINX_PYTHON_DIR`` from ``OPENXC7_DIR`` (default
+   ``/opt/openxc7``) and ``CHIPDB`` (default ``~/openxc7-chipdb``). For other
+   locations add e.g. ``OPENXC7_DIR=$HOME/opt/openxc7-1.0``. In zsh, pass
+   these as separate words or ``export`` them; putting them all in one
+   variable and writing ``make build-board $VARS`` does not split them.
+
+6. **Check timing before using the bitstream.** LiteX lets nextpnr write a
+   bitstream even when timing fails, so check the last
+   ``Max frequency for clock 's7mmcm0_clkout_buf'`` line of the output. If
+   it says ``FAIL``, try another ``--nextpnr-seed`` or lower the clock with
+   ``FREQ=90e6``. The bitstream is
+   ``3.build/build/alinx_ax7203/gateware/alinx_ax7203.bit``; program it with
+   ``make load``.
+
+Builds regenerate files under ``3.build/build/alinx_ax7203/`` that are
+tracked in git; restore them with ``git checkout -- 3.build/build`` before
+committing.
+
+What was changed to make it work
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- ``soc.py`` builds the platform through ``_make_platform()``. It falls back
+  to stock litex-boards (enough for CPU-only builds) and uses the dash-free
+  part name ``xc7a200tfbg484-2`` that prjxray-db, the chip database and
+  nextpnr expect. LiteX only maps a couple of parts to that spelling itself.
+- ``soc.py`` and ``clocking.py`` only instantiate ``IDELAYCTRL`` when DDR3 or
+  Ethernet uses I/ODELAYs; nextpnr-himbaechel rejects an unused one
+  (``ERROR: Found IDELAYCTRL but no I/ODELAYs``).
+- The ``OPENXC7_PLACER`` override in ``soc.py`` now reaches nextpnr. Current
+  LiteX passes no ``--placer`` option, so the old text replacement did
+  nothing.
+- ``3.build/Makefile`` uses the 1.0.0 install layout
+  (``share/nextpnr/prjxray-db``, ``lib/python``).
+
+Known problems
+~~~~~~~~~~~~~~
+
+- ``--with-uberclock`` **does not build.** Synthesis completes, and the
+  design fits (70% LUTs, 48% ``CARRY4``), but nextpnr cannot legally place a
+  ``CARRY4`` from a CORDIC stage adder::
+
+     ERROR: Unable to find legal placement for cell
+       '...uberclock.tx_5.cordic_up.cordic_stages[17]...carry4...' of type 'CARRY4'
+
+  ``OPENXC7_NOCARRY=1`` moves the same failure to a flip-flop cell, and
+  ``OPENXC7_PLACER=sa`` stalls in initial placement. The old nextpnr-xilinx
+  had the same bug; openXC7 1.0.0 does not fix it.
+- **Timing at 100 MHz is marginal.** Sys-clock Fmax across seeds ranged from
+  86 to 107 MHz and only seed 1 passed. The critical path is inside VexRiscv
+  and is mostly routing delay.
+- **64 KiB integrated RAM is required.** With the default size, the old
+  toolchain placed a cascaded BRAM pair in non-adjacent columns
+  (unroutable). This has not been re-tested with 1.0.0.
+- ``--with-uberddr3``, ``--with-ethernet`` and ``--with-hdmi`` are
+  expected to need Vivado: LiteX drops Vivado-only I/O properties such as
+  ``INTERNAL_VREF`` for this toolchain, and there is no false-path support
+  for the 400 MHz DDR3 PHY domain.
 
 Use Vivado for any configuration that includes ``--with-uberclock``,
-``--with-uberddr3``, ``--with-ethernet``, or ``--with-hdmi``. openXC7 is
-solid for the CPU-only bring-up configuration above. See
-``docs/openxc7_port/main.tex`` at the repository root for the full,
-chronological debugging log: every error hit, its root cause, and its fix or
-current workaround.
+``--with-uberddr3``, ``--with-ethernet`` or ``--with-hdmi``.
 
 Firmware Memory Placement and In-place Builds
 -----------------------------------------------
