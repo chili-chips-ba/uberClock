@@ -33,7 +33,7 @@ class UberClockCRG(LiteXModule):
 
     MMCM_MARGIN  = 1e-6
 
-    def __init__(self, platform, need_ddr_clks: bool = True):
+    def __init__(self, platform, need_ddr_clks: bool = True, with_idelayctrl: bool = True):
         self.rst = Signal()
 
         self.locked0 = Signal()
@@ -92,7 +92,10 @@ class UberClockCRG(LiteXModule):
         self.specials += Instance("BUFG", i_I=clk200_se, o_O=clk200_bufg)
         self.comb += self.cd_idelay.clk.eq(clk200_bufg)
 
-        self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
+        # Only needed when something instantiates I/ODELAYs (DDR PHYs, RGMII).
+        # nextpnr-himbaechel rejects an IDELAYCTRL with no delays to serve.
+        if with_idelayctrl:
+            self.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
         # Constraints
         platform.add_false_path_constraints(self.cd_sys.clk, self.pll0.clkin)

@@ -44,11 +44,13 @@ SIM_CYCLES    ?= 100000
 # no Vivado; see docs/openxc7_port/main.tex for the issues this works around)
 TOOLCHAIN     ?= vivado
 
-# openXC7 install (installer layout on this machine: /opt/openxc7)
+# openXC7 1.0.0 install (toolchain-sources-builder.sh layout; default prefix
+# /opt/openxc7, override OPENXC7_DIR for a custom INSTALL_PREFIX). CHIPDB must
+# hold a pre-generated himbaechel chipdb named xc7a200tfbg484.bin.
 OPENXC7_DIR               ?= /opt/openxc7
 CHIPDB                    ?= $(HOME)/openxc7-chipdb
-PRJXRAY_DB_DIR            ?= $(OPENXC7_DIR)/share/prjxray-db
-NEXTPNR_XILINX_PYTHON_DIR ?= $(OPENXC7_DIR)/share/nextpnr-xilinx/python
+PRJXRAY_DB_DIR            ?= $(OPENXC7_DIR)/share/nextpnr/prjxray-db
+NEXTPNR_XILINX_PYTHON_DIR ?= $(OPENXC7_DIR)/lib/python
 
 SERVER_PID    := $(BUILD_DIR)/litex_server.pid
 CSR_CSV_FILE  ?= $(BUILD_DIR)/build/$(BOARD)/csr.csv

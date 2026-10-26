@@ -25,6 +25,7 @@ Design intent:
 from __future__ import annotations
 
 import os
+import re
 
 from migen import *
 from litex.gen import *
@@ -48,6 +49,41 @@ from litedram.core.controller import ControllerSettings
 from .clocking import UberClockCRG
 from .ubddr3 import UberDDR3
 from .uberclock_core import add_uberclock_fullrate
+
+
+def _make_platform(toolchain: str):
+    """
+    Build the AX7203 platform for the requested toolchain.
+
+    The repo's board file (2.soc/6.migen/platforms/alinx_ax7203.py, copied
+    into litex-boards during setup) accepts toolchain=. Stock upstream
+    litex-boards' Platform takes no arguments and hardcodes
+    toolchain="vivado"; fall back to swapping the toolchain object after the
+    fact so CPU-only builds still work without the copied file.
+    """
+    try:
+        platform = alinx_ax7203.Platform(toolchain=toolchain)
+    except TypeError:
+        platform = alinx_ax7203.Platform()
+        if toolchain not in ("vivado", "yosys+nextpnr", "openxc7"):
+            raise ValueError(f"Unsupported toolchain for AX7203 fallback: {toolchain}")
+        if toolchain != "vivado":
+            from litex.build.xilinx import yosys_nextpnr
+            platform.toolchain = yosys_nextpnr.XilinxYosysNextpnrToolchain(toolchain)
+
+            # Platform commands added under Vivado (e.g. INTERNAL_VREF) bypassed
+            # the yosys+nextpnr filter in add_platform_command; re-add them.
+            commands = list(platform.constraint_manager.platform_commands)
+            platform.constraint_manager.platform_commands.clear()
+            for command, signals in commands:
+                platform.add_platform_command(command, **signals)
+
+    if toolchain in ("yosys+nextpnr", "openxc7"):
+        # prjxray-db, fasm2frames and nextpnr-himbaechel all spell the part
+        # without the die-package dash (xc7a200tfbg484-2); LiteX only maps a
+        # couple of parts itself and passes "xc7a200t-fbg484-2" through as-is.
+        platform.device = re.sub(r"^(xc7[a-z]\d+t?)-", r"\1", platform.device)
+    return platform
 
 # =============================================================================
 #                               BaseSoC
@@ -108,7 +144,7 @@ class BaseSoC(SoCCore):
         kwargs.setdefault("integrated_main_ram_size", self.INTEGRATED_MAIN_RAM_BYTES)
         kwargs.setdefault("uart_name", "serial")
 
-        platform = alinx_ax7203.Platform(toolchain=toolchain)
+        platform = _make_platform(toolchain)
 
         if toolchain in ("openxc7", "yosys+nextpnr"):
             # LiteX hardcodes "--placer sa" with no CLI override. On this
@@ -124,9 +160,12 @@ class BaseSoC(SoCCore):
             # (sa: fracturable-LUT-pair fixupPlacement bug; heap: CARRY4
             # legalization bug on abc9's alumacc/replace_alu shapes -- see
             # docs/openxc7_port/main.tex).
+            # Older LiteX passed "--placer sa"; newer LiteX passes no --placer
+            # at all, so strip any existing one and append ours explicitly.
             _placer = os.environ.get("OPENXC7_PLACER", "heap")
-            platform.toolchain._pnr_opts = platform.toolchain._pnr_opts.replace(
-                "--placer sa", f"--placer {_placer}"
+            platform.toolchain._pnr_opts = (
+                re.sub(r"--placer\s+\S+\s*", "", platform.toolchain._pnr_opts)
+                + f" --placer {_placer} "
             )
 
             # LiteX's default synth_opts include "-flatten". synth_xilinx
@@ -176,7 +215,12 @@ class BaseSoC(SoCCore):
         #   - UberDDR3 is enabled, OR
         #   - LiteX is using external SDRAM (integrated RAM is disabled).
         need_ddr_clks = bool(with_uberddr3) or (int(kwargs.get("integrated_main_ram_size", 0)) == 0)
-        self.submodules.crg = UberClockCRG(platform, need_ddr_clks=need_ddr_clks)
+        # IDELAYCTRL is only needed by blocks that instantiate I/ODELAYs:
+        # DDR PHYs (UberDDR3 / LiteDRAM) and the RGMII Ethernet PHY.
+        with_idelayctrl = need_ddr_clks or bool(with_ethernet) or bool(with_etherbone)
+        self.submodules.crg = UberClockCRG(
+            platform, need_ddr_clks=need_ddr_clks, with_idelayctrl=with_idelayctrl
+        )
 
         # ---------------------------------------------------------------------
         # SoCCore init (CPU/CSR @ sys clock)
