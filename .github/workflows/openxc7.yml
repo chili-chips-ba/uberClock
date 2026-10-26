@@ -1,0 +1,175 @@
+name: openXC7 build
+
+# Vivado-free build of the CPU-only SoC with openXC7 1.0.0
+# (Yosys + nextpnr-himbaechel + prjxray). Mirrors the step-by-step
+# instructions in README.md ("Building with openXC7") and
+# docs/openxc7_port/main.tex. --with-uberclock is not built: it still fails
+# nextpnr placement legalization under openXC7 1.0.0.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: openxc7-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  OPENXC7_TAG: "1.0.0"
+  OPENXC7_DIR: /home/runner/openxc7
+  CHIPDB: /home/runner/openxc7-chipdb
+  LITEX_DIR: /home/runner/litex
+  LITEX_VENV: /home/runner/litex-venv
+  NEXTPNR_SEED: "1"
+
+jobs:
+  build-cpu-only:
+    # Pinned so the cached toolchain (and its venv's python3) stays valid.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -----------------------------------------------------------------
+      # openXC7 toolchain (built from source once, then cached).
+      # Runs before setup-python so the toolchain venv uses the system
+      # python3, which is identical on every ubuntu-24.04 runner.
+      # -----------------------------------------------------------------
+      # The builder only apt-installs its dependencies when it builds, but the
+      # cached binaries need the same shared libraries (Boost, Tcl, ...) at
+      # run time, so install its package list on every run.
+      - name: Install openXC7 dependencies
+        run: |
+          git clone --depth 1 --branch "$OPENXC7_TAG" \
+            https://github.com/openXC7/toolchain-installer "$RUNNER_TEMP/openxc7-installer"
+          eval "$(sed -n '/^APT_DEPENDENCIES=(/,/)/p' "$RUNNER_TEMP/openxc7-installer/toolchain-sources-builder.sh")"
+          sudo apt-get update
+          sudo apt-get install -y "${APT_DEPENDENCIES[@]}"
+
+      - name: Restore openXC7 toolchain
+        id: toolchain-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.OPENXC7_DIR }}
+          key: openxc7-${{ env.OPENXC7_TAG }}-ubuntu-24.04-v1
+
+      - name: Build openXC7 toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        working-directory: ${{ runner.temp }}/openxc7-installer
+        run: INSTALL_PREFIX="$OPENXC7_DIR" JOBS="$(nproc)" ./toolchain-sources-builder.sh all
+
+      # Saved immediately, so a later failing step doesn't discard it.
+      - name: Save openXC7 toolchain
+        if: steps.toolchain-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.OPENXC7_DIR }}
+          key: ${{ steps.toolchain-cache.outputs.cache-primary-key }}
+
+      - name: Restore chip database
+        id: chipdb-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.CHIPDB }}
+          key: openxc7-chipdb-xc7a200t-${{ env.OPENXC7_TAG }}-v1
+
+      - name: Generate chip database
+        if: steps.chipdb-cache.outputs.cache-hit != 'true'
+        run: |
+          source "$OPENXC7_DIR/export.sh"
+          mkdir -p "$CHIPDB"
+          python3 "$OPENXC7_DIR/share/nextpnr/himbaechel/uarch/xilinx/gen/xilinx_gen.py" \
+            --xray "$OPENXC7_DIR/share/nextpnr/prjxray-db/artix7" \
+            --device xc7a200t --bba "$RUNNER_TEMP/xc7a200t.bba"
+          bbasm -l "$RUNNER_TEMP/xc7a200t.bba" "$CHIPDB/xc7a200tfbg484.bin"
+          rm "$RUNNER_TEMP/xc7a200t.bba"
+
+      - name: Save chip database
+        if: steps.chipdb-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.CHIPDB }}
+          key: ${{ steps.chipdb-cache.outputs.cache-primary-key }}
+
+      # -----------------------------------------------------------------
+      # LiteX environment (what 2.soc/setup_dev.sh --with-openxc7 does,
+      # minus pyenv).
+      # -----------------------------------------------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install RISC-V GCC
+        run: sudo apt-get install -y gcc-riscv64-unknown-elf
+
+      - name: Install LiteX
+        run: |
+          python -m venv "$LITEX_VENV"
+          source "$LITEX_VENV/bin/activate"
+          python -m pip install -U pip setuptools wheel
+          mkdir -p "$LITEX_DIR" && cd "$LITEX_DIR"
+          wget -q https://raw.githubusercontent.com/enjoy-digital/litex/master/litex_setup.py
+          python litex_setup.py --init --install --config=full
+
+      - name: Install fasm2frames
+        run: |
+          source "$LITEX_VENV/bin/activate"
+          PRJXRAY_SRC_DIR="$LITEX_DIR/prjxray_fasm2frames"
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/f4pga/prjxray.git "$PRJXRAY_SRC_DIR"
+          (cd "$PRJXRAY_SRC_DIR" && git sparse-checkout set utils prjxray)
+          sed -i "s/packages=\['prjxray'\]/packages=['prjxray', 'utils']/" \
+            "$PRJXRAY_SRC_DIR/setup.py"
+          pip install -e "$PRJXRAY_SRC_DIR"
+          command -v fasm2frames
+
+      - name: Install project board file into litex-boards
+        run: |
+          cp 2.soc/6.migen/platforms/alinx_ax7203.py \
+             "$LITEX_DIR/litex-boards/litex_boards/platforms/alinx_ax7203.py"
+
+      # -----------------------------------------------------------------
+      # Build
+      # -----------------------------------------------------------------
+      - name: Build CPU-only SoC with openXC7
+        working-directory: 3.build
+        run: |
+          set -o pipefail
+          make build-board TOOLCHAIN=openxc7 \
+            OPENXC7_DIR="$OPENXC7_DIR" CHIPDB="$CHIPDB" \
+            PYTHON="$LITEX_VENV/bin/python3" \
+            OPTIONS="--integrated-main-ram-size=0x10000 --nextpnr-seed=$NEXTPNR_SEED" \
+            2>&1 | tee "$RUNNER_TEMP/build.log"
+          test -s build/alinx_ax7203/gateware/alinx_ax7203.bit
+
+      - name: Check timing
+        run: |
+          # nextpnr prints Max frequency twice; the last line per clock is
+          # the post-route result. LiteX passes --timing-allow-fail, so a
+          # failing design still produces a bitstream.
+          result=$(grep "Max frequency for clock 's7mmcm0_clkout_buf'" "$RUNNER_TEMP/build.log" | tail -1)
+          echo "$result"
+          echo "### openXC7 sys clock: ${result##*: }" >> "$GITHUB_STEP_SUMMARY"
+          if [[ "$result" == *FAIL* ]]; then
+            echo "::warning title=Timing::sys clock misses 100 MHz with seed $NEXTPNR_SEED: ${result##*: }"
+          fi
+
+      - name: Upload bitstream and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: openxc7-alinx_ax7203-cpu-only
+          path: |
+            3.build/build/alinx_ax7203/gateware/alinx_ax7203.bit
+            3.build/build/alinx_ax7203/gateware/build_alinx_ax7203.sh
+            3.build/build/alinx_ax7203/csr.csv
+            ${{ runner.temp }}/build.log
+          if-no-files-found: ignore
