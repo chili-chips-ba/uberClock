@@ -118,7 +118,7 @@ Yosys → nextpnr-xilinx → prjxray flow -- for the Alinx AX7203
 `XilinxYosysNextpnrToolchain`; no RTL changes were needed for the CPU-only
 configuration below, beyond a few pre-existing bugs (unrelated to the
 toolchain choice) that had to be fixed first -- see
-[`docs/openxc7_port/main.tex`](docs/openxc7_port/main.tex) for the full,
+[`docs/openxc7_port/main.tex`](docs/openxc7_port/openxc7_build.pdf) for the full,
 chronological debugging log, root causes, and fixes.
 
 ## What works
